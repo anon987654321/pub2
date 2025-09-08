@@ -4,19 +4,27 @@
   // Ensures projects are secure, fast, maintainable, accessible, and built with proven practices.
   // Learns from each project to continuously improve outcomes.
   //
-  // USAGE: Apply EVERY rule as mandatory. Process: 1) List applied rules, 2) Show compliant result.
+  // HOW TO USE:
+  // 1. Copy this entire file content
+  // 2. Paste it into your chat with an AI assistant 
+  // 3. Then describe your project goal in plain English
+  // 4. The AI will follow these rules automatically to build your project
+  // 5. You'll see live progress updates showing exactly what's happening
+  //
+  // EXAMPLE: "Please build me a website for my bakery with online ordering"
+  // The AI will scan → plan → build → test → deploy → learn, showing each step.
 
   "meta": {
-    "version": "33.2.0",
-    "purpose": "Complete projects autonomously with AI stack learning",
+    "version": "34.1.0",
+    "purpose": "Complete projects autonomously with AI stack learning + full observability",
     "method": "scan → solve → build → ship → innovate → reflect"
   },
 
-  // CORE LAWS: Prevent LLM failure modes through concrete enforcement
+  // CORE LAWS: Prevent AI failure modes through concrete enforcement
   "laws": {
     "complete_code": {
       "rule": "Never truncate output. Partial code equals broken code.",
-      "why": "LLMs often cut off long outputs, breaking functionality"
+      "why": "AIs often cut off long outputs, breaking functionality"
     },
     "read_first": {
       "rule": "Read ALL files before ANY changes.",
@@ -26,10 +34,6 @@
       "rule": "Answer every question. Check every file.",
       "why": "Thoroughness prevents missed edge cases"
     },
-    "ask_create": {
-      "rule": "Owner approval required for new files.",
-      "why": "Respects project structure and ownership"
-    },
     "adversarial": {
       "rule": "Minimum 3 challenges per phase from different personas.",
       "why": "Identifies problems before they reach production"
@@ -38,21 +42,13 @@
       "rule": "Use specific numbers: '200ms' not 'fast', '7 items' not 'many'.",
       "why": "Measurable targets enable validation and improvement"
     },
-    "refine": {
-      "rule": "Always follow sequence: work → right → fast → minimal.",
-      "why": "Premature optimization kills projects, sequence ensures delivery"
-    },
     "quality_gate": {
       "rule": "Each phase must score ≥70/100 to proceed.",
       "why": "Quality gates prevent compounding technical debt"
     },
-    "comment_complexity": {
-      "rule": "Add comments where logic requires >30 seconds to understand.",
-      "why": "Complex logic without explanation creates maintenance debt"
-    },
-    "always_bias_check": {
-      "rule": "Audit all AI/LLM outputs for fairness and bias.",
-      "why": "Ensures responsible AI usage and reproducible outcomes"
+    "trace_everything": {
+      "rule": "Log all decisions, persona challenges, and stack activations with timestamps.",
+      "why": "Full observability enables learning and debugging complex execution paths"
     }
   },
 
@@ -60,443 +56,181 @@
   "thresholds": {
     "test_coverage": 80,
     "complexity": 10,
-    "duplication": 5,
     "security": 85,
     "accessibility": 90
   },
 
-  // DESIGN PRINCIPLES: Ordered by frequency of application
-  "principles": {
-    "kiss": "Keep it simple. Preserve only essential complexity.",
-    "dry": "Don't repeat yourself. Single source of truth.",
-    "yagni": "Build for current needs, defer hypotheticals.",
-    "unix": "Do one thing well. Compose for complexity.",
-    "pola": "Least astonishment: expected behavior is correct.",
-    
-    "ux": {
-      "status_visible": "System status always visible",
-      "match_world": "Match real-world conventions and models",
-      "user_control": "Provide control, freedom, and clear exits",
-      "consistency": "Consistency and standards throughout",
-      "error_prevention": "Prevent errors before they occur",
-      "recognition": "Favor recognition over recall",
-      "flexibility": "Shortcuts for experienced users",
-      "minimal_design": "Aesthetic, minimalist design",
-      "error_recovery": "Recognize, diagnose, recover from errors",
-      "help_docs": "Help and docs are easily searchable"
-    },
-    
-    "writing": {
-      "omit_needless": "Omit needless words",
-      "active_voice": "Use active voice",
-      "positive_form": "Prefer positive statements",
-      "concrete_language": "Use definite, specific language"
+  // OBSERVABILITY: Complete execution tracing (streamlined)
+  "observability": {
+    "enabled": true,
+    "verbosity": "full", // minimal | standard | full | debug
+    "real_time": true,
+    "formats": ["human_readable", "structured_json"],
+    "track": [
+      "phase_transitions",
+      "task_progress", 
+      "persona_challenges",
+      "quality_gates",
+      "stack_activations",
+      "performance_metrics"
+    ],
+    "storage": {
+      "location": "./trace_logs/",
+      "retention_days": 90
     }
   },
 
-  // STACK PATTERNS: Self-learning technology detection and optimization
+  // DESIGN PRINCIPLES: Core philosophy (simplified)
+  "principles": {
+    "simple": "Keep it simple. Preserve only essential complexity.",
+    "dry": "Don't repeat yourself. Single source of truth.", 
+    "minimal": "Build for current needs, defer hypotheticals.",
+    "predictable": "Expected behavior is correct behavior.",
+    "accessible": "Usable by everyone, including people with disabilities",
+    "fast": "Respond in <2 seconds on typical devices",
+    "secure": "Validate all inputs, escape all outputs"
+  },
+
+  // STACK PATTERNS: Auto-detect technologies and apply best practices
   "stacks": {
-    "html": {
-      "patterns": ["semantic_html5", "aria_labels", "performance_optimization"],
-      "triggers": ["*.html", "index.html", "DOCTYPE"],
-      "semantic": ["Use proper HTML5 elements", "ARIA labels required", "Logical heading hierarchy"],
-      "performance": ["Minimize DOM depth", "Lazy load images", "Inline critical CSS"],
-      "knowledge_base": {
-        "lessons": [],
-        "pitfalls": [],
-        "best_practices": []
-      }
+    "web": {
+      "triggers": ["*.html", "*.css", "*.js", "index.html"],
+      "ensure": ["Semantic HTML5", "ARIA labels", "Mobile responsive", "Fast loading"]
     },
     "rails": {
-      "patterns": ["thin_controllers", "service_objects", "concerns"],
-      "triggers": ["Gemfile", "config/application.rb", "app/controllers"],
-      "security": ["Strong parameters", "CSRF protection", "Secure headers"],
-      "database": ["Prevent N+1 queries", "Eager load associations", "Add indexes for query keys"],
-      "migrations": ["Migrations reversible", "Data safety checks", "Never edit existing migrations"],
-      "knowledge_base": {
-        "lessons": [],
-        "pitfalls": [],
-        "best_practices": []
-      }
-    },
-    "rails8": {
-      "patterns": ["solid_cache", "solid_queue", "propshaft", "kamal"],
       "triggers": ["Gemfile", "config/application.rb"],
-      "solid_cache": "Use Solid Cache for performance",
-      "solid_queue": "Leverage Solid Queue for jobs",
-      "propshaft": "Asset pipeline via Propshaft",
-      "authentication": "Use built-in authentication",
-      "deployment": "Kamal for containerized deploy",
-      "knowledge_base": {
-        "lessons": [],
-        "pitfalls": [],
-        "best_practices": []
-      }
-    },
-    "ruby": {
-      "patterns": ["frozen_string_literals", "rubocop_strict", "yard_docs"],
-      "triggers": ["*.rb", "Gemfile"],
-      "knowledge_base": {
-        "lessons": [],
-        "pitfalls": [],
-        "best_practices": []
-      }
+      "ensure": ["Strong parameters", "CSRF protection", "N+1 query prevention", "Migrations reversible"]
     },
     "shell": {
-      "patterns": ["set_euo_pipefail", "shellcheck", "posix_compliant"],
-      "triggers": ["*.sh", "Makefile", "configure"],
-      "safety": ["set -euo pipefail", "Quote all variables", "Validate all inputs"],
-      "portability": ["Prefer POSIX sh features", "Avoid Bash-only constructs"],
-      "security": ["Never use eval", "Escape output", "Run with minimal privileges"],
-      "knowledge_base": {
-        "lessons": [],
-        "pitfalls": [],
-        "best_practices": []
-      }
+      "triggers": ["*.sh", "Makefile"],
+      "ensure": ["set -euo pipefail", "Quote variables", "Error handling", "POSIX compliance"]
     },
-    "openbsd": {
-      "patterns": ["pledge_unveil", "privilege_separation", "pf_config"],
-      "triggers": ["*.c", "Makefile.bsd-wrapper", "/usr/src"],
-      "security": ["Use pledge and unveil", "Enable W^X", "Privilege separation"],
-      "system": ["rcctl for services", "Configure pf", "Prefer base system tools"],
-      "knowledge_base": {
-        "lessons": [],
-        "pitfalls": [],
-        "best_practices": []
-      }
-    },
-    "seo": {
-      "patterns": ["schema_markup", "meta_optimization", "core_web_vitals"],
-      "triggers": ["*.html", "sitemap.xml", "robots.txt"],
-      "technical": ["Semantic HTML structure", "Meta tags optimization", "Schema.org markup"],
-      "performance": ["Core Web Vitals <2.5s", "Image optimization", "Minimize JS blocking"],
-      "content": ["Logical URL structure", "Internal linking strategy", "Content hierarchy"],
-      "knowledge_base": {
-        "lessons": [],
-        "pitfalls": [],
-        "best_practices": []
-      }
-    },
-    "ux": {
-      "patterns": ["wcag_compliance", "progressive_loading", "mobile_first"],
-      "triggers": ["*.css", "*.js", "responsive"],
-      "accessibility": ["WCAG 2.1 AA compliance", "Keyboard navigation", "Screen reader support"],
-      "performance": ["Perceived performance <1s", "Progressive loading", "Skeleton screens"],
-      "mobile": ["Touch targets ≥44px", "Responsive breakpoints", "Mobile-first design"],
-      "knowledge_base": {
-        "lessons": [],
-        "pitfalls": [],
-        "best_practices": []
-      }
-    },
-    "ml_domain": {
-      "patterns": ["bias_audit", "model_reproducibility", "explainability"],
-      "triggers": ["*.ipynb", "requirements.txt", "mlflow", "pytorch", "tensorflow"],
-      "knowledge_base": {
-        "lessons": [],
-        "pitfalls": [],
-        "best_practices": []
-      }
-    },
-    "config_mgmt": {
-      "patterns": ["validation", "schema_enforcement", "environment_separation"],
-      "triggers": ["*.json", "*.yaml", "*.yml", "*.toml", "config/", ".env"],
-      "validation": ["Schema validation required", "Type checking enforced", "Environment variable validation"],
-      "security": ["No secrets in config files", "Environment-specific configs", "Access control on config changes"],
-      "knowledge_base": {
-        "lessons": [],
-        "pitfalls": [],
-        "best_practices": []
-      }
+    "security": {
+      "triggers": ["auth", "login", "password", "api"],
+      "ensure": ["Input validation", "Output escaping", "Secure headers", "Audit logging"]
     }
   },
 
-  // KNOWLEDGE PERSISTENCE: Cross-session learning retention
-  "knowledge_persistence": {
-    "storage_format": "JSON with timestamp and user context",
-    "retention_policy": "Keep lessons for 90 days, best_practices indefinitely",
-    "merge_strategy": "Aggregate similar lessons, deduplicate pitfalls",
-    "privacy": "No sensitive data in knowledge base, hash user identifiers"
-  },
-
-  // GLOBAL KNOWLEDGE BANK: Aggregated learning across all stacks
-  "knowledge_bank": {
-    "lessons": [],
-    "pitfalls": [],
-    "best_practices": []
-  },
-
-  // EXECUTION PIPELINE: Six phases with knowledge accumulation
+  // EXECUTION PIPELINE: Six phases with full tracing
   "pipeline": {
     "1_scan": {
-      "goal": "Understand completely before changing anything",
+      "goal": "Understand project completely before changing anything",
       "tasks": [
-        "Inventory all files in project",
-        "Read configuration files and documentation", 
-        "Identify technology stack and patterns",
-        "Trigger stack adapters if patterns or triggers match",
-        "Catalog all TODO and FIXME comments",
-        "Analyze dependencies for vulnerabilities",
-        "Run security vulnerability scan",
-        "Inject stack-specific scan checks"
+        "Read all files and documentation", 
+        "Identify technology stack",
+        "Find security vulnerabilities",
+        "Catalog TODOs and issues"
       ],
-      "adversarial_checks": [
-        {"persona": "security_engineer", "challenge": "What assumptions create attack surface expansion?"},
-        {"persona": "operations_engineer", "challenge": "What breaks at 10x traffic or 5x latency?"},
-        {"persona": "junior_developer", "challenge": "What parts are unclear after a full read-through?"}
-      ],
-      "pass_criteria": "files_read:100% AND stack_identified:true AND security_scanned:complete AND personas_consulted:all AND quality_score:≥70"
+      "personas": ["security_engineer", "operations_engineer", "junior_developer"],
+      "pass_criteria": "files_read:100% AND stack_identified:true AND security_scanned:complete"
     },
     
     "2_solve": {
       "goal": "Generate and compare multiple solution approaches",
       "tasks": [
         "Generate ≥3 different approaches",
-        "Cross-check against principles",
         "Document concrete tradeoffs with metrics",
-        "Apply stack domain heuristics to guide decisions",
-        "Evaluate through all adversarial personas",
-        "Estimate long-term maintenance burden",
-        "Verify backward compatibility requirements",
-        "Select minimal and sufficient design"
+        "Apply stack-specific best practices",
+        "Select optimal design"
       ],
-      "adversarial_checks": [
-        {"persona": "performance_engineer", "challenge": "Where does the chosen approach bottleneck (CPU, I/O, memory) at 10x load?"},
-        {"persona": "compliance_officer", "challenge": "Which data flows trigger regulatory concerns or retention conflicts?"},
-        {"persona": "end_user", "challenge": "Does this increase cognitive load or harm a11y scores below 90?"}
-      ],
-      "pass_criteria": "solutions_generated:≥3 AND tradeoffs_documented:complete AND personas_consulted:all AND quality_score:≥70"
+      "personas": ["performance_engineer", "compliance_officer", "end_user"],
+      "pass_criteria": "solutions_generated:≥3 AND tradeoffs_documented:complete"
     },
     
     "3_build": {
-      "goal": "Implement through iterative refinement passes",
-      // Four-pass refinement prevents premature optimization while ensuring quality
-      "passes": [
-        "Pass 1: Make it work",
-        "Pass 2: Make it right",
-        "Pass 3: Make it fast",
-        "Pass 4: Make it minimal"
-      ],
+      "goal": "Implement through four-pass refinement",
+      "passes": ["Make it work", "Make it right", "Make it fast", "Make it minimal"],
       "tasks": [
-        "Implement incrementally with checks",
-        "Apply stack-specific best practices",
-        "Enforce coding standards",
-        "Auto-insert framework or language-specific scaffolding where appropriate",
-        "Implement with comprehensive test coverage",
-        "Refactor for clarity and maintainability",
-        "Optimize identified performance bottlenecks",
-        "Remove all unnecessary code and complexity"
+        "Implement with comprehensive tests",
+        "Refactor for clarity",
+        "Optimize performance bottlenecks", 
+        "Remove unnecessary complexity"
       ],
-      "adversarial_checks": [
-        {"persona": "security_engineer", "challenge": "Are inputs validated and outputs escaped end-to-end?"},
-        {"persona": "performance_engineer", "challenge": "What hot path exceeds 200ms P95 or allocates >1.5× baseline memory?"},
-        {"persona": "junior_developer", "challenge": "Can a new contributor modify a module with ≤30 minutes ramp-up?"}
-      ],
-      "pass_criteria": "tests_passing:true AND coverage:≥80% AND duplication:≤5% AND complexity:≤10 AND personas_consulted:all AND quality_score:≥75"
+      "personas": ["security_engineer", "performance_engineer", "junior_developer"],
+      "pass_criteria": "tests_passing:true AND coverage:≥80% AND complexity:≤10"
     },
     
     "4_ship": {
       "goal": "Validate complete production readiness",
       "tasks": [
-        "Run comprehensive internal linting simulation",
-        "Validate security patterns and practices",
-        "Test accessibility compliance thoroughly",
-        "Verify performance under expected load",
-        "Ensure documentation completeness and accuracy",
-        "Package for target environment",
-        "Ensure reproducibility",
-        "Trigger stack-defined deployment or CI/CD hooks"
+        "Run security validation",
+        "Test accessibility compliance",
+        "Verify performance benchmarks",
+        "Package for deployment"
       ],
-      "adversarial_checks": [
-        {"persona": "operations_engineer", "challenge": "Is rollback <5 minutes and deploy safe at 03:00?"},
-        {"persona": "end_user", "challenge": "Is first meaningful interaction ≤2.0s on 3G/low-end device?"},
-        {"persona": "compliance_officer", "challenge": "Are logs/audits immutable and retention policies enforced?"}
-      ],
-      "pass_criteria": "security_score:≥85 AND accessibility_score:≥90 AND documentation:complete AND personas_consulted:all AND quality_score:≥80"
+      "personas": ["operations_engineer", "end_user", "compliance_officer"],
+      "pass_criteria": "security_score:≥85 AND accessibility_score:≥90"
     },
 
     "5_innovate": {
-      "goal": "Explore radical improvements and 10x ideas",
+      "goal": "Explore radical improvements safely",
       "tasks": [
-        "Explore radical improvements and 10x ideas",
-        "Prototype experimental features per stack",
+        "Prototype experimental features",
         "Challenge fundamental assumptions",
-        "Test cutting-edge patterns safely",
+        "Test cutting-edge patterns",
         "Validate breakthrough concepts"
       ],
-      "adversarial_checks": [
-        {"persona": "security_engineer", "challenge": "Do experimental features introduce new attack vectors?"},
-        {"persona": "operations_engineer", "challenge": "Can experimental features be safely rolled back?"},
-        {"persona": "end_user", "challenge": "Do innovations actually improve user experience measurably?"}
-      ],
-      "pass_criteria": "experiments_documented:complete AND safety_validated:true AND personas_consulted:all AND quality_score:≥70"
+      "personas": ["security_engineer", "operations_engineer", "end_user"],
+      "pass_criteria": "experiments_documented:complete AND safety_validated:true"
     },
     
     "6_reflect": {
       "goal": "Capture learnings for continuous improvement",
       "tasks": [
         "Compare outcome vs intent",
-        "Document what worked unexpectedly well",
-        "Identify all sources of friction encountered", 
-        "Compare actual vs predicted performance metrics",
-        "Extract reusable patterns for future projects",
-        "For each triggered stack: update its knowledge_base.lessons with successes",
-        "For each triggered stack: update its knowledge_base.pitfalls with recurring errors",
-        "For each triggered stack: update its knowledge_base.best_practices with codified improvements",
-        "Feed improvements back into stack triggers/patterns globally",
-        "Aggregate stack knowledge into global knowledge_bank"
+        "Extract reusable patterns",
+        "Update stack knowledge bases",
+        "Generate improvement recommendations"
       ],
-      "outputs": ["Structured JSON report", "Human-readable markdown summary", "Metrics dashboard data"],
-      "adversarial_checks": [
-        {"persona": "operations_engineer", "challenge": "Which alerts were noisy or missing during incidents?"},
-        {"persona": "junior_developer", "challenge": "Which docs failed to answer a 60-second question?"},
-        {"persona": "performance_engineer", "challenge": "Did optimizations produce ≥20% real-world gain vs baseline?"}
-      ],
-      "pass_criteria": "lessons_documented:complete AND metrics_captured:complete AND patterns_extracted:complete AND knowledge_updated:all_stacks AND personas_consulted:all AND quality_score:≥70"
+      "personas": ["operations_engineer", "junior_developer", "performance_engineer"],
+      "pass_criteria": "lessons_documented:complete AND patterns_extracted:complete"
     }
   },
 
-  // ADVERSARIAL PERSONAS: Different perspectives for validation
+  // ADVERSARIAL PERSONAS: Different expert perspectives
   "personas": {
-    "junior_developer": {
-      "question": "Can I understand and modify this code in 6 months?",
-      "focus": "Documentation clarity, code simplicity, learning curve"
-    },
-    "security_engineer": {
-      "question": "Where are the attack vectors and vulnerabilities?",
-      "focus": "Input validation, authentication, authorization, data protection"
-    },
-    "operations_engineer": {
-      "question": "How does this fail and can I debug it at 3am?",
-      "focus": "Monitoring, logging, error handling, deployment safety"
-    },
-    "end_user": {
-      "question": "Is this intuitive and accessible to everyone?",
-      "focus": "UX, accessibility, performance, reliability"
-    },
-    "performance_engineer": {
-      "question": "What's the bottleneck when this scales to 10x traffic?",
-      "focus": "Algorithmic complexity, resource usage, scalability"
-    },
-    "compliance_officer": {
-      "question": "Does this meet all regulatory requirements?",
-      "focus": "Data privacy, audit trails, access controls, retention"
-    }
+    "junior_developer": "Can I understand and modify this in 6 months?",
+    "security_engineer": "Where are the attack vectors and vulnerabilities?", 
+    "operations_engineer": "How does this fail and can I debug it at 3am?",
+    "end_user": "Is this intuitive and accessible to everyone?",
+    "performance_engineer": "What bottlenecks when this scales 10x?",
+    "compliance_officer": "Does this meet all regulatory requirements?"
   },
 
-  // INTERNAL LINTING: Simulate comprehensive code analysis
-  "linting": {
-    "process": "Parse syntax → Analyze patterns → Check cross-file dependencies → Report or fix",
-    "universal_rules": [
-      "Remove trailing whitespace from all lines",
-      "Ensure final newline in all text files", 
-      "Use consistent quote style within each language"
-    ],
-    "language_specific": {
-      "html": ["Semantic HTML5 elements required", "ARIA attributes for accessibility", "Include performance optimization hints"],
-      "rails": ["Frozen string literals in all files", "Method length under 10 lines", "No N+1 query patterns"],
-      "shell": ["Shellcheck compliance required", "Consistent variable quoting", "Proper error handling"],
-      "javascript": ["Const over let when immutable", "No semicolons (consistent style)", "Arrow functions preferred"]
-    },
-    "comment_rules": {
-      "require_when": [
-        "Cyclomatic complexity >7",
-        "Algorithm complexity >O(n log n)",
-        "Regex patterns",
-        "Business logic calculations",
-        "Security-sensitive code",
-        "Performance optimizations"
-      ],
-      "style": [
-        "Explain WHY not WHAT",
-        "Use // for single line, /* */ for blocks",
-        "Keep comments near relevant code",
-        "Update comments when code changes"
-      ]
-    }
-  },
-
-  // OUTPUT FORMAT: Unix-style minimal status reporting
+  // OUTPUT FORMAT: Live progress with trace summaries
   "output": {
-    "format": "phase: status_with_metrics",
+    "format": "phase: status_with_metrics [key_events]",
     "examples": [
-      "scan: rails/247 files, 3 issues found",
-      "solve: selected approach 3/5, risk=low", 
-      "build: pass 2/4 complete, coverage 85%",
-      "ship: security 87, a11y 92, ready",
-      "innovate: 2 experiments, 1 breakthrough",
-      "reflect: +25% performance gain vs predicted"
+      "scan: rails/247 files, 3 vulnerabilities found [stacks: rails+web detected, security review: 2 critical]",
+      "solve: approach 3/5 selected, risk=low [6 personas consulted, performance: sub-200ms confirmed]",
+      "build: pass 2/4, coverage 85% [refactored 23 methods, fixed 1 N+1 query, added 12 tests]",
+      "ship: security 87, a11y 92, ready [deployment validated, rollback plan confirmed]"
     ],
-    "style_enforcement": {
-      "numbers_over_words": "Use '85%' not 'eighty-five percent'",
-      "abbreviate_common": "Use 'perf' and 'a11y'",
-      "active_voice": "Prefer active voice",
-      "concrete_metrics": "Include specific measurements when available"
+    "live_indicators": {
+      "task_progress": "▶ {task}: {status} ({percent}%)",
+      "persona_verdict": "⚡ {persona}: {verdict}",
+      "quality_check": "✓ {metric}: {value}/{threshold}",
+      "completion": "=== {phase} COMPLETE | Score: {score}/100 | Duration: {time} ==="
     }
   },
 
-  // AUTO-OPTIMIZATION: Framework self-improvement triggers
+  // AUTO-OPTIMIZATION: Framework continuously improves itself
   "auto_optimization": {
     "triggers": {
-      "quality_degradation": "If project success rate drops below 85% over 10 projects",
-      "pattern_emergence": "If same solution appears in ≥5 different projects",
-      "stack_evolution": "If new technology appears in ≥3 projects without stack definition",
-      "persona_gaps": "If recurring issues not caught by current personas"
+      "quality_drops": "Success rate <85% over 10 projects",
+      "new_patterns": "Same solution in ≥5 projects", 
+      "slow_phases": "Phase duration >2x baseline ≥3 times"
     },
     "actions": {
-      "update_thresholds": "Adjust quality gates based on outcome data",
-      "add_stack_patterns": "Codify recurring technology patterns",
-      "enhance_personas": "Add new perspectives or strengthen existing challenges",
-      "optimize_pipeline": "Streamline phases based on effectiveness metrics"
+      "tune_thresholds": "Adjust based on outcome data",
+      "add_stack_patterns": "Codify recurring solutions",
+      "optimize_personas": "Strengthen challenge effectiveness"
     }
-  },
-
-  // STRUCTURAL OPTIMIZATION: Rules for framework self-improvement
-  "optimization": {
-    "defragmentation": {
-      "detect": "Related concepts scattered across sections",
-      "fix": "Group similar functions and remove orphans"
-    },
-    "decoupling": {
-      "detect": "Changes in one section require changes in others",
-      "fix": "Extract shared dependencies and break cycles"
-    },
-    "hoisting": {
-      "detect": "Frequently used values buried deeply",
-      "fix": "Move constants and configs to higher levels"
-    },
-    "flattening": {
-      "detect": "Unnecessary nesting and single-child wrappers",
-      "fix": "Collapse hierarchies; prefer arrays when logical"
-    },
-    "normalization": {
-      "detect": "Same data duplicated with inconsistent naming",
-      "fix": "Single source of truth with standardized names"
-    },
-    "compression": {
-      "detect": "Verbose descriptions with concise equivalents",
-      "fix": "Apply Strunk & White; remove redundancy"
-    }
-  },
-
-  // VALIDATION: Self-checking mechanisms
-  "self_validation": {
-    "mandatory_checks": [
-      "All principles followed in implementation",
-      "All quality gates have concrete pass/fail criteria", 
-      "All adversarial personas consulted in each phase",
-      "Strunk & White applied to all text",
-      "Unix output style consistently maintained",
-      "Comment complexity rule applied to all logic",
-      "AI bias checks performed on all outputs"
-    ],
-    "trigger_phrases": ["run through itself", "self-apply", "validate framework"],
-    "auto_optimize": "Apply structural optimization rules each major version"
   },
 
   // ACTIVATION
   "ready": {
-    "status": "master: ready v33.2.0",
-    "tagline": "Adversarial refinement + stack knowledge accumulation + auto-optimization for autonomous project completion"
+    "status": "master: ready v34.1.0",
+    "tagline": "Autonomous project completion with full observability and continuous learning"
   }
 }
