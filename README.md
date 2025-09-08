@@ -4,4 +4,4 @@ LLMs give lazy first answers. This JSON forces 10 personas to fight over 15 alte
 
 Drop it in any LLM. Tell it what to build. It does the rest.
 
-Changes require: "Yes, modify the master.json to [...]"
+> Changes requires your **EXPRESS** written permission like: _"Yes, modify `master.json` to `[...]`"_
