@@ -77,7 +77,7 @@
   </style>
 </head>
 <body>
-  <div class="city-carousel" id="cityCarousel">
+  <div class="city-carousel" data-controller="carousel" data-carousel-options-value='{"direction": "vertical", "loop": true, "autoplay": {"delay": 2800, "disableOnInteraction": false}, "speed": 1200, "effect": "slide", "allowTouchMove": false}' id="cityCarousel">
     <div class="swiper">
       <div class="swiper-wrapper">
         <div class="swiper-slide">radio.brgen.no</div>
@@ -124,15 +124,12 @@
     </div>
   </div>
   <canvas id="canvas" aria-label="Classic warp tunnel visualizer"></canvas>
-  <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
-    <div>
-      <h2 id="start-title">Tap to start</h2>
-      <div class="instructions">
-        <span>Space: next</span> <span>M: mute</span>
-        <span>Swipe: explore</span> <span>Tilt: parallax</span>
-        <span>Double-tap: next</span>
-      </div>
-    </div>
+  <div data-controller="dialog" id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
+    <dialog data-dialog-target="dialog">
+      <p>The modal's content here</p>
+      <button type="button" data-action="dialog#close" autofocus>Cancel</button>
+    </dialog>
+    <button type="button" data-action="dialog#open">Open modal</button>
   </div>
   <div class="viz-indicator" id="vizIndicator">
     <div class="viz-dot active"></div>
@@ -143,7 +140,15 @@
   <div class="ui" id="ui">Ready</div>
   <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
   <iframe id="player" src="about:blank" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope"></iframe>
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script type="module">
+    import { Application } from "https://unpkg.com/@hotwired/stimulus/dist/stimulus.js";
+    import Carousel from "https://unpkg.com/@stimulus-components/carousel/dist/carousel.mjs";
+    import Dialog from "https://unpkg.com/@stimulus-components/dialog/dist/dialog.mjs";
+
+    window.Stimulus = Application.start();
+    Stimulus.register("carousel", Carousel);
+    Stimulus.register("dialog", Dialog);
+  </script>
   <script>
     "use strict";
     // Expanded curated tracks
@@ -168,22 +173,6 @@
       { artist: "Slum Village", title: "Worlds Full of Sadness", id: "MU3nfxsz2XA" },
       { artist: "Bob Marley", title: "Forever Loving Jah", id: "WFCh0Ycjd4Q" }
     ];
-    // City carousel
-    let citySwiper;
-    function initCityCarousel() {
-      citySwiper = new Swiper('.city-carousel .swiper', {
-        direction: 'vertical',
-        loop: true,
-        autoplay: {
-          delay: 2800,
-          disableOnInteraction: false,
-        },
-        speed: 1200,
-        effect: 'slide',
-        allowTouchMove: false,
-        pagination: false
-      });
-    }
     // UI helper
     const UI = (() => {
       const el = document.getElementById("ui");
@@ -194,7 +183,7 @@
       constructor() {
         this.player = document.getElementById("player");
         this.started = false;
-        this.muted = false;
+        this.muted = true; // Start muted to comply with autoplay policies
         this.trackIndex = 0;
         this.tracks = [...YOUTUBE_TRACKS];
         this.startMs = 0;
@@ -206,11 +195,22 @@
       loadAndPlay(track) {
         if (!this.player) return;
         const { id } = track;
-        const src = `https://www.youtube.com/embed/${id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted?1:0}`;
+        const src = `https://www.youtube.com/embed/${id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=1`;
         this.player.src = src;
         this.player.onload = () => {
+          console.log('Iframe loaded');
           this.afterStart();
-          setTimeout(() => { if (this.muted) UI.text(this.trackLabel() + " • muted"); }, 400);
+          // Attempt to unmute after loading
+          setTimeout(() => {
+            this.player.contentWindow.postMessage({event: 'command', func: 'unMute', args: []}, '*');
+            this.muted = false;
+            UI.text(this.trackLabel());
+          }, 1000);
+        };
+        this.player.onerror = () => {
+          console.error('Iframe load error');
+          UI.text('Load error - retrying...');
+          setTimeout(() => this.loadAndPlay(track), 2000); // Retry
         };
         this.beatPhase = Math.random() * Math.PI * 2;
       }
@@ -219,7 +219,6 @@
         this.startMs = performance.now();
         clearTimeout(this._advanceTimer);
         this._advanceTimer = setTimeout(() => this.next(), 180000);
-        UI.text(this.trackLabel());
       }
      
       next() {
@@ -234,10 +233,8 @@
      
       toggleMute() {
         this.muted = !this.muted;
-        if (this.started) {
-          const t = this.tracks[this.trackIndex];
-          this.player.src = `https://www.youtube.com/embed/${t.id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted?1:0}`;
-        }
+        const command = this.muted ? 'mute' : 'unMute';
+        this.player.contentWindow.postMessage({event: 'command', func: command, args: []}, '*');
         UI.text(this.trackLabel() + (this.muted ? " • muted" : ""));
       }
      
@@ -408,11 +405,11 @@
         const rows = this.particles.length;
         let mx = 0, my = 0;
         if (mouseActive || mouseDown) {
-          mx = (mousePos.x - w / 2);
-          my = (mousePos.y - h / 2);
+          mx = (w / 2 - mousePos.x);
+          my = (h / 2 - mousePos.y);
         } else if (orientationActive) {
-          mx = gamma * (w / 180);
-          my = beta * (h / 180);
+          mx = -gamma * (w / 180);
+          my = -beta * (h / 180);
         }
         for (let i = 0; i < rows; i++) {
           const row = this.particles[i];
@@ -456,7 +453,7 @@
         }
         this.floatingParticles.forEach(particle => {
           particle.update(audioData);
-          particle.render(w / 2, h / 2, audioData, mx, my);
+          particle.render(w / 2, h / 2, audioData);
         });
         this.time += 0.01;
       }
@@ -484,11 +481,11 @@
         this.time += 0.02;
         let mx = 0, my = 0;
         if (mouseActive || mouseDown) {
-          mx = (mousePos.x - w / 2);
-          my = (mousePos.y - h / 2);
+          mx = (w / 2 - mousePos.x);
+          my = (h / 2 - mousePos.y);
         } else if (orientationActive) {
-          mx = gamma * (w / 180);
-          my = beta * (h / 180);
+          mx = -gamma * (w / 180);
+          my = -beta * (h / 180);
         }
         this.spirals.forEach((spiral, index) => {
           spiral.rotation += spiral.speed * (1 + audioData.energy);
@@ -496,7 +493,7 @@
           spiral.centerY = h / 2 + my * 0.2;
          
           const baseRadius = Math.min(w, h) * 0.2;
-          const maxRadius = baseRadius * (1 + audioData.average + (audioData.beat ? 0.2 : 0));
+          const maxRadius = baseRadius * (1 + audioData.average);
          
           for (let arm = 0; arm < spiral.arms; arm++) {
             const armAngle = (arm / spiral.arms) * Math.PI * 2;
@@ -536,11 +533,11 @@
         this.time += 0.03;
         let mx = 0, my = 0;
         if (mouseActive || mouseDown) {
-          mx = (mousePos.x - w / 2);
-          my = (mousePos.y - h / 2);
+          mx = (w / 2 - mousePos.x);
+          my = (h / 2 - mousePos.y);
         } else if (orientationActive) {
-          mx = gamma * (w / 180);
-          my = beta * (h / 180);
+          mx = -gamma * (w / 180);
+          my = -beta * (h / 180);
         }
         let centerX = w / 2 + mx * 0.3;
         let centerY = h / 2 + my * 0.3;
@@ -548,7 +545,7 @@
        
         for (let wave = 0; wave < waveCount; wave++) {
           const wavePhase = (wave / waveCount) * Math.PI * 2;
-          const radius = 50 + wave * 30 + audioData.average * 100 + (audioData.beat ? 20 : 0);
+          const radius = 50 + wave * 30 + audioData.average * 100;
          
           const points = [];
           const segments = 64;
@@ -606,11 +603,11 @@
         this.time += 0.02;
         let mx = 0, my = 0;
         if (mouseActive || mouseDown) {
-          mx = (mousePos.x - w / 2);
-          my = (mousePos.y - h / 2);
+          mx = (w / 2 - mousePos.x);
+          my = (h / 2 - mousePos.y);
         } else if (orientationActive) {
-          mx = gamma * (w / 180);
-          my = beta * (h / 180);
+          mx = -gamma * (w / 180);
+          my = -beta * (h / 180);
         }
        
         this.dots.forEach(dot => {
@@ -620,7 +617,7 @@
           const maxDistance = Math.sqrt(w*w + h*h) / 2;
           const normalizedDistance = distance / maxDistance;
          
-          const size = (1 - normalizedDistance) * (3 + audioData.average * 8 + Math.sin(dot.phase) * 2 + (audioData.beat ? 4 : 0));
+          const size = (1 - normalizedDistance) * (3 + audioData.average * 8 + Math.sin(dot.phase) * 2);
           const intensity = (1 - normalizedDistance) * (0.5 + audioData.beat * 0.5 + Math.sin(dot.phase + this.time) * 0.3);
          
           if (size > 0.5 && intensity > 0.1) {
@@ -672,22 +669,19 @@
         if (this.life <= 0) this.reset();
       }
      
-      render(baseX, baseY, audioData, mx, my) {
+      render(centerX, centerY, audioData) {
         const scale = 250 / (250 + this.z);
-        const depthFactor = (this.z - 250) / 500;
-        const offsetX = mx * depthFactor;
-        const offsetY = my * depthFactor;
-        const screenX = Math.round((this.x * scale) + baseX + offsetX);
-        const screenY = Math.round((this.y * scale) + baseY + offsetY);
+        const screenX = Math.round(this.x * scale + centerX);
+        const screenY = Math.round(this.y * scale + centerY);
        
         if (screenX >= 0 && screenX < w && screenY >= 0 && screenY < h) {
           const intensity = this.life * scale;
           const size = Math.round(this.size * scale * (1 + audioData.beat * 0.5));
          
-          const depthColorFactor = (this.z + 250) / 500;
-          const r = Math.round(50 + depthColorFactor * 150);
-          const g = Math.round(100 + depthColorFactor * 120);
-          const b = Math.round(150 + depthColorFactor * 105);
+          const depthFactor = (this.z + 250) / 500;
+          const r = Math.round(50 + depthFactor * 150);
+          const g = Math.round(100 + depthFactor * 120);
+          const b = Math.round(150 + depthFactor * 105);
          
           for (let dx = -size; dx <= size; dx++) {
             for (let dy = -size; dy <= size; dy++) {
@@ -704,14 +698,24 @@
    
     function setupSimpleSensors() {
       try {
-        if (window.DeviceOrientationEvent) {
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+          DeviceOrientationEvent.requestPermission().then(state => {
+            if (state === 'granted') {
+              window.addEventListener("deviceorientation", (e) => {
+                beta = e.beta || 0;
+                gamma = e.gamma || 0;
+                orientationActive = true;
+              }, { passive: true });
+            }
+          }).catch(console.error);
+        } else if (window.DeviceOrientationEvent) {
           window.addEventListener("deviceorientation", (e) => {
             beta = e.beta || 0;
             gamma = e.gamma || 0;
             orientationActive = true;
           }, { passive: true });
         }
-      } catch(e) {}
+      } catch(e) { console.error(e); }
     }
     // Touch handling
     let mouseActive = false, mouseDown = false;
@@ -806,10 +810,9 @@
       if (!audio.started) {
         audio.started = true;
         audio.loadAndPlay(audio.tracks[audio.trackIndex]);
-        UI.text(audio.trackLabel());
         overlay.hidden = true;
        
-        if (citySwiper) citySwiper.autoplay.start();
+        // No citySwiper, as it's now Stimulus
       }
     }
     // Inversion
@@ -856,7 +859,6 @@
     function boot() {
       onResize();
       setupSimpleSensors();
-      initCityCarousel();
       vizManager.init();
      
       clearImageData();
