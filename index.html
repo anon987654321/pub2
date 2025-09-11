@@ -7,32 +7,32 @@
     <title>Radio Bergen</title>
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Classic warp tunnel with multiple views. Swipe to explore. Tilt device for parallax." />
-    
+   
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>">
-    
+   
     <style>
-      html, body { 
-        margin: 0; height: 100%; background: #000; color: #9aa; 
-        font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; 
-        overflow: hidden; 
+      html, body {
+        margin: 0; height: 100%; background: #000; color: #9aa;
+        font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        overflow: hidden;
       }
-      canvas { 
-        position: fixed; inset: 0; width: 100vw; height: 100vh; 
-        display: block; background: #000; touch-action: none; 
+      canvas {
+        position: fixed; inset: 0; width: 100vw; height: 100vh;
+        display: block; background: #000; touch-action: none;
       }
-      
+     
       .loading-screen {
-        position: fixed; inset: 0; background: #000; color: #9aa; 
-        display: grid; place-items: center; z-index: 2000; 
+        position: fixed; inset: 0; background: #000; color: #9aa;
+        display: grid; place-items: center; z-index: 2000;
         transition: opacity 0.5s ease;
       }
       .loading-screen.hidden { opacity: 0; pointer-events: none; }
-      
+     
       .city-carousel {
-        position: fixed; top: 12px; left: 12px; width: 280px; height: 40px; 
+        position: fixed; top: 12px; left: 12px; width: 280px; height: 40px;
         z-index: 95; pointer-events: none; user-select: none; overflow: hidden;
       }
-      
+     
       .carousel-container {
         width: 100%; height: 100%; position: relative; overflow: hidden;
       }
@@ -45,7 +45,7 @@
       }
       .carousel-slide.active { opacity: 1; transform: translateY(0%); }
       .city-inverted .carousel-slide { color: #000 !important; }
-     
+    
       .ui {
         position: fixed; right: 12px; bottom: 10px; color: #7a90a0; font-size: 12px;
         opacity: 0.95; white-space: nowrap; pointer-events: none; user-select: none;
@@ -53,30 +53,30 @@
         text-overflow: ellipsis; z-index: 100; transition: color 0.18s ease;
       }
       .ui-inverted { color: #445566 !important; }
-      
+     
       .overlay {
         position: fixed; inset: 0; display: grid; place-items: center;
         background: rgba(0,0,0,0.9); color: #9aa; cursor: pointer; user-select: none;
         z-index: 1000; text-align: center; padding: 16px;
       }
       .overlay[hidden] { display: none; }
-     
+    
       .overlay h2 {
         margin: 0 0 20px 0; font-size: 36px; font-weight: 300; color: #fff;
       }
-     
+    
       .instructions {
         position: absolute; bottom: 20px; right: 20px; font-size: 10px;
         color: #666; text-align: right; line-height: 1.4; max-width: 200px;
         display: grid; grid-template-columns: auto auto; gap: 4px 12px; justify-content: end;
       }
       .instructions span { white-space: nowrap; }
-      
-      #player { 
-        position: fixed; top: -1000px; left: -1000px; width: 1px; height: 1px; 
-        opacity: 0; pointer-events: none; 
+     
+      #player {
+        position: fixed; top: -1000px; left: -1000px; width: 1px; height: 1px;
+        opacity: 0; pointer-events: none;
       }
-      
+     
       .viz-indicator {
         position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
         display: flex; gap: 8px; z-index: 99; pointer-events: none;
@@ -86,28 +86,28 @@
         transition: background 0.3s ease;
       }
       .viz-dot.active { background: rgba(255,255,255,0.8); }
-      
+     
       .touch-ripple {
         position: absolute; width: 50px; height: 50px; border-radius: 50%;
         background: rgba(100,200,255,0.4); pointer-events: none;
         animation: ripple 0.6s ease-out forwards; z-index: 50;
       }
-      @keyframes ripple { 
-        0% { transform: scale(0); opacity: 1; } 
-        100% { transform: scale(4); opacity: 0; } 
+      @keyframes ripple {
+        0% { transform: scale(0); opacity: 1; }
+        100% { transform: scale(4); opacity: 0; }
       }
-      
+     
       .swipe-hint {
         position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
         color: #555; font-size: 11px; opacity: 0; transition: opacity 0.5s ease; z-index: 99;
       }
       .swipe-hint.show { opacity: 1; }
-      
+     
       @media (prefers-reduced-motion: reduce) {
         * { animation: none !important; transition: none !important; }
         .touch-ripple { display: none; }
       }
-      
+     
       @media (max-width: 768px) {
         canvas { image-rendering: pixelated; }
         .city-carousel { width: 200px; }
@@ -119,7 +119,7 @@
     <div class="loading-screen" id="loadingScreen">
       <div>📻 Loading Radio Bergen...</div>
     </div>
-    
+   
     <div class="city-carousel" id="cityCarousel">
       <div class="carousel-container">
         <div class="carousel-slide active">radio.brgen.no</div>
@@ -164,9 +164,9 @@
         <div class="carousel-slide">radio.mnneapolis.com</div>
       </div>
     </div>
-    
+   
     <canvas id="canvas" aria-label="Classic warp tunnel visualizer"></canvas>
-    
+   
     <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
       <div>
         <h2 id="start-title">Tap to start</h2>
@@ -177,7 +177,7 @@
         </div>
       </div>
     </div>
-    
+   
     <div class="viz-indicator" id="vizIndicator">
       <div class="viz-dot active"></div>
       <div class="viz-dot"></div>
@@ -187,19 +187,19 @@
     <div class="ui" id="ui">Ready</div>
     <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
     <iframe id="player" src="about:blank" frameborder="0" allow="autoplay; encrypted-media"></iframe>
-    
+   
     <script>
       "use strict";
-      
+     
       // Performance optimizations
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isLowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) || 
+      const isLowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) ||
                        (navigator.deviceMemory && navigator.deviceMemory <= 2);
-      
+     
       const QUALITY_SCALE = isLowEnd ? 0.6 : isMobile ? 0.8 : 1;
       const PARTICLE_COUNT = isLowEnd ? 12 : isMobile ? 18 : 25;
       const SPIRAL_COUNT = isLowEnd ? 3 : 4;
-      
+     
       // Simple Carousel
       class SimpleCarousel {
         constructor(element) {
@@ -209,29 +209,29 @@
           this.totalSlides = this.slides.length;
           this.init();
         }
-        
+       
         init() {
           this.startAutoplay();
         }
-        
+       
         goToSlide(index) {
           this.slides[this.currentIndex].classList.remove('active');
           this.currentIndex = ((index % this.totalSlides) + this.totalSlides) % this.totalSlides;
           this.slides[this.currentIndex].classList.add('active');
         }
-        
+       
         next() { this.goToSlide(this.currentIndex + 1); }
         prev() { this.goToSlide(this.currentIndex - 1); }
-        
+       
         startAutoplay() {
           this.autoplayInterval = setInterval(() => this.next(), 2800);
         }
-        
+       
         destroy() {
           if (this.autoplayInterval) clearInterval(this.autoplayInterval);
         }
       }
-      
+     
       // Tracks
       const YOUTUBE_TRACKS = [
         { artist: "J Dilla", title: "Microphone Master", id: "9EGHwkDix78" },
@@ -253,12 +253,12 @@
         { artist: "Slum Village", title: "Worlds Full of Sadness", id: "MU3nfxsz2XA" },
         { artist: "Bob Marley", title: "Forever Loving Jah", id: "WFCh0Ycjd4Q" }
       ];
-      
+     
       const UI = (() => {
         const el = document.getElementById("ui");
         return { text: (t) => { if (el) el.textContent = t; } };
       })();
-      
+     
       // Audio Engine
       class AudioEngine {
         constructor() {
@@ -272,7 +272,7 @@
           this.beatPhase = 0;
           this.energyLevel = 0.5;
         }
-       
+      
         loadAndPlay(track) {
           if (!this.player) return;
           const { id } = track;
@@ -292,23 +292,23 @@
           };
           this.beatPhase = Math.random() * Math.PI * 2;
         }
-       
+      
         afterStart() {
           this.startMs = performance.now();
           clearTimeout(this._advanceTimer);
           this._advanceTimer = setTimeout(() => this.next(), 180000);
         }
-       
+      
         next() {
           this.trackIndex = (this.trackIndex + 1) % this.tracks.length;
           this.loadAndPlay(this.tracks[this.trackIndex]);
         }
-       
+      
         prev() {
           this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length;
           this.loadAndPlay(this.tracks[this.trackIndex]);
         }
-       
+      
         toggleMute() {
           this.muted = !this.muted;
           try {
@@ -319,36 +319,36 @@
             console.log('Could not toggle mute');
           }
         }
-       
+      
         trackLabel() {
           const t = this.tracks[this.trackIndex];
           return `${t.artist} — ${t.title}`;
         }
-       
+      
         data() {
           this.beatPhase += 0.08;
           this.energyLevel = this.energyLevel * 0.999 + Math.random() * 0.001;
-         
+        
           const bass = 0.4 + 0.4 * Math.sin(this.beatPhase * 0.8);
           const mid = 0.35 + 0.35 * Math.sin(this.beatPhase * 1.2);
           const high = 0.25 + 0.35 * Math.sin(this.beatPhase * 1.8);
           const avg = (bass + mid + high) / 3;
           const beat = Math.sin(this.beatPhase) > 0.7 ? 1 : 0;
-         
+        
           return { bass, mid, high, average: avg, beat, energy: this.energyLevel };
         }
       }
-      
+     
       const audio = new AudioEngine();
       let carousel;
-      
+     
       // Canvas
       let w = 0, h = 0, canvas, ctx, imageData, data;
       let resizeTimeout;
-      
+     
       canvas = document.getElementById("canvas");
       ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
-      
+     
       function onResize() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
@@ -362,30 +362,30 @@
           ctx.fillRect(0, 0, w, h);
           imageData = ctx.getImageData(0, 0, w, h);
           data = imageData.data;
-          
+         
           if (vizManager.initialized) vizManager.init();
         }, 100);
       }
-      
+     
       window.addEventListener("resize", onResize, { passive: true });
-      
+     
       // Pixel operations
       function clearImageData() {
         data.fill(0);
         for (let i = 3; i < data.length; i += 4) data[i] = 255;
       }
-     
+    
       function setPixel(x, y, r, g, b) {
         if (x < 0 || x >= w || y < 0 || y >= h) return;
         const i = (Math.floor(x) + Math.floor(y) * w) * 4;
         data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = 255;
       }
-     
+    
       function drawLine(x1, y1, x2, y2, r, g, b, thickness = 1) {
         const dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
         const sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
         let err = dx - dy, x = x1, y = y1;
-       
+      
         while (true) {
           if (thickness === 1) {
             setPixel(x, y, r, g, b);
@@ -399,22 +399,21 @@
               }
             }
           }
-         
+        
           if (x === x2 && y === y2) break;
           const e2 = err * 2;
           if (e2 > -dy) { err -= dy; x += sx; }
           if (e2 < dx) { err += dx; y += sy; }
         }
       }
-      
-      // Visualizers
+      // Simple multi-visualizer system
       class VisualizerManager {
         constructor() {
           this.currentViz = 0;
           this.initialized = false;
           this.visualizers = [];
         }
-       
+      
         init() {
           this.visualizers = [
             new TunnelVisualizer(),
@@ -426,29 +425,36 @@
           this.updateIndicator();
           this.initialized = true;
         }
-       
+      
         switchTo(index) {
           if (index >= 0 && index < this.visualizers.length && index !== this.currentViz) {
             this.currentViz = index;
             this.updateIndicator();
           }
         }
-       
-        next() { this.switchTo((this.currentViz + 1) % this.visualizers.length); }
-        prev() { this.switchTo((this.currentViz - 1 + this.visualizers.length) % this.visualizers.length); }
-       
+      
+        next() {
+          this.switchTo((this.currentViz + 1) % this.visualizers.length);
+        }
+      
+        prev() {
+          this.switchTo((this.currentViz - 1 + this.visualizers.length) % this.visualizers.length);
+        }
+      
         updateIndicator() {
           const dots = document.querySelectorAll('.viz-dot');
-          dots.forEach((dot, i) => dot.classList.toggle('active', i === this.currentViz));
+          dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === this.currentViz);
+          });
         }
-       
+      
         render(audioData) {
           if (this.initialized && this.visualizers[this.currentViz]) {
             this.visualizers[this.currentViz].render(audioData);
           }
         }
       }
-      
+     
       class TunnelVisualizer {
         constructor() {
           this.particles = [];
@@ -461,12 +467,12 @@
           this.baseRadius = 80;
           this.zStep = isLowEnd ? 15 : 10;
         }
-       
+      
         init() {
           this.particles = [];
           this.centers = [];
           this.floatingParticles = [];
-         
+        
           for (let z = -this.fov; z < this.fov; z += this.zStep) {
             const row = [];
             const center = { x: w / 2, y: h / 2 };
@@ -479,12 +485,12 @@
             }
             this.particles.push(row);
           }
-         
+        
           for (let i = 0; i < PARTICLE_COUNT; i++) {
             this.floatingParticles.push(new FloatingParticle());
           }
         }
-       
+      
         render(audioData) {
           const rows = this.particles.length;
           let mx = 0, my = 0;
@@ -495,13 +501,13 @@
             mx = -gamma * (w / 180);
             my = -beta * (h / 180);
           }
-          
+         
           for (let i = 0; i < rows; i++) {
             const row = this.particles[i];
             const center = this.centers[i];
             center.x = mx * ((row[0].z - this.fov) / 500) + w / 2;
             center.y = my * ((row[0].z - this.fov) / 500) + h / 2;
-            
+           
             for (let j = 0, k = row.length; j < k; j++) {
               const p = row[j];
               const scale = this.fov / (this.fov + p.z);
@@ -510,54 +516,64 @@
               p.radiusAudio = p.radius + audioData.average * 10 + (audioData.beat ? 15 : 0);
               p.z -= this.speed;
               if (p.z < -this.fov) p.z += (this.fov * 2);
-              
+             
               const depthFactor = (p.z + this.fov) / (this.fov * 2);
               const r = Math.round(20 + depthFactor * 100);
               const g = Math.round(60 + depthFactor * 140);
               const b = Math.round(120 + depthFactor * 135);
               const thickness = 1 + Math.round(audioData.energy * 2);
-             
+            
               if (j > 0) {
                 const pPrev = row[j - 1];
-                drawLine(p.x2d, p.y2d, pPrev.x2d, pPrev.y2d, r, g, b, thickness);
+                drawLine(
+                  Math.round(p.x2d), Math.round(p.y2d),
+                  Math.round(pPrev.x2d), Math.round(pPrev.y2d),
+                  r, g, b, thickness
+                );
               }
-              
+             
               const angle = p.index * ((Math.PI * 2) / this.segments) + this.time;
               p.x = Math.cos(angle) * p.radiusAudio;
               p.y = Math.sin(angle) * p.radiusAudio;
-              
+             
               if (i > 0) {
                 const pB = this.particles[i-1][j] || this.particles[i-1][0];
-                drawLine(p.x2d, p.y2d, pB.x2d, pB.y2d, r, g, b, Math.max(1, thickness - 1));
+                drawLine(
+                  Math.round(p.x2d), Math.round(p.y2d),
+                  Math.round(pB.x2d), Math.round(pB.y2d),
+                  r, g, b, Math.max(1, thickness - 1)
+                );
               }
             }
           }
-          
+         
           this.floatingParticles.forEach(particle => {
             particle.update(audioData);
             particle.render(w / 2, h / 2, audioData);
           });
-          
+         
           this.time += 0.01;
         }
       }
-      
+     
       class SimpleSpiralsVisualizer {
         constructor() {
           this.time = 0;
           this.spirals = [];
         }
+       
         init() {
-          this.spirals = [];
           for (let i = 0; i < SPIRAL_COUNT; i++) {
             this.spirals.push({
-              centerX: w / 2, centerY: h / 2,
+              centerX: w / 2 + (Math.random() - 0.5) * w * 0.3,
+              centerY: h / 2 + (Math.random() - 0.5) * h * 0.3,
               rotation: Math.random() * Math.PI * 2,
               speed: 0.02 + Math.random() * 0.03,
               arms: 3 + Math.floor(Math.random() * 4)
             });
           }
         }
+       
         render(audioData) {
           this.time += 0.02;
           let mx = 0, my = 0;
@@ -568,28 +584,32 @@
             mx = -gamma * (w / 180);
             my = -beta * (h / 180);
           }
-          
+         
           this.spirals.forEach((spiral) => {
             spiral.rotation += spiral.speed * (1 + audioData.energy);
             spiral.centerX = w / 2 + mx * 0.2;
             spiral.centerY = h / 2 + my * 0.2;
-            
+           
             const baseRadius = Math.min(w, h) * 0.2;
             const maxRadius = baseRadius * (1 + audioData.average);
-            
+           
             for (let arm = 0; arm < spiral.arms; arm++) {
               const armAngle = (arm / spiral.arms) * Math.PI * 2;
-              for (let r = 10; r < maxRadius; r += 10) {
+              for (let r = 10; r < maxRadius; r += isLowEnd ? 12 : 10) {
                 const angle = spiral.rotation + armAngle + r * 0.02;
                 const x = spiral.centerX + Math.cos(angle) * r;
                 const y = spiral.centerY + Math.sin(angle) * r;
+               
                 const intensity = (1 - r / maxRadius) * (1 + audioData.beat * 0.5);
+                const red = Math.round(100 + intensity * 100);
+                const green = Math.round(150 + intensity * 80);
+                const blue = Math.round(200 + intensity * 55);
+               
                 const size = 2 + intensity * 3;
-                const sizeInt = Math.floor(size);
-                for (let dx = -sizeInt; dx <= sizeInt; dx++) {
-                  for (let dy = -sizeInt; dy <= sizeInt; dy++) {
-                    if (dx*dx + dy*dy <= sizeInt*sizeInt) {
-                      setPixel(x + dx, y + dy, 100 + intensity * 100, 150 + intensity * 80, 200 + intensity * 55);
+                for (let dx = -size; dx <= size; dx++) {
+                  for (let dy = -size; dy <= size; dy++) {
+                    if (dx*dx + dy*dy <= size*size) {
+                      setPixel(Math.round(x + dx), Math.round(y + dy), red, green, blue);
                     }
                   }
                 }
@@ -598,7 +618,7 @@
           });
         }
       }
-      
+     
       class SimpleWavesVisualizer {
         constructor() { this.time = 0; }
         init() {}
@@ -612,51 +632,65 @@
             mx = -gamma * (w / 180);
             my = -beta * (h / 180);
           }
-          
-          const centerX = w / 2 + mx * 0.3;
-          const centerY = h / 2 + my * 0.3;
+          let centerX = w / 2 + mx * 0.3;
+          let centerY = h / 2 + my * 0.3;
           const waveCount = isLowEnd ? 5 : 7;
-          
           for (let wave = 0; wave < waveCount; wave++) {
             const wavePhase = (wave / waveCount) * Math.PI * 2;
             const radius = 50 + wave * 30 + audioData.average * 100;
+           
             const points = [];
             const segments = isLowEnd ? 24 : 36;
-            
+           
             for (let i = 0; i <= segments; i++) {
               const angle = (i / segments) * Math.PI * 2;
               const waveOffset = Math.sin(angle * 3 + this.time + wavePhase) * audioData.energy * 20;
               const r = radius + waveOffset;
+           
               const x = centerX + Math.cos(angle) * r;
               const y = centerY + Math.sin(angle) * r;
               points.push({ x, y });
             }
-            
+           
             const intensity = (wave / waveCount) + audioData.beat * 0.3;
             const red = Math.round(50 + intensity * 150);
             const green = Math.round(100 + intensity * 120);
             const blue = Math.round(200 + intensity * 55);
-            
+           
             for (let i = 0; i < points.length - 1; i++) {
               const p1 = points[i];
               const p2 = points[i + 1];
-              drawLine(p1.x, p1.y, p2.x, p2.y, red, green, blue, 1 + Math.round(audioData.energy * 2));
+           
+              drawLine(
+                Math.round(p1.x), Math.round(p1.y),
+                Math.round(p2.x), Math.round(p2.y),
+                red, green, blue, 1 + Math.round(audioData.energy * 2)
+              );
             }
           }
         }
       }
-      
+     
       class SimpleDotsVisualizer {
-        constructor() { this.dots = []; this.time = 0; }
-        init() {
+        constructor() {
           this.dots = [];
+          this.time = 0;
+        }
+       
+        init() {
           const gridSize = isLowEnd ? 60 : 45;
           for (let x = gridSize; x < w; x += gridSize) {
             for (let y = gridSize; y < h; y += gridSize) {
-              this.dots.push({ x, y, phase: Math.random() * Math.PI * 2, speed: 0.05 + Math.random() * 0.05 });
+              this.dots.push({
+                x: x,
+                y: y,
+                phase: Math.random() * Math.PI * 2,
+                speed: 0.05 + Math.random() * 0.05
+              });
             }
           }
         }
+       
         render(audioData) {
           this.time += 0.02;
           let mx = 0, my = 0;
@@ -667,25 +701,29 @@
             mx = -gamma * (w / 180);
             my = -beta * (h / 180);
           }
-          
+         
           this.dots.forEach(dot => {
             dot.phase += dot.speed * (1 + audioData.energy);
-            const distance = Math.sqrt((dot.x - w/2) ** 2 + (dot.y - h/2) ** 2);
-            const normalizedDistance = distance / (Math.sqrt(w*w + h*h) / 2);
+           
+            const distance = Math.sqrt((dot.x - w/2) * (dot.x - w/2) + (dot.y - h/2) * (dot.y - h/2));
+            const maxDistance = Math.sqrt(w*w + h*h) / 2;
+            const normalizedDistance = distance / maxDistance;
+           
             const size = (1 - normalizedDistance) * (3 + audioData.average * 8 + Math.sin(dot.phase) * 2);
             const intensity = (1 - normalizedDistance) * (0.5 + audioData.beat * 0.5 + Math.sin(dot.phase + this.time) * 0.3);
-            
+           
             if (size > 0.5 && intensity > 0.1) {
               const red = Math.round(intensity * 200);
               const green = Math.round(intensity * 150);
               const blue = Math.round(intensity * 255);
+           
               const x = dot.x + mx * 0.1;
               const y = dot.y + my * 0.1;
-              const sizeInt = Math.floor(size);
+              const sizeInt = Math.round(size);
               for (let dx = -sizeInt; dx <= sizeInt; dx++) {
                 for (let dy = -sizeInt; dy <= sizeInt; dy++) {
                   if (dx*dx + dy*dy <= sizeInt*sizeInt) {
-                    setPixel(x + dx, y + dy, red, green, blue);
+                    setPixel(Math.round(x + dx), Math.round(y + dy), red, green, blue);
                   }
                 }
               }
@@ -693,82 +731,37 @@
           });
         }
       }
-      
-      class FloatingParticle {
-        constructor() { this.reset(); }
-        reset() {
-          this.x = (Math.random() - 0.5) * w;
-          this.y = (Math.random() - 0.5) * h;
-          this.z = Math.random() * 500 - 250;
-          this.vx = (Math.random() - 0.5) * 3;
-          this.vy = (Math.random() - 0.5) * 3;
-          this.vz = (Math.random() - 0.5) * 5;
-          this.size = Math.random() * 2 + 1;
-          this.life = 1.0;
-        }
-        update(audioData) {
-          this.x += this.vx;
-          this.y += this.vy;
-          this.z += this.vz + audioData.average * 5;
-          if (this.z > 250) this.z = -250;
-          if (this.z < -250) this.z = 250;
-          this.life -= 0.005;
-          if (this.life <= 0) this.reset();
-        }
-        render(centerX, centerY, audioData) {
-          const scale = 250 / (250 + this.z);
-          const screenX = Math.floor(this.x * scale + centerX);
-          const screenY = Math.floor(this.y * scale + centerY);
-          if (screenX >= 0 && screenX < w && screenY >= 0 && screenY < h) {
-            const size = Math.floor(this.size * scale * (1 + audioData.beat * 0.5));
-            const depthFactor = (this.z + 250) / 500;
-            const r = Math.round(50 + depthFactor * 150);
-            const g = Math.round(100 + depthFactor * 120);
-            const b = Math.round(150 + depthFactor * 105);
-            for (let dx = -size; dx <= size; dx++) {
-              for (let dy = -size; dy <= size; dy++) {
-                if (dx*dx + dy*dy <= size*size) {
-                  setPixel(screenX + dx, screenY + dy, r, g, b);
-                }
-              }
-            }
-          }
-        }
-      }
-      
       const vizManager = new VisualizerManager();
-      
-      // Interaction
+      // Simple sensor handling
       let orientationActive = false, beta = 0, gamma = 0;
-      let mouseActive = false, mouseDown = false;
-      let mousePos = { x: 0, y: 0 };
-      let touchStartX = 0, touchStartY = 0, lastTapTime = 0;
-      const swipeThreshold = 70, doubleTapMs = 300;
-      
+     
       function setupSimpleSensors() {
         try {
-          if (typeof DeviceOrientationEvent !== 'undefined') {
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-              DeviceOrientationEvent.requestPermission().then(state => {
-                if (state === 'granted') {
-                  window.addEventListener("deviceorientation", (e) => {
-                    beta = e.beta || 0;
-                    gamma = e.gamma || 0;
-                    orientationActive = true;
-                  }, { passive: true });
-                }
-              }).catch(console.error);
-            } else {
-              window.addEventListener("deviceorientation", (e) => {
-                beta = e.beta || 0;
-                gamma = e.gamma || 0;
-                orientationActive = true;
-              }, { passive: true });
-            }
+          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission().then(state => {
+              if (state === 'granted') {
+                window.addEventListener("deviceorientation", (e) => {
+                  beta = e.beta || 0;
+                  gamma = e.gamma || 0;
+                  orientationActive = true;
+                }, { passive: true });
+              }
+            }).catch(console.error);
+          } else if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", (e) => {
+              beta = e.beta || 0;
+              gamma = e.gamma || 0;
+              orientationActive = true;
+            }, { passive: true });
           }
-        } catch(e) { console.error('Device orientation not supported'); }
+        } catch(e) { console.error(e); }
       }
-      
+      // Touch handling
+      let mouseActive = false, mouseDown = false;
+      let mousePos = { x: w/2, y: h/2 };
+      let touchStartX = 0, touchStartY = 0, lastTapTime = 0;
+      const swipeThreshold = 70, doubleTapMs = 300;
+      const swipeHint = document.getElementById("swipeHint");
       function createRipple(x, y) {
         const ripple = document.createElement('div');
         ripple.className = 'touch-ripple';
@@ -777,65 +770,61 @@
         document.body.appendChild(ripple);
         setTimeout(() => ripple.remove(), 600);
       }
-      
-      // Event listeners
-      canvas.addEventListener('mousedown', () => { mouseDown = true; setInversion(true); }, { passive: true });
-      canvas.addEventListener('mouseup', () => { mouseDown = false; setInversion(false); }, { passive: true });
+      // Mouse events
+      canvas.addEventListener('mousedown', () => { mouseDown = true; setInversion(true); }, false);
+      canvas.addEventListener('mouseup', () => { mouseDown = false; setInversion(false); }, false);
       canvas.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect();
-        mousePos.x = (e.clientX - rect.left) * QUALITY_SCALE;
-        mousePos.y = (e.clientY - rect.top) * QUALITY_SCALE;
+        mousePos.x = e.clientX - rect.left;
+        mousePos.y = e.clientY - rect.top;
         mouseActive = true;
-      }, { passive: true });
+      }, false);
       canvas.addEventListener('mouseleave', () => {
-        mouseActive = false; mouseDown = false; setInversion(false);
-      }, { passive: true });
-      
+        mouseActive = false;
+        mouseDown = false;
+        setInversion(false);
+      }, false);
+      // Touch events
       canvas.addEventListener("touchstart", (e) => {
         e.preventDefault();
         const t = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        const x = (t.clientX - rect.left) * QUALITY_SCALE;
-        const y = (t.clientY - rect.top) * QUALITY_SCALE;
+        const x = t.clientX - rect.left, y = t.clientY - rect.top;
         touchStartX = x; touchStartY = y;
         mousePos.x = x; mousePos.y = y;
         mouseDown = true; setInversion(true);
-        createRipple(t.clientX, t.clientY);
-        
+        createRipple(x, y);
         const now = performance.now();
         if (now - lastTapTime < doubleTapMs && audio.started) {
           audio.next(); UI.text(audio.trackLabel());
         }
         lastTapTime = now;
       }, { passive: false });
-      
       canvas.addEventListener("touchmove", (e) => {
         e.preventDefault();
         const t = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        mousePos.x = (t.clientX - rect.left) * QUALITY_SCALE;
-        mousePos.y = (t.clientY - rect.top) * QUALITY_SCALE;
+        mousePos.x = t.clientX - rect.left;
+        mousePos.y = t.clientY - rect.top;
       }, { passive: false });
-      
       canvas.addEventListener("touchend", (e) => {
         e.preventDefault();
         mouseDown = false; setInversion(false);
-        
         if (audio.started) {
           const t = e.changedTouches[0];
           const rect = canvas.getBoundingClientRect();
-          const endX = (t.clientX - rect.left) * QUALITY_SCALE;
-          const endY = (t.clientY - rect.top) * QUALITY_SCALE;
+          const endX = t.clientX - rect.left, endY = t.clientY - rect.top;
           const dx = endX - touchStartX, dy = endY - touchStartY;
          
           if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
             if (Math.abs(dx) > Math.abs(dy)) {
+              // Horizontal swipe - change tracks
               if (dx > 0) audio.prev(); else audio.next();
               UI.text(audio.trackLabel());
             } else {
+              // Vertical swipe - change visualizers
               if (dy > 0) vizManager.next(); else vizManager.prev();
               const vizNames = ['Warp Tunnel', 'Spirals', 'Waves', 'Dots'];
-              const swipeHint = document.getElementById("swipeHint");
               swipeHint.textContent = vizNames[vizManager.currentViz];
               swipeHint.classList.add('show');
               setTimeout(() => swipeHint.classList.remove('show'), 1400);
@@ -843,38 +832,31 @@
           }
         }
       }, { passive: false });
-      
       // Keyboard
       addEventListener("keydown", (e) => {
-        if (e.code === "Space") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } }
-        if (e.key?.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); }
-        if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } }
-        if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); UI.text(audio.trackLabel()); } }
-        if (e.code === "ArrowUp") { e.preventDefault(); if (audio.started) vizManager.prev(); }
-        if (e.code === "ArrowDown") { e.preventDefault(); if (audio.started) vizManager.next(); }
-      }, { passive: false });
-      
-      // App initialization
-      const overlay = document.getElementById("overlay");
-      const loadingScreen = document.getElementById("loadingScreen");
-      
-      overlay.addEventListener("click", startApp);
-      overlay.addEventListener("keydown", (e) => { 
-        if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } 
+        if (e.code === "Space") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
+        if (e.key?.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; }
+        if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
+        if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); UI.text(audio.trackLabel()); } return; }
+        if (e.code === "ArrowUp") { e.preventDefault(); if (audio.started) vizManager.prev(); return; }
+        if (e.code === "ArrowDown") { e.preventDefault(); if (audio.started) vizManager.next(); return; }
       });
-      
+      // Overlay
+      const overlay = document.getElementById("overlay");
+      overlay.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(); });
+      overlay.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } });
       function startApp() {
         if (!audio.started) {
           audio.started = true;
           audio.loadAndPlay(audio.tracks[audio.trackIndex]);
           overlay.hidden = true;
+         
+          // No citySwiper, as it's now Stimulus
         }
       }
-      
-      // Color inversion
+      // Inversion
       let colorInvertValue = 0;
       const cityCarousel = document.getElementById("cityCarousel");
-      
       function setInversion(active) {
         if (active) {
           cityCarousel.classList.add('city-inverted');
@@ -886,19 +868,13 @@
       }
      
       function softInvert(value) {
-        const len = data.length;
-        for (let j = 0; j < len; j += 4) {
+        for (let j = 0, n = data.length; j < n; j += 4) {
           data[j] = Math.abs(value - data[j]);
           data[j+1] = Math.abs(value - data[j+1]);
           data[j+2] = Math.abs(value - data[j+2]);
         }
       }
-      
-      // Render loop
-      let lastRenderTime = 0;
-      const targetFPS = isLowEnd ? 30 : 60;
-      const frameInterval = 1000 / targetFPS;
-      
+      // Main render loop (simple)
       function renderFrame(audioData) {
         if (mouseDown) {
           colorInvertValue = Math.min(255, colorInvertValue + 8);
@@ -907,46 +883,34 @@
           colorInvertValue = Math.max(0, colorInvertValue - 8);
           if (colorInvertValue > 0) softInvert(colorInvertValue);
         }
+       
         vizManager.render(audioData);
       }
-      
-      function animate(currentTime) {
-        if (currentTime - lastRenderTime >= frameInterval) {
-          clearImageData();
-          const audioData = audio.started ? audio.data() : {
-            average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0
-          };
-          renderFrame(audioData);
-          ctx.putImageData(imageData, 0, 0);
-          lastRenderTime = currentTime;
-        }
+      function animate() {
+        clearImageData();
+        const audioData = audio.started ? audio.data() : {
+          average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0
+        };
+        renderFrame(audioData);
+        ctx.putImageData(imageData, 0, 0);
         requestAnimationFrame(animate);
       }
-      
-      // Initialize
-      function initializeApp() {
-        carousel = new SimpleCarousel(document.getElementById('cityCarousel'));
-        
-        loadingScreen.classList.add('hidden');
-        setTimeout(() => {
-          loadingScreen.remove();
-          overlay.hidden = false;
-        }, 500);
-        
+      function boot() {
         onResize();
         setupSimpleSensors();
-        
-        setTimeout(() => {
-          vizManager.init();
-          UI.text("Ready");
-          requestAnimationFrame(animate);
-        }, 100);
+        vizManager.init();
+       
+        clearImageData();
+        renderFrame({ average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0 });
+        ctx.putImageData(imageData, 0, 0);
+       
+        UI.text("Ready");
+        requestAnimationFrame(animate);
       }
-      
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeApp);
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", boot);
       } else {
-        initializeApp();
+        boot();
       }
     </script>
   </body>
