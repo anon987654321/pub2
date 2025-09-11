@@ -6,7 +6,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <title>Radio Bergen</title>
   <meta name="theme-color" content="#000000" />
-  <meta name="description" content="Multi-dimensional audio visualizer. Swipe to explore different worlds. Tilt device for parallax." />
+  <meta name="description" content="Classic warp tunnel with multiple views. Swipe to explore. Tilt device for parallax." />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   <style>
     html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
@@ -130,7 +130,7 @@
     </div>
   </div>
 
-  <canvas id="canvas" aria-label="Multi-dimensional audio visualizer"></canvas>
+  <canvas id="canvas" aria-label="Classic warp tunnel visualizer"></canvas>
 
   <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
     <div>
@@ -150,7 +150,7 @@
   </div>
 
   <div class="ui" id="ui">Ready</div>
-  <div class="swipe-hint" id="swipeHint">← Swipe to explore visualizations →</div>
+  <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
   <iframe id="player" src="about:blank" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope"></iframe>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
@@ -180,7 +180,7 @@
       { artist: "Bob Marley", title: "Forever Loving Jah", id: "WFCh0Ycjd4Q" }
     ];
 
-    // Enhanced city carousel with smoother transitions
+    // City carousel
     let citySwiper;
     function initCityCarousel() {
       citySwiper = new Swiper('.city-carousel .swiper', {
@@ -202,7 +202,7 @@
       return { text: (t) => { if (el) el.textContent = t; } };
     })();
 
-    // Enhanced audio engine with better synthesis
+    // Simple audio engine (back to basics)
     class AudioEngine {
       constructor() {
         this.player = document.getElementById("player");
@@ -214,10 +214,6 @@
         this._advanceTimer = null;
         this.beatPhase = 0;
         this.energyLevel = 0.5;
-        this.spectrumHistory = [];
-        this.smoothedSpectrum = new Array(64).fill(0);
-        this.lastBeatTime = 0;
-        this.beatIntensity = 0;
       }
       
       loadAndPlay(track) {
@@ -230,7 +226,6 @@
           setTimeout(() => { if (this.muted) UI.text(this.trackLabel() + " • muted"); }, 400);
         };
         this.beatPhase = Math.random() * Math.PI * 2;
-        this.energyLevel = 0.3 + Math.random() * 0.4;
       }
       
       afterStart() {
@@ -264,73 +259,26 @@
         return `${t.artist} — ${t.title}`; 
       }
       
-      // Highly sophisticated synthetic audio data
+      // Simple synthetic audio data
       data() {
         const t = (performance.now() - this.startMs) * 0.001;
         
-        // Enhanced beat detection with intensity tracking
-        this.beatPhase += 0.095 + Math.sin(t * 0.1) * 0.01;
-        this.energyLevel = this.energyLevel * 0.9985 + Math.random() * 0.0015;
+        this.beatPhase += 0.08;
+        this.energyLevel = this.energyLevel * 0.999 + Math.random() * 0.001;
         
-        // Multi-layered frequency simulation with harmonics
-        const bassFreq = this.beatPhase * 0.7;
-        const midFreq = this.beatPhase * 1.4;
-        const highFreq = this.beatPhase * 2.1;
-        
-        const bass = 0.45 + 0.45 * Math.sin(bassFreq) + 0.15 * Math.sin(bassFreq * 0.5) + 0.1 * Math.sin(bassFreq * 2);
-        const mid = 0.38 + 0.4 * Math.sin(midFreq) + 0.2 * Math.sin(midFreq * 0.7) + 0.12 * Math.sin(midFreq * 1.5);
-        const high = 0.28 + 0.35 * Math.sin(highFreq) + 0.25 * Math.sin(highFreq * 1.2) + 0.15 * Math.sin(highFreq * 0.8);
+        const bass = 0.4 + 0.4 * Math.sin(this.beatPhase * 0.8);
+        const mid = 0.35 + 0.35 * Math.sin(this.beatPhase * 1.2);
+        const high = 0.25 + 0.35 * Math.sin(this.beatPhase * 1.8);
         const avg = (bass + mid + high) / 3;
         
-        // Enhanced beat detection with decay
-        const currentTime = performance.now();
-        const beatThreshold = 0.78;
-        let beat = Math.sin(this.beatPhase) > beatThreshold ? 1 : 0;
+        const beat = Math.sin(this.beatPhase) > 0.7 ? 1 : 0;
         
-        if (beat && currentTime - this.lastBeatTime > 300) {
-          this.lastBeatTime = currentTime;
-          this.beatIntensity = 1.0;
-          this.energyLevel = Math.min(1, this.energyLevel + 0.15);
-        }
-        
-        this.beatIntensity *= 0.92; // Decay beat intensity
-        
-        // Generate sophisticated spectrum with realistic distribution
-        const spectrum = new Array(64);
-        for (let i = 0; i < 64; i++) {
-          const freq = (i / 64) * Math.PI * 4;
-          const harmonicBase = Math.sin(t * (0.4 + i * 0.03) + this.beatPhase) * 0.35;
-          const harmonicDetail = Math.sin(t * (0.8 + i * 0.02)) * 0.25;
-          const noiseLayer = (Math.random() - 0.5) * 0.1;
-          
-          // Frequency-dependent amplitude (bass boost, high roll-off)
-          const freqWeight = Math.exp(-i * 0.04) * (1 + Math.sin(i * 0.2) * 0.3);
-          
-          spectrum[i] = Math.min(1, Math.max(0, 
-            (0.35 + harmonicBase + harmonicDetail + noiseLayer + this.energyLevel * 0.25) * freqWeight
-          ));
-          
-          // Smooth spectrum changes
-          this.smoothedSpectrum[i] = this.smoothedSpectrum[i] * 0.85 + spectrum[i] * 0.15;
-        }
-        
-        // Store spectrum history for flow effects
-        this.spectrumHistory.push(this.smoothedSpectrum.slice());
-        if (this.spectrumHistory.length > 40) this.spectrumHistory.shift();
-        
-        return { 
-          bass, mid, high, average: avg, beat, 
-          energy: this.energyLevel, 
-          beatIntensity: this.beatIntensity,
-          spectrum: this.smoothedSpectrum, 
-          spectrumHistory: this.spectrumHistory,
-          time: t
-        };
+        return { bass, mid, high, average: avg, beat, energy: this.energyLevel };
       }
     }
     const audio = new AudioEngine();
 
-    // Enhanced canvas with better performance
+    // Canvas setup (back to simple)
     let w = 0, h = 0, canvas, ctx, imageData, data;
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d", { alpha: false });
@@ -347,78 +295,60 @@
     }
     window.addEventListener("resize", onResize, false);
 
-    // Optimized pixel operations
+    // Simple pixel operations
     function clearImageData() {
-      const len = data.length;
-      for (let i = 0; i < len; i += 4) {
-        data[i] = 0; data[i+1] = 0; data[i+2] = 0; data[i+3] = 255;
+      data.fill(0);
+      for (let i = 3; i < data.length; i += 4) {
+        data[i] = 255; // alpha
       }
     }
     
-    function setPixelFast(x, y, r, g, b) {
+    function setPixel(x, y, r, g, b, a = 255) {
       if (x < 0 || x >= w || y < 0 || y >= h) return;
-      const i = (x + y * w) << 2;
-      data[i] = r; data[i+1] = g; data[i+2] = b; data[i+3] = 255;
+      const i = (x + y * w) * 4;
+      data[i] = r; data[i+1] = g; data[i+2] = b; data[i+3] = a;
     }
     
-    function setPixelBlend(x, y, r, g, b, blend = 0.3) {
-      if (x < 0 || x >= w || y < 0 || y >= h) return;
-      const i = (x + y * w) << 2;
-      const invBlend = 1 - blend;
-      data[i] = Math.min(255, data[i] * invBlend + r * blend) | 0;
-      data[i+1] = Math.min(255, data[i+1] * invBlend + g * blend) | 0;
-      data[i+2] = Math.min(255, data[i+2] * invBlend + b * blend) | 0;
-      data[i+3] = 255;
-    }
-    
-    function drawLineOptimized(x1, y1, x2, y2, r, g, b, thickness = 1) {
-      const dx = Math.abs(x2 - x1);
-      const dy = Math.abs(y2 - y1);
-      const sx = x1 < x2 ? 1 : -1;
-      const sy = y1 < y2 ? 1 : -1;
-      let err = dx - dy;
-      let x = x1 | 0, y = y1 | 0;
-      const thickSq = thickness * thickness;
+    function drawLine(x1, y1, x2, y2, r, g, b, thickness = 1) {
+      let dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
+      let sx = (x1 < x2) ? 1 : -1, sy = (y1 < y2) ? 1 : -1;
+      let err = dx - dy, lx = x1, ly = y1;
       
       while (true) {
         if (thickness === 1) {
-          setPixelFast(x, y, r, g, b);
+          setPixel(lx, ly, r, g, b);
         } else {
           for (let tx = -thickness; tx <= thickness; tx++) {
             for (let ty = -thickness; ty <= thickness; ty++) {
-              if (tx*tx + ty*ty <= thickSq) {
-                setPixelFast(x + tx, y + ty, r, g, b);
+              if (tx*tx + ty*ty <= thickness*thickness) {
+                setPixel(lx + tx, ly + ty, r, g, b);
               }
             }
           }
         }
         
-        if (x === (x2|0) && y === (y2|0)) break;
+        if (lx === x2 && ly === y2) break;
         const e2 = err << 1;
-        if (e2 > -dy) { err -= dy; x += sx; }
-        if (e2 < dx) { err += dx; y += sy; }
+        if (e2 > -dy) { err -= dy; lx += sx; }
+        if (e2 < dx) { err += dx; ly += sy; }
       }
     }
 
-    // Multi-Visualizer System with enhanced transitions
+    // Simple multi-visualizer system
     class VisualizerManager {
       constructor() {
         this.currentViz = 0;
         this.visualizers = [
           new TunnelVisualizer(),
-          new ParticleGalaxyVisualizer(), 
-          new FluidFlowVisualizer(),
-          new FractalMandalaVisualizer()
+          new SimpleSpiralsVisualizer(), 
+          new SimpleWavesVisualizer(),
+          new SimpleDotsVisualizer()
         ];
-        this.transitionAlpha = 1.0;
-        this.transitioning = false;
       }
       
       switchTo(index) {
         if (index >= 0 && index < this.visualizers.length && index !== this.currentViz) {
-          this.visualizers[this.currentViz].onExit();
           this.currentViz = index;
-          this.visualizers[this.currentViz].onEnter();
           this.updateIndicator();
         }
       }
@@ -448,26 +378,23 @@
       }
     }
 
-    // 1. Enhanced Tunnel Visualizer (Immutable Core with Polish)
+    // 1. Original Tunnel Visualizer (EXACTLY as it was - immutable)
     class TunnelVisualizer {
       constructor() {
         this.particles = [];
         this.centers = [];
         this.floatingParticles = [];
         this.time = 0;
-        this.fov = 280;
-        this.speed = 0.85;
-        this.segments = 36;
-        this.baseRadius = 85;
-        this.zStep = 7;
+        this.fov = 250;
+        this.speed = 0.8;
+        this.segments = 32;
+        this.baseRadius = 80;
+        this.zStep = 8;
       }
       
       init() {
         this.addParticles();
       }
-      
-      onEnter() {}
-      onExit() {}
       
       addParticles() {
         this.particles = [];
@@ -491,8 +418,8 @@
           this.particles.push(row);
         }
         
-        for (let i = 0; i < 45; i++) {
-          this.floatingParticles.push(new EnhancedFloatingParticle());
+        for (let i = 0; i < 30; i++) {
+          this.floatingParticles.push(new FloatingParticle());
         }
       }
       
@@ -509,502 +436,257 @@
             p.x2d = (p.x * scale) + center.x;
             p.y2d = (p.y * scale) + center.y;
 
-            // Enhanced audio responsiveness
-            const specIndex = Math.floor((j / k) * audioData.spectrum.length);
-            const specValue = audioData.spectrum[specIndex] || 0;
-            p.radiusAudio = p.radius + audioData.average * 12 + specValue * 18 + audioData.beatIntensity * 25;
+            p.radiusAudio = p.radius + audioData.average * 10 + (audioData.beat ? 15 : 0);
 
-            p.z -= this.speed * (1 + audioData.energy * 0.3);
+            p.z -= this.speed;
             if (p.z < -this.fov) p.z += (this.fov * 2);
 
-            // Enhanced depth-based coloring with spectrum influence
             const depthFactor = (p.z + this.fov) / (this.fov * 2);
-            const specInfluence = specValue * 0.6;
-            const r = Math.round((25 + depthFactor * 120 + specInfluence * 110) * (1 + audioData.beatIntensity * 0.4));
-            const g = Math.round((70 + depthFactor * 150 + specInfluence * 85) * (1 + audioData.beatIntensity * 0.3));
-            const b = Math.round((130 + depthFactor * 125 + specInfluence * 70) * (1 + audioData.beatIntensity * 0.2));
-            const thickness = 1 + Math.round(audioData.energy * 2.5 + audioData.beatIntensity * 2);
+            const r = Math.round(20 + depthFactor * 100);
+            const g = Math.round(60 + depthFactor * 140);
+            const b = Math.round(120 + depthFactor * 135);
+            const thickness = 1 + Math.round(audioData.energy * 2);
             
             if (j > 0) {
               const pPrev = row[j - 1];
-              drawLineOptimized(
-                p.x2d | 0, p.y2d | 0, 
-                pPrev.x2d | 0, pPrev.y2d | 0, 
+              drawLine(
+                Math.round(p.x2d), Math.round(p.y2d), 
+                Math.round(pPrev.x2d), Math.round(pPrev.y2d), 
                 r, g, b, thickness
               );
             }
 
-            // Enhanced ring positioning with subtle audio warping
             const angle = p.index * ((Math.PI * 2) / this.segments) + this.time;
-            const warp = Math.sin(angle * 3 + audioData.time) * audioData.energy * 5;
-            p.x = Math.cos(angle) * (p.radiusAudio + warp);
-            p.y = Math.sin(angle) * (p.radiusAudio + warp);
+            p.x = Math.cos(angle) * p.radiusAudio;
+            p.y = Math.sin(angle) * p.radiusAudio;
 
-            // Optimized radial connections
-            if (i > 0 && j % 2 === 0) { // Draw every other radial for performance
+            if (i > 0) {
               const pB = this.particles[i-1][j] || this.particles[i-1][0];
-              drawLineOptimized(
-                p.x2d | 0, p.y2d | 0, 
-                pB.x2d | 0, pB.y2d | 0, 
-                r >> 1, g >> 1, b >> 1, Math.max(1, thickness - 1)
+              drawLine(
+                Math.round(p.x2d), Math.round(p.y2d), 
+                Math.round(pB.x2d), Math.round(pB.y2d), 
+                r, g, b, Math.max(1, thickness - 1)
               );
             }
           }
         }
 
-        // Enhanced floating particles
         this.floatingParticles.forEach(particle => {
           particle.update(audioData);
           particle.render(w / 2, h / 2, audioData);
         });
 
-        this.time += 0.012 * (1 + audioData.energy * 0.2);
+        this.time += 0.01;
       }
     }
 
-    // 2. Enhanced Particle Galaxy Visualizer
-    class ParticleGalaxyVisualizer {
+    // 2. Simple Spirals (fast and clean)
+    class SimpleSpiralsVisualizer {
       constructor() {
-        this.particles = [];
         this.time = 0;
-        this.galaxyArms = 7;
-        this.coreParticles = [];
+        this.spirals = [];
       }
       
       init() {
-        // Main galaxy particles
-        for (let i = 0; i < 1200; i++) {
-          this.particles.push({
-            angle: Math.random() * Math.PI * 2,
-            radius: Math.random() * Math.min(w, h) * 0.45,
-            armIndex: Math.floor(Math.random() * this.galaxyArms),
-            speed: 0.004 + Math.random() * 0.012,
-            size: Math.random() * 4 + 1,
-            life: Math.random(),
-            baseRadius: Math.random() * Math.min(w, h) * 0.45,
-            shimmer: Math.random() * Math.PI * 2
-          });
-        }
-        
-        // Central core particles
-        for (let i = 0; i < 80; i++) {
-          this.coreParticles.push({
-            angle: Math.random() * Math.PI * 2,
-            radius: Math.random() * 60 + 10,
+        for (let i = 0; i < 5; i++) {
+          this.spirals.push({
+            centerX: w / 2 + (Math.random() - 0.5) * w * 0.3,
+            centerY: h / 2 + (Math.random() - 0.5) * h * 0.3,
+            rotation: Math.random() * Math.PI * 2,
             speed: 0.02 + Math.random() * 0.03,
-            size: Math.random() * 3 + 2,
-            intensity: Math.random()
+            arms: 3 + Math.floor(Math.random() * 4)
           });
         }
       }
       
-      onEnter() {}
-      onExit() {}
-      
       render(audioData) {
-        this.time += 0.025 * (1 + audioData.energy);
-        const centerX = w / 2;
-        const centerY = h / 2;
+        this.time += 0.02;
         
-        // Render main galaxy
-        this.particles.forEach(particle => {
-          particle.angle += particle.speed * (1 + audioData.energy * 1.8);
-          particle.shimmer += 0.1;
+        this.spirals.forEach((spiral, index) => {
+          spiral.rotation += spiral.speed * (1 + audioData.energy);
           
-          // Enhanced spiral calculation
-          const radiusModulation = Math.sin(this.time + particle.angle) * 60 * audioData.average;
-          particle.radius = particle.baseRadius + radiusModulation;
+          const baseRadius = Math.min(w, h) * 0.2;
+          const maxRadius = baseRadius * (1 + audioData.average);
           
-          const armAngle = particle.angle + (particle.armIndex * Math.PI * 2 / this.galaxyArms);
-          const spiralFactor = particle.radius * 0.012;
-          const finalAngle = armAngle + spiralFactor + audioData.beatIntensity * 0.5;
-          
-          const x = centerX + Math.cos(finalAngle) * particle.radius;
-          const y = centerY + Math.sin(finalAngle) * particle.radius;
-          
-          // Enhanced spectrum-based coloring
-          const specIndex = Math.floor((particle.armIndex / this.galaxyArms) * audioData.spectrum.length);
-          const intensity = audioData.spectrum[specIndex] || 0;
-          const shimmerMod = Math.sin(particle.shimmer) * 0.3 + 0.7;
-          
-          const r = Math.round((60 + intensity * 150 + particle.armIndex * 25) * shimmerMod);
-          const g = Math.round((90 + intensity * 130 + Math.sin(particle.armIndex) * 40) * shimmerMod);
-          const b = Math.round((160 + intensity * 95 + Math.cos(particle.armIndex) * 30) * shimmerMod);
-          
-          const size = particle.size * (1 + audioData.beatIntensity * 0.8 + intensity * 1.2);
-          
-          // Optimized particle rendering
-          const sizeInt = Math.round(size);
-          for (let dx = -sizeInt; dx <= sizeInt; dx++) {
-            for (let dy = -sizeInt; dy <= sizeInt; dy++) {
-              const dist = dx*dx + dy*dy;
-              if (dist <= sizeInt*sizeInt) {
-                const alpha = Math.max(0, 1 - Math.sqrt(dist) / sizeInt) * intensity * shimmerMod;
-                setPixelBlend(Math.round(x + dx), Math.round(y + dy), r, g, b, alpha * 0.5);
-              }
-            }
-          }
-        });
-        
-        // Render galactic core
-        this.coreParticles.forEach(particle => {
-          particle.angle += particle.speed * (1 + audioData.energy * 3);
-          
-          const x = centerX + Math.cos(particle.angle) * particle.radius * (1 + audioData.average * 0.5);
-          const y = centerY + Math.sin(particle.angle) * particle.radius * (1 + audioData.average * 0.5);
-          
-          const coreIntensity = audioData.energy * particle.intensity;
-          const r = Math.round(255 * coreIntensity);
-          const g = Math.round(220 * coreIntensity);
-          const b = Math.round(180 * coreIntensity);
-          
-          const size = particle.size * (1 + audioData.beatIntensity);
-          const sizeInt = Math.round(size);
-          
-          for (let dx = -sizeInt; dx <= sizeInt; dx++) {
-            for (let dy = -sizeInt; dy <= sizeInt; dy++) {
-              if (dx*dx + dy*dy <= sizeInt*sizeInt) {
-                setPixelFast(Math.round(x + dx), Math.round(y + dy), r, g, b);
-              }
-            }
-          }
-        });
-      }
-    }
-
-    // 3. Enhanced Fluid Flow Visualizer  
-    class FluidFlowVisualizer {
-      constructor() {
-        this.flowField = [];
-        this.flowParticles = [];
-        this.time = 0;
-        this.gridSize = 25;
-        this.noiseScale = 0.008;
-      }
-      
-      init() {
-        // Initialize optimized flow field
-        for (let x = 0; x < w; x += this.gridSize) {
-          for (let y = 0; y < h; y += this.gridSize) {
-            this.flowField.push({ x, y, vx: 0, vy: 0, intensity: 0 });
-          }
-        }
-        
-        // Initialize enhanced flow particles
-        for (let i = 0; i < 400; i++) {
-          this.flowParticles.push({
-            x: Math.random() * w,
-            y: Math.random() * h,
-            vx: 0, vy: 0,
-            life: Math.random(),
-            maxLife: 120 + Math.random() * 180,
-            trail: [],
-            hue: Math.random() * 360,
-            speed: 0.5 + Math.random() * 1.5
-          });
-        }
-      }
-      
-      onEnter() {}
-      onExit() {}
-      
-      enhancedPerlinNoise(x, y, time) {
-        const freq1 = this.noiseScale;
-        const freq2 = this.noiseScale * 2.1;
-        const freq3 = this.noiseScale * 4.3;
-        
-        const noise1 = Math.sin(x * freq1 + time * 0.6) * Math.cos(y * freq1 + time * 0.4);
-        const noise2 = Math.sin(x * freq2 + time * 0.8) * Math.cos(y * freq2 + time * 0.5) * 0.5;
-        const noise3 = Math.sin(x * freq3 + time * 1.1) * Math.cos(y * freq3 + time * 0.7) * 0.25;
-        
-        return noise1 + noise2 + noise3;
-      }
-      
-      render(audioData) {
-        this.time += 0.03 * (1 + audioData.energy);
-        
-        // Update flow field with enhanced audio influence
-        this.flowField.forEach(field => {
-          const noise = this.enhancedPerlinNoise(field.x, field.y, this.time);
-          const audioInfluence = audioData.average * 3 + audioData.beatIntensity * 2;
-          const specIndex = Math.floor(((field.x + field.y) / (w + h)) * audioData.spectrum.length);
-          const specInfluence = audioData.spectrum[specIndex] || 0;
-          
-          field.vx = Math.cos(noise * Math.PI * 3) * audioInfluence * (1 + specInfluence);
-          field.vy = Math.sin(noise * Math.PI * 3) * audioInfluence * (1 + specInfluence);
-          field.intensity = specInfluence;
-        });
-        
-        // Update and render enhanced flow particles
-        this.flowParticles.forEach(particle => {
-          // Find nearest flow field with interpolation
-          const gridX = Math.floor(particle.x / this.gridSize) * this.gridSize;
-          const gridY = Math.floor(particle.y / this.gridSize) * this.gridSize;
-          const nearestField = this.flowField.find(f => f.x === gridX && f.y === gridY);
-          
-          if (nearestField) {
-            particle.vx += nearestField.vx * 0.08 * particle.speed;
-            particle.vy += nearestField.vy * 0.08 * particle.speed;
-            particle.intensity = nearestField.intensity;
-          }
-          
-          // Apply velocity with enhanced audio modulation
-          const energyMod = 1 + audioData.energy * 1.5 + audioData.beatIntensity;
-          particle.x += particle.vx * energyMod;
-          particle.y += particle.vy * energyMod;
-          
-          // Enhanced boundary behavior
-          if (particle.x < 0) particle.x = w;
-          if (particle.x > w) particle.x = 0;
-          if (particle.y < 0) particle.y = h;
-          if (particle.y > h) particle.y = 0;
-          
-          // Velocity damping
-          particle.vx *= 0.96;
-          particle.vy *= 0.96;
-          
-          // Enhanced trail management
-          particle.trail.push({ x: particle.x, y: particle.y, life: 1.0, intensity: particle.intensity || 0 });
-          if (particle.trail.length > 20) particle.trail.shift();
-          
-          // Update trail life
-          particle.trail.forEach(point => point.life -= 0.065);
-          
-          // Render enhanced trail with color variation
-          for (let i = 0; i < particle.trail.length - 1; i++) {
-            const point1 = particle.trail[i];
-            const point2 = particle.trail[i + 1];
+          for (let arm = 0; arm < spiral.arms; arm++) {
+            const armAngle = (arm / spiral.arms) * Math.PI * 2;
             
-            if (point1.life > 0 && point2.life > 0) {
-              const intensity = point1.life * audioData.average * (1 + point1.intensity);
-              const hueShift = particle.hue + audioData.time * 50 + point1.intensity * 60;
+            for (let r = 10; r < maxRadius; r += 8) {
+              const angle = spiral.rotation + armAngle + r * 0.02;
+              const x = spiral.centerX + Math.cos(angle) * r;
+              const y = spiral.centerY + Math.sin(angle) * r;
               
-              const r = Math.round((128 + Math.cos(hueShift * Math.PI / 180) * 127) * intensity);
-              const g = Math.round((128 + Math.cos((hueShift + 120) * Math.PI / 180) * 127) * intensity);
-              const b = Math.round((128 + Math.cos((hueShift + 240) * Math.PI / 180) * 127) * intensity);
+              const intensity = (1 - r / maxRadius) * (1 + audioData.beat * 0.5);
+              const red = Math.round(100 + intensity * 100);
+              const green = Math.round(150 + intensity * 80);
+              const blue = Math.round(200 + intensity * 55);
               
-              drawLineOptimized(
-                point1.x | 0, point1.y | 0,
-                point2.x | 0, point2.y | 0,
-                r, g, b, Math.max(1, Math.round(intensity * 4))
-              );
-            }
-          }
-          
-          particle.life++;
-          if (particle.life > particle.maxLife) {
-            particle.x = Math.random() * w;
-            particle.y = Math.random() * h;
-            particle.vx = particle.vy = 0;
-            particle.life = 0;
-            particle.trail = [];
-            particle.hue = Math.random() * 360;
-          }
-        });
-      }
-    }
-
-    // 4. Enhanced Fractal Mandala Visualizer
-    class FractalMandalaVisualizer {
-      constructor() {
-        this.time = 0;
-        this.mandalaLayers = 10;
-        this.rotationSpeed = 0.008;
-        this.geometryNodes = [];
-      }
-      
-      init() {
-        // Pre-calculate sacred geometry nodes
-        for (let layer = 0; layer < this.mandalaLayers; layer++) {
-          const numPoints = 8 + layer * 6;
-          this.geometryNodes[layer] = numPoints;
-        }
-      }
-      
-      onEnter() {}
-      onExit() {}
-      
-      render(audioData) {
-        this.time += this.rotationSpeed * (1 + audioData.energy * 0.8);
-        const centerX = w / 2;
-        const centerY = h / 2;
-        const maxRadius = Math.min(w, h) * 0.42;
-        
-        // Enhanced mandala layers with better distribution
-        for (let layer = 0; layer < this.mandalaLayers; layer++) {
-          const layerRadius = (maxRadius / this.mandalaLayers) * (layer + 1);
-          const numPoints = this.geometryNodes[layer];
-          const audioMod = audioData.spectrum[layer * 6] || 0;
-          const finalRadius = layerRadius * (0.75 + audioMod * 0.45 + audioData.beatIntensity * 0.3);
-          
-          // Enhanced rotation with layer-specific speeds
-          const layerRotation = this.time * (layer % 2 === 0 ? 1 : -0.7) * (1 + audioMod * 0.5);
-          
-          // Draw connecting polygons
-          const points = [];
-          for (let i = 0; i < numPoints; i++) {
-            const angle = (i / numPoints) * Math.PI * 2 + layerRotation;
-            const radiusVar = finalRadius + Math.sin(angle * 5 + this.time * 2) * audioData.energy * 15;
-            
-            const x = centerX + Math.cos(angle) * radiusVar;
-            const y = centerY + Math.sin(angle) * radiusVar;
-            points.push({ x, y, angle });
-          }
-          
-          // Enhanced layer-based coloring with spectrum
-          const hue = (layer / this.mandalaLayers) * 300 + audioData.time * 20;
-          const saturation = 0.6 + audioMod * 0.4;
-          const intensity = 0.7 + audioMod * 0.3 + audioData.beatIntensity * 0.4;
-          
-          const r = Math.round((128 + Math.cos(hue * Math.PI / 180) * 127) * intensity);
-          const g = Math.round((128 + Math.cos((hue + 120) * Math.PI / 180) * 127) * intensity);
-          const b = Math.round((128 + Math.cos((hue + 240) * Math.PI / 180) * 127) * intensity);
-          
-          const thickness = 1 + Math.round(audioMod * 4 + audioData.beatIntensity * 3);
-          
-          // Draw polygon edges
-          for (let i = 0; i < points.length; i++) {
-            const point1 = points[i];
-            const point2 = points[(i + 1) % points.length];
-            
-            drawLineOptimized(
-              point1.x | 0, point1.y | 0,
-              point2.x | 0, point2.y | 0,
-              r, g, b, thickness
-            );
-          }
-          
-          // Draw radial connections with golden ratio spacing
-          if (layer > 0 && layer % 2 === 0) {
-            const innerLayer = Math.floor(layer * 0.618); // Golden ratio
-            if (innerLayer < this.mandalaLayers) {
-              const innerRadius = (maxRadius / this.mandalaLayers) * (innerLayer + 1) * 0.8;
-              
-              for (let i = 0; i < numPoints; i += 2) { // Every other point for performance
-                const point = points[i];
-                const innerAngle = point.angle;
-                const innerX = centerX + Math.cos(innerAngle) * innerRadius;
-                const innerY = centerY + Math.sin(innerAngle) * innerRadius;
-                
-                drawLineOptimized(
-                  point.x | 0, point.y | 0,
-                  innerX | 0, innerY | 0,
-                  r >> 1, g >> 1, b >> 1, Math.max(1, thickness - 1)
-                );
-              }
-            }
-          }
-          
-          // Enhanced sacred geometry nodes
-          if (audioData.beatIntensity > 0.3) {
-            points.forEach((point, i) => {
-              if (i % 3 === 0) { // Every third point
-                const nodeSize = 2 + audioMod * 6 + audioData.beatIntensity * 4;
-                const nodeSizeInt = Math.round(nodeSize);
-                
-                for (let dx = -nodeSizeInt; dx <= nodeSizeInt; dx++) {
-                  for (let dy = -nodeSizeInt; dy <= nodeSizeInt; dy++) {
-                    if (dx*dx + dy*dy <= nodeSizeInt*nodeSizeInt) {
-                      setPixelFast(Math.round(point.x + dx), Math.round(point.y + dy), r, g, b);
-                    }
+              const size = 2 + intensity * 3;
+              for (let dx = -size; dx <= size; dx++) {
+                for (let dy = -size; dy <= size; dy++) {
+                  if (dx*dx + dy*dy <= size*size) {
+                    setPixel(Math.round(x + dx), Math.round(y + dy), red, green, blue);
                   }
                 }
               }
-            });
-          }
-        }
-        
-        // Enhanced central mandala core with pulsing
-        const coreRadius = 25 + audioData.average * 40 + audioData.beatIntensity * 20;
-        const corePoints = 16;
-        const pulseIntensity = 1 + Math.sin(this.time * 8) * 0.3 * audioData.energy;
-        
-        for (let i = 0; i < corePoints; i++) {
-          const angle = (i / corePoints) * Math.PI * 2 + this.time * 4;
-          const radius = coreRadius * pulseIntensity;
-          const x = centerX + Math.cos(angle) * radius;
-          const y = centerY + Math.sin(angle) * radius;
-          
-          const coreIntensity = audioData.energy * (0.8 + audioData.beatIntensity);
-          const r = Math.round(255 * coreIntensity);
-          const g = Math.round(220 * coreIntensity);
-          const b = Math.round(160 * coreIntensity);
-          
-          const nodeSize = 3 + audioData.beatIntensity * 5;
-          const nodeSizeInt = Math.round(nodeSize);
-          
-          for (let dx = -nodeSizeInt; dx <= nodeSizeInt; dx++) {
-            for (let dy = -nodeSizeInt; dy <= nodeSizeInt; dy++) {
-              if (dx*dx + dy*dy <= nodeSizeInt*nodeSizeInt) {
-                setPixelFast(Math.round(x + dx), Math.round(y + dy), r, g, b);
-              }
             }
+          }
+        });
+      }
+    }
+
+    // 3. Simple Waves (fast and clean)
+    class SimpleWavesVisualizer {
+      constructor() {
+        this.time = 0;
+      }
+      
+      init() {}
+      
+      render(audioData) {
+        this.time += 0.03;
+        
+        const centerX = w / 2;
+        const centerY = h / 2;
+        const waveCount = 8;
+        
+        for (let wave = 0; wave < waveCount; wave++) {
+          const wavePhase = (wave / waveCount) * Math.PI * 2;
+          const radius = 50 + wave * 30 + audioData.average * 100;
+          
+          const points = [];
+          const segments = 64;
+          
+          for (let i = 0; i <= segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            const waveOffset = Math.sin(angle * 3 + this.time + wavePhase) * audioData.energy * 20;
+            const r = radius + waveOffset;
+            
+            const x = centerX + Math.cos(angle) * r;
+            const y = centerY + Math.sin(angle) * r;
+            points.push({ x, y });
+          }
+          
+          const intensity = (wave / waveCount) + audioData.beat * 0.3;
+          const red = Math.round(50 + intensity * 150);
+          const green = Math.round(100 + intensity * 120);
+          const blue = Math.round(200 + intensity * 55);
+          
+          for (let i = 0; i < points.length - 1; i++) {
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            
+            drawLine(
+              Math.round(p1.x), Math.round(p1.y),
+              Math.round(p2.x), Math.round(p2.y),
+              red, green, blue, 1 + Math.round(audioData.energy * 2)
+            );
           }
         }
       }
     }
 
-    // Initialize enhanced visualizer system
+    // 4. Simple Dots (fast and clean)
+    class SimpleDotsVisualizer {
+      constructor() {
+        this.dots = [];
+        this.time = 0;
+      }
+      
+      init() {
+        const gridSize = 40;
+        for (let x = gridSize; x < w; x += gridSize) {
+          for (let y = gridSize; y < h; y += gridSize) {
+            this.dots.push({
+              x: x,
+              y: y,
+              phase: Math.random() * Math.PI * 2,
+              speed: 0.05 + Math.random() * 0.05
+            });
+          }
+        }
+      }
+      
+      render(audioData) {
+        this.time += 0.02;
+        
+        this.dots.forEach(dot => {
+          dot.phase += dot.speed * (1 + audioData.energy);
+          
+          const distance = Math.sqrt((dot.x - w/2) * (dot.x - w/2) + (dot.y - h/2) * (dot.y - h/2));
+          const maxDistance = Math.sqrt(w*w + h*h) / 2;
+          const normalizedDistance = distance / maxDistance;
+          
+          const size = (1 - normalizedDistance) * (3 + audioData.average * 8 + Math.sin(dot.phase) * 2);
+          const intensity = (1 - normalizedDistance) * (0.5 + audioData.beat * 0.5 + Math.sin(dot.phase + this.time) * 0.3);
+          
+          if (size > 0.5 && intensity > 0.1) {
+            const red = Math.round(intensity * 200);
+            const green = Math.round(intensity * 150);
+            const blue = Math.round(intensity * 255);
+            
+            const sizeInt = Math.round(size);
+            for (let dx = -sizeInt; dx <= sizeInt; dx++) {
+              for (let dy = -sizeInt; dy <= sizeInt; dy++) {
+                if (dx*dx + dy*dy <= sizeInt*sizeInt) {
+                  setPixel(Math.round(dot.x + dx), Math.round(dot.y + dy), red, green, blue);
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
     const vizManager = new VisualizerManager();
 
-    // Enhanced floating particle for tunnel
-    class EnhancedFloatingParticle {
+    // Simple floating particle (original)
+    class FloatingParticle {
       constructor() {
         this.reset();
       }
       
       reset() {
-        this.x = (Math.random() - 0.5) * w * 1.5;
-        this.y = (Math.random() - 0.5) * h * 1.5;
-        this.z = Math.random() * 560 - 280;
-        this.vx = (Math.random() - 0.5) * 4;
-        this.vy = (Math.random() - 0.5) * 4;
-        this.vz = (Math.random() - 0.5) * 6;
-        this.size = Math.random() * 3 + 1;
+        this.x = (Math.random() - 0.5) * w;
+        this.y = (Math.random() - 0.5) * h;
+        this.z = Math.random() * 500 - 250;
+        this.vx = (Math.random() - 0.5) * 3;
+        this.vy = (Math.random() - 0.5) * 3;
+        this.vz = (Math.random() - 0.5) * 5;
+        this.size = Math.random() * 2 + 1;
         this.life = 1.0;
-        this.shimmer = Math.random() * Math.PI * 2;
-        this.hue = Math.random() * 60 + 180; // Blue-cyan range
       }
       
       update(audioData) {
-        this.shimmer += 0.08;
-        const energyMod = 1 + audioData.energy * 1.2;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.z += this.vz + audioData.average * 5;
         
-        this.x += this.vx * energyMod;
-        this.y += this.vy * energyMod;
-        this.z += this.vz * energyMod + audioData.average * 8;
+        if (this.z > 250) this.z = -250;
+        if (this.z < -250) this.z = 250;
         
-        if (this.z > 280) this.z = -280;
-        if (this.z < -280) this.z = 280;
-        
-        this.life -= 0.004;
+        this.life -= 0.005;
         if (this.life <= 0) this.reset();
       }
       
       render(centerX, centerY, audioData) {
-        const scale = 280 / (280 + this.z);
-        const screenX = this.x * scale + centerX;
-        const screenY = this.y * scale + centerY;
+        const scale = 250 / (250 + this.z);
+        const screenX = Math.round(this.x * scale + centerX);
+        const screenY = Math.round(this.y * scale + centerY);
         
-        if (screenX >= -10 && screenX < w + 10 && screenY >= -10 && screenY < h + 10) {
+        if (screenX >= 0 && screenX < w && screenY >= 0 && screenY < h) {
           const intensity = this.life * scale;
-          const shimmerMod = Math.sin(this.shimmer) * 0.4 + 0.6;
-          const size = this.size * scale * (1 + audioData.beatIntensity * 0.7) * shimmerMod;
+          const size = Math.round(this.size * scale * (1 + audioData.beat * 0.5));
           
-          const depthFactor = (this.z + 280) / 560;
-          const hueShift = this.hue + depthFactor * 60;
+          const depthFactor = (this.z + 250) / 500;
+          const r = Math.round(50 + depthFactor * 150);
+          const g = Math.round(100 + depthFactor * 120);
+          const b = Math.round(150 + depthFactor * 105);
           
-          const r = Math.round((60 + depthFactor * 160) * intensity * shimmerMod);
-          const g = Math.round((110 + depthFactor * 130) * intensity * shimmerMod);
-          const b = Math.round((170 + depthFactor * 85) * intensity * shimmerMod);
-          
-          const sizeInt = Math.round(size);
-          for (let dx = -sizeInt; dx <= sizeInt; dx++) {
-            for (let dy = -sizeInt; dy <= sizeInt; dy++) {
-              const dist = dx*dx + dy*dy;
-              if (dist <= sizeInt*sizeInt) {
-                const alpha = Math.max(0, 1 - Math.sqrt(dist) / sizeInt);
-                setPixelBlend(Math.round(screenX + dx), Math.round(screenY + dy), r, g, b, alpha * 0.6);
+          for (let dx = -size; dx <= size; dx++) {
+            for (let dy = -size; dy <= size; dy++) {
+              if (dx*dx + dy*dy <= size*size) {
+                setPixel(screenX + dx, screenY + dy, r, g, b);
               }
             }
           }
@@ -1012,10 +694,10 @@
       }
     }
 
-    // Enhanced sensor handling
+    // Simple sensor handling
     let orientationActive = false, beta = 0, gamma = 0;
     
-    function setupSensors() {
+    function setupSimpleSensors() {
       try {
         if (window.DeviceOrientationEvent) {
           window.addEventListener("deviceorientation", (e) => {
@@ -1024,44 +706,41 @@
             orientationActive = true;
           }, { passive: true });
         }
-      } catch(e) {
-        console.info('Device orientation not available');
-      }
+      } catch(e) {}
     }
 
-    // Enhanced touch and gesture handling
+    // Touch handling
     let mouseActive = false, mouseDown = false;
     let mousePos = { x: w/2, y: h/2 };
     let touchStartX = 0, touchStartY = 0, lastTapTime = 0;
     const swipeThreshold = 70, doubleTapMs = 300;
     const swipeHint = document.getElementById("swipeHint");
 
-    function createEnhancedRipple(x, y) {
+    function createRipple(x, y) {
       const ripple = document.createElement('div');
       ripple.className = 'touch-ripple';
       ripple.style.left = (x - 25) + 'px';
       ripple.style.top = (y - 25) + 'px';
-      ripple.style.background = `rgba(${100 + Math.random()*100}, ${150 + Math.random()*100}, 255, 0.5)`;
       document.body.appendChild(ripple);
       setTimeout(() => ripple.remove(), 600);
     }
 
-    // Optimized mouse events
-    canvas.addEventListener('mousedown', () => { mouseDown = true; setInversion(true); }, { passive: true });
-    canvas.addEventListener('mouseup', () => { mouseDown = false; setInversion(false); }, { passive: true });
+    // Mouse events
+    canvas.addEventListener('mousedown', () => { mouseDown = true; setInversion(true); }, false);
+    canvas.addEventListener('mouseup', () => { mouseDown = false; setInversion(false); }, false);
     canvas.addEventListener('mousemove', (e) => { 
       const rect = canvas.getBoundingClientRect();
       mousePos.x = e.clientX - rect.left; 
       mousePos.y = e.clientY - rect.top; 
       mouseActive = true;
-    }, { passive: true });
+    }, false);
     canvas.addEventListener('mouseleave', () => { 
       mouseActive = false; 
       mouseDown = false; 
       setInversion(false); 
-    }, { passive: true });
+    }, false);
 
-    // Enhanced touch events
+    // Touch events
     canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       const t = e.touches[0];
@@ -1070,7 +749,7 @@
       touchStartX = x; touchStartY = y;
       mousePos.x = x; mousePos.y = y;
       mouseDown = true; setInversion(true);
-      createEnhancedRipple(x, y);
+      createRipple(x, y);
 
       const now = performance.now();
       if (now - lastTapTime < doubleTapMs && audio.started) {
@@ -1104,16 +783,16 @@
           } else {
             // Vertical swipe - change visualizers
             if (dy > 0) vizManager.next(); else vizManager.prev();
-            const vizNames = ['Warp Tunnel', 'Particle Galaxy', 'Fluid Flow', 'Fractal Mandala'];
+            const vizNames = ['Warp Tunnel', 'Spirals', 'Waves', 'Dots'];
             swipeHint.textContent = vizNames[vizManager.currentViz];
             swipeHint.classList.add('show');
-            setTimeout(() => swipeHint.classList.remove('show'), 1600);
+            setTimeout(() => swipeHint.classList.remove('show'), 1400);
           }
         }
       }
     }, { passive: false });
 
-    // Enhanced keyboard controls
+    // Keyboard
     addEventListener("keydown", (e) => {
       if (e.code === "Space") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
       if (e.key?.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; }
@@ -1121,9 +800,9 @@
       if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); UI.text(audio.trackLabel()); } return; }
       if (e.code === "ArrowUp") { e.preventDefault(); if (audio.started) vizManager.prev(); return; }
       if (e.code === "ArrowDown") { e.preventDefault(); if (audio.started) vizManager.next(); return; }
-    }, { passive: false });
+    });
 
-    // Overlay with enhanced startup
+    // Overlay
     const overlay = document.getElementById("overlay");
     overlay.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(); });
     overlay.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } });
@@ -1135,14 +814,11 @@
         UI.text(audio.trackLabel());
         overlay.hidden = true;
         
-        // Start city carousel with delay for smoothness
-        setTimeout(() => {
-          if (citySwiper) citySwiper.autoplay.start();
-        }, 500);
+        if (citySwiper) citySwiper.autoplay.start();
       }
     }
 
-    // Enhanced inversion system
+    // Inversion
     let colorInvertValue = 0;
     const cityCarousel = document.getElementById("cityCarousel");
     function setInversion(active) {
@@ -1156,34 +832,30 @@
     }
     
     function softInvert(value) {
-      const len = data.length;
-      for (let j = 0; j < len; j += 4) {
+      for (let j = 0, n = data.length; j < n; j += 4) {
         data[j] = Math.abs(value - data[j]);
         data[j+1] = Math.abs(value - data[j+1]);
         data[j+2] = Math.abs(value - data[j+2]);
       }
     }
 
-    // Optimized main render loop
+    // Main render loop (simple)
     function renderFrame(audioData) {
-      // Enhanced inversion effect
       if (mouseDown) {
-        colorInvertValue = Math.min(255, colorInvertValue + 12);
+        colorInvertValue = Math.min(255, colorInvertValue + 8);
         softInvert(colorInvertValue);
       } else {
-        colorInvertValue = Math.max(0, colorInvertValue - 12);
+        colorInvertValue = Math.max(0, colorInvertValue - 8);
         if (colorInvertValue > 0) softInvert(colorInvertValue);
       }
       
-      // Render current visualizer
       vizManager.render(audioData);
     }
 
     function animate() {
       clearImageData();
       const audioData = audio.started ? audio.data() : { 
-        average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0,
-        beatIntensity: 0, spectrum: new Array(64).fill(0), spectrumHistory: [], time: 0
+        average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0
       };
       renderFrame(audioData);
       ctx.putImageData(imageData, 0, 0);
@@ -1192,20 +864,18 @@
 
     function boot() {
       onResize();
-      setupSensors();
+      setupSimpleSensors();
       initCityCarousel();
       vizManager.init();
       
-      // Initial render
       clearImageData(); 
-      renderFrame({ average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0, beatIntensity: 0, spectrum: new Array(64).fill(0), spectrumHistory: [], time: 0 }); 
+      renderFrame({ average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0 }); 
       ctx.putImageData(imageData, 0, 0);
       
       UI.text("Ready");
       requestAnimationFrame(animate);
     }
 
-    // Start when ready
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", boot);
     } else {
