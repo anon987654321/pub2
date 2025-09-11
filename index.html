@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en" manifest="data:application/manifest+json;base64,eyJuYW1lIjoiV2FycCBUdW5uZWwgVmlzdWFsaXplciIsInNob3J0X25hbWUiOiJXVE0iLCJkZXNjcmlwdGlvbiI6Ik1pbmltYWwgYXVkaW8tcmVhY3RpdmUgd2FycCB0dW5uZWwgdmlzdWFsaXplciIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3BuZzt3aWR0aD0xOTI7aGVpZ2h0PTE5Mjt0eXBlPWltYWdlL3BuZyIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmcifV19">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warp Tunnel Visualizer</title>
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Enhanced audio-reactive warp tunnel with chromatic effects. Space next track. M mute/unmute. Mobile: tilt for parallax.">
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #000; touch-action: none; }
+    h1.site { position: fixed; top: 12px; left: 12px; margin: 0; color: #fff; letter-spacing: 0.02em; pointer-events: none; user-select: none; font-weight: 700; font-size: clamp(18px, 2.4vw, 26px); text-shadow: 0 0 10px rgba(100,200,255,0.5); }
+    .ui { position: fixed; right: 12px; bottom: 10px; color: #7a90a0; font-size: 12px; opacity: 0.95; white-space: nowrap; pointer-events: none; user-select: none; text-align: right; max-width: min(72vw, 800px); overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 5px rgba(100,200,255,0.3); }
+    .overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.9); color: #9aa; cursor: pointer; user-select: none; }
+    .overlay[hidden] { display: none; }
+    #player-container { position: absolute; top: -1000px; left: -1000px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <h1 class="site">radio.brgen.no</h1>
+  <canvas id="canvas" aria-label="Enhanced audio-reactive warp tunnel visualizer"></canvas>
+  <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
+    <h2 id="start-title" style="position:absolute;left:-9999px;">Start Visualization</h2>
+    <p>Click / tap to start · Space next track · M mute/unmute · Mobile: tilt for parallax</p>
+  </div>
+  <div class="ui" id="ui">Ready</div>
+  <div id="player-container"></div>
+  <script>
+    "use strict";
+    // Dynamic color system
+    const COLOR_A = { h: 210, s: 40, l: 16 };
+    const COLOR_B = { h: 190, s: 50, l: 38 };
+    const COLOR_C = { h: 180, s: 30, l: 28 };
+   
+    // Performance detection
+    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    const SEGMENTS = isMobile ? 32 : 64;
+    const PARTICLE_COUNT = isMobile ? 30 : 80;
+   
+    const GRAD = {
+      phase: 0,
+      speedBase: 0.08,
+      mouseDelta: 0,
+      colorShift: 0,
+      update(dt, audioAvg, mouseDx, mouseDy) {
+        this.mouseDelta = Math.hypot(mouseDx || 0, mouseDy || 0) * 0.01;
+        this.phase += dt * (this.speedBase + audioAvg * 0.12 + this.mouseDelta * 0.2);
+       
+        // Dynamic color shifting based on audio
+        this.colorShift = audioAvg * 30;
+        COLOR_A.h = (210 + this.colorShift) % 360;
+        COLOR_B.h = (190 + this.colorShift * 0.7) % 360;
+        COLOR_C.h = (180 + this.colorShift * 0.5) % 360;
+        COLOR_B.s = Math.min(80, 50 + audioAvg * 30);
+      },
+      factor(depth, audioAvg) {
+        let f = 1 - depth;
+        f += 0.06 * Math.sin(this.phase + depth * 1.2);
+        f += 0.05 * (audioAvg || 0);
+        f += 0.03 * this.mouseDelta;
+        return Math.max(0, Math.min(1, f));
+      }
+    };
+   
+    function hslToRgb(h, s, l) {
+      h = ((h % 360) + 360) % 360;
+      s = Math.max(0, Math.min(100, s)) / 100;
+      l = Math.max(0, Math.min(100, l)) / 100;
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const hp = h / 60;
+      const x = c * (1 - Math.abs((hp % 2) - 1));
+      let r1=0,g1=0,b1=0;
+      if (0<=hp && hp<1){ r1=c; g1=x; b1=0; } else if (1<=hp && hp<2){ r1=x; g1=c; b1=0; } else if (2<=hp && hp<3){ r1=0; g1=c; b1=x; }
+      else if (3<=hp && hp<4){ r1=0; g1=x; b1=c; } else if (4<=hp && hp<5){ r1=x; g1=0; b1=c; } else if (5<=hp && hp<6){ r1=c; g1=0; b1=x; }
+      const m = l - c/2;
+      return [Math.round((r1 + m) * 255) | 0, Math.round((g1 + m) * 255) | 0, Math.round((b1 + m) * 255) | 0];
+    }
+   
+    function colorFor(depth, audioAvg) {
+      const f = GRAD.factor(depth, audioAvg);
+      let h, s, lBase;
+      if (f < 0.5) {
+        const t = f * 2;
+        h = COLOR_A.h + (COLOR_B.h - COLOR_A.h) * t;
+        s = COLOR_A.s + (COLOR_B.s - COLOR_A.s) * t;
+        lBase = COLOR_A.l + (COLOR_B.l - COLOR_A.l) * t;
+      } else {
+        const t = (f - 0.5) * 2;
+        h = COLOR_B.h + (COLOR_C.h - COLOR_B.h) * t;
+        s = COLOR_B.s + (COLOR_C.s - COLOR_B.s) * t;
+        lBase = COLOR_B.l + (COLOR_C.l - COLOR_B.l) * t;
+      }
+      const l = lBase + (audioAvg || 0) * 5;
+      return hslToRgb(h, s, l);
+    }
+   
+    // Particle system
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.z = -FOV + Math.random() * FOV * 2;
+        this.angle = Math.random() * TAU;
+        this.speed = 1 + Math.random() * 2;
+        this.radius = BASE_RADIUS * (0.7 + Math.random() * 0.6);
+        this.brightness = 0.3 + Math.random() * 0.7;
+      }
+      update(dt, audioAvg) {
+        this.z += this.speed * (1 + audioAvg * 2) * 60 * dt;
+        if (this.z > FOV) this.reset();
+        this.angle += dt * 0.5;
+      }
+      draw(ctx, w, h, audioAvg) {
+        const scale = FOV / (FOV + this.z);
+        const x = Math.cos(this.angle) * this.radius * scale + w/2;
+        const y = Math.sin(this.angle) * this.radius * scale + h/2;
+        const size = Math.max(1, 3 * scale * this.brightness);
+        const alpha = Math.min(255, 255 * scale * this.brightness * (1 + audioAvg));
+       
+        // Draw particle with glow
+        const [r, g, b] = colorFor(1 - (this.z + FOV) / (FOV * 2), audioAvg);
+        setPixel(x|0, y|0, r, g, b, alpha);
+        if (size > 1) {
+          setPixel((x+1)|0, y|0, r*0.5, g*0.5, b*0.5, alpha*0.5);
+          setPixel((x-1)|0, y|0, r*0.5, g*0.5, b*0.5, alpha*0.5);
+          setPixel(x|0, (y+1)|0, r*0.5, g*0.5, b*0.5, alpha*0.5);
+          setPixel(x|0, (y-1)|0, r*0.5, g*0.5, b*0.5, alpha*0.5);
+        }
+      }
+    }
+   
+    const particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push(new Particle());
+    }
+   
+    const UI = (() => {
+      const el = document.getElementById("ui");
+      return { text: (t) => { if (el) el.textContent = t; } };
+    })();
+   
+    let started = false, muted = true, trackIndex = 0;
+    let startMs = 0;
+    let ready = false;
+    let playerContainer = document.getElementById('player-container');
+   
+    window.addEventListener('message', (event) => {
+      if (event.source !== playerContainer.firstChild?.contentWindow) return;
+      const data = event.data;
+      if (typeof data === 'string') try { data = JSON.parse(data); } catch {}
+      if (data.event === 'onReady') {
+        ready = true;
+        event.source.postMessage(JSON.stringify({event: 'command', func: muted ? 'mute' : 'unMute'}), '*');
+        event.source.postMessage(JSON.stringify({event: 'command', func: 'playVideo'}), '*');
+      } else if (data.event === 'onStateChange') {
+        if (data.info === 0) nextTrack();
+      }
+    });
+   
+    function createPlayerIframe(id) {
+      playerContainer.innerHTML = '';
+      const iframe = document.createElement('iframe');
+      iframe.allow = 'autoplay; encrypted-media; fullscreen';
+      iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&enablejsapi=1&mute=${muted ? 1 : 0}`;
+      iframe.frameBorder = '0';
+      playerContainer.appendChild(iframe);
+    }
+   
+    function startApp() {
+      if (!started) {
+        started = true;
+        createPlayerIframe(YOUTUBE_TRACKS[trackIndex].id);
+        overlay.hidden = true;
+        startMs = performance.now();
+        UI.text(trackLabel() + (muted ? ' • muted (press M)' : ''));
+      }
+    }
+   
+    function nextTrack() {
+      trackIndex = (trackIndex + 1) % YOUTUBE_TRACKS.length;
+      createPlayerIframe(YOUTUBE_TRACKS[trackIndex].id);
+      UI.text(trackLabel() + (muted ? ' • muted (press M)' : ''));
+    }
+   
+    function toggleMute() {
+      muted = !muted;
+      if (ready) {
+        playerContainer.firstChild.contentWindow.postMessage(JSON.stringify({event: 'command', func: muted ? 'mute' : 'unMute'}), '*');
+      } else {
+        createPlayerIframe(YOUTUBE_TRACKS[trackIndex].id);
+      }
+      UI.text(trackLabel() + (muted ? ' • muted (press M)' : ''));
+    }
+   
+    function trackLabel() { const t = YOUTUBE_TRACKS[trackIndex]; return `${t.artist} — ${t.title}`; }
+   
+    // Enhanced synthetic audio with beat detection
+    function getAudioData() {
+      const t = (performance.now() - startMs) * 0.001;
+      const baseWave = 0.4 + 0.3 * Math.sin(t * 0.5);
+      const beat = Math.max(0, Math.sin(t * 4) * 0.5) * (Math.sin(t * 8) > 0 ? 1 : 0);
+      const avg = baseWave + beat * 0.3;
+      return { average: Math.min(1, avg), beat: beat > 0.3 };
+    }
+   
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d", { alpha: false });
+    let w = 0, h = 0, imageData = null, data = null;
+   
+    function resize() {
+      w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+      h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+      if (w <= 0 || h <= 0) return;
+      canvas.width = w;
+      canvas.height = h;
+      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, w, h);
+      imageData = ctx.getImageData(0, 0, w, h);
+      data = imageData.data;
+    }
+   
+    addEventListener("resize", resize);
+   
+    // Adaptive fade based on performance
+    let fps = 60, lastFpsTime = Date.now();
+    function fadeImageData() {
+      const now = Date.now();
+      fps = 1000 / (now - lastFpsTime);
+      lastFpsTime = now;
+     
+      const fade = fps < 30 ? 0.9 : (fps > 50 ? 0.82 : 0.85);
+     
+      for (let i = 0, n = data.length; i < n; i += 4) {
+        data[i] *= fade; data[i+1] *= fade; data[i+2] *= fade; data[i+3] = 255;
+      }
+    }
+   
+    function setPixel(x, y, r, g, b, a) {
+      if (x >= 0 && x < w && y >= 0 && y < h) {
+        const i = (x + y * w) * 4;
+        data[i] = Math.min(255, data[i] + r);
+        data[i+1] = Math.min(255, data[i+1] + g);
+        data[i+2] = Math.min(255, data[i+2] + b);
+        data[i+3] = 255;
+      }
+    }
+   
+    // Enhanced line drawing with chromatic aberration
+    function drawLineChromatic(x1, y1, x2, y2, r, g, b, a, audioAvg, isGlow = false) {
+      const chromaticOffset = audioAvg * 2;
+     
+      if (!isGlow) {
+        // Main chromatic aberration effect
+        drawLine(x1 - chromaticOffset, y1, x2 - chromaticOffset, y2, r, 0, 0, a);
+        drawLine(x1, y1, x2, y2, 0, g, 0, a);
+        drawLine(x1 + chromaticOffset, y1, x2 + chromaticOffset, y2, 0, 0, b, a);
+      }
+     
+      // Glow effect
+      const glowIntensity = audioAvg * 0.5;
+      for (let i = 1; i <= 2; i++) {
+        const alpha = Math.floor(a * glowIntensity / (i * 2));
+        if (alpha > 0) {
+          const ox = (Math.random() - 0.5) * i;
+          const oy = (Math.random() - 0.5) * i;
+          drawLine(x1 + ox, y1 + oy, x2 + ox, y2 + oy, r * 0.3, g * 0.3, b * 0.3, alpha);
+        }
+      }
+    }
+   
+    function drawLine(x1, y1, x2, y2, r, g, b, a) {
+      x1 = Math.max(0, Math.min(w-1, x1 | 0)); y1 = Math.max(0, Math.min(h-1, y1 | 0));
+      x2 = Math.max(0, Math.min(w-1, x2 | 0)); y2 = Math.max(0, Math.min(h-1, y2 | 0));
+      let dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
+      let sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
+      let err = dx - dy, x = x1, y = y1;
+      for (;;) {
+        if (x >= 0 && x < w && y >= 0 && y < h) {
+          const i = (x + y * w) * 4;
+          // Additive blending for glow effect
+          data[i] = Math.min(255, data[i] + r);
+          data[i+1] = Math.min(255, data[i+1] + g);
+          data[i+2] = Math.min(255, data[i+2] + b);
+          data[i+3] = 255;
+        }
+        if (x === x2 && y === y2) break;
+        const e2 = err << 1;
+        if (e2 > -dy) { err -= dy; x += sx; }
+        if (e2 < dx) { err += dx; y += sy; }
+      }
+    }
+   
+    let time = 0;
+    let mouseActive = false, mouseDown = false;
+    let mouseX = 0, mouseY = 0, lastMouseX = 0, lastMouseY = 0;
+    let rows = []; let centers = [];
+   
+    function initField() {
+      rows = []; centers = [];
+      let c = 0;
+      const w1 = Math.random() * w, h1 = Math.random() * h;
+      for (let z = -FOV; z < FOV; z += Z_STEP) {
+        const row = [];
+        for (let i = 0; i < SEGMENTS; i++) {
+          row.push({ x:0, y:0, z, x2d:0, y2d:0, idx:i, segs:SEGMENTS, radius:BASE_RADIUS, radiusAudio:BASE_RADIUS });
+        }
+        rows.push(row);
+        centers.push({
+          x: ((w / 2) - w1) * (c / 15) + w / 2,
+          y: ((h / 2) - h1) * (c / 15) + h / 2
+        });
+        c++;
+      }
+    }
+   
+    const TAU = Math.PI * 2;
+    const ringFn = (th,i,p,a)=> 0;
+    const diagEvery = 1;
+    const twist = 1.0;
+   
+    const overlay = document.getElementById("overlay");
+    overlay.addEventListener("mousedown", (e) => { e.stopPropagation(); e.preventDefault(); }, { capture: true });
+    overlay.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(); });
+    overlay.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } });
+   
+    canvas.addEventListener("mousedown", () => { mouseDown = true; });
+    canvas.addEventListener("mouseup", () => { mouseDown = false; });
+    canvas.addEventListener("mouseenter",() => { mouseActive = true; });
+    canvas.addEventListener("mouseleave",() => { mouseActive = false; mouseDown = false; mouseX = w/2; mouseY = h/2; });
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      lastMouseX = mouseX; lastMouseY = mouseY;
+      mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
+    }, { passive: true });
+   
+    let orientationActive = false;
+    let alpha = 0, beta = 0, gamma = 0;
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener("deviceorientation", (e) => {
+        alpha = e.alpha || 0; beta = e.beta || 0; gamma = e.gamma || 0;
+        orientationActive = true;
+      }, { passive: true });
+    }
+   
+    addEventListener("keydown", (e) => {
+      if (e.code === "Space") { e.preventDefault(); if (started) nextTrack(); return; }
+      if (e.key?.toLowerCase() === "m") { e.preventDefault(); if (started) toggleMute(); return; }
+    });
+   
+    function projectAndAdvance(audioData, dt, mouseDx, mouseDy) {
+      const R = rows.length;
+      let sortNeeded = false;
+      GRAD.update(dt, audioData.average, mouseDx, mouseDy);
+     
+      // Update particles
+      particles.forEach(p => p.update(dt, audioData.average));
+     
+      for (let i = 0; i < R; i++) {
+        const row = rows[i];
+        const prevRow = i > 0 ? rows[i - 1] : null;
+        const center = centers[i];
+       
+        if (mouseActive) {
+          center.x = ((w / 2) - mouseX) * ((row[0].z - FOV) / 500) + w / 2;
+          center.y = ((h / 2) - mouseY) * ((row[0].z - FOV) / 500) + h / 2;
+        } else {
+          center.x += ((w / 2) - center.x) * 0.015;
+          center.y += ((h / 2) - center.y) * 0.015;
+        }
+       
+        const depth = i / R;
+        const [cr, cg, cb] = colorFor(depth, audioData.average);
+       
+        // Depth-based alpha and thickness
+        const scale = Math.max(0.001, Math.min(10, FOV / (FOV + row[0].z)));
+        const ca = Math.floor(WIRE_ALPHA * (0.5 + scale * 0.5));
+       
+        for (let j = 0, k = row.length; j < k; j++) {
+          const p = row[j];
+         
+          // Enhanced rotation with audio pulse
+          const pulseFactor = 1 + audioData.average * 0.2 * Math.sin(time * 4 + depth * Math.PI);
+          const audioRotation = audioData.average * 0.1 * Math.sin(time * 2);
+          const spiralTwist = depth * audioData.average * 0.3;
+          const theta = p.idx * (TAU / p.segs) + time * twist + audioRotation + spiralTwist;
+         
+          const rShape = ringFn(theta, i, p, audioData);
+          p.radius = BASE_RADIUS + rShape + Math.sin(p.z * 0.05 + time) * 10 * audioData.average;
+          p.radiusAudio = p.radius * pulseFactor + audioData.average * 8;
+         
+          const rx = Math.cos(theta) * p.radiusAudio;
+          const ry = Math.sin(theta) * p.radiusAudio;
+          p.x2d = (rx * scale) + center.x;
+          p.y2d = (ry * scale) + center.y;
+         
+          if (mouseDown) {
+            p.z += SPEED * 1.5;
+            if (p.z > FOV) { p.z -= (FOV * 2); sortNeeded = true; }
+          } else {
+            p.z -= SPEED;
+            if (p.z < -FOV) { p.z += (FOV * 2); sortNeeded = true; }
+          }
+         
+          const prevIdx = (j > 0 ? j - 1 : k - 1);
+          const prev = row[prevIdx];
+         
+          // Draw with chromatic aberration
+          drawLineChromatic(p.x2d, p.y2d, prev.x2d, prev.y2d, cr, cg, cb, ca, audioData.average);
+         
+          if (prevRow && (j % diagEvery === 0)) {
+            const prevInPrev = prevRow[prevIdx];
+            drawLineChromatic(p.x2d, p.y2d, prevInPrev.x2d, prevInPrev.y2d, cr, cg, cb, ca * 0.7, audioData.average, true);
+          }
+        }
+      }
+     
+      // Draw particles
+      particles.forEach(p => p.draw(ctx, w, h, audioData.average));
+     
+      if (sortNeeded) {
+        const pairs = rows.map((row, idx) => ({ row, center: centers[idx] }));
+        pairs.sort((a, b) => b.row[0].z - a.row[0].z);
+        rows = pairs.map(p => p.row);
+        centers = pairs.map(p => p.center);
+      }
+     
+      time += mouseDown ? -0.008 : 0.005;
+    }
+   
+    let lastTs = performance.now();
+    function animate(ts) {
+      const dt = Math.min(0.05, (ts - lastTs) / 1000);
+      lastTs = ts;
+     
+      fadeImageData();
+      const a = getAudioData();
+      const mouseDx = mouseX - lastMouseX, mouseDy = mouseY - lastMouseY;
+     
+      if (orientationActive) {
+        mouseX = w / 2 + gamma * (w / 90);
+        mouseY = h / 2 + beta * (h / 90);
+        mouseActive = true;
+      }
+     
+      projectAndAdvance(a, dt, mouseDx, mouseDy);
+      ctx.putImageData(imageData, 0, 0);
+      requestAnimationFrame(animate);
+    }
+   
+    function boot() {
+      resize();
+      initField();
+      UI.text("Ready · click to start");
+      requestAnimationFrame(animate);
+    }
+   
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+  </script>
+</body>
+</html>
