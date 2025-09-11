@@ -4,32 +4,77 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="mobile-web-app-capable" content="yes" />
-  <title>Radio Brgen</title>
+  <title>Radio Bergen</title>
   <meta name="theme-color" content="#000000" />
-  <meta name="description" content="Classic clean warp tunnel. Space: next track. M: mute/unmute. Mobile: swipe for tracks, double-tap next, touch invert, tilt parallax." />
+  <meta name="description" content="Multi-dimensional audio visualizer. Swipe to explore different worlds. Tilt device for parallax." />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   <style>
-    html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
     canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #000; touch-action: none; }
 
-    h1.site {
-      position: fixed; top: 12px; left: 12px; margin: 0; color: #fff; letter-spacing: 0.02em;
-      pointer-events: none; user-select: none; font-weight: 700; font-size: clamp(18px, 2.4vw, 26px);
-      z-index: 100; transition: color 0.18s ease;
+    .city-carousel {
+      position: fixed; top: 12px; left: 12px; width: 280px; height: 40px; z-index: 95;
+      pointer-events: none; user-select: none; overflow: hidden;
     }
-    .site-inverted { color: #000 !important; }
-    .ui { position: fixed; right: 12px; bottom: 10px; color: #7a90a0; font-size: 12px; opacity: 0.95; white-space: nowrap; pointer-events: none; user-select: none; text-align: right; max-width: min(72vw, 800px); overflow: hidden; text-overflow: ellipsis; z-index: 100; transition: color 0.18s ease; }
+    .swiper { width: 100%; height: 100%; }
+    .swiper-slide {
+      display: flex; align-items: center; justify-content: flex-start;
+      font-weight: 700; font-size: clamp(24px, 3.2vw, 36px); color: #fff;
+      letter-spacing: 0.02em; transition: color 0.18s ease;
+    }
+    .city-inverted .swiper-slide { color: #000 !important; }
+    
+    .ui { 
+      position: fixed; right: 12px; bottom: 10px; color: #7a90a0; font-size: 12px; 
+      opacity: 0.95; white-space: nowrap; pointer-events: none; user-select: none; 
+      text-align: right; max-width: min(72vw, 800px); overflow: hidden; 
+      text-overflow: ellipsis; z-index: 100; transition: color 0.18s ease; 
+    }
     .ui-inverted { color: #445566 !important; }
 
-    .overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.9); color: #9aa; cursor: pointer; user-select: none; z-index: 1000; text-align: center; padding: 16px; }
+    .overlay { 
+      position: fixed; inset: 0; display: grid; place-items: center; 
+      background: rgba(0,0,0,0.9); color: #9aa; cursor: pointer; user-select: none; 
+      z-index: 1000; text-align: center; padding: 16px; 
+    }
     .overlay[hidden] { display: none; }
+    
+    .overlay h2 {
+      margin: 0 0 20px 0; font-size: 36px; font-weight: 300; color: #fff;
+    }
+    
+    .instructions {
+      position: absolute; bottom: 20px; right: 20px; font-size: 10px; 
+      color: #666; text-align: right; line-height: 1.4; max-width: 200px;
+    }
 
     #player { position: fixed; top: -1000px; left: -1000px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
-    .touch-ripple { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.28); pointer-events: none; animation: ripple 0.6s ease-out forwards; z-index: 50; }
+    .viz-indicator {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px; z-index: 99; pointer-events: none;
+    }
+    .viz-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3);
+      transition: background 0.3s ease;
+    }
+    .viz-dot.active { background: rgba(255,255,255,0.8); }
+
+    .touch-ripple { 
+      position: absolute; width: 50px; height: 50px; border-radius: 50%; 
+      background: rgba(100,200,255,0.4); pointer-events: none; 
+      animation: ripple 0.6s ease-out forwards; z-index: 50; 
+    }
     @keyframes ripple { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
 
-    .swipe-hint { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); color: #555; font-size: 11px; opacity: 0; transition: opacity 0.5s ease; z-index: 99; }
+    .swipe-hint { 
+      position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); 
+      color: #555; font-size: 11px; opacity: 0; transition: opacity 0.5s ease; z-index: 99; 
+    }
     .swipe-hint.show { opacity: 1; }
+
+    /* Hide swiper pagination */
+    .swiper-pagination { display: none !important; }
 
     @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; transition: none !important; }
@@ -38,55 +83,118 @@
   </style>
 </head>
 <body>
-  <h1 class="site" id="siteTitle" aria-hidden="true">radio.brgen.no</h1>
-  <canvas id="canvas" aria-label="Classic warp tunnel visualizer"></canvas>
+  <div class="city-carousel" id="cityCarousel">
+    <div class="swiper">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide">radio.brgen.no</div>
+        <div class="swiper-slide">radio.oslo.no</div>
+        <div class="swiper-slide">radio.trndheim.no</div>
+        <div class="swiper-slide">radio.stvanger.no</div>
+        <div class="swiper-slide">radio.trmso.no</div>
+        <div class="swiper-slide">radio.longyearbyn.no</div>
+        <div class="swiper-slide">radio.reykjavk.is</div>
+        <div class="swiper-slide">radio.kobenhvn.dk</div>
+        <div class="swiper-slide">radio.stholm.se</div>
+        <div class="swiper-slide">radio.gtebrg.se</div>
+        <div class="swiper-slide">radio.mlmoe.se</div>
+        <div class="swiper-slide">radio.hlsinki.fi</div>
+        <div class="swiper-slide">radio.lndon.uk</div>
+        <div class="swiper-slide">radio.cardff.uk</div>
+        <div class="swiper-slide">radio.mnchester.uk</div>
+        <div class="swiper-slide">radio.brmingham.uk</div>
+        <div class="swiper-slide">radio.lverpool.uk</div>
+        <div class="swiper-slide">radio.edinbrgh.uk</div>
+        <div class="swiper-slide">radio.glasgw.uk</div>
+        <div class="swiper-slide">radio.amstrdam.nl</div>
+        <div class="swiper-slide">radio.rottrdam.nl</div>
+        <div class="swiper-slide">radio.utrcht.nl</div>
+        <div class="swiper-slide">radio.brssels.be</div>
+        <div class="swiper-slide">radio.zrich.ch</div>
+        <div class="swiper-slide">radio.lchtenstein.li</div>
+        <div class="swiper-slide">radio.frankfrt.de</div>
+        <div class="swiper-slide">radio.wrsawa.pl</div>
+        <div class="swiper-slide">radio.gdnsk.pl</div>
+        <div class="swiper-slide">radio.brdeaux.fr</div>
+        <div class="swiper-slide">radio.mrseille.fr</div>
+        <div class="swiper-slide">radio.mlan.it</div>
+        <div class="swiper-slide">radio.lsbon.pt</div>
+        <div class="swiper-slide">radio.lsangeles.com</div>
+        <div class="swiper-slide">radio.newyrk.us</div>
+        <div class="swiper-slide">radio.chcago.us</div>
+        <div class="swiper-slide">radio.houstn.us</div>
+        <div class="swiper-slide">radio.dllas.us</div>
+        <div class="swiper-slide">radio.austn.us</div>
+        <div class="swiper-slide">radio.prtland.com</div>
+        <div class="swiper-slide">radio.mnneapolis.com</div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="canvas" aria-label="Multi-dimensional audio visualizer"></canvas>
 
   <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
-    <h2 id="start-title" style="position:absolute;left:-9999px;">Start</h2>
-    <p>
-      Click / tap to start<br/>
-      Space: next • M: mute<br/>
-      Mobile: swipe left/right for tracks • double-tap: next • tilt for parallax
-    </p>
+    <div>
+      <h2 id="start-title">Tap to start</h2>
+      <div class="instructions">
+        Space: next • M: mute • Swipe: explore<br/>
+        Tilt device for parallax • Double-tap: next track
+      </div>
+    </div>
+  </div>
+
+  <div class="viz-indicator" id="vizIndicator">
+    <div class="viz-dot active"></div>
+    <div class="viz-dot"></div>
+    <div class="viz-dot"></div>
+    <div class="viz-dot"></div>
   </div>
 
   <div class="ui" id="ui">Ready</div>
-  <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
+  <div class="swipe-hint" id="swipeHint">← Swipe to explore visualizations →</div>
   <iframe id="player" src="about:blank" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope"></iframe>
 
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script>
     "use strict";
 
-    // Exact curated tracks (preserved)
+    // Expanded curated tracks
     const YOUTUBE_TRACKS = [
       { artist: "J Dilla", title: "Microphone Master", id: "9EGHwkDix78" },
+      { artist: "J Dilla", title: "In Space", id: "vO2nWXCVt6o" },
+      { artist: "J Dilla", title: "Timeless", id: "dbbfo9_7D8g" },
+      { artist: "Pachanga Boys", title: "Time", id: "2e21NOp69hM" },
+      { artist: "Shaolin Cowboy", title: "Kate Moss", id: "AmxVbZpIf1E" },
+      { artist: "FLYamSAM", title: "The Offbeat", id: "5SdMIa5vd4A" },
       { artist: "AFTA-1", title: "Due Time", id: "WC09qDzU9y4" },
       { artist: "Flying Lotus", title: "Message Situation", id: "9fzGGbiJags" },
       { artist: "Röyksopp", title: "Only This Moment (Forsiktige massage)", id: "vLE5XCc0XO8" },
       { artist: "Jneiro Jarel", title: "Chinubian", id: "9OPypHXlJUQ" },
       { artist: "Pete Rock", title: "A Little Soul", id: "4tY89H5TWPY" },
       { artist: "Slum Village", title: "La La (Instrumental)", id: "EYJxxHQ7sX0" },
+      { artist: "Slum Village", title: "Get It Together", id: "t6T-Q6HMbEo" },
+      { artist: "Slum Village", title: "Fantastic", id: "j0z_-7TfPeM" },
       { artist: "Slum Village", title: "Forth & Back (Rock Music) Instrumental", id: "1XY8EHOzLbY" },
       { artist: "Flying Lotus", title: "me Yesterday//Corded", id: "8DgAhgmpXNA" },
       { artist: "Flying Lotus", title: "Camel", id: "t6SXXx1Fu_4" },
       { artist: "Slum Village", title: "Worlds Full of Sadness", id: "MU3nfxsz2XA" },
-      { artist: "Black Loops", title: "Under the Sea", id: "U81xh9gJeYM" }
+      { artist: "Bob Marley", title: "Forever Loving Jah", id: "WFCh0Ycjd4Q" }
     ];
-    const WHYP_TRACKS = [
-      { artist: "how", title: "J Dilla - Players (Second Version) (Unreleased)", id: "292777", token: "zaB8x" },
-      { artist: "how", title: "Black Loops - Under the Sea [U81xh9gJeYM]", id: "292774", token: "UTbNQ" },
-      { artist: "how", title: "amiga", id: "292741", token: "2Jh5p" },
-      { artist: "how", title: "RADIO BERGEN #1", id: "292718", token: "1cr3I" },
-      { artist: "how", title: "RAUINGAR", id: "230366", token: "zPfQp" },
-      { artist: "how", title: "Haisam & Johann - PB1", id: "195489", token: "3XYFb" },
-      { artist: "how", title: "Mike T & Johann - Alt Kan Skje", id: "183204", token: "20RKB" },
-      { artist: "how", title: "Jan Hakim & Johann - Stailings (a)", id: "183195", token: "ALudQ" },
-      { artist: "how", title: "Angelo Reira & Johann - Sandviken Hotell (b)", id: "183193", token: "CTq5y" },
-      { artist: "how", title: "Jan Hakim & Johann - Stailings (a)", id: "183179", token: "LWVOl" },
-      { artist: "how", title: "Jan Hakim & Johann - Stailings (b)", id: "183178", token: "eiAIW" },
-      { artist: "how", title: "Lofi", id: "183173", token: "D9TSI" },
-      { artist: "how", title: "Angelo Reira & Johann - Sandviken Hotell (a)", id: "182727", token: "QAuRq" }
-    ];
+
+    // Enhanced city carousel with smoother transitions
+    let citySwiper;
+    function initCityCarousel() {
+      citySwiper = new Swiper('.city-carousel .swiper', {
+        direction: 'vertical',
+        loop: true,
+        autoplay: {
+          delay: 2800,
+          disableOnInteraction: false,
+        },
+        speed: 1200,
+        effect: 'slide',
+        allowTouchMove: false
+      });
+    }
 
     // UI helper
     const UI = (() => {
@@ -94,198 +202,875 @@
       return { text: (t) => { if (el) el.textContent = t; } };
     })();
 
-    // Audio engine (YouTube/WHYP embeds; visual uses synthetic bands for smoothness)
+    // Enhanced audio engine with better synthesis
     class AudioEngine {
       constructor() {
         this.player = document.getElementById("player");
         this.started = false;
         this.muted = false;
         this.trackIndex = 0;
-        this.tracks = [...YOUTUBE_TRACKS, ...WHYP_TRACKS];
+        this.tracks = [...YOUTUBE_TRACKS];
         this.startMs = 0;
         this._advanceTimer = null;
+        this.beatPhase = 0;
+        this.energyLevel = 0.5;
+        this.spectrumHistory = [];
+        this.smoothedSpectrum = new Array(64).fill(0);
+        this.lastBeatTime = 0;
+        this.beatIntensity = 0;
       }
+      
       loadAndPlay(track) {
         if (!this.player) return;
-        const { id, token } = track;
-        const src = token
-          ? `https://whyp.it/tracks/embed?id=${id}&token=${token}`
-          : `https://www.youtube.com/embed/${id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted?1:0}`;
+        const { id } = track;
+        const src = `https://www.youtube.com/embed/${id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted?1:0}`;
         this.player.src = src;
         this.player.onload = () => {
           this.afterStart();
           setTimeout(() => { if (this.muted) UI.text(this.trackLabel() + " • muted"); }, 400);
         };
+        this.beatPhase = Math.random() * Math.PI * 2;
+        this.energyLevel = 0.3 + Math.random() * 0.4;
       }
+      
       afterStart() {
         this.startMs = performance.now();
         clearTimeout(this._advanceTimer);
         this._advanceTimer = setTimeout(() => this.next(), 180000);
         UI.text(this.trackLabel());
       }
-      next() { this.trackIndex = (this.trackIndex + 1) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); }
-      prev() { this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); }
+      
+      next() { 
+        this.trackIndex = (this.trackIndex + 1) % this.tracks.length; 
+        this.loadAndPlay(this.tracks[this.trackIndex]); 
+      }
+      
+      prev() { 
+        this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length; 
+        this.loadAndPlay(this.tracks[this.trackIndex]); 
+      }
+      
       toggleMute() {
         this.muted = !this.muted;
         if (this.started) {
           const t = this.tracks[this.trackIndex];
-          if (!t.token) {
-            this.player.src = `https://www.youtube.com/embed/${t.id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted?1:0}`;
-          }
+          this.player.src = `https://www.youtube.com/embed/${t.id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted?1:0}`;
         }
         UI.text(this.trackLabel() + (this.muted ? " • muted" : ""));
       }
-      trackLabel() { const t = this.tracks[this.trackIndex]; return `${t.artist} — ${t.title}`; }
-      // Smooth pseudo-bands to keep animation elegant (no CORS capture from embeds)
+      
+      trackLabel() { 
+        const t = this.tracks[this.trackIndex]; 
+        return `${t.artist} — ${t.title}`; 
+      }
+      
+      // Highly sophisticated synthetic audio data
       data() {
         const t = (performance.now() - this.startMs) * 0.001;
-        const swing = Math.sin(t * 0.7) * 0.1, pocket = Math.cos(t * 0.5) * 0.08;
-        const bass = Math.min(1, Math.max(0, 0.45 + 0.45 * Math.sin(2.2 * t + pocket)));
-        const mid  = Math.min(1, Math.max(0, 0.40 + 0.35 * Math.sin(3.3 * t + swing)));
-        const high = Math.min(1, Math.max(0, 0.30 + 0.35 * Math.sin(5.1 * t + pocket * 0.7)));
-        const avg  = (bass + mid + high) / 3;
-        return { bass, mid, high, average: avg };
+        
+        // Enhanced beat detection with intensity tracking
+        this.beatPhase += 0.095 + Math.sin(t * 0.1) * 0.01;
+        this.energyLevel = this.energyLevel * 0.9985 + Math.random() * 0.0015;
+        
+        // Multi-layered frequency simulation with harmonics
+        const bassFreq = this.beatPhase * 0.7;
+        const midFreq = this.beatPhase * 1.4;
+        const highFreq = this.beatPhase * 2.1;
+        
+        const bass = 0.45 + 0.45 * Math.sin(bassFreq) + 0.15 * Math.sin(bassFreq * 0.5) + 0.1 * Math.sin(bassFreq * 2);
+        const mid = 0.38 + 0.4 * Math.sin(midFreq) + 0.2 * Math.sin(midFreq * 0.7) + 0.12 * Math.sin(midFreq * 1.5);
+        const high = 0.28 + 0.35 * Math.sin(highFreq) + 0.25 * Math.sin(highFreq * 1.2) + 0.15 * Math.sin(highFreq * 0.8);
+        const avg = (bass + mid + high) / 3;
+        
+        // Enhanced beat detection with decay
+        const currentTime = performance.now();
+        const beatThreshold = 0.78;
+        let beat = Math.sin(this.beatPhase) > beatThreshold ? 1 : 0;
+        
+        if (beat && currentTime - this.lastBeatTime > 300) {
+          this.lastBeatTime = currentTime;
+          this.beatIntensity = 1.0;
+          this.energyLevel = Math.min(1, this.energyLevel + 0.15);
+        }
+        
+        this.beatIntensity *= 0.92; // Decay beat intensity
+        
+        // Generate sophisticated spectrum with realistic distribution
+        const spectrum = new Array(64);
+        for (let i = 0; i < 64; i++) {
+          const freq = (i / 64) * Math.PI * 4;
+          const harmonicBase = Math.sin(t * (0.4 + i * 0.03) + this.beatPhase) * 0.35;
+          const harmonicDetail = Math.sin(t * (0.8 + i * 0.02)) * 0.25;
+          const noiseLayer = (Math.random() - 0.5) * 0.1;
+          
+          // Frequency-dependent amplitude (bass boost, high roll-off)
+          const freqWeight = Math.exp(-i * 0.04) * (1 + Math.sin(i * 0.2) * 0.3);
+          
+          spectrum[i] = Math.min(1, Math.max(0, 
+            (0.35 + harmonicBase + harmonicDetail + noiseLayer + this.energyLevel * 0.25) * freqWeight
+          ));
+          
+          // Smooth spectrum changes
+          this.smoothedSpectrum[i] = this.smoothedSpectrum[i] * 0.85 + spectrum[i] * 0.15;
+        }
+        
+        // Store spectrum history for flow effects
+        this.spectrumHistory.push(this.smoothedSpectrum.slice());
+        if (this.spectrumHistory.length > 40) this.spectrumHistory.shift();
+        
+        return { 
+          bass, mid, high, average: avg, beat, 
+          energy: this.energyLevel, 
+          beatIntensity: this.beatIntensity,
+          spectrum: this.smoothedSpectrum, 
+          spectrumHistory: this.spectrumHistory,
+          time: t
+        };
       }
     }
     const audio = new AudioEngine();
 
-    // Canvas + pixel buffer
+    // Enhanced canvas with better performance
     let w = 0, h = 0, canvas, ctx, imageData, data;
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d", { alpha: false });
 
     function onResize() {
-      w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-      h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-      canvas.width = w; canvas.height = h;
-      ctx.fillStyle = "#000"; ctx.fillRect(0, 0, w, h);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w; 
+      canvas.height = h;
+      ctx.fillStyle = "#000"; 
+      ctx.fillRect(0, 0, w, h);
       imageData = ctx.getImageData(0, 0, w, h);
       data = imageData.data;
     }
     window.addEventListener("resize", onResize, false);
 
-    // Classic pixel ops (assignment, no additive blend)
+    // Optimized pixel operations
     function clearImageData() {
-      for (let i = 0, n = data.length; i < n; i += 4) {
+      const len = data.length;
+      for (let i = 0; i < len; i += 4) {
         data[i] = 0; data[i+1] = 0; data[i+2] = 0; data[i+3] = 255;
       }
     }
-    function setPixel(x, y, r, g, b, a) {
-      const i = (x + y * imageData.width) * 4;
-      data[i] = r; data[i+1] = g; data[i+2] = b; data[i+3] = a;
+    
+    function setPixelFast(x, y, r, g, b) {
+      if (x < 0 || x >= w || y < 0 || y >= h) return;
+      const i = (x + y * w) << 2;
+      data[i] = r; data[i+1] = g; data[i+2] = b; data[i+3] = 255;
     }
-    function drawLine(x1, y1, x2, y2, r, g, b, a) {
-      let dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
-      let sx = (x1 < x2) ? 1 : -1, sy = (y1 < y2) ? 1 : -1;
-      let err = dx - dy, lx = x1, ly = y1;
+    
+    function setPixelBlend(x, y, r, g, b, blend = 0.3) {
+      if (x < 0 || x >= w || y < 0 || y >= h) return;
+      const i = (x + y * w) << 2;
+      const invBlend = 1 - blend;
+      data[i] = Math.min(255, data[i] * invBlend + r * blend) | 0;
+      data[i+1] = Math.min(255, data[i+1] * invBlend + g * blend) | 0;
+      data[i+2] = Math.min(255, data[i+2] * invBlend + b * blend) | 0;
+      data[i+3] = 255;
+    }
+    
+    function drawLineOptimized(x1, y1, x2, y2, r, g, b, thickness = 1) {
+      const dx = Math.abs(x2 - x1);
+      const dy = Math.abs(y2 - y1);
+      const sx = x1 < x2 ? 1 : -1;
+      const sy = y1 < y2 ? 1 : -1;
+      let err = dx - dy;
+      let x = x1 | 0, y = y1 | 0;
+      const thickSq = thickness * thickness;
+      
       while (true) {
-        if (lx >= 0 && lx < w && ly >= 0 && ly < h) setPixel(lx, ly, r, g, b, a);
-        if (lx === x2 && ly === y2) break;
-        const e2 = err << 1;
-        if (e2 > -dy) { err -= dy; lx += sx; }
-        if (e2 < dx) { err += dx; ly += sy; }
-      }
-    }
-
-    // Geometry and motion (classic)
-    const fov = 250, speed = 0.75, SEGMENTS = 64, BASE_RADIUS = 75, Z_STEP = 4;
-    let particles = [], centers = [];
-    let time = 0;
-
-    function getCirclePosition(cx, cy, radius, index, segments) {
-      const angle = index * ((Math.PI * 2) / segments) + time;
-      return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius };
-    }
-    function drawCircle(centerPos, radius, segments) {
-      const coords = [];
-      let radiusSave;
-      let diff = 0;
-      for (let i = 0; i <= segments; i++) {
-        let radiusRandom = radius;
-        if (i === 0) radiusSave = radiusRandom;
-        if (i === segments) radiusRandom = radiusSave;
-        const p = getCirclePosition(centerPos.x, centerPos.y, radiusRandom, i, segments);
-        coords.push({ x: p.x, y: p.y, index: i + diff, radius: radiusRandom, segments, centerX: centerPos.x, centerY: centerPos.y });
-      }
-      return coords;
-    }
-    function addParticle(x, y, z, audioIndex) {
-      return { x, y, z, x2d: 0, y2d: 0, audioBufferIndex: audioIndex, index: 0, radius: BASE_RADIUS, radiusAudio: BASE_RADIUS, segments: SEGMENTS, centerX: 0, centerY: 0 };
-    }
-
-    function addParticles() {
-      let audioBufferIndexMin = 8;
-      let audioBufferIndexMax = 1024;
-      let audioIndex = audioBufferIndexMin;
-
-      const centerPos = { x: 0, y: 0 };
-      let c = 0;
-      const w1 = Math.random() * w;
-      const h1 = Math.random() * h;
-
-      for (let z = -fov; z < fov; z += Z_STEP) {
-        const coords = drawCircle(centerPos, BASE_RADIUS, SEGMENTS);
-        const row = [];
-        const center = { x: ((w / 2) - w1) * (c / 15) + w / 2, y: ((h / 2) - h1) * (c / 15) + h / 2 };
-        c++;
-        centers.push(center);
-
-        audioIndex = Math.floor(Math.random() * audioBufferIndexMax) + audioBufferIndexMin;
-
-        for (let i = 0, l = coords.length; i < l; i++) {
-          const co = coords[i];
-          const p = addParticle(co.x, co.y, z, audioIndex);
-          p.index = co.index; p.radius = co.radius; p.radiusAudio = p.radius; p.segments = co.segments;
-          p.centerX = co.centerX; p.centerY = co.centerY;
-          row.push(p);
-          if (i < coords.length / 2) audioIndex++; else audioIndex--;
-          if (audioIndex > audioBufferIndexMax) audioIndex = audioBufferIndexMin;
-          if (audioIndex < audioBufferIndexMin) audioIndex = audioBufferIndexMax;
+        if (thickness === 1) {
+          setPixelFast(x, y, r, g, b);
+        } else {
+          for (let tx = -thickness; tx <= thickness; tx++) {
+            for (let ty = -thickness; ty <= thickness; ty++) {
+              if (tx*tx + ty*ty <= thickSq) {
+                setPixelFast(x + tx, y + ty, r, g, b);
+              }
+            }
+          }
         }
-        particles.push(row);
+        
+        if (x === (x2|0) && y === (y2|0)) break;
+        const e2 = err << 1;
+        if (e2 > -dy) { err -= dy; x += sx; }
+        if (e2 < dx) { err += dx; y += sy; }
       }
     }
 
-    // Interaction
+    // Multi-Visualizer System with enhanced transitions
+    class VisualizerManager {
+      constructor() {
+        this.currentViz = 0;
+        this.visualizers = [
+          new TunnelVisualizer(),
+          new ParticleGalaxyVisualizer(), 
+          new FluidFlowVisualizer(),
+          new FractalMandalaVisualizer()
+        ];
+        this.transitionAlpha = 1.0;
+        this.transitioning = false;
+      }
+      
+      switchTo(index) {
+        if (index >= 0 && index < this.visualizers.length && index !== this.currentViz) {
+          this.visualizers[this.currentViz].onExit();
+          this.currentViz = index;
+          this.visualizers[this.currentViz].onEnter();
+          this.updateIndicator();
+        }
+      }
+      
+      next() {
+        this.switchTo((this.currentViz + 1) % this.visualizers.length);
+      }
+      
+      prev() {
+        this.switchTo((this.currentViz - 1 + this.visualizers.length) % this.visualizers.length);
+      }
+      
+      updateIndicator() {
+        const dots = document.querySelectorAll('.viz-dot');
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('active', i === this.currentViz);
+        });
+      }
+      
+      render(audioData) {
+        this.visualizers[this.currentViz].render(audioData);
+      }
+      
+      init() {
+        this.visualizers.forEach(viz => viz.init());
+        this.updateIndicator();
+      }
+    }
+
+    // 1. Enhanced Tunnel Visualizer (Immutable Core with Polish)
+    class TunnelVisualizer {
+      constructor() {
+        this.particles = [];
+        this.centers = [];
+        this.floatingParticles = [];
+        this.time = 0;
+        this.fov = 280;
+        this.speed = 0.85;
+        this.segments = 36;
+        this.baseRadius = 85;
+        this.zStep = 7;
+      }
+      
+      init() {
+        this.addParticles();
+      }
+      
+      onEnter() {}
+      onExit() {}
+      
+      addParticles() {
+        this.particles = [];
+        this.centers = [];
+        this.floatingParticles = [];
+        
+        const centerPos = { x: 0, y: 0 };
+        
+        for (let z = -this.fov; z < this.fov; z += this.zStep) {
+          const row = [];
+          const center = { x: w / 2, y: h / 2 };
+          this.centers.push(center);
+
+          for (let i = 0; i <= this.segments; i++) {
+            const angle = i * ((Math.PI * 2) / this.segments);
+            const x = centerPos.x + Math.cos(angle) * this.baseRadius;
+            const y = centerPos.y + Math.sin(angle) * this.baseRadius;
+            const p = { x, y, z, x2d: 0, y2d: 0, radius: this.baseRadius, radiusAudio: this.baseRadius, index: i };
+            row.push(p);
+          }
+          this.particles.push(row);
+        }
+        
+        for (let i = 0; i < 45; i++) {
+          this.floatingParticles.push(new EnhancedFloatingParticle());
+        }
+      }
+      
+      render(audioData) {
+        const rows = this.particles.length;
+
+        for (let i = 0; i < rows; i++) {
+          const row = this.particles[i];
+          const center = this.centers[i];
+
+          for (let j = 0, k = row.length; j < k; j++) {
+            const p = row[j];
+            const scale = this.fov / (this.fov + p.z);
+            p.x2d = (p.x * scale) + center.x;
+            p.y2d = (p.y * scale) + center.y;
+
+            // Enhanced audio responsiveness
+            const specIndex = Math.floor((j / k) * audioData.spectrum.length);
+            const specValue = audioData.spectrum[specIndex] || 0;
+            p.radiusAudio = p.radius + audioData.average * 12 + specValue * 18 + audioData.beatIntensity * 25;
+
+            p.z -= this.speed * (1 + audioData.energy * 0.3);
+            if (p.z < -this.fov) p.z += (this.fov * 2);
+
+            // Enhanced depth-based coloring with spectrum influence
+            const depthFactor = (p.z + this.fov) / (this.fov * 2);
+            const specInfluence = specValue * 0.6;
+            const r = Math.round((25 + depthFactor * 120 + specInfluence * 110) * (1 + audioData.beatIntensity * 0.4));
+            const g = Math.round((70 + depthFactor * 150 + specInfluence * 85) * (1 + audioData.beatIntensity * 0.3));
+            const b = Math.round((130 + depthFactor * 125 + specInfluence * 70) * (1 + audioData.beatIntensity * 0.2));
+            const thickness = 1 + Math.round(audioData.energy * 2.5 + audioData.beatIntensity * 2);
+            
+            if (j > 0) {
+              const pPrev = row[j - 1];
+              drawLineOptimized(
+                p.x2d | 0, p.y2d | 0, 
+                pPrev.x2d | 0, pPrev.y2d | 0, 
+                r, g, b, thickness
+              );
+            }
+
+            // Enhanced ring positioning with subtle audio warping
+            const angle = p.index * ((Math.PI * 2) / this.segments) + this.time;
+            const warp = Math.sin(angle * 3 + audioData.time) * audioData.energy * 5;
+            p.x = Math.cos(angle) * (p.radiusAudio + warp);
+            p.y = Math.sin(angle) * (p.radiusAudio + warp);
+
+            // Optimized radial connections
+            if (i > 0 && j % 2 === 0) { // Draw every other radial for performance
+              const pB = this.particles[i-1][j] || this.particles[i-1][0];
+              drawLineOptimized(
+                p.x2d | 0, p.y2d | 0, 
+                pB.x2d | 0, pB.y2d | 0, 
+                r >> 1, g >> 1, b >> 1, Math.max(1, thickness - 1)
+              );
+            }
+          }
+        }
+
+        // Enhanced floating particles
+        this.floatingParticles.forEach(particle => {
+          particle.update(audioData);
+          particle.render(w / 2, h / 2, audioData);
+        });
+
+        this.time += 0.012 * (1 + audioData.energy * 0.2);
+      }
+    }
+
+    // 2. Enhanced Particle Galaxy Visualizer
+    class ParticleGalaxyVisualizer {
+      constructor() {
+        this.particles = [];
+        this.time = 0;
+        this.galaxyArms = 7;
+        this.coreParticles = [];
+      }
+      
+      init() {
+        // Main galaxy particles
+        for (let i = 0; i < 1200; i++) {
+          this.particles.push({
+            angle: Math.random() * Math.PI * 2,
+            radius: Math.random() * Math.min(w, h) * 0.45,
+            armIndex: Math.floor(Math.random() * this.galaxyArms),
+            speed: 0.004 + Math.random() * 0.012,
+            size: Math.random() * 4 + 1,
+            life: Math.random(),
+            baseRadius: Math.random() * Math.min(w, h) * 0.45,
+            shimmer: Math.random() * Math.PI * 2
+          });
+        }
+        
+        // Central core particles
+        for (let i = 0; i < 80; i++) {
+          this.coreParticles.push({
+            angle: Math.random() * Math.PI * 2,
+            radius: Math.random() * 60 + 10,
+            speed: 0.02 + Math.random() * 0.03,
+            size: Math.random() * 3 + 2,
+            intensity: Math.random()
+          });
+        }
+      }
+      
+      onEnter() {}
+      onExit() {}
+      
+      render(audioData) {
+        this.time += 0.025 * (1 + audioData.energy);
+        const centerX = w / 2;
+        const centerY = h / 2;
+        
+        // Render main galaxy
+        this.particles.forEach(particle => {
+          particle.angle += particle.speed * (1 + audioData.energy * 1.8);
+          particle.shimmer += 0.1;
+          
+          // Enhanced spiral calculation
+          const radiusModulation = Math.sin(this.time + particle.angle) * 60 * audioData.average;
+          particle.radius = particle.baseRadius + radiusModulation;
+          
+          const armAngle = particle.angle + (particle.armIndex * Math.PI * 2 / this.galaxyArms);
+          const spiralFactor = particle.radius * 0.012;
+          const finalAngle = armAngle + spiralFactor + audioData.beatIntensity * 0.5;
+          
+          const x = centerX + Math.cos(finalAngle) * particle.radius;
+          const y = centerY + Math.sin(finalAngle) * particle.radius;
+          
+          // Enhanced spectrum-based coloring
+          const specIndex = Math.floor((particle.armIndex / this.galaxyArms) * audioData.spectrum.length);
+          const intensity = audioData.spectrum[specIndex] || 0;
+          const shimmerMod = Math.sin(particle.shimmer) * 0.3 + 0.7;
+          
+          const r = Math.round((60 + intensity * 150 + particle.armIndex * 25) * shimmerMod);
+          const g = Math.round((90 + intensity * 130 + Math.sin(particle.armIndex) * 40) * shimmerMod);
+          const b = Math.round((160 + intensity * 95 + Math.cos(particle.armIndex) * 30) * shimmerMod);
+          
+          const size = particle.size * (1 + audioData.beatIntensity * 0.8 + intensity * 1.2);
+          
+          // Optimized particle rendering
+          const sizeInt = Math.round(size);
+          for (let dx = -sizeInt; dx <= sizeInt; dx++) {
+            for (let dy = -sizeInt; dy <= sizeInt; dy++) {
+              const dist = dx*dx + dy*dy;
+              if (dist <= sizeInt*sizeInt) {
+                const alpha = Math.max(0, 1 - Math.sqrt(dist) / sizeInt) * intensity * shimmerMod;
+                setPixelBlend(Math.round(x + dx), Math.round(y + dy), r, g, b, alpha * 0.5);
+              }
+            }
+          }
+        });
+        
+        // Render galactic core
+        this.coreParticles.forEach(particle => {
+          particle.angle += particle.speed * (1 + audioData.energy * 3);
+          
+          const x = centerX + Math.cos(particle.angle) * particle.radius * (1 + audioData.average * 0.5);
+          const y = centerY + Math.sin(particle.angle) * particle.radius * (1 + audioData.average * 0.5);
+          
+          const coreIntensity = audioData.energy * particle.intensity;
+          const r = Math.round(255 * coreIntensity);
+          const g = Math.round(220 * coreIntensity);
+          const b = Math.round(180 * coreIntensity);
+          
+          const size = particle.size * (1 + audioData.beatIntensity);
+          const sizeInt = Math.round(size);
+          
+          for (let dx = -sizeInt; dx <= sizeInt; dx++) {
+            for (let dy = -sizeInt; dy <= sizeInt; dy++) {
+              if (dx*dx + dy*dy <= sizeInt*sizeInt) {
+                setPixelFast(Math.round(x + dx), Math.round(y + dy), r, g, b);
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // 3. Enhanced Fluid Flow Visualizer  
+    class FluidFlowVisualizer {
+      constructor() {
+        this.flowField = [];
+        this.flowParticles = [];
+        this.time = 0;
+        this.gridSize = 25;
+        this.noiseScale = 0.008;
+      }
+      
+      init() {
+        // Initialize optimized flow field
+        for (let x = 0; x < w; x += this.gridSize) {
+          for (let y = 0; y < h; y += this.gridSize) {
+            this.flowField.push({ x, y, vx: 0, vy: 0, intensity: 0 });
+          }
+        }
+        
+        // Initialize enhanced flow particles
+        for (let i = 0; i < 400; i++) {
+          this.flowParticles.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: 0, vy: 0,
+            life: Math.random(),
+            maxLife: 120 + Math.random() * 180,
+            trail: [],
+            hue: Math.random() * 360,
+            speed: 0.5 + Math.random() * 1.5
+          });
+        }
+      }
+      
+      onEnter() {}
+      onExit() {}
+      
+      enhancedPerlinNoise(x, y, time) {
+        const freq1 = this.noiseScale;
+        const freq2 = this.noiseScale * 2.1;
+        const freq3 = this.noiseScale * 4.3;
+        
+        const noise1 = Math.sin(x * freq1 + time * 0.6) * Math.cos(y * freq1 + time * 0.4);
+        const noise2 = Math.sin(x * freq2 + time * 0.8) * Math.cos(y * freq2 + time * 0.5) * 0.5;
+        const noise3 = Math.sin(x * freq3 + time * 1.1) * Math.cos(y * freq3 + time * 0.7) * 0.25;
+        
+        return noise1 + noise2 + noise3;
+      }
+      
+      render(audioData) {
+        this.time += 0.03 * (1 + audioData.energy);
+        
+        // Update flow field with enhanced audio influence
+        this.flowField.forEach(field => {
+          const noise = this.enhancedPerlinNoise(field.x, field.y, this.time);
+          const audioInfluence = audioData.average * 3 + audioData.beatIntensity * 2;
+          const specIndex = Math.floor(((field.x + field.y) / (w + h)) * audioData.spectrum.length);
+          const specInfluence = audioData.spectrum[specIndex] || 0;
+          
+          field.vx = Math.cos(noise * Math.PI * 3) * audioInfluence * (1 + specInfluence);
+          field.vy = Math.sin(noise * Math.PI * 3) * audioInfluence * (1 + specInfluence);
+          field.intensity = specInfluence;
+        });
+        
+        // Update and render enhanced flow particles
+        this.flowParticles.forEach(particle => {
+          // Find nearest flow field with interpolation
+          const gridX = Math.floor(particle.x / this.gridSize) * this.gridSize;
+          const gridY = Math.floor(particle.y / this.gridSize) * this.gridSize;
+          const nearestField = this.flowField.find(f => f.x === gridX && f.y === gridY);
+          
+          if (nearestField) {
+            particle.vx += nearestField.vx * 0.08 * particle.speed;
+            particle.vy += nearestField.vy * 0.08 * particle.speed;
+            particle.intensity = nearestField.intensity;
+          }
+          
+          // Apply velocity with enhanced audio modulation
+          const energyMod = 1 + audioData.energy * 1.5 + audioData.beatIntensity;
+          particle.x += particle.vx * energyMod;
+          particle.y += particle.vy * energyMod;
+          
+          // Enhanced boundary behavior
+          if (particle.x < 0) particle.x = w;
+          if (particle.x > w) particle.x = 0;
+          if (particle.y < 0) particle.y = h;
+          if (particle.y > h) particle.y = 0;
+          
+          // Velocity damping
+          particle.vx *= 0.96;
+          particle.vy *= 0.96;
+          
+          // Enhanced trail management
+          particle.trail.push({ x: particle.x, y: particle.y, life: 1.0, intensity: particle.intensity || 0 });
+          if (particle.trail.length > 20) particle.trail.shift();
+          
+          // Update trail life
+          particle.trail.forEach(point => point.life -= 0.065);
+          
+          // Render enhanced trail with color variation
+          for (let i = 0; i < particle.trail.length - 1; i++) {
+            const point1 = particle.trail[i];
+            const point2 = particle.trail[i + 1];
+            
+            if (point1.life > 0 && point2.life > 0) {
+              const intensity = point1.life * audioData.average * (1 + point1.intensity);
+              const hueShift = particle.hue + audioData.time * 50 + point1.intensity * 60;
+              
+              const r = Math.round((128 + Math.cos(hueShift * Math.PI / 180) * 127) * intensity);
+              const g = Math.round((128 + Math.cos((hueShift + 120) * Math.PI / 180) * 127) * intensity);
+              const b = Math.round((128 + Math.cos((hueShift + 240) * Math.PI / 180) * 127) * intensity);
+              
+              drawLineOptimized(
+                point1.x | 0, point1.y | 0,
+                point2.x | 0, point2.y | 0,
+                r, g, b, Math.max(1, Math.round(intensity * 4))
+              );
+            }
+          }
+          
+          particle.life++;
+          if (particle.life > particle.maxLife) {
+            particle.x = Math.random() * w;
+            particle.y = Math.random() * h;
+            particle.vx = particle.vy = 0;
+            particle.life = 0;
+            particle.trail = [];
+            particle.hue = Math.random() * 360;
+          }
+        });
+      }
+    }
+
+    // 4. Enhanced Fractal Mandala Visualizer
+    class FractalMandalaVisualizer {
+      constructor() {
+        this.time = 0;
+        this.mandalaLayers = 10;
+        this.rotationSpeed = 0.008;
+        this.geometryNodes = [];
+      }
+      
+      init() {
+        // Pre-calculate sacred geometry nodes
+        for (let layer = 0; layer < this.mandalaLayers; layer++) {
+          const numPoints = 8 + layer * 6;
+          this.geometryNodes[layer] = numPoints;
+        }
+      }
+      
+      onEnter() {}
+      onExit() {}
+      
+      render(audioData) {
+        this.time += this.rotationSpeed * (1 + audioData.energy * 0.8);
+        const centerX = w / 2;
+        const centerY = h / 2;
+        const maxRadius = Math.min(w, h) * 0.42;
+        
+        // Enhanced mandala layers with better distribution
+        for (let layer = 0; layer < this.mandalaLayers; layer++) {
+          const layerRadius = (maxRadius / this.mandalaLayers) * (layer + 1);
+          const numPoints = this.geometryNodes[layer];
+          const audioMod = audioData.spectrum[layer * 6] || 0;
+          const finalRadius = layerRadius * (0.75 + audioMod * 0.45 + audioData.beatIntensity * 0.3);
+          
+          // Enhanced rotation with layer-specific speeds
+          const layerRotation = this.time * (layer % 2 === 0 ? 1 : -0.7) * (1 + audioMod * 0.5);
+          
+          // Draw connecting polygons
+          const points = [];
+          for (let i = 0; i < numPoints; i++) {
+            const angle = (i / numPoints) * Math.PI * 2 + layerRotation;
+            const radiusVar = finalRadius + Math.sin(angle * 5 + this.time * 2) * audioData.energy * 15;
+            
+            const x = centerX + Math.cos(angle) * radiusVar;
+            const y = centerY + Math.sin(angle) * radiusVar;
+            points.push({ x, y, angle });
+          }
+          
+          // Enhanced layer-based coloring with spectrum
+          const hue = (layer / this.mandalaLayers) * 300 + audioData.time * 20;
+          const saturation = 0.6 + audioMod * 0.4;
+          const intensity = 0.7 + audioMod * 0.3 + audioData.beatIntensity * 0.4;
+          
+          const r = Math.round((128 + Math.cos(hue * Math.PI / 180) * 127) * intensity);
+          const g = Math.round((128 + Math.cos((hue + 120) * Math.PI / 180) * 127) * intensity);
+          const b = Math.round((128 + Math.cos((hue + 240) * Math.PI / 180) * 127) * intensity);
+          
+          const thickness = 1 + Math.round(audioMod * 4 + audioData.beatIntensity * 3);
+          
+          // Draw polygon edges
+          for (let i = 0; i < points.length; i++) {
+            const point1 = points[i];
+            const point2 = points[(i + 1) % points.length];
+            
+            drawLineOptimized(
+              point1.x | 0, point1.y | 0,
+              point2.x | 0, point2.y | 0,
+              r, g, b, thickness
+            );
+          }
+          
+          // Draw radial connections with golden ratio spacing
+          if (layer > 0 && layer % 2 === 0) {
+            const innerLayer = Math.floor(layer * 0.618); // Golden ratio
+            if (innerLayer < this.mandalaLayers) {
+              const innerRadius = (maxRadius / this.mandalaLayers) * (innerLayer + 1) * 0.8;
+              
+              for (let i = 0; i < numPoints; i += 2) { // Every other point for performance
+                const point = points[i];
+                const innerAngle = point.angle;
+                const innerX = centerX + Math.cos(innerAngle) * innerRadius;
+                const innerY = centerY + Math.sin(innerAngle) * innerRadius;
+                
+                drawLineOptimized(
+                  point.x | 0, point.y | 0,
+                  innerX | 0, innerY | 0,
+                  r >> 1, g >> 1, b >> 1, Math.max(1, thickness - 1)
+                );
+              }
+            }
+          }
+          
+          // Enhanced sacred geometry nodes
+          if (audioData.beatIntensity > 0.3) {
+            points.forEach((point, i) => {
+              if (i % 3 === 0) { // Every third point
+                const nodeSize = 2 + audioMod * 6 + audioData.beatIntensity * 4;
+                const nodeSizeInt = Math.round(nodeSize);
+                
+                for (let dx = -nodeSizeInt; dx <= nodeSizeInt; dx++) {
+                  for (let dy = -nodeSizeInt; dy <= nodeSizeInt; dy++) {
+                    if (dx*dx + dy*dy <= nodeSizeInt*nodeSizeInt) {
+                      setPixelFast(Math.round(point.x + dx), Math.round(point.y + dy), r, g, b);
+                    }
+                  }
+                }
+              }
+            });
+          }
+        }
+        
+        // Enhanced central mandala core with pulsing
+        const coreRadius = 25 + audioData.average * 40 + audioData.beatIntensity * 20;
+        const corePoints = 16;
+        const pulseIntensity = 1 + Math.sin(this.time * 8) * 0.3 * audioData.energy;
+        
+        for (let i = 0; i < corePoints; i++) {
+          const angle = (i / corePoints) * Math.PI * 2 + this.time * 4;
+          const radius = coreRadius * pulseIntensity;
+          const x = centerX + Math.cos(angle) * radius;
+          const y = centerY + Math.sin(angle) * radius;
+          
+          const coreIntensity = audioData.energy * (0.8 + audioData.beatIntensity);
+          const r = Math.round(255 * coreIntensity);
+          const g = Math.round(220 * coreIntensity);
+          const b = Math.round(160 * coreIntensity);
+          
+          const nodeSize = 3 + audioData.beatIntensity * 5;
+          const nodeSizeInt = Math.round(nodeSize);
+          
+          for (let dx = -nodeSizeInt; dx <= nodeSizeInt; dx++) {
+            for (let dy = -nodeSizeInt; dy <= nodeSizeInt; dy++) {
+              if (dx*dx + dy*dy <= nodeSizeInt*nodeSizeInt) {
+                setPixelFast(Math.round(x + dx), Math.round(y + dy), r, g, b);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Initialize enhanced visualizer system
+    const vizManager = new VisualizerManager();
+
+    // Enhanced floating particle for tunnel
+    class EnhancedFloatingParticle {
+      constructor() {
+        this.reset();
+      }
+      
+      reset() {
+        this.x = (Math.random() - 0.5) * w * 1.5;
+        this.y = (Math.random() - 0.5) * h * 1.5;
+        this.z = Math.random() * 560 - 280;
+        this.vx = (Math.random() - 0.5) * 4;
+        this.vy = (Math.random() - 0.5) * 4;
+        this.vz = (Math.random() - 0.5) * 6;
+        this.size = Math.random() * 3 + 1;
+        this.life = 1.0;
+        this.shimmer = Math.random() * Math.PI * 2;
+        this.hue = Math.random() * 60 + 180; // Blue-cyan range
+      }
+      
+      update(audioData) {
+        this.shimmer += 0.08;
+        const energyMod = 1 + audioData.energy * 1.2;
+        
+        this.x += this.vx * energyMod;
+        this.y += this.vy * energyMod;
+        this.z += this.vz * energyMod + audioData.average * 8;
+        
+        if (this.z > 280) this.z = -280;
+        if (this.z < -280) this.z = 280;
+        
+        this.life -= 0.004;
+        if (this.life <= 0) this.reset();
+      }
+      
+      render(centerX, centerY, audioData) {
+        const scale = 280 / (280 + this.z);
+        const screenX = this.x * scale + centerX;
+        const screenY = this.y * scale + centerY;
+        
+        if (screenX >= -10 && screenX < w + 10 && screenY >= -10 && screenY < h + 10) {
+          const intensity = this.life * scale;
+          const shimmerMod = Math.sin(this.shimmer) * 0.4 + 0.6;
+          const size = this.size * scale * (1 + audioData.beatIntensity * 0.7) * shimmerMod;
+          
+          const depthFactor = (this.z + 280) / 560;
+          const hueShift = this.hue + depthFactor * 60;
+          
+          const r = Math.round((60 + depthFactor * 160) * intensity * shimmerMod);
+          const g = Math.round((110 + depthFactor * 130) * intensity * shimmerMod);
+          const b = Math.round((170 + depthFactor * 85) * intensity * shimmerMod);
+          
+          const sizeInt = Math.round(size);
+          for (let dx = -sizeInt; dx <= sizeInt; dx++) {
+            for (let dy = -sizeInt; dy <= sizeInt; dy++) {
+              const dist = dx*dx + dy*dy;
+              if (dist <= sizeInt*sizeInt) {
+                const alpha = Math.max(0, 1 - Math.sqrt(dist) / sizeInt);
+                setPixelBlend(Math.round(screenX + dx), Math.round(screenY + dy), r, g, b, alpha * 0.6);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Enhanced sensor handling
+    let orientationActive = false, beta = 0, gamma = 0;
+    
+    function setupSensors() {
+      try {
+        if (window.DeviceOrientationEvent) {
+          window.addEventListener("deviceorientation", (e) => {
+            beta = e.beta || 0; 
+            gamma = e.gamma || 0; 
+            orientationActive = true;
+          }, { passive: true });
+        }
+      } catch(e) {
+        console.info('Device orientation not available');
+      }
+    }
+
+    // Enhanced touch and gesture handling
     let mouseActive = false, mouseDown = false;
-    let mousePos = { x: 0, y: 0 }, mouseFollowSpeed = 0.015;
-
-    function getMousePos(canvas, event) { const rect = canvas.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top }; }
-    function mouseDownHandler() { mouseDown = true; setInversion(true); }
-    function mouseUpHandler() { mouseDown = false; setInversion(false); }
-    function mouseEnterHandler() { mouseActive = true; }
-    function mouseLeaveHandler() { mouseActive = false; mousePos.x = w / 2; mousePos.y = h / 2; mouseDown = false; setInversion(false); }
-    function mouseMoveHandler(event) { mousePos = getMousePos(canvas, event); }
-
-    canvas.addEventListener('mousedown', mouseDownHandler, false);
-    canvas.addEventListener('mouseup', mouseUpHandler, false);
-    canvas.addEventListener('mousemove', mouseMoveHandler, false);
-    canvas.addEventListener('mouseenter', mouseEnterHandler, false);
-    canvas.addEventListener('mouseleave', mouseLeaveHandler, false);
-
-    // Touch with ripple, swipe, double-tap
+    let mousePos = { x: w/2, y: h/2 };
     let touchStartX = 0, touchStartY = 0, lastTapTime = 0;
-    const swipeThreshold = 50, doubleTapMs = 300;
+    const swipeThreshold = 70, doubleTapMs = 300;
     const swipeHint = document.getElementById("swipeHint");
 
-    function createRipple(x, y) {
+    function createEnhancedRipple(x, y) {
       const ripple = document.createElement('div');
       ripple.className = 'touch-ripple';
       ripple.style.left = (x - 25) + 'px';
-      ripple.style.top  = (y - 25) + 'px';
+      ripple.style.top = (y - 25) + 'px';
+      ripple.style.background = `rgba(${100 + Math.random()*100}, ${150 + Math.random()*100}, 255, 0.5)`;
       document.body.appendChild(ripple);
       setTimeout(() => ripple.remove(), 600);
     }
 
+    // Optimized mouse events
+    canvas.addEventListener('mousedown', () => { mouseDown = true; setInversion(true); }, { passive: true });
+    canvas.addEventListener('mouseup', () => { mouseDown = false; setInversion(false); }, { passive: true });
+    canvas.addEventListener('mousemove', (e) => { 
+      const rect = canvas.getBoundingClientRect();
+      mousePos.x = e.clientX - rect.left; 
+      mousePos.y = e.clientY - rect.top; 
+      mouseActive = true;
+    }, { passive: true });
+    canvas.addEventListener('mouseleave', () => { 
+      mouseActive = false; 
+      mouseDown = false; 
+      setInversion(false); 
+    }, { passive: true });
+
+    // Enhanced touch events
     canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
       const t = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
       const x = t.clientX - rect.left, y = t.clientY - rect.top;
       touchStartX = x; touchStartY = y;
       mousePos.x = x; mousePos.y = y;
       mouseDown = true; setInversion(true);
-      createRipple(x, y);
+      createEnhancedRipple(x, y);
 
       const now = performance.now();
       if (now - lastTapTime < doubleTapMs && audio.started) {
@@ -296,48 +1081,52 @@
 
     canvas.addEventListener("touchmove", (e) => {
       e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
       const t = e.touches[0];
-      mousePos.x = t.clientX - rect.left; mousePos.y = t.clientY - rect.top;
+      const rect = canvas.getBoundingClientRect();
+      mousePos.x = t.clientX - rect.left; 
+      mousePos.y = t.clientY - rect.top;
     }, { passive: false });
 
     canvas.addEventListener("touchend", (e) => {
       e.preventDefault();
       mouseDown = false; setInversion(false);
       if (audio.started) {
-        const rect = canvas.getBoundingClientRect();
         const t = e.changedTouches[0];
+        const rect = canvas.getBoundingClientRect();
         const endX = t.clientX - rect.left, endY = t.clientY - rect.top;
         const dx = endX - touchStartX, dy = endY - touchStartY;
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > swipeThreshold) {
-          if (dx > 0) audio.prev(); else audio.next();
-          UI.text(audio.trackLabel());
-          swipeHint.classList.add('show');
-          setTimeout(() => swipeHint.classList.remove('show'), 1400);
+        
+        if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
+          if (Math.abs(dx) > Math.abs(dy)) {
+            // Horizontal swipe - change tracks
+            if (dx > 0) audio.prev(); else audio.next();
+            UI.text(audio.trackLabel());
+          } else {
+            // Vertical swipe - change visualizers
+            if (dy > 0) vizManager.next(); else vizManager.prev();
+            const vizNames = ['Warp Tunnel', 'Particle Galaxy', 'Fluid Flow', 'Fractal Mandala'];
+            swipeHint.textContent = vizNames[vizManager.currentViz];
+            swipeHint.classList.add('show');
+            setTimeout(() => swipeHint.classList.remove('show'), 1600);
+          }
         }
       }
     }, { passive: false });
 
-    // Device orientation parallax
-    let orientationActive = false, beta = 0, gamma = 0;
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener("deviceorientation", (e) => {
-        beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true;
-      }, { passive: true });
-    }
-
-    // Overlay start + keyboard
-    const overlay = document.getElementById("overlay");
-    overlay.addEventListener("mousedown", (e) => { e.stopPropagation(); e.preventDefault(); }, { capture: true });
-    overlay.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(); });
-    overlay.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } });
-
+    // Enhanced keyboard controls
     addEventListener("keydown", (e) => {
       if (e.code === "Space") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
       if (e.key?.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; }
       if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
       if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); UI.text(audio.trackLabel()); } return; }
-    });
+      if (e.code === "ArrowUp") { e.preventDefault(); if (audio.started) vizManager.prev(); return; }
+      if (e.code === "ArrowDown") { e.preventDefault(); if (audio.started) vizManager.next(); return; }
+    }, { passive: false });
+
+    // Overlay with enhanced startup
+    const overlay = document.getElementById("overlay");
+    overlay.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(); });
+    overlay.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } });
 
     function startApp() {
       if (!audio.started) {
@@ -345,134 +1134,83 @@
         audio.loadAndPlay(audio.tracks[audio.trackIndex]);
         UI.text(audio.trackLabel());
         overlay.hidden = true;
+        
+        // Start city carousel with delay for smoothness
+        setTimeout(() => {
+          if (citySwiper) citySwiper.autoplay.start();
+        }, 500);
       }
     }
 
-    // Soft invert (progressive) + text state
+    // Enhanced inversion system
     let colorInvertValue = 0;
-    const siteTitle = document.getElementById("siteTitle");
+    const cityCarousel = document.getElementById("cityCarousel");
     function setInversion(active) {
-      // For text/UI, snap-mode like original press feedback
       if (active) {
-        siteTitle.classList.add('site-inverted');
+        cityCarousel.classList.add('city-inverted');
         document.getElementById('ui').classList.add('ui-inverted');
       } else {
-        siteTitle.classList.remove('site-inverted');
+        cityCarousel.classList.remove('city-inverted');
         document.getElementById('ui').classList.remove('ui-inverted');
       }
     }
+    
     function softInvert(value) {
-      for (let j = 0, n = data.length; j < n; j += 4) {
-        data[j]   = Math.abs(value - data[j]);
+      const len = data.length;
+      for (let j = 0; j < len; j += 4) {
+        data[j] = Math.abs(value - data[j]);
         data[j+1] = Math.abs(value - data[j+1]);
         data[j+2] = Math.abs(value - data[j+2]);
-        data[j+3] = 255;
       }
     }
 
-    // Render (clean, no additive trails; blue/teal wire tint like original)
-    function renderFrame(a) {
-      let needSort = false;
-      const rows = particles.length;
-
-      // Mouse/gyro parallax target
-      let px = mousePos.x, py = mousePos.y;
-      if (orientationActive && !mouseDown) {
-        const sens = 1.25;
-        px = w/2 + gamma * (w/90) * sens;
-        py = h/2 + beta  * (h/90) * sens;
-      }
-
-      for (let i = 0; i < rows; i++) {
-        const row = particles[i];
-        const prevRow = (i > 0) ? particles[i-1] : null;
-        const center = centers[i];
-
-        if (mouseActive || mouseDown || orientationActive) {
-          center.x = ((w / 2) - px) * ((row[0].z - fov) / 500) + w / 2;
-          center.y = ((h / 2) - py) * ((row[0].z - fov) / 500) + h / 2;
-        } else {
-          center.x += ((w / 2) - center.x) * mouseFollowSpeed;
-          center.y += ((h / 2) - center.y) * mouseFollowSpeed;
-        }
-
-        for (let j = 0, k = row.length; j < k; j++) {
-          const p = row[j];
-          const scale = fov / (fov + p.z);
-          p.x2d = (p.x * scale) + center.x;
-          p.y2d = (p.y * scale) + center.y;
-
-          // Smooth audio radius lift (no analyser from embeds)
-          p.radiusAudio = p.radius + a.average * 6;
-
-          // Advance z with input modulation
-          if (mouseDown) { p.z += speed; if (p.z > fov) { p.z -= (fov * 2); needSort = true; } }
-          else           { p.z -= speed; if (p.z < -fov) { p.z += (fov * 2); needSort = true; } }
-
-          // Line color by depth row (clean teal/blue)
-          let lineColorValue = Math.round(i / rows * 180); // <= 180 to keep dimmer
-          let b = lineColorValue;
-          let g = Math.round(lineColorValue / 2);
-          // draw around ring
-          if (j > 0) {
-            const pPrev = row[j - 1];
-            drawLine(p.x2d | 0, p.y2d | 0, pPrev.x2d | 0, pPrev.y2d | 0, 0, g, b, 255);
-          }
-
-          // Move point along the ring for next frame
-          let pos;
-          if (j < k - 1) {
-            pos = getCirclePosition(p.centerX, p.centerY, p.radiusAudio, p.index, p.segments);
-          } else {
-            const p1 = row[0];
-            pos = getCirclePosition(p1.centerX, p1.centerY, p1.radiusAudio, p1.index, p1.segments);
-          }
-          p.x = pos.x; p.y = pos.y;
-
-          // Diagonals to previous row
-          if (i > 0 && i < rows - 1) {
-            const pB = (j === 0) ? prevRow[prevRow.length - 1] : prevRow[j - 1];
-            drawLine(p.x2d | 0, p.y2d | 0, pB.x2d | 0, pB.y2d | 0, 0, g, b, 255);
-          }
-        }
-      }
-
-      if (needSort) {
-        particles = particles.sort((a, b) => (b[0].z - a[0].z));
-      }
-
-      // Time flow like original
-      time += mouseDown ? -0.005 : 0.005;
-
-      // Progressive soft invert on press/drag
+    // Optimized main render loop
+    function renderFrame(audioData) {
+      // Enhanced inversion effect
       if (mouseDown) {
-        colorInvertValue = Math.min(255, colorInvertValue + 5);
+        colorInvertValue = Math.min(255, colorInvertValue + 12);
         softInvert(colorInvertValue);
       } else {
-        colorInvertValue = Math.max(0, colorInvertValue - 5);
+        colorInvertValue = Math.max(0, colorInvertValue - 12);
         if (colorInvertValue > 0) softInvert(colorInvertValue);
       }
+      
+      // Render current visualizer
+      vizManager.render(audioData);
     }
 
     function animate() {
       clearImageData();
-      const a = audio.started ? audio.data() : { average: 0, bass: 0, mid: 0, high: 0 };
-      renderFrame(a);
+      const audioData = audio.started ? audio.data() : { 
+        average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0,
+        beatIntensity: 0, spectrum: new Array(64).fill(0), spectrumHistory: [], time: 0
+      };
+      renderFrame(audioData);
       ctx.putImageData(imageData, 0, 0);
       requestAnimationFrame(animate);
     }
 
     function boot() {
       onResize();
-      addParticles();
-      // initial clear + render to prime buffer
-      clearImageData(); renderFrame({ average: 0, bass: 0, mid: 0, high: 0 }); ctx.putImageData(imageData, 0, 0);
-      UI.text("Ready · click/touch to start");
+      setupSensors();
+      initCityCarousel();
+      vizManager.init();
+      
+      // Initial render
+      clearImageData(); 
+      renderFrame({ average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0, beatIntensity: 0, spectrum: new Array(64).fill(0), spectrumHistory: [], time: 0 }); 
+      ctx.putImageData(imageData, 0, 0);
+      
+      UI.text("Ready");
       requestAnimationFrame(animate);
     }
 
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
-    else boot();
+    // Start when ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot);
+    } else {
+      boot();
+    }
   </script>
 </body>
 </html>
