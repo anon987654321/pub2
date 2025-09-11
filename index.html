@@ -8,39 +8,43 @@
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Classic warp tunnel with multiple views. Swipe to explore. Tilt device for parallax." />
     
-    <!-- Add favicon to prevent 404 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>">
     
     <style>
-      html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
-      canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #000; touch-action: none; }
+      html, body { 
+        margin: 0; height: 100%; background: #000; color: #9aa; 
+        font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; 
+        overflow: hidden; 
+      }
+      canvas { 
+        position: fixed; inset: 0; width: 100vw; height: 100vh; 
+        display: block; background: #000; touch-action: none; 
+      }
       
-      /* Loading screen */
       .loading-screen {
-        position: fixed; inset: 0; background: #000; color: #9aa; display: grid; place-items: center;
-        z-index: 2000; transition: opacity 0.5s ease;
+        position: fixed; inset: 0; background: #000; color: #9aa; 
+        display: grid; place-items: center; z-index: 2000; 
+        transition: opacity 0.5s ease;
       }
       .loading-screen.hidden { opacity: 0; pointer-events: none; }
       
       .city-carousel {
-        position: fixed; top: 12px; left: 12px; width: 280px; height: 40px; z-index: 95;
-        pointer-events: none; user-select: none; overflow: hidden;
+        position: fixed; top: 12px; left: 12px; width: 280px; height: 40px; 
+        z-index: 95; pointer-events: none; user-select: none; overflow: hidden;
       }
       
-      /* Swiper styles - minimal needed */
-      .swiper { width: 100%; height: 100%; position: relative; overflow: hidden; }
-      .swiper-wrapper { 
-        position: relative; width: 100%; height: 100%; z-index: 1; 
-        display: flex; transition-property: transform; box-sizing: content-box; 
+      .carousel-container {
+        width: 100%; height: 100%; position: relative; overflow: hidden;
       }
-      .swiper-slide { 
-        flex-shrink: 0; width: 100%; height: 100%; position: relative; 
-        display: flex; align-items: center; justify-content: flex-start;
+      .carousel-slide {
+        height: 100%; display: flex; align-items: center; justify-content: flex-start;
         font-weight: 700; font-size: clamp(24px, 3.2vw, 36px); color: #fff;
-        letter-spacing: 0.02em; transition: color 0.18s ease;
+        letter-spacing: 0.02em; transition: all 0.3s ease;
+        position: absolute; top: 0; left: 0; width: 100%;
+        opacity: 0; transform: translateY(100%);
       }
-      .city-inverted .swiper-slide { color: #000 !important; }
-      .swiper-pagination { display: none !important; }
+      .carousel-slide.active { opacity: 1; transform: translateY(0%); }
+      .city-inverted .carousel-slide { color: #000 !important; }
      
       .ui {
         position: fixed; right: 12px; bottom: 10px; color: #7a90a0; font-size: 12px;
@@ -67,7 +71,12 @@
         display: grid; grid-template-columns: auto auto; gap: 4px 12px; justify-content: end;
       }
       .instructions span { white-space: nowrap; }
-      #player { position: fixed; top: -1000px; left: -1000px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+      
+      #player { 
+        position: fixed; top: -1000px; left: -1000px; width: 1px; height: 1px; 
+        opacity: 0; pointer-events: none; 
+      }
+      
       .viz-indicator {
         position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
         display: flex; gap: 8px; z-index: 99; pointer-events: none;
@@ -77,12 +86,17 @@
         transition: background 0.3s ease;
       }
       .viz-dot.active { background: rgba(255,255,255,0.8); }
+      
       .touch-ripple {
         position: absolute; width: 50px; height: 50px; border-radius: 50%;
         background: rgba(100,200,255,0.4); pointer-events: none;
         animation: ripple 0.6s ease-out forwards; z-index: 50;
       }
-      @keyframes ripple { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
+      @keyframes ripple { 
+        0% { transform: scale(0); opacity: 1; } 
+        100% { transform: scale(4); opacity: 0; } 
+      }
+      
       .swipe-hint {
         position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
         color: #555; font-size: 11px; opacity: 0; transition: opacity 0.5s ease; z-index: 99;
@@ -94,68 +108,66 @@
         .touch-ripple { display: none; }
       }
       
-      /* Responsive canvas scaling for performance */
       @media (max-width: 768px) {
         canvas { image-rendering: pixelated; }
+        .city-carousel { width: 200px; }
+        .carousel-slide { font-size: clamp(18px, 4vw, 28px); }
       }
     </style>
   </head>
   <body>
-    <!-- Loading screen -->
     <div class="loading-screen" id="loadingScreen">
       <div>📻 Loading Radio Bergen...</div>
     </div>
     
-    <div class="city-carousel" data-controller="carousel" data-carousel-options-value='{"direction": "vertical", "loop": true, "autoplay": {"delay": 2800, "disableOnInteraction": false}, "speed": 1200, "effect": "slide", "allowTouchMove": false}' id="cityCarousel">
-      <div class="swiper">
-        <div class="swiper-wrapper">
-          <div class="swiper-slide">radio.brgen.no</div>
-          <div class="swiper-slide">radio.oslo.no</div>
-          <div class="swiper-slide">radio.trndheim.no</div>
-          <div class="swiper-slide">radio.stvanger.no</div>
-          <div class="swiper-slide">radio.trmso.no</div>
-          <div class="swiper-slide">radio.longyearbyn.no</div>
-          <div class="swiper-slide">radio.reykjavk.is</div>
-          <div class="swiper-slide">radio.kobenhvn.dk</div>
-          <div class="swiper-slide">radio.stholm.se</div>
-          <div class="swiper-slide">radio.gtebrg.se</div>
-          <div class="swiper-slide">radio.mlmoe.se</div>
-          <div class="swiper-slide">radio.hlsinki.fi</div>
-          <div class="swiper-slide">radio.lndon.uk</div>
-          <div class="swiper-slide">radio.cardff.uk</div>
-          <div class="swiper-slide">radio.mnchester.uk</div>
-          <div class="swiper-slide">radio.brmingham.uk</div>
-          <div class="swiper-slide">radio.lverpool.uk</div>
-          <div class="swiper-slide">radio.edinbrgh.uk</div>
-          <div class="swiper-slide">radio.glasgw.uk</div>
-          <div class="swiper-slide">radio.amstrdam.nl</div>
-          <div class="swiper-slide">radio.rottrdam.nl</div>
-          <div class="swiper-slide">radio.utrcht.nl</div>
-          <div class="swiper-slide">radio.brssels.be</div>
-          <div class="swiper-slide">radio.zrich.ch</div>
-          <div class="swiper-slide">radio.lchtenstein.li</div>
-          <div class="swiper-slide">radio.frankfrt.de</div>
-          <div class="swiper-slide">radio.wrsawa.pl</div>
-          <div class="swiper-slide">radio.gdnsk.pl</div>
-          <div class="swiper-slide">radio.brdeaux.fr</div>
-          <div class="swiper-slide">radio.mrseille.fr</div>
-          <div class="swiper-slide">radio.mlan.it</div>
-          <div class="swiper-slide">radio.lsbon.pt</div>
-          <div class="swiper-slide">radio.lsangeles.com</div>
-          <div class="swiper-slide">radio.newyrk.us</div>
-          <div class="swiper-slide">radio.chcago.us</div>
-          <div class="swiper-slide">radio.houstn.us</div>
-          <div class="swiper-slide">radio.dllas.us</div>
-          <div class="swiper-slide">radio.austn.us</div>
-          <div class="swiper-slide">radio.prtland.com</div>
-          <div class="swiper-slide">radio.mnneapolis.com</div>
-        </div>
+    <div class="city-carousel" id="cityCarousel">
+      <div class="carousel-container">
+        <div class="carousel-slide active">radio.brgen.no</div>
+        <div class="carousel-slide">radio.oslo.no</div>
+        <div class="carousel-slide">radio.trndheim.no</div>
+        <div class="carousel-slide">radio.stvanger.no</div>
+        <div class="carousel-slide">radio.trmso.no</div>
+        <div class="carousel-slide">radio.longyearbyn.no</div>
+        <div class="carousel-slide">radio.reykjavk.is</div>
+        <div class="carousel-slide">radio.kobenhvn.dk</div>
+        <div class="carousel-slide">radio.stholm.se</div>
+        <div class="carousel-slide">radio.gtebrg.se</div>
+        <div class="carousel-slide">radio.mlmoe.se</div>
+        <div class="carousel-slide">radio.hlsinki.fi</div>
+        <div class="carousel-slide">radio.lndon.uk</div>
+        <div class="carousel-slide">radio.cardff.uk</div>
+        <div class="carousel-slide">radio.mnchester.uk</div>
+        <div class="carousel-slide">radio.brmingham.uk</div>
+        <div class="carousel-slide">radio.lverpool.uk</div>
+        <div class="carousel-slide">radio.edinbrgh.uk</div>
+        <div class="carousel-slide">radio.glasgw.uk</div>
+        <div class="carousel-slide">radio.amstrdam.nl</div>
+        <div class="carousel-slide">radio.rottrdam.nl</div>
+        <div class="carousel-slide">radio.utrcht.nl</div>
+        <div class="carousel-slide">radio.brssels.be</div>
+        <div class="carousel-slide">radio.zrich.ch</div>
+        <div class="carousel-slide">radio.lchtenstein.li</div>
+        <div class="carousel-slide">radio.frankfrt.de</div>
+        <div class="carousel-slide">radio.wrsawa.pl</div>
+        <div class="carousel-slide">radio.gdnsk.pl</div>
+        <div class="carousel-slide">radio.brdeaux.fr</div>
+        <div class="carousel-slide">radio.mrseille.fr</div>
+        <div class="carousel-slide">radio.mlan.it</div>
+        <div class="carousel-slide">radio.lsbon.pt</div>
+        <div class="carousel-slide">radio.lsangeles.com</div>
+        <div class="carousel-slide">radio.newyrk.us</div>
+        <div class="carousel-slide">radio.chcago.us</div>
+        <div class="carousel-slide">radio.houstn.us</div>
+        <div class="carousel-slide">radio.dllas.us</div>
+        <div class="carousel-slide">radio.austn.us</div>
+        <div class="carousel-slide">radio.prtland.com</div>
+        <div class="carousel-slide">radio.mnneapolis.com</div>
       </div>
     </div>
     
     <canvas id="canvas" aria-label="Classic warp tunnel visualizer"></canvas>
     
-    <div data-controller="dialog" data-action="click->dialog#backdropClose" id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
+    <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
       <div>
         <h2 id="start-title">Tap to start</h2>
         <div class="instructions">
@@ -174,31 +186,53 @@
     </div>
     <div class="ui" id="ui">Ready</div>
     <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
-    <iframe id="player" src="about:blank" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope"></iframe>
-    
-    <!-- Load Stimulus and components using UMD versions -->
-    <script src="https://unpkg.com/@hotwired/stimulus/dist/stimulus.umd.js"></script>
-    <script src="https://unpkg.com/@stimulus-components/carousel/dist/stimulus-carousel.umd.js"></script>
-    <script src="https://unpkg.com/@stimulus-components/dialog/dist/stimulus-dialog.umd.js"></script>
+    <iframe id="player" src="about:blank" frameborder="0" allow="autoplay; encrypted-media"></iframe>
     
     <script>
       "use strict";
       
-      // Initialize Stimulus with UMD components
-      const application = Stimulus.Application.start();
-      application.register("carousel", window.StimulusCarousel);
-      application.register("dialog", window.StimulusDialog);
-      
       // Performance optimizations
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isLowEnd = navigator.hardwareConcurrency <= 2 || navigator.deviceMemory <= 2;
+      const isLowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) || 
+                       (navigator.deviceMemory && navigator.deviceMemory <= 2);
       
-      // Reduce quality on low-end devices
-      const QUALITY_SCALE = isLowEnd ? 0.5 : isMobile ? 0.75 : 1;
-      const PARTICLE_COUNT = isLowEnd ? 15 : isMobile ? 20 : 30;
-      const SPIRAL_COUNT = isLowEnd ? 3 : 5;
+      const QUALITY_SCALE = isLowEnd ? 0.6 : isMobile ? 0.8 : 1;
+      const PARTICLE_COUNT = isLowEnd ? 12 : isMobile ? 18 : 25;
+      const SPIRAL_COUNT = isLowEnd ? 3 : 4;
       
-      // Expanded curated tracks
+      // Simple Carousel
+      class SimpleCarousel {
+        constructor(element) {
+          this.container = element;
+          this.slides = Array.from(element.querySelectorAll('.carousel-slide'));
+          this.currentIndex = 0;
+          this.totalSlides = this.slides.length;
+          this.init();
+        }
+        
+        init() {
+          this.startAutoplay();
+        }
+        
+        goToSlide(index) {
+          this.slides[this.currentIndex].classList.remove('active');
+          this.currentIndex = ((index % this.totalSlides) + this.totalSlides) % this.totalSlides;
+          this.slides[this.currentIndex].classList.add('active');
+        }
+        
+        next() { this.goToSlide(this.currentIndex + 1); }
+        prev() { this.goToSlide(this.currentIndex - 1); }
+        
+        startAutoplay() {
+          this.autoplayInterval = setInterval(() => this.next(), 2800);
+        }
+        
+        destroy() {
+          if (this.autoplayInterval) clearInterval(this.autoplayInterval);
+        }
+      }
+      
+      // Tracks
       const YOUTUBE_TRACKS = [
         { artist: "J Dilla", title: "Microphone Master", id: "9EGHwkDix78" },
         { artist: "J Dilla", title: "In Space", id: "vO2nWXCVt6o" },
@@ -208,26 +242,24 @@
         { artist: "FLYamSAM", title: "The Offbeat", id: "5SdMIa5vd4A" },
         { artist: "AFTA-1", title: "Due Time", id: "WC09qDzU9y4" },
         { artist: "Flying Lotus", title: "Message Situation", id: "9fzGGbiJags" },
-        { artist: "Röyksopp", title: "Only This Moment (Forsiktige massage)", id: "vLE5XCc0XO8" },
+        { artist: "Röyksopp", title: "Only This Moment", id: "vLE5XCc0XO8" },
         { artist: "Jneiro Jarel", title: "Chinubian", id: "9OPypHXlJUQ" },
         { artist: "Pete Rock", title: "A Little Soul", id: "4tY89H5TWPY" },
         { artist: "Slum Village", title: "La La (Instrumental)", id: "EYJxxHQ7sX0" },
         { artist: "Slum Village", title: "Get It Together", id: "t6T-Q6HMbEo" },
         { artist: "Slum Village", title: "Fantastic", id: "j0z_-7TfPeM" },
-        { artist: "Slum Village", title: "Forth & Back (Rock Music) Instrumental", id: "1XY8EHOzLbY" },
         { artist: "Flying Lotus", title: "me Yesterday//Corded", id: "8DgAhgmpXNA" },
         { artist: "Flying Lotus", title: "Camel", id: "t6SXXx1Fu_4" },
         { artist: "Slum Village", title: "Worlds Full of Sadness", id: "MU3nfxsz2XA" },
         { artist: "Bob Marley", title: "Forever Loving Jah", id: "WFCh0Ycjd4Q" }
       ];
       
-      // UI helper
       const UI = (() => {
         const el = document.getElementById("ui");
         return { text: (t) => { if (el) el.textContent = t; } };
       })();
       
-      // Simple audio engine (optimized)
+      // Audio Engine
       class AudioEngine {
         constructor() {
           this.player = document.getElementById("player");
@@ -249,14 +281,14 @@
           this.player.onload = () => {
             this.afterStart();
             setTimeout(() => {
-              this.player.contentWindow.postMessage({event: 'command', func: 'unMute', args: []}, '*');
-              this.muted = false;
-              UI.text(this.trackLabel());
+              try {
+                this.player.contentWindow.postMessage({event: 'command', func: 'unMute', args: []}, '*');
+                this.muted = false;
+                UI.text(this.trackLabel());
+              } catch(e) {
+                UI.text(this.trackLabel() + " • muted");
+              }
             }, 1000);
-          };
-          this.player.onerror = () => {
-            UI.text('Load error - retrying...');
-            setTimeout(() => this.loadAndPlay(track), 2000);
           };
           this.beatPhase = Math.random() * Math.PI * 2;
         }
@@ -279,9 +311,13 @@
        
         toggleMute() {
           this.muted = !this.muted;
-          const command = this.muted ? 'mute' : 'unMute';
-          this.player.contentWindow.postMessage({event: 'command', func: command, args: []}, '*');
-          UI.text(this.trackLabel() + (this.muted ? " • muted" : ""));
+          try {
+            const command = this.muted ? 'mute' : 'unMute';
+            this.player.contentWindow.postMessage({event: 'command', func: command, args: []}, '*');
+            UI.text(this.trackLabel() + (this.muted ? " • muted" : ""));
+          } catch(e) {
+            console.log('Could not toggle mute');
+          }
         }
        
         trackLabel() {
@@ -297,7 +333,6 @@
           const mid = 0.35 + 0.35 * Math.sin(this.beatPhase * 1.2);
           const high = 0.25 + 0.35 * Math.sin(this.beatPhase * 1.8);
           const avg = (bass + mid + high) / 3;
-         
           const beat = Math.sin(this.beatPhase) > 0.7 ? 1 : 0;
          
           return { bass, mid, high, average: avg, beat, energy: this.energyLevel };
@@ -305,17 +340,14 @@
       }
       
       const audio = new AudioEngine();
+      let carousel;
       
-      // Canvas setup with performance optimizations
+      // Canvas
       let w = 0, h = 0, canvas, ctx, imageData, data;
       let resizeTimeout;
       
       canvas = document.getElementById("canvas");
-      ctx = canvas.getContext("2d", { 
-        alpha: false, 
-        willReadFrequently: true,
-        desynchronized: true
-      });
+      ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
       
       function onResize() {
         clearTimeout(resizeTimeout);
@@ -331,41 +363,28 @@
           imageData = ctx.getImageData(0, 0, w, h);
           data = imageData.data;
           
-          if (vizManager.initialized) {
-            vizManager.init();
-          }
+          if (vizManager.initialized) vizManager.init();
         }, 100);
       }
       
       window.addEventListener("resize", onResize, { passive: true });
       
-      // Optimized pixel operations
+      // Pixel operations
       function clearImageData() {
-        const len = data.length;
-        for (let i = 0; i < len; i += 4) {
-          data[i] = 0;
-          data[i + 1] = 0;
-          data[i + 2] = 0;
-          data[i + 3] = 255;
-        }
+        data.fill(0);
+        for (let i = 3; i < data.length; i += 4) data[i] = 255;
       }
      
       function setPixel(x, y, r, g, b) {
         if (x < 0 || x >= w || y < 0 || y >= h) return;
         const i = (Math.floor(x) + Math.floor(y) * w) * 4;
-        data[i] = r; 
-        data[i + 1] = g; 
-        data[i + 2] = b; 
-        data[i + 3] = 255;
+        data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = 255;
       }
      
       function drawLine(x1, y1, x2, y2, r, g, b, thickness = 1) {
-        const dx = Math.abs(x2 - x1);
-        const dy = Math.abs(y2 - y1);
-        const sx = x1 < x2 ? 1 : -1;
-        const sy = y1 < y2 ? 1 : -1;
-        let err = dx - dy;
-        let x = x1, y = y1;
+        const dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
+        const sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
+        let err = dx - dy, x = x1, y = y1;
        
         while (true) {
           if (thickness === 1) {
@@ -388,7 +407,7 @@
         }
       }
       
-      // Simplified visualizer manager
+      // Visualizers
       class VisualizerManager {
         constructor() {
           this.currentViz = 0;
@@ -415,19 +434,12 @@
           }
         }
        
-        next() {
-          this.switchTo((this.currentViz + 1) % this.visualizers.length);
-        }
-       
-        prev() {
-          this.switchTo((this.currentViz - 1 + this.visualizers.length) % this.visualizers.length);
-        }
+        next() { this.switchTo((this.currentViz + 1) % this.visualizers.length); }
+        prev() { this.switchTo((this.currentViz - 1 + this.visualizers.length) % this.visualizers.length); }
        
         updateIndicator() {
           const dots = document.querySelectorAll('.viz-dot');
-          dots.forEach((dot, i) => {
-            dot.classList.toggle('active', i === this.currentViz);
-          });
+          dots.forEach((dot, i) => dot.classList.toggle('active', i === this.currentViz));
         }
        
         render(audioData) {
@@ -437,7 +449,6 @@
         }
       }
       
-      // Optimized visualizers (same as before but more concise)
       class TunnelVisualizer {
         constructor() {
           this.particles = [];
@@ -446,9 +457,9 @@
           this.time = 0;
           this.fov = 250;
           this.speed = 0.8;
-          this.segments = isLowEnd ? 16 : 24;
+          this.segments = isLowEnd ? 12 : 20;
           this.baseRadius = 80;
-          this.zStep = isLowEnd ? 12 : 8;
+          this.zStep = isLowEnd ? 15 : 10;
         }
        
         init() {
@@ -464,8 +475,7 @@
               const angle = i * ((Math.PI * 2) / this.segments);
               const x = Math.cos(angle) * this.baseRadius;
               const y = Math.sin(angle) * this.baseRadius;
-              const p = { x, y, z, x2d: 0, y2d: 0, radius: this.baseRadius, radiusAudio: this.baseRadius, index: i };
-              row.push(p);
+              row.push({ x, y, z, x2d: 0, y2d: 0, radius: this.baseRadius, radiusAudio: this.baseRadius, index: i });
             }
             this.particles.push(row);
           }
@@ -537,20 +547,17 @@
           this.time = 0;
           this.spirals = [];
         }
-       
         init() {
           this.spirals = [];
           for (let i = 0; i < SPIRAL_COUNT; i++) {
             this.spirals.push({
-              centerX: w / 2 + (Math.random() - 0.5) * w * 0.3,
-              centerY: h / 2 + (Math.random() - 0.5) * h * 0.3,
+              centerX: w / 2, centerY: h / 2,
               rotation: Math.random() * Math.PI * 2,
               speed: 0.02 + Math.random() * 0.03,
               arms: 3 + Math.floor(Math.random() * 4)
             });
           }
         }
-       
         render(audioData) {
           this.time += 0.02;
           let mx = 0, my = 0;
@@ -566,29 +573,23 @@
             spiral.rotation += spiral.speed * (1 + audioData.energy);
             spiral.centerX = w / 2 + mx * 0.2;
             spiral.centerY = h / 2 + my * 0.2;
-           
+            
             const baseRadius = Math.min(w, h) * 0.2;
             const maxRadius = baseRadius * (1 + audioData.average);
-           
+            
             for (let arm = 0; arm < spiral.arms; arm++) {
               const armAngle = (arm / spiral.arms) * Math.PI * 2;
-             
-              for (let r = 10; r < maxRadius; r += isLowEnd ? 12 : 8) {
+              for (let r = 10; r < maxRadius; r += 10) {
                 const angle = spiral.rotation + armAngle + r * 0.02;
                 const x = spiral.centerX + Math.cos(angle) * r;
                 const y = spiral.centerY + Math.sin(angle) * r;
-               
                 const intensity = (1 - r / maxRadius) * (1 + audioData.beat * 0.5);
-                const red = Math.round(100 + intensity * 100);
-                const green = Math.round(150 + intensity * 80);
-                const blue = Math.round(200 + intensity * 55);
-               
                 const size = 2 + intensity * 3;
                 const sizeInt = Math.floor(size);
                 for (let dx = -sizeInt; dx <= sizeInt; dx++) {
                   for (let dy = -sizeInt; dy <= sizeInt; dy++) {
                     if (dx*dx + dy*dy <= sizeInt*sizeInt) {
-                      setPixel(x + dx, y + dy, red, green, blue);
+                      setPixel(x + dx, y + dy, 100 + intensity * 100, 150 + intensity * 80, 200 + intensity * 55);
                     }
                   }
                 }
@@ -599,12 +600,8 @@
       }
       
       class SimpleWavesVisualizer {
-        constructor() {
-          this.time = 0;
-        }
-       
+        constructor() { this.time = 0; }
         init() {}
-       
         render(audioData) {
           this.time += 0.03;
           let mx = 0, my = 0;
@@ -618,30 +615,28 @@
           
           const centerX = w / 2 + mx * 0.3;
           const centerY = h / 2 + my * 0.3;
-          const waveCount = isLowEnd ? 6 : 8;
-         
+          const waveCount = isLowEnd ? 5 : 7;
+          
           for (let wave = 0; wave < waveCount; wave++) {
             const wavePhase = (wave / waveCount) * Math.PI * 2;
             const radius = 50 + wave * 30 + audioData.average * 100;
-           
             const points = [];
-            const segments = isLowEnd ? 32 : 48;
-           
+            const segments = isLowEnd ? 24 : 36;
+            
             for (let i = 0; i <= segments; i++) {
               const angle = (i / segments) * Math.PI * 2;
               const waveOffset = Math.sin(angle * 3 + this.time + wavePhase) * audioData.energy * 20;
               const r = radius + waveOffset;
-             
               const x = centerX + Math.cos(angle) * r;
               const y = centerY + Math.sin(angle) * r;
               points.push({ x, y });
             }
-           
+            
             const intensity = (wave / waveCount) + audioData.beat * 0.3;
             const red = Math.round(50 + intensity * 150);
             const green = Math.round(100 + intensity * 120);
             const blue = Math.round(200 + intensity * 55);
-           
+            
             for (let i = 0; i < points.length - 1; i++) {
               const p1 = points[i];
               const p2 = points[i + 1];
@@ -652,26 +647,16 @@
       }
       
       class SimpleDotsVisualizer {
-        constructor() {
-          this.dots = [];
-          this.time = 0;
-        }
-       
+        constructor() { this.dots = []; this.time = 0; }
         init() {
           this.dots = [];
-          const gridSize = isLowEnd ? 50 : 40;
+          const gridSize = isLowEnd ? 60 : 45;
           for (let x = gridSize; x < w; x += gridSize) {
             for (let y = gridSize; y < h; y += gridSize) {
-              this.dots.push({
-                x: x,
-                y: y,
-                phase: Math.random() * Math.PI * 2,
-                speed: 0.05 + Math.random() * 0.05
-              });
+              this.dots.push({ x, y, phase: Math.random() * Math.PI * 2, speed: 0.05 + Math.random() * 0.05 });
             }
           }
         }
-       
         render(audioData) {
           this.time += 0.02;
           let mx = 0, my = 0;
@@ -682,22 +667,18 @@
             mx = -gamma * (w / 180);
             my = -beta * (h / 180);
           }
-         
+          
           this.dots.forEach(dot => {
             dot.phase += dot.speed * (1 + audioData.energy);
-           
-            const distance = Math.sqrt((dot.x - w/2) * (dot.x - w/2) + (dot.y - h/2) * (dot.y - h/2));
-            const maxDistance = Math.sqrt(w*w + h*h) / 2;
-            const normalizedDistance = distance / maxDistance;
-           
+            const distance = Math.sqrt((dot.x - w/2) ** 2 + (dot.y - h/2) ** 2);
+            const normalizedDistance = distance / (Math.sqrt(w*w + h*h) / 2);
             const size = (1 - normalizedDistance) * (3 + audioData.average * 8 + Math.sin(dot.phase) * 2);
             const intensity = (1 - normalizedDistance) * (0.5 + audioData.beat * 0.5 + Math.sin(dot.phase + this.time) * 0.3);
-           
+            
             if (size > 0.5 && intensity > 0.1) {
               const red = Math.round(intensity * 200);
               const green = Math.round(intensity * 150);
               const blue = Math.round(intensity * 255);
-             
               const x = dot.x + mx * 0.1;
               const y = dot.y + my * 0.1;
               const sizeInt = Math.floor(size);
@@ -713,13 +694,8 @@
         }
       }
       
-      const vizManager = new VisualizerManager();
-      
       class FloatingParticle {
-        constructor() {
-          this.reset();
-        }
-       
+        constructor() { this.reset(); }
         reset() {
           this.x = (Math.random() - 0.5) * w;
           this.y = (Math.random() - 0.5) * h;
@@ -730,32 +706,25 @@
           this.size = Math.random() * 2 + 1;
           this.life = 1.0;
         }
-       
         update(audioData) {
           this.x += this.vx;
           this.y += this.vy;
           this.z += this.vz + audioData.average * 5;
-         
           if (this.z > 250) this.z = -250;
           if (this.z < -250) this.z = 250;
-         
           this.life -= 0.005;
           if (this.life <= 0) this.reset();
         }
-       
         render(centerX, centerY, audioData) {
           const scale = 250 / (250 + this.z);
           const screenX = Math.floor(this.x * scale + centerX);
           const screenY = Math.floor(this.y * scale + centerY);
-         
           if (screenX >= 0 && screenX < w && screenY >= 0 && screenY < h) {
             const size = Math.floor(this.size * scale * (1 + audioData.beat * 0.5));
-           
             const depthFactor = (this.z + 250) / 500;
             const r = Math.round(50 + depthFactor * 150);
             const g = Math.round(100 + depthFactor * 120);
             const b = Math.round(150 + depthFactor * 105);
-           
             for (let dx = -size; dx <= size; dx++) {
               for (let dy = -size; dy <= size; dy++) {
                 if (dx*dx + dy*dy <= size*size) {
@@ -767,7 +736,9 @@
         }
       }
       
-      // Touch and interaction handling
+      const vizManager = new VisualizerManager();
+      
+      // Interaction
       let orientationActive = false, beta = 0, gamma = 0;
       let mouseActive = false, mouseDown = false;
       let mousePos = { x: 0, y: 0 };
@@ -776,24 +747,26 @@
       
       function setupSimpleSensors() {
         try {
-          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            DeviceOrientationEvent.requestPermission().then(state => {
-              if (state === 'granted') {
-                window.addEventListener("deviceorientation", (e) => {
-                  beta = e.beta || 0;
-                  gamma = e.gamma || 0;
-                  orientationActive = true;
-                }, { passive: true });
-              }
-            }).catch(console.error);
-          } else if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", (e) => {
-              beta = e.beta || 0;
-              gamma = e.gamma || 0;
-              orientationActive = true;
-            }, { passive: true });
+          if (typeof DeviceOrientationEvent !== 'undefined') {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+              DeviceOrientationEvent.requestPermission().then(state => {
+                if (state === 'granted') {
+                  window.addEventListener("deviceorientation", (e) => {
+                    beta = e.beta || 0;
+                    gamma = e.gamma || 0;
+                    orientationActive = true;
+                  }, { passive: true });
+                }
+              }).catch(console.error);
+            } else {
+              window.addEventListener("deviceorientation", (e) => {
+                beta = e.beta || 0;
+                gamma = e.gamma || 0;
+                orientationActive = true;
+              }, { passive: true });
+            }
           }
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error('Device orientation not supported'); }
       }
       
       function createRipple(x, y) {
@@ -815,9 +788,7 @@
         mouseActive = true;
       }, { passive: true });
       canvas.addEventListener('mouseleave', () => {
-        mouseActive = false;
-        mouseDown = false;
-        setInversion(false);
+        mouseActive = false; mouseDown = false; setInversion(false);
       }, { passive: true });
       
       canvas.addEventListener("touchstart", (e) => {
@@ -873,22 +844,24 @@
         }
       }, { passive: false });
       
-      // Keyboard events
+      // Keyboard
       addEventListener("keydown", (e) => {
-        if (e.code === "Space") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
-        if (e.key?.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; }
-        if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
-        if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); UI.text(audio.trackLabel()); } return; }
-        if (e.code === "ArrowUp") { e.preventDefault(); if (audio.started) vizManager.prev(); return; }
-        if (e.code === "ArrowDown") { e.preventDefault(); if (audio.started) vizManager.next(); return; }
+        if (e.code === "Space") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } }
+        if (e.key?.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); }
+        if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } }
+        if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); UI.text(audio.trackLabel()); } }
+        if (e.code === "ArrowUp") { e.preventDefault(); if (audio.started) vizManager.prev(); }
+        if (e.code === "ArrowDown") { e.preventDefault(); if (audio.started) vizManager.next(); }
       }, { passive: false });
       
       // App initialization
       const overlay = document.getElementById("overlay");
       const loadingScreen = document.getElementById("loadingScreen");
       
-      overlay.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(); });
-      overlay.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } });
+      overlay.addEventListener("click", startApp);
+      overlay.addEventListener("keydown", (e) => { 
+        if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } 
+      });
       
       function startApp() {
         if (!audio.started) {
@@ -921,7 +894,7 @@
         }
       }
       
-      // Optimized render loop
+      // Render loop
       let lastRenderTime = 0;
       const targetFPS = isLowEnd ? 30 : 60;
       const frameInterval = 1000 / targetFPS;
@@ -934,7 +907,6 @@
           colorInvertValue = Math.max(0, colorInvertValue - 8);
           if (colorInvertValue > 0) softInvert(colorInvertValue);
         }
-       
         vizManager.render(audioData);
       }
       
@@ -951,7 +923,10 @@
         requestAnimationFrame(animate);
       }
       
+      // Initialize
       function initializeApp() {
+        carousel = new SimpleCarousel(document.getElementById('cityCarousel'));
+        
         loadingScreen.classList.add('hidden');
         setTimeout(() => {
           loadingScreen.remove();
@@ -968,7 +943,6 @@
         }, 100);
       }
       
-      // Initialize when DOM is ready
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeApp);
       } else {
