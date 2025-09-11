@@ -8,15 +8,10 @@
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Classic warp tunnel with multiple views. Swipe to explore. Tilt device for parallax." />
     
-    <!-- Preload critical resources -->
-    <link rel="preconnect" href="https://unpkg.com">
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <!-- Add favicon to prevent 404 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>">
     
-    <!-- Inline critical Swiper CSS to eliminate render-blocking request -->
     <style>
-      /* Minimal Swiper CSS - only what we need */
-      .swiper{margin-left:auto;margin-right:auto;position:relative;overflow:hidden;list-style:none;padding:0;z-index:1}.swiper-wrapper{position:relative;width:100%;height:100%;z-index:1;display:flex;transition-property:transform;box-sizing:content-box}.swiper-slide{flex-shrink:0;width:100%;height:100%;position:relative;transition-property:transform}
-      
       html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
       canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #000; touch-action: none; }
       
@@ -31,13 +26,21 @@
         position: fixed; top: 12px; left: 12px; width: 280px; height: 40px; z-index: 95;
         pointer-events: none; user-select: none; overflow: hidden;
       }
-      .swiper { width: 100%; height: 100%; }
-      .swiper-slide {
+      
+      /* Swiper styles - minimal needed */
+      .swiper { width: 100%; height: 100%; position: relative; overflow: hidden; }
+      .swiper-wrapper { 
+        position: relative; width: 100%; height: 100%; z-index: 1; 
+        display: flex; transition-property: transform; box-sizing: content-box; 
+      }
+      .swiper-slide { 
+        flex-shrink: 0; width: 100%; height: 100%; position: relative; 
         display: flex; align-items: center; justify-content: flex-start;
         font-weight: 700; font-size: clamp(24px, 3.2vw, 36px); color: #fff;
         letter-spacing: 0.02em; transition: color 0.18s ease;
       }
       .city-inverted .swiper-slide { color: #000 !important; }
+      .swiper-pagination { display: none !important; }
      
       .ui {
         position: fixed; right: 12px; bottom: 10px; color: #7a90a0; font-size: 12px;
@@ -46,6 +49,7 @@
         text-overflow: ellipsis; z-index: 100; transition: color 0.18s ease;
       }
       .ui-inverted { color: #445566 !important; }
+      
       .overlay {
         position: fixed; inset: 0; display: grid; place-items: center;
         background: rgba(0,0,0,0.9); color: #9aa; cursor: pointer; user-select: none;
@@ -84,7 +88,7 @@
         color: #555; font-size: 11px; opacity: 0; transition: opacity 0.5s ease; z-index: 99;
       }
       .swipe-hint.show { opacity: 1; }
-      .swiper-pagination { display: none !important; }
+      
       @media (prefers-reduced-motion: reduce) {
         * { animation: none !important; transition: none !important; }
         .touch-ripple { display: none; }
@@ -99,7 +103,7 @@
   <body>
     <!-- Loading screen -->
     <div class="loading-screen" id="loadingScreen">
-      <div>Loading Radio Bergen...</div>
+      <div>📻 Loading Radio Bergen...</div>
     </div>
     
     <div class="city-carousel" data-controller="carousel" data-carousel-options-value='{"direction": "vertical", "loop": true, "autoplay": {"delay": 2800, "disableOnInteraction": false}, "speed": 1200, "effect": "slide", "allowTouchMove": false}' id="cityCarousel">
@@ -148,21 +152,20 @@
         </div>
       </div>
     </div>
+    
     <canvas id="canvas" aria-label="Classic warp tunnel visualizer"></canvas>
-    <div data-controller="dialog" data-action="click->dialog#backdropClose" id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0" hidden>
-      <dialog data-dialog-target="dialog">
-        <div>
-          <h2 id="start-title">Tap to start</h2>
-          <div class="instructions">
-            <span>Space: next</span> <span>M: mute</span>
-            <span>Swipe: explore</span> <span>Tilt: parallax</span>
-            <span>Double-tap: next</span>
-          </div>
+    
+    <div data-controller="dialog" data-action="click->dialog#backdropClose" id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
+      <div>
+        <h2 id="start-title">Tap to start</h2>
+        <div class="instructions">
+          <span>Space: next</span> <span>M: mute</span>
+          <span>Swipe: explore</span> <span>Tilt: parallax</span>
+          <span>Double-tap: next</span>
         </div>
-        <button type="button" data-action="dialog#close" autofocus>Cancel</button>
-      </dialog>
-      <button type="button" data-action="dialog#open" hidden>Open modal</button>
+      </div>
     </div>
+    
     <div class="viz-indicator" id="vizIndicator">
       <div class="viz-dot active"></div>
       <div class="viz-dot"></div>
@@ -173,41 +176,18 @@
     <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
     <iframe id="player" src="about:blank" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope"></iframe>
     
-    <!-- Load external dependencies asynchronously -->
-    <script>
-      // Fast loading setup
-      let loadedModules = 0;
-      const totalModules = 3;
-      
-      function checkModulesLoaded() {
-        loadedModules++;
-        if (loadedModules === totalModules) {
-          initializeApp();
-        }
-      }
-      
-      // Load Stimulus modules asynchronously
-      import("https://unpkg.com/@hotwired/stimulus/dist/stimulus.js")
-        .then(({ Application }) => {
-          window.Stimulus = Application.start();
-          checkModulesLoaded();
-        });
-      
-      import("https://unpkg.com/@stimulus-components/carousel/dist/carousel.mjs")
-        .then((Carousel) => {
-          if (window.Stimulus) window.Stimulus.register("carousel", Carousel.default);
-          checkModulesLoaded();
-        });
-      
-      import("https://unpkg.com/@stimulus-components/dialog/dist/dialog.mjs")
-        .then((Dialog) => {
-          if (window.Stimulus) window.Stimulus.register("dialog", Dialog.default);
-          checkModulesLoaded();
-        });
-    </script>
+    <!-- Load Stimulus and components using UMD versions -->
+    <script src="https://unpkg.com/@hotwired/stimulus/dist/stimulus.umd.js"></script>
+    <script src="https://unpkg.com/@stimulus-components/carousel/dist/stimulus-carousel.umd.js"></script>
+    <script src="https://unpkg.com/@stimulus-components/dialog/dist/stimulus-dialog.umd.js"></script>
     
     <script>
       "use strict";
+      
+      // Initialize Stimulus with UMD components
+      const application = Stimulus.Application.start();
+      application.register("carousel", window.StimulusCarousel);
+      application.register("dialog", window.StimulusDialog);
       
       // Performance optimizations
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -334,7 +314,7 @@
       ctx = canvas.getContext("2d", { 
         alpha: false, 
         willReadFrequently: true,
-        desynchronized: true // Better performance on some devices
+        desynchronized: true
       });
       
       function onResize() {
@@ -351,7 +331,6 @@
           imageData = ctx.getImageData(0, 0, w, h);
           data = imageData.data;
           
-          // Reinitialize visualizers on resize
           if (vizManager.initialized) {
             vizManager.init();
           }
@@ -364,10 +343,10 @@
       function clearImageData() {
         const len = data.length;
         for (let i = 0; i < len; i += 4) {
-          data[i] = 0;     // r
-          data[i + 1] = 0; // g  
-          data[i + 2] = 0; // b
-          data[i + 3] = 255; // a
+          data[i] = 0;
+          data[i + 1] = 0;
+          data[i + 2] = 0;
+          data[i + 3] = 255;
         }
       }
      
@@ -380,7 +359,6 @@
         data[i + 3] = 255;
       }
      
-      // Optimized line drawing with reduced thickness calculations
       function drawLine(x1, y1, x2, y2, r, g, b, thickness = 1) {
         const dx = Math.abs(x2 - x1);
         const dy = Math.abs(y2 - y1);
@@ -459,7 +437,7 @@
         }
       }
       
-      // Optimized visualizers with reduced complexity
+      // Optimized visualizers (same as before but more concise)
       class TunnelVisualizer {
         constructor() {
           this.particles = [];
@@ -468,16 +446,12 @@
           this.time = 0;
           this.fov = 250;
           this.speed = 0.8;
-          this.segments = isLowEnd ? 16 : 24; // Reduced segments for performance
+          this.segments = isLowEnd ? 16 : 24;
           this.baseRadius = 80;
           this.zStep = isLowEnd ? 12 : 8;
         }
        
         init() {
-          this.addParticles();
-        }
-       
-        addParticles() {
           this.particles = [];
           this.centers = [];
           this.floatingParticles = [];
@@ -831,7 +805,7 @@
         setTimeout(() => ripple.remove(), 600);
       }
       
-      // Event listeners with passive options for better performance
+      // Event listeners
       canvas.addEventListener('mousedown', () => { mouseDown = true; setInversion(true); }, { passive: true });
       canvas.addEventListener('mouseup', () => { mouseDown = false; setInversion(false); }, { passive: true });
       canvas.addEventListener('mousemove', (e) => {
@@ -987,7 +961,6 @@
         onResize();
         setupSimpleSensors();
         
-        // Defer heavy initialization
         setTimeout(() => {
           vizManager.init();
           UI.text("Ready");
@@ -995,8 +968,10 @@
         }, 100);
       }
       
-      // Start initialization immediately if modules are already loaded
-      if (loadedModules === totalModules) {
+      // Initialize when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeApp);
+      } else {
         initializeApp();
       }
     </script>
