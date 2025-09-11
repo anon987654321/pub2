@@ -1,112 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="mobile-web-app-capable" content="yes" />
   <title>Radio Brgen</title>
-  <meta name="theme-color" content="#000000">
-  <meta name="description" content="Minimal audio-reactive warp tunnel with three-color gradient. Space next track. M mute/unmute. Mobile: swipe right for next track, touch for effects and tilt for parallax.">
-  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Classic clean warp tunnel. Space: next track. M: mute/unmute. Mobile: swipe for tracks, double-tap next, touch invert, tilt parallax." />
   <style>
     html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-    canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #000; touch-action: none; transition: filter 0.2s ease; }
-    
-    h1.site { 
-      position: fixed; 
-      top: 12px; 
-      left: 12px; 
-      margin: 0; 
-      color: #fff; 
-      letter-spacing: 0.02em; 
-      pointer-events: none; 
-      user-select: none; 
-      font-weight: 700; 
-      font-size: clamp(18px, 2.4vw, 26px);
-      z-index: 100;
-      transition: all 0.3s ease;
+    canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #000; touch-action: none; }
+
+    h1.site {
+      position: fixed; top: 12px; left: 12px; margin: 0; color: #fff; letter-spacing: 0.02em;
+      pointer-events: none; user-select: none; font-weight: 700; font-size: clamp(18px, 2.4vw, 26px);
+      z-index: 100; transition: color 0.18s ease;
     }
-    
-    /* ENHANCEMENT: Color inversion affects all text */
-    .canvas-inverted { filter: invert(1) hue-rotate(180deg); }
-    .canvas-pulse { filter: brightness(1.5) saturate(1.2); }
-    .site-pulse { color: #00ffff; transform: scale(1.05); }
-    .text-inverted { color: #000; }
-    .text-inverted.site-pulse { color: #ff3300; }
-    
-    .ui { 
-      position: fixed; 
-      right: 12px; 
-      bottom: 10px; 
-      color: #7a90a0; 
-      font-size: 12px; 
-      opacity: 0.95; 
-      white-space: nowrap; 
-      pointer-events: none; 
-      user-select: none; 
-      text-align: right; 
-      max-width: min(72vw, 800px); 
-      overflow: hidden; 
-      text-overflow: ellipsis;
-      z-index: 100;
-      transition: all 0.3s ease;
-    }
-    
-    .overlay { 
-      position: fixed; 
-      inset: 0; 
-      display: grid; 
-      place-items: center; 
-      background: rgba(0,0,0,0.9); 
-      color: #9aa; 
-      cursor: pointer; 
-      user-select: none;
-      z-index: 1000;
-      transition: all 0.3s ease;
-    }
-    
+    .site-inverted { color: #000 !important; }
+    .ui { position: fixed; right: 12px; bottom: 10px; color: #7a90a0; font-size: 12px; opacity: 0.95; white-space: nowrap; pointer-events: none; user-select: none; text-align: right; max-width: min(72vw, 800px); overflow: hidden; text-overflow: ellipsis; z-index: 100; transition: color 0.18s ease; }
+    .ui-inverted { color: #445566 !important; }
+
+    .overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.9); color: #9aa; cursor: pointer; user-select: none; z-index: 1000; text-align: center; padding: 16px; }
     .overlay[hidden] { display: none; }
-    
-    #player { 
-      position: fixed; 
-      top: -1000px; 
-      left: -1000px; 
-      width: 1px; 
-      height: 1px; 
-      opacity: 0; 
-      pointer-events: none; 
-    }
-    
-    .touch-ripple {
-      position: absolute;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
-      pointer-events: none;
-      animation: ripple 0.6s ease-out forwards;
-      z-index: 50;
-    }
-    
-    /* ENHANCEMENT: Swipe indicator for mobile */
-    .swipe-hint {
-      position: fixed;
-      bottom: 50px;
-      right: 20px;
-      color: rgba(255,255,255,0.3);
-      font-size: 10px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      z-index: 99;
-      pointer-events: none;
-    }
-    
+
+    #player { position: fixed; top: -1000px; left: -1000px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+    .touch-ripple { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.28); pointer-events: none; animation: ripple 0.6s ease-out forwards; z-index: 50; }
+    @keyframes ripple { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
+
+    .swipe-hint { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); color: #555; font-size: 11px; opacity: 0; transition: opacity 0.5s ease; z-index: 99; }
     .swipe-hint.show { opacity: 1; }
-    
-    @keyframes ripple {
-      0% { transform: scale(0); opacity: 1; }
-      100% { transform: scale(4); opacity: 0; }
-    }
-    
-    @media (prefers-reduced-motion: reduce) { 
+
+    @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; transition: none !important; }
       .touch-ripple { display: none; }
     }
@@ -114,233 +39,25 @@
 </head>
 <body>
   <h1 class="site" id="siteTitle" aria-hidden="true">radio.brgen.no</h1>
-  <canvas id="canvas" aria-label="Audio-reactive warp tunnel visualizer"></canvas>
+  <canvas id="canvas" aria-label="Classic warp tunnel visualizer"></canvas>
+
   <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
-    <h2 id="start-title" style="position:absolute;left:-9999px;">Start Visualization</h2>
-    <p>Click / tap to start · Space next track · Mobile: swipe right for next track</p>
+    <h2 id="start-title" style="position:absolute;left:-9999px;">Start</h2>
+    <p>
+      Click / tap to start<br/>
+      Space: next • M: mute<br/>
+      Mobile: swipe left/right for tracks • double-tap: next • tilt for parallax
+    </p>
   </div>
+
   <div class="ui" id="ui">Ready</div>
-  <div class="swipe-hint" id="swipeHint">→ swipe for next track</div>
+  <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
   <iframe id="player" src="about:blank" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope"></iframe>
+
   <script>
     "use strict";
-    
-    // PRESERVE EXACT: Three-color gradient system
-    const COLOR_A = { h: 210, s: 40, l: 16 };
-    const COLOR_B = { h: 190, s: 50, l: 38 };
-    const COLOR_C = { h: 180, s: 30, l: 28 };
-    
-    // ENHANCEMENT: Expanded effects state management
-    const EffectsState = {
-      colorInverted: false,
-      pulsing: false,
-      touchActive: false,
-      gyroStrength: 0,
-      tunnelEndpoint: { x: 0, y: 0 },
-      breathingPhase: 0,
-      chromaticStrength: 0,
-      
-      invertColors() {
-        this.colorInverted = !this.colorInverted;
-        const canvas = document.getElementById('canvas');
-        const siteTitle = document.getElementById('siteTitle');
-        const ui = document.getElementById('ui');
-        const overlay = document.getElementById('overlay');
-        
-        if (this.colorInverted) {
-          canvas.classList.add('canvas-inverted');
-          siteTitle.classList.add('site-pulse', 'text-inverted');
-          ui.classList.add('text-inverted');
-          overlay.classList.add('text-inverted');
-        } else {
-          canvas.classList.remove('canvas-inverted');
-          siteTitle.classList.remove('site-pulse', 'text-inverted');
-          ui.classList.remove('text-inverted');
-          overlay.classList.remove('text-inverted');
-        }
-      },
-      
-      pulse(duration = 200) {
-        if (this.pulsing) return;
-        this.pulsing = true;
-        const canvas = document.getElementById('canvas');
-        canvas.classList.add('canvas-pulse');
-        
-        setTimeout(() => {
-          canvas.classList.remove('canvas-pulse');
-          this.pulsing = false;
-        }, duration);
-      },
-      
-      createRipple(x, y) {
-        const ripple = document.createElement('div');
-        ripple.className = 'touch-ripple';
-        ripple.style.left = (x - 25) + 'px';
-        ripple.style.top = (y - 25) + 'px';
-        ripple.style.width = '50px';
-        ripple.style.height = '50px';
-        document.body.appendChild(ripple);
-        
-        setTimeout(() => {
-          if (ripple.parentNode) {
-            ripple.parentNode.removeChild(ripple);
-          }
-        }, 600);
-      },
-      
-      // ENHANCEMENT: Update tunnel endpoint for parallax
-      updateTunnelEndpoint(mouseX, mouseY, w, h) {
-        const targetX = (mouseX - w/2) * 0.15;
-        const targetY = (mouseY - h/2) * 0.15;
-        this.tunnelEndpoint.x += (targetX - this.tunnelEndpoint.x) * 0.08;
-        this.tunnelEndpoint.y += (targetY - this.tunnelEndpoint.y) * 0.08;
-      }
-    };
-    
-    // ENHANCEMENT: Particle system for ambient effects
-    class TunnelParticle {
-      constructor() {
-        this.reset();
-      }
-      
-      reset() {
-        this.x = (Math.random() - 0.5) * 400;
-        this.y = (Math.random() - 0.5) * 400;
-        this.z = Math.random() * 500 - 250;
-        this.life = 1.0;
-        this.decay = 0.003 + Math.random() * 0.007;
-        this.size = 1 + Math.random() * 3;
-        this.hue = Math.random() * 60 + 180;
-      }
-      
-      update(dt, audioAvg) {
-        this.z += (50 + audioAvg * 100) * dt;
-        this.life -= this.decay;
-        
-        if (this.life <= 0 || this.z > 250) {
-          this.reset();
-          this.z = -250;
-        }
-      }
-      
-      draw(ctx, w, h, tunnelEndpoint) {
-        if (this.z <= -250) return;
-        
-        const scale = 250 / (250 + this.z);
-        const screenX = this.x * scale + w/2 + tunnelEndpoint.x * scale;
-        const screenY = this.y * scale + h/2 + tunnelEndpoint.y * scale;
-        
-        if (screenX < 0 || screenX >= w || screenY < 0 || screenY >= h) return;
-        
-        const alpha = Math.floor(this.life * 100 * scale);
-        if (alpha <= 0) return;
-        
-        const [r, g, b] = hslToRgb(this.hue, 70, 50);
-        const size = this.size * scale;
-        
-        for (let dx = -size; dx <= size; dx++) {
-          for (let dy = -size; dy <= size; dy++) {
-            const dist = Math.hypot(dx, dy);
-            if (dist <= size) {
-              const px = Math.floor(screenX + dx);
-              const py = Math.floor(screenY + dy);
-              if (px >= 0 && px < w && py >= 0 && py < h) {
-                const i = (px + py * w) * 4;
-                const falloff = 1 - (dist / size);
-                const particleAlpha = alpha * falloff;
-                setPixel(px, py, r, g, b, particleAlpha);
-              }
-            }
-          }
-        }
-      }
-    }
-    
-    // ENHANCEMENT: Create particle instances
-    const particles = [];
-    for (let i = 0; i < 25; i++) {
-      particles.push(new TunnelParticle());
-    }
-    
-    const GRAD = {
-      phase: 0,
-      speedBase: 0.08,
-      mouseDelta: 0,
-      colorShift: 0,
-      
-      update(dt, audioAvg, mouseDx, mouseDy) {
-        this.mouseDelta = Math.hypot(mouseDx || 0, mouseDy || 0) * 0.01;
-        this.phase += dt * (this.speedBase + audioAvg * 0.12 + this.mouseDelta * 0.2);
-        
-        // ENHANCEMENT: Chromatic aberration from movement
-        EffectsState.chromaticStrength = Math.min(1, this.mouseDelta * 5);
-        
-        // ENHANCEMENT: Breathing effect
-        EffectsState.breathingPhase += dt * (2 + audioAvg * 4);
-        
-        const effectMultiplier = EffectsState.colorInverted ? -1 : 1;
-        const targetShift = audioAvg * 30 * effectMultiplier + EffectsState.gyroStrength * 20;
-        this.colorShift += (targetShift - this.colorShift) * 0.2;
-        
-        COLOR_A.h = (210 + this.colorShift) % 360;
-        COLOR_B.h = (190 + this.colorShift * 0.7) % 360;
-        COLOR_C.h = (180 + this.colorShift * 0.5) % 360;
-        COLOR_B.s = Math.min(80, 50 + audioAvg * 30);
-      },
-      
-      factor(depth, audioAvg) {
-        let f = 1 - depth;
-        f += 0.06 * Math.sin(this.phase + depth * 1.2);
-        f += 0.05 * (audioAvg || 0);
-        f += 0.03 * this.mouseDelta;
-        
-        // ENHANCEMENT: Breathing effect integration
-        f += 0.02 * Math.sin(EffectsState.breathingPhase) * audioAvg;
-        
-        if (EffectsState.pulsing) {
-          f += 0.15 * Math.sin(this.phase * 8);
-        }
-        
-        return Math.max(0, Math.min(1, f));
-      }
-    };
-    
-    function hslToRgb(h, s, l) {
-      h = ((h % 360) + 360) % 360;
-      s = Math.max(0, Math.min(100, s)) / 100;
-      l = Math.max(0, Math.min(100, l)) / 100;
-      const c = (1 - Math.abs(2 * l - 1)) * s;
-      const hp = h / 60;
-      const x = c * (1 - Math.abs((hp % 2) - 1));
-      let r1=0,g1=0,b1=0;
-      if (0<=hp && hp<1){ r1=c; g1=x; b1=0; } else if (1<=hp && hp<2){ r1=x; g1=c; b1=0; } else if (2<=hp && hp<3){ r1=0; g1=c; b1=x; }
-      else if (3<=hp && hp<4){ r1=0; g1=x; b1=c; } else if (4<=hp && hp<5){ r1=x; g1=0; b1=c; } else if (5<=hp && hp<6){ r1=c; g1=0; b1=x; }
-      const m = l - c/2;
-      return [Math.round((r1 + m) * 255) | 0, Math.round((g1 + m) * 255) | 0, Math.round((b1 + m) * 255) | 0];
-    }
-    
-    function colorFor(depth, audioAvg) {
-      const f = GRAD.factor(depth, audioAvg);
-      let h, s, lBase;
-      if (f < 0.5) {
-        const t = f * 2;
-        h = COLOR_A.h + (COLOR_B.h - COLOR_A.h) * t;
-        s = COLOR_A.s + (COLOR_B.s - COLOR_A.s) * t;
-        lBase = COLOR_A.l + (COLOR_B.l - COLOR_A.l) * t;
-      } else {
-        const t = (f - 0.5) * 2;
-        h = COLOR_B.h + (COLOR_C.h - COLOR_B.h) * t;
-        s = COLOR_B.s + (COLOR_C.s - COLOR_B.s) * t;
-        lBase = COLOR_B.l + (COLOR_C.l - COLOR_B.l) * t;
-      }
-      const l = lBase + (audioAvg || 0) * 3;
-      return hslToRgb(h, s, l);
-    }
-    
-    const WIRE_ALPHA = 200;
-    const FOV = 250, SPEED = 0.75, BASE_RADIUS = 75, SEGMENTS = 64, Z_STEP = 4;
-    
-    // PRESERVE EXACT: YOUR CURATED TRACKS
+
+    // Exact curated tracks (preserved)
     const YOUTUBE_TRACKS = [
       { artist: "J Dilla", title: "Microphone Master", id: "9EGHwkDix78" },
       { artist: "AFTA-1", title: "Due Time", id: "WC09qDzU9y4" },
@@ -355,7 +72,6 @@
       { artist: "Slum Village", title: "Worlds Full of Sadness", id: "MU3nfxsz2XA" },
       { artist: "Black Loops", title: "Under the Sea", id: "U81xh9gJeYM" }
     ];
-    
     const WHYP_TRACKS = [
       { artist: "how", title: "J Dilla - Players (Second Version) (Unreleased)", id: "292777", token: "zaB8x" },
       { artist: "how", title: "Black Loops - Under the Sea [U81xh9gJeYM]", id: "292774", token: "UTbNQ" },
@@ -371,13 +87,14 @@
       { artist: "how", title: "Lofi", id: "183173", token: "D9TSI" },
       { artist: "how", title: "Angelo Reira & Johann - Sandviken Hotell (a)", id: "182727", token: "QAuRq" }
     ];
-    
+
+    // UI helper
     const UI = (() => {
       const el = document.getElementById("ui");
       return { text: (t) => { if (el) el.textContent = t; } };
     })();
-    
-    // PRESERVE EXACT: AudioEngine class
+
+    // Audio engine (YouTube/WHYP embeds; visual uses synthetic bands for smoothness)
     class AudioEngine {
       constructor() {
         this.player = document.getElementById("player");
@@ -391,18 +108,13 @@
       loadAndPlay(track) {
         if (!this.player) return;
         const { id, token } = track;
-        let src;
-        if (token) {
-          src = `https://whyp.it/tracks/embed?id=${id}&token=${token}`;
-        } else {
-          src = `https://www.youtube.com/embed/${id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted ? 1 : 0}`;
-        }
+        const src = token
+          ? `https://whyp.it/tracks/embed?id=${id}&token=${token}`
+          : `https://www.youtube.com/embed/${id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted?1:0}`;
         this.player.src = src;
         this.player.onload = () => {
           this.afterStart();
-          setTimeout(() => {
-            if (this.muted) UI.text(this.trackLabel() + " • muted (press M)");
-          }, 600);
+          setTimeout(() => { if (this.muted) UI.text(this.trackLabel() + " • muted"); }, 400);
         };
       }
       afterStart() {
@@ -411,370 +123,356 @@
         this._advanceTimer = setTimeout(() => this.next(), 180000);
         UI.text(this.trackLabel());
       }
-      next() {
-        this.trackIndex = (this.trackIndex + 1) % this.tracks.length;
-        this.loadAndPlay(this.tracks[this.trackIndex]);
-        
-        // ENHANCEMENT: Show swipe hint briefly on mobile
-        if (isMobile) {
-          const hint = document.getElementById('swipeHint');
-          hint.classList.add('show');
-          setTimeout(() => hint.classList.remove('show'), 2000);
-        }
-      }
+      next() { this.trackIndex = (this.trackIndex + 1) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); }
+      prev() { this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); }
       toggleMute() {
         this.muted = !this.muted;
         if (this.started) {
-          const track = this.tracks[this.trackIndex];
-          if (!track.token) {
-            const src = `https://www.youtube.com/embed/${track.id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted ? 1 : 0}`;
-            this.player.src = src;
+          const t = this.tracks[this.trackIndex];
+          if (!t.token) {
+            this.player.src = `https://www.youtube.com/embed/${t.id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted?1:0}`;
           }
         }
         UI.text(this.trackLabel() + (this.muted ? " • muted" : ""));
       }
       trackLabel() { const t = this.tracks[this.trackIndex]; return `${t.artist} — ${t.title}`; }
+      // Smooth pseudo-bands to keep animation elegant (no CORS capture from embeds)
       data() {
         const t = (performance.now() - this.startMs) * 0.001;
         const swing = Math.sin(t * 0.7) * 0.1, pocket = Math.cos(t * 0.5) * 0.08;
         const bass = Math.min(1, Math.max(0, 0.45 + 0.45 * Math.sin(2.2 * t + pocket)));
-        const mid = Math.min(1, Math.max(0, 0.40 + 0.35 * Math.sin(3.3 * t + swing)));
+        const mid  = Math.min(1, Math.max(0, 0.40 + 0.35 * Math.sin(3.3 * t + swing)));
         const high = Math.min(1, Math.max(0, 0.30 + 0.35 * Math.sin(5.1 * t + pocket * 0.7)));
-        const avg = (bass + mid + high) / 3;
+        const avg  = (bass + mid + high) / 3;
         return { bass, mid, high, average: avg };
       }
     }
-    
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d", { alpha: false });
-    let w = 0, h = 0, imageData = null, data = null;
-    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-    
-    function resize() {
-      w = window.innerWidth | 0; h = window.innerHeight | 0;
+    const audio = new AudioEngine();
+
+    // Canvas + pixel buffer
+    let w = 0, h = 0, canvas, ctx, imageData, data;
+    canvas = document.getElementById("canvas");
+    ctx = canvas.getContext("2d", { alpha: false });
+
+    function onResize() {
+      w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+      h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
       canvas.width = w; canvas.height = h;
       ctx.fillStyle = "#000"; ctx.fillRect(0, 0, w, h);
       imageData = ctx.getImageData(0, 0, w, h);
       data = imageData.data;
     }
-    addEventListener("resize", resize);
-    
-    function fadeImageData(fade = 0.85) {
+    window.addEventListener("resize", onResize, false);
+
+    // Classic pixel ops (assignment, no additive blend)
+    function clearImageData() {
       for (let i = 0, n = data.length; i < n; i += 4) {
-        data[i] *= fade; data[i+1] *= fade; data[i+2] *= fade; data[i+3] = 255;
+        data[i] = 0; data[i+1] = 0; data[i+2] = 0; data[i+3] = 255;
       }
     }
-    
-    // ENHANCEMENT: Improved setPixel for particle system
     function setPixel(x, y, r, g, b, a) {
-      if (x >= 0 && x < w && y >= 0 && y < h && a > 0) {
-        const i = (x + y * w) * 4;
-        const alpha = a / 255;
-        data[i] = Math.min(255, data[i] + r * alpha);
-        data[i+1] = Math.min(255, data[i+1] + g * alpha);
-        data[i+2] = Math.min(255, data[i+2] + b * alpha);
-        data[i+3] = 255;
-      }
+      const i = (x + y * imageData.width) * 4;
+      data[i] = r; data[i+1] = g; data[i+2] = b; data[i+3] = a;
     }
-    
-    // ENHANCEMENT: Chromatic aberration line drawing
-    function drawLineChromatic(x1, y1, x2, y2, r, g, b, a, chromaticStrength = 0) {
-      if (chromaticStrength > 0.1) {
-        const offset = chromaticStrength * 2;
-        drawLine(x1 - offset, y1, x2 - offset, y2, r, 0, 0, a);
-        drawLine(x1, y1, x2, y2, 0, g, 0, a);
-        drawLine(x1 + offset, y1, x2 + offset, y2, 0, 0, b, a);
-      } else {
-        drawLine(x1, y1, x2, y2, r, g, b, a);
-      }
-    }
-    
     function drawLine(x1, y1, x2, y2, r, g, b, a) {
-      x1 = Math.max(0, Math.min(w-1, x1 | 0)); y1 = Math.max(0, Math.min(h-1, y1 | 0));
-      x2 = Math.max(0, Math.min(w-1, x2 | 0)); y2 = Math.max(0, Math.min(h-1, y2 | 0));
       let dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
-      let sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
-      let err = dx - dy, x = x1, y = y1;
-      for (;;) {
-        if (x >= 0 && x < w && y >= 0 && y < h) {
-          const i = (x + y * w) * 4;
-          data[i]=r; data[i+1]=g; data[i+2]=b; data[i+3]=a;
-        }
-        if (x === x2 && y === y2) break;
+      let sx = (x1 < x2) ? 1 : -1, sy = (y1 < y2) ? 1 : -1;
+      let err = dx - dy, lx = x1, ly = y1;
+      while (true) {
+        if (lx >= 0 && lx < w && ly >= 0 && ly < h) setPixel(lx, ly, r, g, b, a);
+        if (lx === x2 && ly === y2) break;
         const e2 = err << 1;
-        if (e2 > -dy) { err -= dy; x += sx; }
-        if (e2 < dx) { err += dx; y += sy; }
+        if (e2 > -dy) { err -= dy; lx += sx; }
+        if (e2 < dx) { err += dx; ly += sy; }
       }
     }
-    
+
+    // Geometry and motion (classic)
+    const fov = 250, speed = 0.75, SEGMENTS = 64, BASE_RADIUS = 75, Z_STEP = 4;
+    let particles = [], centers = [];
     let time = 0;
-    let mouseActive = false, mouseDown = false;
-    let mouseX = 0, mouseY = 0, lastMouseX = 0, lastMouseY = 0;
-    let rows = []; let centers = [];
-    
-    function initField() {
-      rows = []; centers = [];
+
+    function getCirclePosition(cx, cy, radius, index, segments) {
+      const angle = index * ((Math.PI * 2) / segments) + time;
+      return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius };
+    }
+    function drawCircle(centerPos, radius, segments) {
+      const coords = [];
+      let radiusSave;
+      let diff = 0;
+      for (let i = 0; i <= segments; i++) {
+        let radiusRandom = radius;
+        if (i === 0) radiusSave = radiusRandom;
+        if (i === segments) radiusRandom = radiusSave;
+        const p = getCirclePosition(centerPos.x, centerPos.y, radiusRandom, i, segments);
+        coords.push({ x: p.x, y: p.y, index: i + diff, radius: radiusRandom, segments, centerX: centerPos.x, centerY: centerPos.y });
+      }
+      return coords;
+    }
+    function addParticle(x, y, z, audioIndex) {
+      return { x, y, z, x2d: 0, y2d: 0, audioBufferIndex: audioIndex, index: 0, radius: BASE_RADIUS, radiusAudio: BASE_RADIUS, segments: SEGMENTS, centerX: 0, centerY: 0 };
+    }
+
+    function addParticles() {
+      let audioBufferIndexMin = 8;
+      let audioBufferIndexMax = 1024;
+      let audioIndex = audioBufferIndexMin;
+
+      const centerPos = { x: 0, y: 0 };
       let c = 0;
-      const w1 = Math.random() * w, h1 = Math.random() * h;
-      for (let z = -FOV; z < FOV; z += Z_STEP) {
+      const w1 = Math.random() * w;
+      const h1 = Math.random() * h;
+
+      for (let z = -fov; z < fov; z += Z_STEP) {
+        const coords = drawCircle(centerPos, BASE_RADIUS, SEGMENTS);
         const row = [];
-        for (let i = 0; i < SEGMENTS; i++) {
-          row.push({ x:0, y:0, z, x2d:0, y2d:0, idx:i, segs:SEGMENTS, radius:BASE_RADIUS, radiusAudio:BASE_RADIUS });
-        }
-        rows.push(row);
-        centers.push({
-          x: ((w / 2) - w1) * (c / 15) + w / 2,
-          y: ((h / 2) - h1) * (c / 15) + h / 2
-        });
+        const center = { x: ((w / 2) - w1) * (c / 15) + w / 2, y: ((h / 2) - h1) * (c / 15) + h / 2 };
         c++;
+        centers.push(center);
+
+        audioIndex = Math.floor(Math.random() * audioBufferIndexMax) + audioBufferIndexMin;
+
+        for (let i = 0, l = coords.length; i < l; i++) {
+          const co = coords[i];
+          const p = addParticle(co.x, co.y, z, audioIndex);
+          p.index = co.index; p.radius = co.radius; p.radiusAudio = p.radius; p.segments = co.segments;
+          p.centerX = co.centerX; p.centerY = co.centerY;
+          row.push(p);
+          if (i < coords.length / 2) audioIndex++; else audioIndex--;
+          if (audioIndex > audioBufferIndexMax) audioIndex = audioBufferIndexMin;
+          if (audioIndex < audioBufferIndexMin) audioIndex = audioBufferIndexMax;
+        }
+        particles.push(row);
       }
     }
-    
-    const TAU = Math.PI * 2;
-    const ringShapeFn = (th,i,p,a) => 0;
-    const diagEvery = 1;
-    const twist = 1.0;
-    
-    const overlay = document.getElementById("overlay");
-    const audio = new AudioEngine();
-    
-    // ENHANCEMENT: Touch gesture handling for mobile track switching
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let swipeThreshold = 50;
-    
-    function handleInteraction(x, y, isTouch = false) {
-      if (isTouch) {
-        EffectsState.createRipple(x, y);
-        EffectsState.pulse(300);
-      } else {
-        EffectsState.invertColors();
-        EffectsState.pulse(150);
-      }
+
+    // Interaction
+    let mouseActive = false, mouseDown = false;
+    let mousePos = { x: 0, y: 0 }, mouseFollowSpeed = 0.015;
+
+    function getMousePos(canvas, event) { const rect = canvas.getBoundingClientRect(); return { x: event.clientX - rect.left, y: event.clientY - rect.top }; }
+    function mouseDownHandler() { mouseDown = true; setInversion(true); }
+    function mouseUpHandler() { mouseDown = false; setInversion(false); }
+    function mouseEnterHandler() { mouseActive = true; }
+    function mouseLeaveHandler() { mouseActive = false; mousePos.x = w / 2; mousePos.y = h / 2; mouseDown = false; setInversion(false); }
+    function mouseMoveHandler(event) { mousePos = getMousePos(canvas, event); }
+
+    canvas.addEventListener('mousedown', mouseDownHandler, false);
+    canvas.addEventListener('mouseup', mouseUpHandler, false);
+    canvas.addEventListener('mousemove', mouseMoveHandler, false);
+    canvas.addEventListener('mouseenter', mouseEnterHandler, false);
+    canvas.addEventListener('mouseleave', mouseLeaveHandler, false);
+
+    // Touch with ripple, swipe, double-tap
+    let touchStartX = 0, touchStartY = 0, lastTapTime = 0;
+    const swipeThreshold = 50, doubleTapMs = 300;
+    const swipeHint = document.getElementById("swipeHint");
+
+    function createRipple(x, y) {
+      const ripple = document.createElement('div');
+      ripple.className = 'touch-ripple';
+      ripple.style.left = (x - 25) + 'px';
+      ripple.style.top  = (y - 25) + 'px';
+      document.body.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
     }
-    
-    overlay.addEventListener("mousedown", (e) => { e.stopPropagation(); e.preventDefault(); }, { capture: true });
-    overlay.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(); });
-    overlay.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } });
-    
-    canvas.addEventListener("mousedown", (e) => { 
-      mouseDown = true;
-      const rect = canvas.getBoundingClientRect();
-      handleInteraction(e.clientX - rect.left, e.clientY - rect.top, false);
-    });
-    canvas.addEventListener("mouseup", () => { mouseDown = false; });
-    canvas.addEventListener("mouseenter",() => { mouseActive = true; });
-    canvas.addEventListener("mouseleave",() => { mouseActive = false; mouseDown = false; mouseX = w/2; mouseY = h/2; });
-    canvas.addEventListener("mousemove", (e) => {
-      const rect = canvas.getBoundingClientRect();
-      lastMouseX = mouseX; lastMouseY = mouseY;
-      mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
-    }, { passive: true });
-    
-    // ENHANCEMENT: Advanced touch handling with swipe detection
+
     canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
-      EffectsState.touchActive = true;
       const rect = canvas.getBoundingClientRect();
-      const touch = e.touches[0];
-      const x = touch.clientX - rect.left;
-      const y = touch.clientY - rect.top;
-      
-      touchStartX = x;
-      touchStartY = y;
-      
-      handleInteraction(x, y, true);
-      mouseX = x; mouseY = y;
-      mouseActive = true;
-      mouseDown = true;
+      const t = e.touches[0];
+      const x = t.clientX - rect.left, y = t.clientY - rect.top;
+      touchStartX = x; touchStartY = y;
+      mousePos.x = x; mousePos.y = y;
+      mouseDown = true; setInversion(true);
+      createRipple(x, y);
+
+      const now = performance.now();
+      if (now - lastTapTime < doubleTapMs && audio.started) {
+        audio.next(); UI.text(audio.trackLabel());
+      }
+      lastTapTime = now;
     }, { passive: false });
-    
+
     canvas.addEventListener("touchmove", (e) => {
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
-      const touch = e.touches[0];
-      lastMouseX = mouseX; lastMouseY = mouseY;
-      mouseX = touch.clientX - rect.left;
-      mouseY = touch.clientY - rect.top;
+      const t = e.touches[0];
+      mousePos.x = t.clientX - rect.left; mousePos.y = t.clientY - rect.top;
     }, { passive: false });
-    
+
     canvas.addEventListener("touchend", (e) => {
       e.preventDefault();
-      
-      // ENHANCEMENT: Swipe detection for track switching
-      const deltaX = mouseX - touchStartX;
-      const deltaY = mouseY - touchStartY;
-      
-      if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
-        if (deltaX > 0 && audio.started) {
-          audio.next(); // Swipe right = next track
+      mouseDown = false; setInversion(false);
+      if (audio.started) {
+        const rect = canvas.getBoundingClientRect();
+        const t = e.changedTouches[0];
+        const endX = t.clientX - rect.left, endY = t.clientY - rect.top;
+        const dx = endX - touchStartX, dy = endY - touchStartY;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > swipeThreshold) {
+          if (dx > 0) audio.prev(); else audio.next();
+          UI.text(audio.trackLabel());
+          swipeHint.classList.add('show');
+          setTimeout(() => swipeHint.classList.remove('show'), 1400);
         }
       }
-      
-      EffectsState.touchActive = false;
-      mouseDown = false;
     }, { passive: false });
-    
-    let orientationActive = false;
-    let alpha = 0, beta = 0, gamma = 0;
+
+    // Device orientation parallax
+    let orientationActive = false, beta = 0, gamma = 0;
     if (window.DeviceOrientationEvent) {
       window.addEventListener("deviceorientation", (e) => {
-        alpha = e.alpha || 0; 
-        beta = e.beta || 0; 
-        gamma = e.gamma || 0;
-        orientationActive = true;
-        EffectsState.gyroStrength = Math.min(1, Math.hypot(beta, gamma) / 90);
+        beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true;
       }, { passive: true });
     }
-    
+
+    // Overlay start + keyboard
+    const overlay = document.getElementById("overlay");
+    overlay.addEventListener("mousedown", (e) => { e.stopPropagation(); e.preventDefault(); }, { capture: true });
+    overlay.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(); });
+    overlay.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } });
+
     addEventListener("keydown", (e) => {
-      if (e.code === "Space") { e.preventDefault(); if (audio.started) audio.next(); return; }
+      if (e.code === "Space") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
       if (e.key?.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; }
-      if (e.key?.toLowerCase() === "i") { e.preventDefault(); EffectsState.invertColors(); return; }
+      if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
+      if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); UI.text(audio.trackLabel()); } return; }
     });
-    
+
     function startApp() {
       if (!audio.started) {
         audio.started = true;
         audio.loadAndPlay(audio.tracks[audio.trackIndex]);
         UI.text(audio.trackLabel());
         overlay.hidden = true;
-        
-        // Show swipe hint on mobile
-        if (isMobile) {
-          setTimeout(() => {
-            const hint = document.getElementById('swipeHint');
-            hint.classList.add('show');
-            setTimeout(() => hint.classList.remove('show'), 3000);
-          }, 2000);
-        }
       }
     }
-    
-    function projectAndAdvance(audioData, dt, mouseDx, mouseDy) {
-      const R = rows.length;
-      let sortNeeded = false;
-      GRAD.update(dt, audioData.average, mouseDx, mouseDy);
-      
-      // ENHANCEMENT: Update tunnel endpoint for parallax effect
-      EffectsState.updateTunnelEndpoint(mouseX, mouseY, w, h);
-      
-      // ENHANCEMENT: Update particles
-      particles.forEach(p => p.update(dt, audioData.average));
-      
-      for (let i = 0; i < R; i++) {
-        const row = rows[i];
-        const prevRow = i > 0 ? rows[i - 1] : null;
+
+    // Soft invert (progressive) + text state
+    let colorInvertValue = 0;
+    const siteTitle = document.getElementById("siteTitle");
+    function setInversion(active) {
+      // For text/UI, snap-mode like original press feedback
+      if (active) {
+        siteTitle.classList.add('site-inverted');
+        document.getElementById('ui').classList.add('ui-inverted');
+      } else {
+        siteTitle.classList.remove('site-inverted');
+        document.getElementById('ui').classList.remove('ui-inverted');
+      }
+    }
+    function softInvert(value) {
+      for (let j = 0, n = data.length; j < n; j += 4) {
+        data[j]   = Math.abs(value - data[j]);
+        data[j+1] = Math.abs(value - data[j+1]);
+        data[j+2] = Math.abs(value - data[j+2]);
+        data[j+3] = 255;
+      }
+    }
+
+    // Render (clean, no additive trails; blue/teal wire tint like original)
+    function renderFrame(a) {
+      let needSort = false;
+      const rows = particles.length;
+
+      // Mouse/gyro parallax target
+      let px = mousePos.x, py = mousePos.y;
+      if (orientationActive && !mouseDown) {
+        const sens = 1.25;
+        px = w/2 + gamma * (w/90) * sens;
+        py = h/2 + beta  * (h/90) * sens;
+      }
+
+      for (let i = 0; i < rows; i++) {
+        const row = particles[i];
+        const prevRow = (i > 0) ? particles[i-1] : null;
         const center = centers[i];
-        
-        // ENHANCEMENT: Tunnel endpoint parallax
-        const depthFactor = (row[0].z + FOV) / (FOV * 2);
-        const endpointInfluence = 1 - depthFactor;
-        
-        if (mouseActive || EffectsState.touchActive) {
-          const parallaxStrength = EffectsState.touchActive ? 1.5 : 1.0;
-          center.x = ((w / 2) - mouseX) * ((row[0].z - FOV) / 500) * parallaxStrength + w / 2;
-          center.y = ((h / 2) - mouseY) * ((row[0].z - FOV) / 500) * parallaxStrength + h / 2;
-          
-          // Apply endpoint movement
-          center.x += EffectsState.tunnelEndpoint.x * endpointInfluence;
-          center.y += EffectsState.tunnelEndpoint.y * endpointInfluence;
+
+        if (mouseActive || mouseDown || orientationActive) {
+          center.x = ((w / 2) - px) * ((row[0].z - fov) / 500) + w / 2;
+          center.y = ((h / 2) - py) * ((row[0].z - fov) / 500) + h / 2;
         } else {
-          center.x += ((w / 2) - center.x) * 0.015;
-          center.y += ((h / 2) - center.y) * 0.015;
-          
-          // Gentle endpoint drift
-          center.x += EffectsState.tunnelEndpoint.x * endpointInfluence * 0.5;
-          center.y += EffectsState.tunnelEndpoint.y * endpointInfluence * 0.5;
+          center.x += ((w / 2) - center.x) * mouseFollowSpeed;
+          center.y += ((h / 2) - center.y) * mouseFollowSpeed;
         }
-        
-        const depth = i / R;
-        const [cr, cg, cb] = colorFor(depth, audioData.average);
-        const ca = WIRE_ALPHA;
-        
+
         for (let j = 0, k = row.length; j < k; j++) {
           const p = row[j];
-          const theta = p.idx * (TAU / p.segs) + time * twist;
-          const rShape = ringShapeFn(theta, i, p, audioData);
-          
-          // ENHANCEMENT: Audio-reactive breathing
-          const breathingEffect = Math.sin(EffectsState.breathingPhase + depth * Math.PI) * audioData.average * 8;
-          p.radius = BASE_RADIUS + rShape + breathingEffect;
-          p.radiusAudio = p.radius + audioData.average * 6;
-          
-          if (EffectsState.touchActive) {
-            p.radiusAudio += 10;
+          const scale = fov / (fov + p.z);
+          p.x2d = (p.x * scale) + center.x;
+          p.y2d = (p.y * scale) + center.y;
+
+          // Smooth audio radius lift (no analyser from embeds)
+          p.radiusAudio = p.radius + a.average * 6;
+
+          // Advance z with input modulation
+          if (mouseDown) { p.z += speed; if (p.z > fov) { p.z -= (fov * 2); needSort = true; } }
+          else           { p.z -= speed; if (p.z < -fov) { p.z += (fov * 2); needSort = true; } }
+
+          // Line color by depth row (clean teal/blue)
+          let lineColorValue = Math.round(i / rows * 180); // <= 180 to keep dimmer
+          let b = lineColorValue;
+          let g = Math.round(lineColorValue / 2);
+          // draw around ring
+          if (j > 0) {
+            const pPrev = row[j - 1];
+            drawLine(p.x2d | 0, p.y2d | 0, pPrev.x2d | 0, pPrev.y2d | 0, 0, g, b, 255);
           }
-          
-          const rx = Math.cos(theta) * p.radiusAudio;
-          const ry = Math.sin(theta) * p.radiusAudio;
-          const scale = Math.max(0.001, Math.min(10, FOV / (FOV + p.z)));
-          p.x2d = (rx * scale) + center.x;
-          p.y2d = (ry * scale) + center.y;
-          
-          if (mouseDown) { 
-            p.z += SPEED * (EffectsState.touchActive ? 1.5 : 1.0); 
-            if (p.z > FOV) { p.z -= (FOV * 2); sortNeeded = true; } 
-          } else { 
-            p.z -= SPEED; 
-            if (p.z < -FOV) { p.z += (FOV * 2); sortNeeded = true; } 
+
+          // Move point along the ring for next frame
+          let pos;
+          if (j < k - 1) {
+            pos = getCirclePosition(p.centerX, p.centerY, p.radiusAudio, p.index, p.segments);
+          } else {
+            const p1 = row[0];
+            pos = getCirclePosition(p1.centerX, p1.centerY, p1.radiusAudio, p1.index, p1.segments);
           }
-          
-          const prevIdx = (j > 0 ? j - 1 : k - 1);
-          const prev = row[prevIdx];
-          
-          // ENHANCEMENT: Use chromatic aberration on fast movement
-          drawLineChromatic(p.x2d, p.y2d, prev.x2d, prev.y2d, cr, cg, cb, ca, EffectsState.chromaticStrength);
-          
-          if (prevRow && (j % diagEvery === 0)) {
-            const prevInPrev = prevRow[prevIdx];
-            drawLineChromatic(p.x2d, p.y2d, prevInPrev.x2d, prevInPrev.y2d, cr, cg, cb, ca * 0.7, EffectsState.chromaticStrength * 0.5);
+          p.x = pos.x; p.y = pos.y;
+
+          // Diagonals to previous row
+          if (i > 0 && i < rows - 1) {
+            const pB = (j === 0) ? prevRow[prevRow.length - 1] : prevRow[j - 1];
+            drawLine(p.x2d | 0, p.y2d | 0, pB.x2d | 0, pB.y2d | 0, 0, g, b, 255);
           }
         }
       }
-      
-      // ENHANCEMENT: Draw particles
-      particles.forEach(p => p.draw(ctx, w, h, EffectsState.tunnelEndpoint));
-      
-      if (sortNeeded) {
-        const pairs = rows.map((row, idx) => ({ row, center: centers[idx] }));
-        pairs.sort((a, b) => b.row[0].z - a.row[0].z);
-        rows = pairs.map(p => p.row);
-        centers = pairs.map(p => p.center);
+
+      if (needSort) {
+        particles = particles.sort((a, b) => (b[0].z - a[0].z));
       }
-      
+
+      // Time flow like original
       time += mouseDown ? -0.005 : 0.005;
-    }
-    
-    let lastTs = performance.now();
-    function animate(ts) {
-      const dt = Math.min(0.05, (ts - lastTs) / 1000);
-      lastTs = ts;
-      
-      fadeImageData(0.85);
-      const a = audio.data();
-      const mouseDx = mouseX - lastMouseX, mouseDy = mouseY - lastMouseY;
-      
-      if (orientationActive && !EffectsState.touchActive) {
-        const gyroSensitivity = 1.2;
-        mouseX = w / 2 + gamma * (w / 90) * gyroSensitivity;
-        mouseY = h / 2 + beta * (h / 90) * gyroSensitivity;
-        mouseActive = true;
+
+      // Progressive soft invert on press/drag
+      if (mouseDown) {
+        colorInvertValue = Math.min(255, colorInvertValue + 5);
+        softInvert(colorInvertValue);
+      } else {
+        colorInvertValue = Math.max(0, colorInvertValue - 5);
+        if (colorInvertValue > 0) softInvert(colorInvertValue);
       }
-      
-      projectAndAdvance(a, dt, mouseDx, mouseDy);
+    }
+
+    function animate() {
+      clearImageData();
+      const a = audio.started ? audio.data() : { average: 0, bass: 0, mid: 0, high: 0 };
+      renderFrame(a);
       ctx.putImageData(imageData, 0, 0);
       requestAnimationFrame(animate);
     }
-    
-    function boot() { 
-      resize(); 
-      initField(); 
-      UI.text("Ready · click/touch to start"); 
-      requestAnimationFrame(animate); 
+
+    function boot() {
+      onResize();
+      addParticles();
+      // initial clear + render to prime buffer
+      clearImageData(); renderFrame({ average: 0, bass: 0, mid: 0, high: 0 }); ctx.putImageData(imageData, 0, 0);
+      UI.text("Ready · click/touch to start");
+      requestAnimationFrame(animate);
     }
-    
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+    else boot();
   </script>
 </body>
 </html>
