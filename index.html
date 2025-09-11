@@ -6,13 +6,12 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>Radio Brgen</title>
   <meta name="theme-color" content="#000000">
-  <meta name="description" content="Minimal audio-reactive warp tunnel with three-color gradient. Space next track. M mute/unmute. Mobile: touch for effects and tilt for parallax.">
+  <meta name="description" content="Minimal audio-reactive warp tunnel with three-color gradient. Space next track. M mute/unmute. Mobile: swipe right for next track, touch for effects and tilt for parallax.">
   <link rel="manifest" href="manifest.json">
   <style>
     html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
     canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #000; touch-action: none; transition: filter 0.2s ease; }
     
-    /* FIXED: H1 visibility with proper contrast */
     h1.site { 
       position: fixed; 
       top: 12px; 
@@ -28,10 +27,12 @@
       transition: all 0.3s ease;
     }
     
-    /* ENHANCEMENT: Click effect states */
+    /* ENHANCEMENT: Color inversion affects all text */
     .canvas-inverted { filter: invert(1) hue-rotate(180deg); }
     .canvas-pulse { filter: brightness(1.5) saturate(1.2); }
     .site-pulse { color: #00ffff; transform: scale(1.05); }
+    .text-inverted { color: #000; }
+    .text-inverted.site-pulse { color: #ff3300; }
     
     .ui { 
       position: fixed; 
@@ -61,6 +62,7 @@
       cursor: pointer; 
       user-select: none;
       z-index: 1000;
+      transition: all 0.3s ease;
     }
     
     .overlay[hidden] { display: none; }
@@ -75,7 +77,6 @@
       pointer-events: none; 
     }
     
-    /* ENHANCEMENT: Touch feedback */
     .touch-ripple {
       position: absolute;
       border-radius: 50%;
@@ -84,6 +85,21 @@
       animation: ripple 0.6s ease-out forwards;
       z-index: 50;
     }
+    
+    /* ENHANCEMENT: Swipe indicator for mobile */
+    .swipe-hint {
+      position: fixed;
+      bottom: 50px;
+      right: 20px;
+      color: rgba(255,255,255,0.3);
+      font-size: 10px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 99;
+      pointer-events: none;
+    }
+    
+    .swipe-hint.show { opacity: 1; }
     
     @keyframes ripple {
       0% { transform: scale(0); opacity: 1; }
@@ -101,9 +117,10 @@
   <canvas id="canvas" aria-label="Audio-reactive warp tunnel visualizer"></canvas>
   <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
     <h2 id="start-title" style="position:absolute;left:-9999px;">Start Visualization</h2>
-    <p>Click / tap to start · Space next track</p>
+    <p>Click / tap to start · Space next track · Mobile: swipe right for next track</p>
   </div>
   <div class="ui" id="ui">Ready</div>
+  <div class="swipe-hint" id="swipeHint">→ swipe for next track</div>
   <iframe id="player" src="about:blank" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope"></iframe>
   <script>
     "use strict";
@@ -113,24 +130,33 @@
     const COLOR_B = { h: 190, s: 50, l: 38 };
     const COLOR_C = { h: 180, s: 30, l: 28 };
     
-    // ENHANCEMENT: Click effects state management
+    // ENHANCEMENT: Expanded effects state management
     const EffectsState = {
       colorInverted: false,
       pulsing: false,
       touchActive: false,
       gyroStrength: 0,
+      tunnelEndpoint: { x: 0, y: 0 },
+      breathingPhase: 0,
+      chromaticStrength: 0,
       
       invertColors() {
         this.colorInverted = !this.colorInverted;
         const canvas = document.getElementById('canvas');
         const siteTitle = document.getElementById('siteTitle');
+        const ui = document.getElementById('ui');
+        const overlay = document.getElementById('overlay');
         
         if (this.colorInverted) {
           canvas.classList.add('canvas-inverted');
-          siteTitle.classList.add('site-pulse');
+          siteTitle.classList.add('site-pulse', 'text-inverted');
+          ui.classList.add('text-inverted');
+          overlay.classList.add('text-inverted');
         } else {
           canvas.classList.remove('canvas-inverted');
-          siteTitle.classList.remove('site-pulse');
+          siteTitle.classList.remove('site-pulse', 'text-inverted');
+          ui.classList.remove('text-inverted');
+          overlay.classList.remove('text-inverted');
         }
       },
       
@@ -160,8 +186,81 @@
             ripple.parentNode.removeChild(ripple);
           }
         }, 600);
+      },
+      
+      // ENHANCEMENT: Update tunnel endpoint for parallax
+      updateTunnelEndpoint(mouseX, mouseY, w, h) {
+        const targetX = (mouseX - w/2) * 0.15;
+        const targetY = (mouseY - h/2) * 0.15;
+        this.tunnelEndpoint.x += (targetX - this.tunnelEndpoint.x) * 0.08;
+        this.tunnelEndpoint.y += (targetY - this.tunnelEndpoint.y) * 0.08;
       }
     };
+    
+    // ENHANCEMENT: Particle system for ambient effects
+    class TunnelParticle {
+      constructor() {
+        this.reset();
+      }
+      
+      reset() {
+        this.x = (Math.random() - 0.5) * 400;
+        this.y = (Math.random() - 0.5) * 400;
+        this.z = Math.random() * 500 - 250;
+        this.life = 1.0;
+        this.decay = 0.003 + Math.random() * 0.007;
+        this.size = 1 + Math.random() * 3;
+        this.hue = Math.random() * 60 + 180;
+      }
+      
+      update(dt, audioAvg) {
+        this.z += (50 + audioAvg * 100) * dt;
+        this.life -= this.decay;
+        
+        if (this.life <= 0 || this.z > 250) {
+          this.reset();
+          this.z = -250;
+        }
+      }
+      
+      draw(ctx, w, h, tunnelEndpoint) {
+        if (this.z <= -250) return;
+        
+        const scale = 250 / (250 + this.z);
+        const screenX = this.x * scale + w/2 + tunnelEndpoint.x * scale;
+        const screenY = this.y * scale + h/2 + tunnelEndpoint.y * scale;
+        
+        if (screenX < 0 || screenX >= w || screenY < 0 || screenY >= h) return;
+        
+        const alpha = Math.floor(this.life * 100 * scale);
+        if (alpha <= 0) return;
+        
+        const [r, g, b] = hslToRgb(this.hue, 70, 50);
+        const size = this.size * scale;
+        
+        for (let dx = -size; dx <= size; dx++) {
+          for (let dy = -size; dy <= size; dy++) {
+            const dist = Math.hypot(dx, dy);
+            if (dist <= size) {
+              const px = Math.floor(screenX + dx);
+              const py = Math.floor(screenY + dy);
+              if (px >= 0 && px < w && py >= 0 && py < h) {
+                const i = (px + py * w) * 4;
+                const falloff = 1 - (dist / size);
+                const particleAlpha = alpha * falloff;
+                setPixel(px, py, r, g, b, particleAlpha);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // ENHANCEMENT: Create particle instances
+    const particles = [];
+    for (let i = 0; i < 25; i++) {
+      particles.push(new TunnelParticle());
+    }
     
     const GRAD = {
       phase: 0,
@@ -173,7 +272,12 @@
         this.mouseDelta = Math.hypot(mouseDx || 0, mouseDy || 0) * 0.01;
         this.phase += dt * (this.speedBase + audioAvg * 0.12 + this.mouseDelta * 0.2);
         
-        // ENHANCEMENT: Dynamic color shifting based on effects state
+        // ENHANCEMENT: Chromatic aberration from movement
+        EffectsState.chromaticStrength = Math.min(1, this.mouseDelta * 5);
+        
+        // ENHANCEMENT: Breathing effect
+        EffectsState.breathingPhase += dt * (2 + audioAvg * 4);
+        
         const effectMultiplier = EffectsState.colorInverted ? -1 : 1;
         const targetShift = audioAvg * 30 * effectMultiplier + EffectsState.gyroStrength * 20;
         this.colorShift += (targetShift - this.colorShift) * 0.2;
@@ -190,7 +294,9 @@
         f += 0.05 * (audioAvg || 0);
         f += 0.03 * this.mouseDelta;
         
-        // ENHANCEMENT: Pulse effect integration
+        // ENHANCEMENT: Breathing effect integration
+        f += 0.02 * Math.sin(EffectsState.breathingPhase) * audioAvg;
+        
         if (EffectsState.pulsing) {
           f += 0.15 * Math.sin(this.phase * 8);
         }
@@ -308,6 +414,13 @@
       next() {
         this.trackIndex = (this.trackIndex + 1) % this.tracks.length;
         this.loadAndPlay(this.tracks[this.trackIndex]);
+        
+        // ENHANCEMENT: Show swipe hint briefly on mobile
+        if (isMobile) {
+          const hint = document.getElementById('swipeHint');
+          hint.classList.add('show');
+          setTimeout(() => hint.classList.remove('show'), 2000);
+        }
       }
       toggleMute() {
         this.muted = !this.muted;
@@ -335,6 +448,7 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d", { alpha: false });
     let w = 0, h = 0, imageData = null, data = null;
+    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
     
     function resize() {
       w = window.innerWidth | 0; h = window.innerHeight | 0;
@@ -348,6 +462,30 @@
     function fadeImageData(fade = 0.85) {
       for (let i = 0, n = data.length; i < n; i += 4) {
         data[i] *= fade; data[i+1] *= fade; data[i+2] *= fade; data[i+3] = 255;
+      }
+    }
+    
+    // ENHANCEMENT: Improved setPixel for particle system
+    function setPixel(x, y, r, g, b, a) {
+      if (x >= 0 && x < w && y >= 0 && y < h && a > 0) {
+        const i = (x + y * w) * 4;
+        const alpha = a / 255;
+        data[i] = Math.min(255, data[i] + r * alpha);
+        data[i+1] = Math.min(255, data[i+1] + g * alpha);
+        data[i+2] = Math.min(255, data[i+2] + b * alpha);
+        data[i+3] = 255;
+      }
+    }
+    
+    // ENHANCEMENT: Chromatic aberration line drawing
+    function drawLineChromatic(x1, y1, x2, y2, r, g, b, a, chromaticStrength = 0) {
+      if (chromaticStrength > 0.1) {
+        const offset = chromaticStrength * 2;
+        drawLine(x1 - offset, y1, x2 - offset, y2, r, 0, 0, a);
+        drawLine(x1, y1, x2, y2, 0, g, 0, a);
+        drawLine(x1 + offset, y1, x2 + offset, y2, 0, 0, b, a);
+      } else {
+        drawLine(x1, y1, x2, y2, r, g, b, a);
       }
     }
     
@@ -393,8 +531,6 @@
     }
     
     const TAU = Math.PI * 2;
-    
-    // SIMPLIFIED: Only Classic Tunnel mode
     const ringShapeFn = (th,i,p,a) => 0;
     const diagEvery = 1;
     const twist = 1.0;
@@ -402,7 +538,11 @@
     const overlay = document.getElementById("overlay");
     const audio = new AudioEngine();
     
-    // ENHANCEMENT: Click and touch effects
+    // ENHANCEMENT: Touch gesture handling for mobile track switching
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let swipeThreshold = 50;
+    
     function handleInteraction(x, y, isTouch = false) {
       if (isTouch) {
         EffectsState.createRipple(x, y);
@@ -417,7 +557,6 @@
     overlay.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(); });
     overlay.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } });
     
-    // ENHANCEMENT: Mouse events with click effects
     canvas.addEventListener("mousedown", (e) => { 
       mouseDown = true;
       const rect = canvas.getBoundingClientRect();
@@ -432,7 +571,7 @@
       mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
     }, { passive: true });
     
-    // ENHANCEMENT: Touch events with effects
+    // ENHANCEMENT: Advanced touch handling with swipe detection
     canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       EffectsState.touchActive = true;
@@ -440,6 +579,10 @@
       const touch = e.touches[0];
       const x = touch.clientX - rect.left;
       const y = touch.clientY - rect.top;
+      
+      touchStartX = x;
+      touchStartY = y;
+      
       handleInteraction(x, y, true);
       mouseX = x; mouseY = y;
       mouseActive = true;
@@ -457,12 +600,21 @@
     
     canvas.addEventListener("touchend", (e) => {
       e.preventDefault();
+      
+      // ENHANCEMENT: Swipe detection for track switching
+      const deltaX = mouseX - touchStartX;
+      const deltaY = mouseY - touchStartY;
+      
+      if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (deltaX > 0 && audio.started) {
+          audio.next(); // Swipe right = next track
+        }
+      }
+      
       EffectsState.touchActive = false;
       mouseDown = false;
-      // Keep mouse position for continued parallax
     }, { passive: false });
     
-    // ENHANCEMENT: Enhanced device orientation with effects integration
     let orientationActive = false;
     let alpha = 0, beta = 0, gamma = 0;
     if (window.DeviceOrientationEvent) {
@@ -471,8 +623,6 @@
         beta = e.beta || 0; 
         gamma = e.gamma || 0;
         orientationActive = true;
-        
-        // Calculate gyroscope strength for effects
         EffectsState.gyroStrength = Math.min(1, Math.hypot(beta, gamma) / 90);
       }, { passive: true });
     }
@@ -480,7 +630,6 @@
     addEventListener("keydown", (e) => {
       if (e.code === "Space") { e.preventDefault(); if (audio.started) audio.next(); return; }
       if (e.key?.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; }
-      // ENHANCEMENT: Manual color inversion with 'i' key
       if (e.key?.toLowerCase() === "i") { e.preventDefault(); EffectsState.invertColors(); return; }
     });
     
@@ -490,6 +639,15 @@
         audio.loadAndPlay(audio.tracks[audio.trackIndex]);
         UI.text(audio.trackLabel());
         overlay.hidden = true;
+        
+        // Show swipe hint on mobile
+        if (isMobile) {
+          setTimeout(() => {
+            const hint = document.getElementById('swipeHint');
+            hint.classList.add('show');
+            setTimeout(() => hint.classList.remove('show'), 3000);
+          }, 2000);
+        }
       }
     }
     
@@ -498,19 +656,36 @@
       let sortNeeded = false;
       GRAD.update(dt, audioData.average, mouseDx, mouseDy);
       
+      // ENHANCEMENT: Update tunnel endpoint for parallax effect
+      EffectsState.updateTunnelEndpoint(mouseX, mouseY, w, h);
+      
+      // ENHANCEMENT: Update particles
+      particles.forEach(p => p.update(dt, audioData.average));
+      
       for (let i = 0; i < R; i++) {
         const row = rows[i];
         const prevRow = i > 0 ? rows[i - 1] : null;
         const center = centers[i];
         
-        // ENHANCEMENT: Enhanced parallax with touch and gyro
+        // ENHANCEMENT: Tunnel endpoint parallax
+        const depthFactor = (row[0].z + FOV) / (FOV * 2);
+        const endpointInfluence = 1 - depthFactor;
+        
         if (mouseActive || EffectsState.touchActive) {
           const parallaxStrength = EffectsState.touchActive ? 1.5 : 1.0;
           center.x = ((w / 2) - mouseX) * ((row[0].z - FOV) / 500) * parallaxStrength + w / 2;
           center.y = ((h / 2) - mouseY) * ((row[0].z - FOV) / 500) * parallaxStrength + h / 2;
+          
+          // Apply endpoint movement
+          center.x += EffectsState.tunnelEndpoint.x * endpointInfluence;
+          center.y += EffectsState.tunnelEndpoint.y * endpointInfluence;
         } else {
           center.x += ((w / 2) - center.x) * 0.015;
           center.y += ((h / 2) - center.y) * 0.015;
+          
+          // Gentle endpoint drift
+          center.x += EffectsState.tunnelEndpoint.x * endpointInfluence * 0.5;
+          center.y += EffectsState.tunnelEndpoint.y * endpointInfluence * 0.5;
         }
         
         const depth = i / R;
@@ -521,10 +696,12 @@
           const p = row[j];
           const theta = p.idx * (TAU / p.segs) + time * twist;
           const rShape = ringShapeFn(theta, i, p, audioData);
-          p.radius = BASE_RADIUS + rShape;
+          
+          // ENHANCEMENT: Audio-reactive breathing
+          const breathingEffect = Math.sin(EffectsState.breathingPhase + depth * Math.PI) * audioData.average * 8;
+          p.radius = BASE_RADIUS + rShape + breathingEffect;
           p.radiusAudio = p.radius + audioData.average * 6;
           
-          // ENHANCEMENT: Touch boost for radius
           if (EffectsState.touchActive) {
             p.radiusAudio += 10;
           }
@@ -545,14 +722,19 @@
           
           const prevIdx = (j > 0 ? j - 1 : k - 1);
           const prev = row[prevIdx];
-          drawLine(p.x2d, p.y2d, prev.x2d, prev.y2d, cr, cg, cb, ca);
+          
+          // ENHANCEMENT: Use chromatic aberration on fast movement
+          drawLineChromatic(p.x2d, p.y2d, prev.x2d, prev.y2d, cr, cg, cb, ca, EffectsState.chromaticStrength);
           
           if (prevRow && (j % diagEvery === 0)) {
             const prevInPrev = prevRow[prevIdx];
-            drawLine(p.x2d, p.y2d, prevInPrev.x2d, prevInPrev.y2d, cr, cg, cb, ca);
+            drawLineChromatic(p.x2d, p.y2d, prevInPrev.x2d, prevInPrev.y2d, cr, cg, cb, ca * 0.7, EffectsState.chromaticStrength * 0.5);
           }
         }
       }
+      
+      // ENHANCEMENT: Draw particles
+      particles.forEach(p => p.draw(ctx, w, h, EffectsState.tunnelEndpoint));
       
       if (sortNeeded) {
         const pairs = rows.map((row, idx) => ({ row, center: centers[idx] }));
@@ -573,7 +755,6 @@
       const a = audio.data();
       const mouseDx = mouseX - lastMouseX, mouseDy = mouseY - lastMouseY;
       
-      // ENHANCEMENT: Enhanced gyroscope parallax
       if (orientationActive && !EffectsState.touchActive) {
         const gyroSensitivity = 1.2;
         mouseX = w / 2 + gamma * (w / 90) * gyroSensitivity;
