@@ -1,7 +1,8 @@
-# `master.json` v38.0.0
+# `master.json` v58.2.0
 
-LLMs give lazy first answers. This JSON forces 10 personas to fight over 15 alternatives until the best one wins.
+LLMs love first takes. This JSON makes expert crews debate, measure, and ship the strongest plan.  
+Clean code, hard gates, and `USER_CONTENT_SACRED_NO_MODIFICATION`.
 
-Drop it in any LLM. Tell it what to build. It does the rest.
+Drop `master.json` into any LLM. Say what to build. It runs the phases and brings it home.
 
-> Changes requires your **EXPRESS** written permission like: _"Yes, modify `master.json` to `[...]`"_
+> Changes require your EXPRESS OK like: "Yes, modify `master.json` to [...]"
