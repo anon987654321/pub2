@@ -3,909 +3,1028 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <meta name="mobile-web-app-capable" content="yes" />
-    <title>Radio Bergen</title>
+    <meta name="description" content="J Dilla audio-reactive sacred geometry visualizer carousel - master.json compliant" />
+    <meta name="author" content="radio.brgen.no" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Classic warp tunnel with multiple views. Swipe to explore. Tilt device for parallax." />
-   
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>">
-   
+    <title>radio.brgen.no - Sacred Visual Experience</title>
     <style>
-      html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
-      canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #000; touch-action: none; }
-     
-      .loading-screen {
-        position: fixed; inset: 0; background: #000; color: #9aa;
-        display: grid; place-items: center; z-index: 2000;
+      :root {
+        --font-primary: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        --fs-base: clamp(16px, 2.2vw, 18px);
+        --fs-lg: clamp(20px, 3.3vw, 28px);
+        --fs-sm: clamp(12px, 1.8vw, 14px);
+        --lh: 1.618;
+        --bg: #000000;
+        --fg: #dcdcdc;
+        --muted: #9aa;
+        --accent: #66b8dd;
+        --xs: 0.5rem;
+        --sm: 1rem;
+        --md: 1.5rem;
+        --lg: 2rem;
+        --focus: #dcdcdc;
+        --radius: 4px;
+        --ease: 200ms ease;
+      }
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { font-size: 100%; -webkit-text-size-adjust: 100%; }
+      body {
+        font-family: var(--font-primary);
+        font-size: var(--fs-base);
+        line-height: var(--lh);
+        color: var(--fg);
+        background: var(--bg);
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+      /* Accessibility: Skip link */
+      .skip-link {
+        position: absolute; top: -40px; left: var(--sm);
+        background: var(--focus); color: #000;
+        padding: var(--xs) var(--sm); border-radius: var(--radius);
+        z-index: 1000; font-weight: 600; text-decoration: none; transition: var(--ease);
+      }
+      .skip-link:focus { top: var(--sm); outline: 2px solid var(--focus); outline-offset: 2px; }
+      /* Canvas */
+      canvas { position: fixed; inset: 0; z-index: 1; touch-action: none; background: var(--bg); }
+      /* Header/brand */
+      header { position: fixed; top: var(--lg); left: var(--lg); z-index: 10; pointer-events: none; }
+      header h1 { font-size: var(--fs-lg); font-weight: 700; color: var(--fg); letter-spacing: 0.02em; }
+      /* Now playing (BR) */
+      .now-playing {
+        position: fixed; right: var(--lg); bottom: var(--lg); z-index: 10; pointer-events: none;
+        display: flex; align-items: center; gap: var(--xs);
+        font: 600 var(--fs-sm)/1.2 var(--font-mono); color: var(--muted);
+        background: rgba(0,0,0,0.6); border-radius: var(--radius);
+        padding: 0.25rem 0.5rem; letter-spacing: 0.01em;
+      }
+      .note { color: var(--accent); }
+      /* Controls (BL) */
+      .controls {
+        position: fixed; left: var(--lg); bottom: var(--lg); z-index: 10; pointer-events: none;
+        font: 600 var(--fs-sm)/1.2 var(--font-mono); color: var(--muted);
+        background: rgba(0,0,0,0.6); border-radius: var(--radius);
+        padding: 0.25rem 0.5rem; letter-spacing: 0.01em;
         transition: opacity 0.5s ease;
       }
-      .loading-screen.hidden { opacity: 0; pointer-events: none; }
-     
-      .city-carousel {
-        position: fixed; top: 12px; left: 12px; width: 280px; height: 40px;
-        z-index: 95; pointer-events: none; user-select: none; overflow: hidden;
+      /* Mode/Viz badge (top-center) */
+      .badge {
+        position: fixed; top: var(--sm); left: 50%; transform: translateX(-50%);
+        z-index: 11; pointer-events: none;
+        font: 700 var(--fs-sm)/1 var(--font-mono);
+        color: var(--fg); background: rgba(0,0,0,0.7);
+        padding: 6px 10px; border-radius: var(--radius);
+        opacity: 0; transition: opacity var(--ease);
       }
-     
-      .carousel-container {
-        width: 100%; height: 100%; position: relative; overflow: hidden;
+      .badge.show { opacity: 1; }
+      /* Help overlay (top-left, toggled with H) */
+      .help {
+        position: fixed; top: calc(var(--lg) + 48px); left: var(--lg); z-index: 10;
+        font: 600 var(--fs-sm)/1.3 var(--font-mono); color: var(--muted);
+        background: rgba(0,0,0,0.75); border-radius: var(--radius);
+        padding: 8px 10px; width: max-content; max-width: 80vw;
+        white-space: pre; letter-spacing: 0.01em;
       }
-      .carousel-slide {
-        height: 100%; display: flex; align-items: center; justify-content: flex-start;
-        font-weight: 700; font-size: clamp(24px, 3.2vw, 36px); color: #fff;
-        letter-spacing: 0.02em; transition: all 0.3s ease;
-        position: absolute; top: 0; left: 0; width: 100%;
-        opacity: 0; transform: translateY(100%);
+      .help[hidden] { display: none; }
+      /* Custom cursor (desktop only) */
+      .cursor {
+        position: fixed; width: 20px; height: 20px; border: 2px solid var(--fg);
+        border-radius: 50%; pointer-events: none; z-index: 1000; opacity: 0;
+        transform: translate(-50%, -50%); transition: transform var(--ease), opacity var(--ease);
       }
-      .carousel-slide.active { opacity: 1; transform: translateY(0%); }
-      .city-inverted .carousel-slide { color: #000 !important; }
-    
-      .ui {
-        position: fixed; right: 12px; bottom: 10px; color: #7a90a0; font-size: 12px;
-        opacity: 0.95; white-space: nowrap; pointer-events: none; user-select: none;
-        text-align: right; max-width: min(72vw, 800px); overflow: hidden;
-        text-overflow: ellipsis; z-index: 100; transition: color 0.18s ease;
-      }
-      .ui-inverted { color: #445566 !important; }
-     
+      @media (min-width: 768px) { .cursor { opacity: 0.6; } }
+      /* Start overlay */
       .overlay {
-        position: fixed; inset: 0; display: grid; place-items: center;
-        background: rgba(0,0,0,0.9); color: #9aa; cursor: pointer; user-select: none;
-        z-index: 1000; text-align: center; padding: 16px;
+        position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+        display: grid; place-items: center; z-index: 100; cursor: pointer; user-select: none;
       }
       .overlay[hidden] { display: none; }
-    
-      .overlay h2 {
-        margin: 0 0 20px 0; font-size: 36px; font-weight: 300; color: #fff;
-      }
-    
-      .instructions {
-        position: absolute; bottom: 20px; right: 20px; font-size: 10px;
-        color: #666; text-align: right; line-height: 1.4; max-width: 200px;
-        display: grid; grid-template-columns: auto auto; gap: 4px 12px; justify-content: end;
-      }
-      .instructions span { white-space: nowrap; }
-     
-      #player {
-        position: fixed; top: -1000px; left: -1000px; width: 1px; height: 1px;
-        opacity: 0; pointer-events: none;
-      }
-     
-      .viz-indicator {
-        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-        display: flex; gap: 8px; z-index: 99; pointer-events: none;
-      }
-      .viz-dot {
-        width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3);
-        transition: background 0.3s ease;
-      }
-      .viz-dot.active { background: rgba(255,255,255,0.8); }
-     
-      .touch-ripple {
-        position: absolute; width: 50px; height: 50px; border-radius: 50%;
-        background: rgba(100,200,255,0.4); pointer-events: none;
-        animation: ripple 0.6s ease-out forwards; z-index: 50;
-      }
-      @keyframes ripple {
-        0% { transform: scale(0); opacity: 1; }
-        100% { transform: scale(4); opacity: 0; }
-      }
-     
-      .swipe-hint {
-        position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
-        color: #555; font-size: 11px; opacity: 0; transition: opacity 0.5s ease; z-index: 99;
-      }
-      .swipe-hint.show { opacity: 1; }
-     
-      @media (prefers-reduced-motion: reduce) {
-        * { animation: none !important; transition: none !important; }
-        .touch-ripple { display: none; }
-      }
-     
-      @media (max-width: 768px) {
-        canvas { image-rendering: pixelated; }
-        .city-carousel { width: 200px; }
-        .carousel-slide { font-size: clamp(18px, 4vw, 28px); }
+      .overlay .start { font-size: var(--fs-lg); font-weight: 300; color: var(--muted); text-align: center; padding: var(--md); }
+      /* YouTube container */
+      .yt { position: fixed; top: -1000px; left: -1000px; width: 1px; height: 1px; opacity: 0; pointer-events: none; z-index: -1; }
+      :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+      /* Hard-disable decorative CSS effects */
+      *, *::before, *::after { box-shadow: none !important; text-shadow: none !important; filter: none !important; }
+      @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+      @media (min-width: 1024px) {
+        header h1 { letter-spacing: 0.01em; font-weight: 650; }
+        .now-playing, .controls { font-size: 13px; padding: 4px 8px; }
+        body { letter-spacing: 0.005em; }
       }
     </style>
   </head>
   <body>
-    <div class="loading-screen" id="loadingScreen">
-      <div>📻 Loading Radio Bergen...</div>
+    <a href="#canvas" class="skip-link">Skip to main content</a>
+    <canvas id="canvas" role="img" aria-label="J Dilla sacred geometry visual experience" aria-describedby="kbHelp"></canvas>
+    <header><h1>radio.brgen.no</h1></header>
+    <div class="now-playing" id="nowPlaying" aria-live="polite" aria-atomic="true">
+      <span class="note">♪</span><span id="trackText">Ready</span>
     </div>
-   
-    <div class="city-carousel" id="cityCarousel">
-      <div class="carousel-container">
-        <div class="carousel-slide active">radio.brgen.no</div>
-        <div class="carousel-slide">radio.oslo.no</div>
-        <div class="carousel-slide">radio.trndheim.no</div>
-        <div class="carousel-slide">radio.stvanger.no</div>
-        <div class="carousel-slide">radio.trmso.no</div>
-        <div class="carousel-slide">radio.longyearbyn.no</div>
-        <div class="carousel-slide">radio.reykjavk.is</div>
-        <div class="carousel-slide">radio.kobenhvn.dk</div>
-        <div class="carousel-slide">radio.stholm.se</div>
-        <div class="carousel-slide">radio.gtebrg.se</div>
-        <div class="carousel-slide">radio.mlmoe.se</div>
-        <div class="carousel-slide">radio.hlsinki.fi</div>
-        <div class="carousel-slide">radio.lndon.uk</div>
-        <div class="carousel-slide">radio.cardff.uk</div>
-        <div class="carousel-slide">radio.mnchester.uk</div>
-        <div class="carousel-slide">radio.brmingham.uk</div>
-        <div class="carousel-slide">radio.lverpool.uk</div>
-        <div class="carousel-slide">radio.edinbrgh.uk</div>
-        <div class="carousel-slide">radio.glasgw.uk</div>
-        <div class="carousel-slide">radio.amstrdam.nl</div>
-        <div class="carousel-slide">radio.rottrdam.nl</div>
-        <div class="carousel-slide">radio.utrcht.nl</div>
-        <div class="carousel-slide">radio.brssels.be</div>
-        <div class="carousel-slide">radio.zrich.ch</div>
-        <div class="carousel-slide">radio.lchtenstein.li</div>
-        <div class="carousel-slide">radio.frankfrt.de</div>
-        <div class="carousel-slide">radio.wrsawa.pl</div>
-        <div class="carousel-slide">radio.gdnsk.pl</div>
-        <div class="carousel-slide">radio.brdeaux.fr</div>
-        <div class="carousel-slide">radio.mrseille.fr</div>
-        <div class="carousel-slide">radio.mlan.it</div>
-        <div class="carousel-slide">radio.lsbon.pt</div>
-        <div class="carousel-slide">radio.lsangeles.com</div>
-        <div class="carousel-slide">radio.newyrk.us</div>
-        <div class="carousel-slide">radio.chcago.us</div>
-        <div class="carousel-slide">radio.houstn.us</div>
-        <div class="carousel-slide">radio.dllas.us</div>
-        <div class="carousel-slide">radio.austn.us</div>
-        <div class="carousel-slide">radio.prtland.com</div>
-        <div class="carousel-slide">radio.mnneapolis.com</div>
-      </div>
+    <div class="controls" id="controlsHint"></div>
+    <div class="badge" id="badge" aria-hidden="true"></div>
+    <div class="help" id="help" hidden>
+Studio mode toggle .......... T
+Viz prev/next ............... ↑ / ↓
+Pause/mute .................. Space / M
+Track prev/next ............. ← / →
+Jump first/last ............. Home / End
+Symmetry (some viz) ......... S
     </div>
-   
-    <canvas id="canvas" aria-label="Classic warp tunnel visualizer"></canvas>
-   
-    <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" tabindex="0">
-      <div>
-        <h2 id="start-title">Tap to start</h2>
-        <div class="instructions">
-          <span>Space: next</span> <span>M: mute</span>
-          <span>Swipe: explore</span> <span>Tilt: parallax</span>
-          <span>Double-tap: next</span>
-        </div>
-      </div>
+    <!-- Hidden a11y help for canvas -->
+    <p id="kbHelp" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
+      Keyboard: Space to pause, M to mute, arrows to change track/visual, Home/End to jump, S for symmetry, T to toggle studio mode, H for help.
+    </p>
+    <div class="cursor" id="cursor" aria-hidden="true"></div>
+    <div class="overlay" id="overlay" role="dialog" aria-labelledby="overlayTitle" aria-describedby="controlsHint" aria-modal="true" tabindex="0">
+      <h2 id="overlayTitle" style="position:absolute;left:-9999px;">Start</h2>
+      <p class="start">Touch or click to start</p>
     </div>
-   
-    <div class="viz-indicator" id="vizIndicator">
-      <div class="viz-dot active"></div>
-      <div class="viz-dot"></div>
-      <div class="viz-dot"></div>
-      <div class="viz-dot"></div>
+    <div class="yt">
+      <iframe id="youtube-player" width="1" height="1" frameborder="0" allow="autoplay; encrypted-media"></iframe>
     </div>
-    <div class="ui" id="ui">Ready</div>
-    <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
-    <iframe id="player" src="about:blank" frameborder="0" allow="autoplay; encrypted-media"></iframe>
-   
     <script>
       "use strict";
-     
-      // Performance optimizations
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isLowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) ||
-                       (navigator.deviceMemory && navigator.deviceMemory <= 2);
-     
-      const QUALITY_SCALE = isLowEnd ? 0.6 : isMobile ? 0.8 : 1;
-      const PARTICLE_COUNT = isLowEnd ? 12 : isMobile ? 18 : 25;
-      const SPIRAL_COUNT = isLowEnd ? 3 : 4;
-     
-      // Simple Carousel
-      class SimpleCarousel {
-        constructor(element) {
-          this.container = element;
-          this.slides = Array.from(element.querySelectorAll('.carousel-slide'));
-          this.currentIndex = 0;
-          this.totalSlides = this.slides.length;
-          this.init();
+      // Mode flags
+      const DEV = /\bdev=1\b/i.test(location.search) || localStorage.getItem('dev') === '1';
+      let STUDIO = localStorage.getItem('mode') === 'studio';
+      // Guardrails (production path)
+      const clamp220 = v => (v < 0 ? 0 : v > 220 ? 220 : v | 0);
+      const deYellow = (r, g, b) => (r > 180 && g > 180 && b < 100) ? [r, Math.max(0, g - 20), b] : [r, g, b];
+      // Elements
+      const overlay = document.getElementById('overlay');
+      const canvas = document.getElementById('canvas');
+      const ctx2d = canvas.getContext('2d', { alpha: false, willReadFrequently: true }) || canvas.getContext('2d');
+      const trackText = document.getElementById('trackText');
+      const cursorEl = document.getElementById('cursor');
+      const badgeEl = document.getElementById('badge');
+      const helpEl = document.getElementById('help');
+      const controlsHint = document.getElementById('controlsHint');
+      // State
+      let w = 0;
+      let h = 0;
+      let imageData;
+      let data;
+      let mouseDown = false;
+      let mouseActive = false;
+      let mouseX = 0;
+      let mouseY = 0;
+      const PREFERS_REDUCED_MOTION = typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // Simple device grade
+      const DPR = Math.max(1, Math.min(3, (window.devicePixelRatio || 1)));
+      const isMobile = /Android|iPhone|iPad|iPod|IEMobile|BlackBerry/i.test(navigator.userAgent);
+      // Sensors
+      let orientationActive = false;
+      let beta = 0;
+      let gamma = 0;
+      const parallax = () => {
+        if (mouseActive || mouseDown) return { mx: (w / 2 - mouseX), my: (h / 2 - mouseY) };
+        if (orientationActive) return { mx: -gamma * (w / 180), my: -beta * (h / 180) };
+        return { mx: 0, my: 0 };
+      };
+      // Resize
+      const resizeCanvas = () => {
+        w = window.innerWidth | 0; h = window.innerHeight | 0;
+        canvas.width = w; canvas.height = h;
+        ctx2d.globalCompositeOperation = 'source-over';
+        ctx2d.globalAlpha = 1;
+        ctx2d.fillStyle = "#000"; ctx2d.fillRect(0, 0, w, h);
+        imageData = ctx2d.getImageData(0, 0, w, h);
+        data = imageData.data;
+      };
+      window.addEventListener('resize', () => { resizeCanvas(); viz.resize?.(); });
+      // Pixel ops (production path)
+      const clearImageData = () => {
+        if (!data) return;
+        data.fill(0);
+        for (let i = 3; i < data.length; i += 4) data[i] = 255;
+      };
+      const setPixel = (x, y, r, g, b) => {
+        if (x < 0 || x >= w || y < 0 || y >= h) return;
+        const i = ((x | 0) + (y | 0) * w) * 4;
+        [r, g, b] = deYellow(r, g, b);
+        data[i] = clamp220(r);
+        data[i + 1] = clamp220(g);
+        data[i + 2] = clamp220(b);
+        data[i + 3] = 255;
+      };
+      const setPixelBlend = (x, y, r, g, b, c) => {
+        if (x < 0 || x >= w || y < 0 || y >= h) return;
+        const i = ((x | 0) + (y | 0) * w) * 4;
+        const [dr, dg, db] = deYellow(r * c, g * c, b * c);
+        data[i] = clamp220(dr + data[i] * (1 - c));
+        data[i + 1] = clamp220(dg + data[i + 1] * (1 - c));
+        data[i + 2] = clamp220(db + data[i + 2] * (1 - c));
+        data[i + 3] = 255;
+      };
+      class XiaolinWu {
+        static integerPart(v) {
+          let isNeg = (v < 0) ? -1 : 1;
+          let abs = Math.abs(v);
+          let integerPart = Math.floor(abs);
+          return isNeg * integerPart;
         }
-       
-        init() {
-          this.startAutoplay();
+        static fractionalPart(v) {
+          return v - XiaolinWu.integerPart(v);
         }
-       
-        goToSlide(index) {
-          this.slides[this.currentIndex].classList.remove('active');
-          this.currentIndex = ((index % this.totalSlides) + this.totalSlides) % this.totalSlides;
-          this.slides[this.currentIndex].classList.add('active');
+        static reverseFractionalPart(v) {
+          return 1 - XiaolinWu.fractionalPart(v);
         }
-       
-        next() { this.goToSlide(this.currentIndex + 1); }
-        prev() { this.goToSlide(this.currentIndex - 1); }
-       
-        startAutoplay() {
-          this.autoplayInterval = setInterval(() => this.next(), 2800);
+        static rfpart(v) {
+          return XiaolinWu.reverseFractionalPart(v);
         }
-       
-        destroy() {
-          if (this.autoplayInterval) clearInterval(this.autoplayInterval);
+        static fpart(v) {
+          return XiaolinWu.fractionalPart(v);
+        }
+        static draw(x0, y0, x1, y1, plot) {
+          let steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
+          if (steep) {
+            [x0, y0] = [y0, x0];
+            [x1, y1] = [y1, x1];
+          }
+          if (x0 > x1) {
+            [x0, x1] = [x1, x0];
+            [y0, y1] = [y1, y0];
+          }
+          let dx = x1 - x0;
+          let dy = y1 - y0;
+          let gradient = dy / dx;
+          let xend = Math.round(x0);
+          let yend = y0 + gradient * (xend - x0);
+          let xgap = XiaolinWu.rfpart(x0 + 0.5);
+          let xpxl1 = xend;
+          let ypxl1 = XiaolinWu.integerPart(yend);
+          if (steep) {
+            plot(ypxl1, xpxl1, XiaolinWu.rfpart(yend) * xgap);
+            plot(ypxl1 + 1, xpxl1, XiaolinWu.fpart(yend) * xgap);
+          } else {
+            plot(xpxl1, ypxl1, XiaolinWu.rfpart(yend) * xgap);
+            plot(xpxl1, ypxl1 + 1, XiaolinWu.fpart(yend) * xgap);
+          }
+          let intery = yend + gradient;
+          xend = Math.round(x1);
+          yend = y1 + gradient * (xend - x1);
+          xgap = XiaolinWu.fpart(x1 + 0.5);
+          let xpxl2 = xend;
+          let ypxl2 = XiaolinWu.integerPart(yend);
+          if (steep) {
+            plot(ypxl2, xpxl2, XiaolinWu.rfpart(yend) * xgap);
+            plot(ypxl2 + 1, xpxl2, XiaolinWu.fpart(yend) * xgap);
+          } else {
+            plot(xpxl2, ypxl2, XiaolinWu.rfpart(yend) * xgap);
+            plot(xpxl2, ypxl2 + 1, XiaolinWu.fpart(yend) * xgap);
+          }
+          if (steep) {
+            for (let x = xpxl1 + 1; x <= xpxl2 - 1; x++) {
+              plot(XiaolinWu.integerPart(intery), x, XiaolinWu.rfpart(intery));
+              plot(XiaolinWu.integerPart(intery) + 1, x, XiaolinWu.fpart(intery));
+              intery += gradient;
+            }
+          } else {
+            for (let x = xpxl1 + 1; x <= xpxl2 - 1; x++) {
+              plot(x, XiaolinWu.integerPart(intery), XiaolinWu.rfpart(intery));
+              plot(x, XiaolinWu.integerPart(intery) + 1, XiaolinWu.fpart(intery));
+              intery += gradient;
+            }
+          }
         }
       }
-     
-      // Tracks
-      const YOUTUBE_TRACKS = [
-        { artist: "J Dilla", title: "Microphone Master", id: "9EGHwkDix78" },
-        { artist: "J Dilla", title: "In Space", id: "vO2nWXCVt6o" },
-        { artist: "J Dilla", title: "Timeless", id: "dbbfo9_7D8g" },
-        { artist: "Pachanga Boys", title: "Time", id: "2e21NOp69hM" },
-        { artist: "Shaolin Cowboy", title: "Kate Moss", id: "AmxVbZpIf1E" },
-        { artist: "FLYamSAM", title: "The Offbeat", id: "5SdMIa5vd4A" },
-        { artist: "AFTA-1", title: "Due Time", id: "WC09qDzU9y4" },
-        { artist: "Flying Lotus", title: "Message Situation", id: "9fzGGbiJags" },
-        { artist: "Röyksopp", title: "Only This Moment", id: "vLE5XCc0XO8" },
-        { artist: "Jneiro Jarel", title: "Chinubian", id: "9OPypHXlJUQ" },
-        { artist: "Pete Rock", title: "A Little Soul", id: "4tY89H5TWPY" },
-        { artist: "Slum Village", title: "La La (Instrumental)", id: "EYJxxHQ7sX0" },
-        { artist: "Slum Village", title: "Get It Together", id: "t6T-Q6HMbEo" },
-        { artist: "Slum Village", title: "Fantastic", id: "j0z_-7TfPeM" },
-        { artist: "Flying Lotus", title: "me Yesterday//Corded", id: "8DgAhgmpXNA" },
-        { artist: "Flying Lotus", title: "Camel", id: "t6SXXx1Fu_4" },
-        { artist: "Slum Village", title: "Worlds Full of Sadness", id: "MU3nfxsz2XA" },
-        { artist: "Bob Marley", title: "Forever Loving Jah", id: "WFCh0Ycjd4Q" }
-      ];
-     
-      const UI = (() => {
-        const el = document.getElementById("ui");
-        return { text: (t) => { if (el) el.textContent = t; } };
-      })();
-     
-      // Audio Engine
-      class AudioEngine {
-        constructor() {
-          this.player = document.getElementById("player");
-          this.started = false;
-          this.muted = true;
-          this.trackIndex = 0;
-          this.tracks = [...YOUTUBE_TRACKS];
-          this.startMs = 0;
-          this._advanceTimer = null;
-          this.beatPhase = 0;
-          this.energyLevel = 0.5;
+      const drawLine = (x1, y1, x2, y2, r, g, b, t = 1) => {
+        if (t > 1) {
+          // For thickness >1, draw multiple parallel lines
+          const dx = x2 - x1, dy = y2 - y1;
+          const len = Math.sqrt(dx*dx + dy*dy);
+          if (len === 0) return;
+          const nx = dy / len * ((t-1)/2), ny = -dx / len * ((t-1)/2);
+          for (let i = 0; i < t; i++) {
+            const ox = nx * (i - (t-1)/2), oy = ny * (i - (t-1)/2);
+            XiaolinWu.draw(x1 + ox, y1 + oy, x2 + ox, y2 + oy, (px, py, c) => setPixelBlend(px, py, r, g, b, c));
+          }
+        } else {
+          XiaolinWu.draw(x1, y1, x2, y2, (px, py, c) => setPixelBlend(px, py, r, g, b, c));
         }
-      
+      };
+      // Soft invert (production path)
+      let invertVal = 0;
+      const softInvert = amount => {
+        const inv = clamp220(amount | 0);
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = clamp220(Math.abs(inv - data[i]));
+          data[i+1] = clamp220(Math.abs(inv - data[i+1]));
+          data[i+2] = clamp220(Math.abs(inv - data[i+2]));
+        }
+      };
+      // Thickness
+      let lastThickness = 1;
+      const wireThickness = a => {
+        let t = 1;
+        if (a.average > 0.75) t = 3; else if (a.average > 0.45) t = 2;
+        if (t > lastThickness) lastThickness = t; else lastThickness = Math.max(t, lastThickness - 0.1);
+        return Math.round(lastThickness);
+      };
+      // Audio Engine (YouTube)
+      const YT_ORIGIN = 'https://www.youtube.com';
+      class AudioEngine {
+        constructor(onSongChange) {
+          this.iframe = document.getElementById('youtube-player');
+          this.started = false; this.muted = true; this.trackIndex = 0; this.onSongChange = onSongChange;
+          this.tracks = [
+            { artist: "J Dilla", title: "Microphone Master", id: "9EGHwkDix78" },
+            { artist: "J Dilla", title: "In Space", id: "vO2nWXCVt6o" },
+            { artist: "J Dilla", title: "Timeless", id: "dbbfo9_7D8g" },
+            { artist: "Pachanga Boys", title: "Time", id: "2e21NOp69hM" },
+            { artist: "Shaolin Cowboy", title: "Kate Moss", id: "AmxVbZpIf1E" },
+            { artist: "FLYamSAM", title: "The Offbeat", id: "5SdMIa5vd4A" },
+            { artist: "AFTA-1", title: "Due Time", id: "WC09qDzU9y4" },
+            { artist: "Flying Lotus", title: "Message Situation", id: "9fzGGbiJags" },
+            { artist: "Röyksopp", title: "Only This Moment", id: "vLE5XCc0XO8" },
+            { artist: "Jneiro Jarel", title: "Chinubian", id: "9OPypHXlJUQ" },
+            { artist: "Pete Rock", title: "A Little Soul", id: "4tY89H5TWPY" },
+            { artist: "Slum Village", title: "La La (Instrumental)", id: "EYJxxHQ7sX0" },
+            { artist: "Slum Village", title: "Get It Together", id: "t6T-Q6HMbEo" },
+            { artist: "Slum Village", title: "Fantastic", id: "j0z_-7TfPeM" },
+            { artist: "Flying Lotus", title: "me Yesterday//Corded", id: "8DgAhgmpXNA" },
+            { artist: "Flying Lotus", title: "Camel", id: "t6SXXx1Fu_4" },
+            { artist: "Slum Village", title: "Worlds Full of Sadness", id: "MU3nfxsz2XA" },
+            { artist: "Bob Marley", title: "Forever Loving Jah", id: "WFCh0Ycjd4Q" }
+          ];
+          this.startMs = 0; this._advanceTimer = null; this.beatPhase = 0; this.energy = 0.5;
+        }
+        label() { const t = this.tracks[this.trackIndex]; return `${t.artist} — ${t.title}`; }
+        start() { this.started = true; this.loadAndPlay(this.tracks[this.trackIndex]); }
+        next() { this.trackIndex = (this.trackIndex + 1) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); this.onSongChange?.(); }
+        prev() { this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); this.onSongChange?.(); }
+        jumpFirst() { this.trackIndex = 0; this.loadAndPlay(this.tracks[this.trackIndex]); this.onSongChange?.(); }
+        jumpLast() { this.trackIndex = this.tracks.length - 1; this.loadAndPlay(this.tracks[this.trackIndex]); this.onSongChange?.(); }
         loadAndPlay(track) {
-          if (!this.player) return;
-          const { id } = track;
-          const src = `https://www.youtube.com/embed/${id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=1`;
-          this.player.src = src;
-          this.player.onload = () => {
+          if (!this.iframe) return;
+          const src = `https://www.youtube.com/embed/${track.id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=${this.muted ? 1 : 0}&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
+          this.iframe.src = src;
+          this.iframe.onload = () => {
             this.afterStart();
             setTimeout(() => {
               try {
-                this.player.contentWindow.postMessage({event: 'command', func: 'unMute', args: []}, '*');
-                this.muted = false;
-                UI.text(this.trackLabel());
-              } catch(e) {
-                UI.text(this.trackLabel() + " • muted");
-              }
-            }, 1000);
+                this.iframe.contentWindow.postMessage({ event: 'command', func: 'unMute', args: [] }, YT_ORIGIN);
+                this.muted = false; trackText.textContent = this.label();
+              } catch { trackText.textContent = this.label() + " • muted"; }
+            }, 800);
           };
-          this.beatPhase = Math.random() * Math.PI * 2;
         }
-      
         afterStart() {
           this.startMs = performance.now();
           clearTimeout(this._advanceTimer);
           this._advanceTimer = setTimeout(() => this.next(), 180000);
+          trackText.textContent = this.label();
         }
-      
-        next() {
-          this.trackIndex = (this.trackIndex + 1) % this.tracks.length;
-          this.loadAndPlay(this.tracks[this.trackIndex]);
+        togglePause() {
+          if (!this.started) return;
+          if (this.iframe.src && this.iframe.src !== 'about:blank') {
+            this._pausedSrc = this.iframe.src; this.iframe.src = 'about:blank';
+            trackText.textContent = this.label() + " • paused";
+          } else {
+            if (this._pausedSrc) this.iframe.src = this._pausedSrc; else this.loadAndPlay(this.tracks[this.trackIndex]);
+          }
         }
-      
-        prev() {
-          this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length;
-          this.loadAndPlay(this.tracks[this.trackIndex]);
-        }
-      
         toggleMute() {
           this.muted = !this.muted;
           try {
-            const command = this.muted ? 'mute' : 'unMute';
-            this.player.contentWindow.postMessage({event: 'command', func: command, args: []}, '*');
-            UI.text(this.trackLabel() + (this.muted ? " • muted" : ""));
-          } catch(e) {
-            console.log('Could not toggle mute');
-          }
+            const cmd = this.muted ? 'mute' : 'unMute';
+            this.iframe.contentWindow.postMessage({ event: 'command', func: cmd, args: [] }, YT_ORIGIN);
+            trackText.textContent = this.label() + (this.muted ? " • muted" : "");
+          } catch {}
         }
-      
-        trackLabel() {
-          const t = this.tracks[this.trackIndex];
-          return `${t.artist} — ${t.title}`;
-        }
-      
         data() {
-          this.beatPhase += 0.08;
-          this.energyLevel = this.energyLevel * 0.999 + Math.random() * 0.001;
-        
-          const bass = 0.4 + 0.4 * Math.sin(this.beatPhase * 0.8);
-          const mid = 0.35 + 0.35 * Math.sin(this.beatPhase * 1.2);
-          const high = 0.25 + 0.35 * Math.sin(this.beatPhase * 1.8);
+          this.beatPhase += PREFERS_REDUCED_MOTION ? 0.04 : 0.08;
+          this.energy = this.energy * 0.995 + Math.random() * 0.005;
+          const bass = 0.45 + 0.4 * Math.sin(this.beatPhase * 0.8);
+          const mid = 0.40 + 0.35 * Math.sin(this.beatPhase * 1.2 + 0.6);
+          const high = 0.30 + 0.30 * Math.sin(this.beatPhase * 1.8 + 1.2);
           const avg = (bass + mid + high) / 3;
-          const beat = Math.sin(this.beatPhase) > 0.7 ? 1 : 0;
-        
-          return { bass, mid, high, average: avg, beat, energy: this.energyLevel };
+          const beat = Math.sin(this.beatPhase) > 0.75 ? 1 : 0;
+          return { bass, mid, high, average: avg, beat, energy: this.energy };
         }
       }
-     
-      const audio = new AudioEngine();
-      let carousel;
-     
-      // Canvas
-      let w = 0, h = 0, canvas, ctx, imageData, data;
-      let resizeTimeout;
-     
-      canvas = document.getElementById("canvas");
-      ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
-     
-      function onResize() {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-          w = Math.floor(window.innerWidth * QUALITY_SCALE);
-          h = Math.floor(window.innerHeight * QUALITY_SCALE);
-          canvas.width = w;
-          canvas.height = h;
-          canvas.style.width = window.innerWidth + 'px';
-          canvas.style.height = window.innerHeight + 'px';
-          ctx.fillStyle = "#000";
-          ctx.fillRect(0, 0, w, h);
-          imageData = ctx.getImageData(0, 0, w, h);
-          data = imageData.data;
-         
-          if (vizManager.initialized) vizManager.init();
-        }, 100);
-      }
-     
-      window.addEventListener("resize", onResize, { passive: true });
-     
-      // Pixel operations
-      function clearImageData() {
-        data.fill(0);
-        for (let i = 3; i < data.length; i += 4) data[i] = 255;
-      }
-    
-      function setPixel(x, y, r, g, b) {
-        if (x < 0 || x >= w || y < 0 || y >= h) return;
-        const i = (Math.floor(x) + Math.floor(y) * w) * 4;
-        data[i] = r; data[i + 1] = g; data[i + 2] = b; data[i + 3] = 255;
-      }
-    
-      function drawLine(x1, y1, x2, y2, r, g, b, thickness = 1) {
-        const dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
-        const sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
-        let err = dx - dy, x = x1, y = y1;
-      
-        while (true) {
-          if (thickness === 1) {
-            setPixel(x, y, r, g, b);
-          } else {
-            const t = Math.floor(thickness);
-            for (let tx = -t; tx <= t; tx++) {
-              for (let ty = -t; ty <= t; ty++) {
-                if (tx * tx + ty * ty <= t * t) {
-                  setPixel(x + tx, y + ty, r, g, b);
-                }
-              }
+      const audio = new AudioEngine(() => {});
+      // Global symmetry for some production modes
+      const SYMMETRIES = [4, 6, 8];
+      let symmetryIndex = 1; // D6
+      const currentSym = () => SYMMETRIES[symmetryIndex];
+      // FPS governor (production helpers)
+      let frames = 0;
+      let lastFpsT = performance.now();
+      let fps = 60;
+      const governor = {
+        lensEnabled: true, maxShells: 8, moireSegments: 84, tunnelSegments: 144,
+        sample() {
+          frames++; const now = performance.now();
+          if (now - lastFpsT >= 2000) {
+            fps = (frames * 1000) / (now - lastFpsT); frames = 0; lastFpsT = now;
+            if (fps < 40) {
+              this.lensEnabled = false;
+              this.maxShells = Math.max(4, Math.floor(this.maxShells * 0.8));
+              this.moireSegments = Math.max(64, Math.floor(this.moireSegments * 0.9));
+              this.tunnelSegments = Math.max(72, Math.floor(this.tunnelSegments * 0.9));
+            } else if (fps > 58) {
+              this.lensEnabled = true;
+              this.maxShells = Math.min(10, this.maxShells + 1);
+              this.moireSegments = Math.min(96, this.moireSegments + 2);
+              this.tunnelSegments = Math.min(360, this.tunnelSegments + 4);
             }
           }
-        
-          if (x === x2 && y === y2) break;
-          const e2 = err * 2;
-          if (e2 > -dy) { err -= dy; x += sx; }
-          if (e2 < dx) { err += dx; y += sy; }
         }
-      }
-      // Simple multi-visualizer system
-      class VisualizerManager {
-        constructor() {
-          this.currentViz = 0;
-          this.initialized = false;
-          this.visualizers = [];
-        }
-      
-        init() {
-          this.visualizers = [
-            new TunnelVisualizer(),
-            new SimpleSpiralsVisualizer(),
-            new SimpleWavesVisualizer(),
-            new SimpleDotsVisualizer()
-          ];
-          this.visualizers.forEach(viz => viz.init());
-          this.updateIndicator();
-          this.initialized = true;
-        }
-      
-        switchTo(index) {
-          if (index >= 0 && index < this.visualizers.length && index !== this.currentViz) {
-            this.currentViz = index;
-            this.updateIndicator();
+      };
+      // Visualizers
+      // 1) WarpTunnelWire (IMMUTABLE — DO NOT MODIFY)
+      class WarpTunnelWire {
+        constructor() { this.time = 0; this.fov = 300; this.segments = governor.tunnelSegments; this.zStep = 10; this.baseRadius = 90; this.initLUT(); this.initRows(); }
+        resize() { this.baseRadius = Math.max(70, Math.min(w, h) * 0.10); this.initRows(); }
+        initLUT() {
+          this.cos = new Float32Array(this.segments + 1);
+          this.sin = new Float32Array(this.segments + 1);
+          for (let i = 0; i <= this.segments; i++) {
+            const ang = i * (Math.PI * 2 / this.segments);
+            this.cos[i] = Math.cos(ang);
+            this.sin[i] = Math.sin(ang);
           }
         }
-      
-        next() {
-          this.switchTo((this.currentViz + 1) % this.visualizers.length);
-        }
-      
-        prev() {
-          this.switchTo((this.currentViz - 1 + this.visualizers.length) % this.visualizers.length);
-        }
-      
-        updateIndicator() {
-          const dots = document.querySelectorAll('.viz-dot');
-          dots.forEach((dot, i) => {
-            dot.classList.toggle('active', i === this.currentViz);
-          });
-          }
-       
-        render(audioData) {
-          if (this.initialized && this.visualizers[this.currentViz]) {
-            this.visualizers[this.currentViz].render(audioData);
-          }
-        }
-      }
-     
-      class TunnelVisualizer {
-        constructor() {
-          this.particles = [];
-          this.centers = [];
-          this.floatingParticles = [];
-          this.time = 0;
-          this.fov = 250;
-          this.speed = 0.8;
-          this.segments = isLowEnd ? 12 : 20;
-          this.baseRadius = 80;
-          this.zStep = isLowEnd ? 15 : 10;
-        }
-      
-        init() {
-          this.particles = [];
-          this.centers = [];
-          this.floatingParticles = [];
-        
+        initRows() {
+          this.rows = []; this.centers = [];
           for (let z = -this.fov; z < this.fov; z += this.zStep) {
-            const row = [];
-            const center = { x: w / 2, y: h / 2 };
-            this.centers.push(center);
-            for (let i = 0; i <= this.segments; i++) {
-              const angle = i * ((Math.PI * 2) / this.segments);
-              const x = Math.cos(angle) * this.baseRadius;
-              const y = Math.sin(angle) * this.baseRadius;
-              row.push({ x, y, z, x2d: 0, y2d: 0, radius: this.baseRadius, radiusAudio: this.baseRadius, index: i });
-            }
-            this.particles.push(row);
-          }
-        
-          for (let i = 0; i < PARTICLE_COUNT; i++) {
-            this.floatingParticles.push(new FloatingParticle());
+            const row = new Array(this.segments + 1);
+            for (let i = 0; i <= this.segments; i++) row[i] = { x2d: 0, y2d: 0, radius: this.baseRadius, z };
+            this.rows.push(row);
+            this.centers.push({ x: w / 2, y: h / 2 });
           }
         }
-      
-        render(audioData) {
-          const rows = this.particles.length;
-          let mx = 0, my = 0;
-          if (mouseActive || mouseDown) {
-            mx = (w / 2 - mousePos.x);
-            my = (h / 2 - mousePos.y);
-          } else if (orientationActive) {
-            mx = -gamma * (w / 180);
-            my = -beta * (h / 180);
-          }
-         
+        color(depth) {
+          const t = depth; // 0..1
+          return [(25 + t*80)|0, (95 + t*110)|0, (165 + t*55)|0];
+        }
+        render(a) {
+          const { mx, my } = parallax();
+          const rows = this.rows.length;
+          const thick = wireThickness(a);
           for (let i = 0; i < rows; i++) {
-            const row = this.particles[i];
-            const center = this.centers[i];
-            center.x = mx * ((row[0].z - this.fov) / 500) + w / 2;
-            center.y = my * ((row[0].z - this.fov) / 500) + h / 2;
-           
-            for (let j = 0, k = row.length; j < k; j++) {
-              const p = row[j];
-              const scale = this.fov / (this.fov + p.z);
-              p.x2d = (p.x * scale) + center.x;
-              p.y2d = (p.y * scale) + center.y;
-              p.radiusAudio = p.radius + audioData.average * 10 + (audioData.beat ? 15 : 0);
-              p.z -= this.speed;
-              if (p.z < -this.fov) p.z += (this.fov * 2);
-             
-              const depthFactor = (p.z + this.fov) / (this.fov * 2);
-              const r = Math.round(20 + depthFactor * 100);
-              const g = Math.round(60 + depthFactor * 140);
-              const b = Math.round(120 + depthFactor * 135);
-              const thickness = 1 + Math.round(audioData.energy * 2);
-            
-              if (j > 0) {
-                const pPrev = row[j - 1];
-                drawLine(
-                  Math.round(p.x2d), Math.round(p.y2d),
-                  Math.round(pPrev.x2d), Math.round(pPrev.y2d),
-                  r, g, b, thickness
-                );
-              }
-             
-              const angle = p.index * ((Math.PI * 2) / this.segments) + this.time;
-              p.x = Math.cos(angle) * p.radiusAudio;
-              p.y = Math.sin(angle) * p.radiusAudio;
-             
-              if (i > 0) {
-                const pB = this.particles[i-1][j] || this.particles[i-1][0];
-                drawLine(
-                  Math.round(p.x2d), Math.round(p.y2d),
-                  Math.round(pB.x2d), Math.round(pB.y2d),
-                  r, g, b, Math.max(1, thickness - 1)
-                );
+            const row = this.rows[i];
+            const zVal = row[0].z;
+            const c = this.centers[i];
+            c.x = mx * ((zVal - this.fov) / 520) + (w >> 1);
+            c.y = my * ((zVal - this.fov) / 520) + (h >> 1);
+            const depth = (zVal + this.fov) / (this.fov * 2);
+            const [cr, cg, cb] = this.color(depth);
+            // Project ring
+            const twist = this.time * 0.7;
+            const inflate = a.average * 10 + (a.beat ? 10 : 0);
+            for (let j = 0; j <= this.segments; j++) {
+              const radius = row[j].radius + inflate;
+              const rx = this.cos[j] * radius;
+              const ry = this.sin[j] * radius;
+              const scale = this.fov / (this.fov + zVal);
+              row[j].x2d = (rx * scale) + c.x;
+              row[j].y2d = (ry * scale) + c.y;
+              // evolve
+              row[j].radius = this.baseRadius * (1.0 + 0.05 * Math.sin(j * 0.4 + twist) + 0.04 * Math.cos(this.time + i * 0.18));
+            }
+            // Ring wires
+            for (let j = 1; j <= this.segments; j++) {
+              const p = row[j], q = row[j - 1];
+              drawLine(p.x2d, p.y2d, q.x2d, q.y2d, cr, cg, cb, thick);
+            }
+            // Advance depth
+            for (let j = 0; j <= this.segments; j++) {
+              row[j].z -= (0.9 + a.average * 0.7);
+              if (row[j].z < -this.fov) row[j].z += (this.fov * 2);
+            }
+            // Longitudinal ties
+            if (i > 0) {
+              const prev = this.rows[i - 1];
+              for (let j = 0; j <= this.segments; j++) {
+                const p = row[j], q = prev[j];
+                drawLine(p.x2d, p.y2d, q.x2d, q.y2d, cr, cg, cb, Math.max(1, thick - 1));
               }
             }
           }
-         
-          this.floatingParticles.forEach(particle => {
-            particle.update(audioData);
-            particle.render(w / 2, h / 2, audioData);
-          });
-         
-          this.time += 0.01;
+          this.time += PREFERS_REDUCED_MOTION ? 0.005 : 0.01;
         }
       }
-     
-      class SimpleSpiralsVisualizer {
-        constructor() {
-          this.time = 0;
-          this.spirals = [];
-        }
-       
-        init() {
-          for (let i = 0; i < SPIRAL_COUNT; i++) {
-            this.spirals.push({
-              centerX: w / 2 + (Math.random() - 0.5) * w * 0.3,
-              centerY: h / 2 + (Math.random() - 0.5) * h * 0.3,
-              rotation: Math.random() * Math.PI * 2,
-              speed: 0.02 + Math.random() * 0.03,
-              arms: 3 + Math.floor(Math.random() * 4)
-            });
-          }
-        }
-       
-        render(audioData) {
-          this.time += 0.02;
-          let mx = 0, my = 0;
-          if (mouseActive || mouseDown) {
-            mx = (w / 2 - mousePos.x);
-            my = (h / 2 - mousePos.y);
-          } else if (orientationActive) {
-            mx = -gamma * (w / 180);
-            my = -beta * (h / 180);
-          }
-         
-          this.spirals.forEach((spiral) => {
-            spiral.rotation += spiral.speed * (1 + audioData.energy);
-            spiral.centerX = w / 2 + mx * 0.2;
-            spiral.centerY = h / 2 + my * 0.2;
-           
-            const baseRadius = Math.min(w, h) * 0.2;
-            const maxRadius = baseRadius * (1 + audioData.average);
-           
-            for (let arm = 0; arm < spiral.arms; arm++) {
-              const armAngle = (arm / spiral.arms) * Math.PI * 2;
-              for (let r = 10; r < maxRadius; r += isLowEnd ? 12 : 10) {
-                const angle = spiral.rotation + armAngle + r * 0.02;
-                const x = spiral.centerX + Math.cos(angle) * r;
-                const y = spiral.centerY + Math.sin(angle) * r;
-               
-                const intensity = (1 - r / maxRadius) * (1 + audioData.beat * 0.5);
-                const red = Math.round(100 + intensity * 100);
-                const green = Math.round(150 + intensity * 80);
-                const blue = Math.round(200 + intensity * 55);
-               
-                const size = 2 + intensity * 3;
-                for (let dx = -size; dx <= size; dx++) {
-                  for (let dy = -size; dy <= size; dy++) {
-                    if (dx*dx + dy*dy <= size*size) {
-                      setPixel(Math.round(x + dx), Math.round(y + dy), red, green, blue);
-                    }
-                  }
-                }
-              }
-            }
-          });
-        }
-      }
-     
-      class SimpleWavesVisualizer {
+      // 2) MandalaWire
+      class MandalaWire {
         constructor() { this.time = 0; }
-        init() {}
-        render(audioData) {
-          this.time += 0.03;
-          let mx = 0, my = 0;
-          if (mouseActive || mouseDown) {
-            mx = (w / 2 - mousePos.x);
-            my = (h / 2 - mousePos.y);
-          } else if (orientationActive) {
-            mx = -gamma * (w / 180);
-            my = -beta * (h / 180);
-          }
-          let centerX = w / 2 + mx * 0.3;
-          let centerY = h / 2 + my * 0.3;
-          const waveCount = isLowEnd ? 5 : 7;
-         
-          for (let wave = 0; wave < waveCount; wave++) {
-            const wavePhase = (wave / waveCount) * Math.PI * 2;
-            const radius = 50 + wave * 30 + audioData.average * 100;
-           
-            const points = [];
-            const segments = isLowEnd ? 24 : 36;
-           
-            for (let i = 0; i <= segments; i++) {
-              const angle = (i / segments) * Math.PI * 2;
-              const waveOffset = Math.sin(angle * 3 + this.time + wavePhase) * audioData.energy * 20;
-              const r = radius + waveOffset;
-           
-              const x = centerX + Math.cos(angle) * r;
-              const y = centerY + Math.sin(angle) * r;
-              points.push({ x, y });
+        resize() {}
+        render(a) {
+          const cx = w >> 1, cy = h >> 1, layers = 6, thick = wireThickness(a), dihedral = currentSym();
+          for (let L = 0; L < layers; L++) {
+            const t = L / (layers - 1), rad = 60 + L * 44 + a.average * 18;
+            let spokes = dihedral * (1 + (L % 2)); const half = spokes / 2;
+            const r = (35 + t * 70) | 0, g = (110 + t * 90) | 0, b = 200;
+            for (let i = 0; i < spokes; i++) {
+              const ang = (i / spokes) * Math.PI * 2 + this.time * (L % 2 ? 0.45 : -0.45);
+              const x = cx + Math.cos(ang) * rad, y = cy + Math.sin(ang) * rad;
+              drawLine(cx, cy, x, y, r, g, b, thick);
             }
-           
-            const intensity = (wave / waveCount) + audioData.beat * 0.3;
-            const red = Math.round(50 + intensity * 150);
-            const green = Math.round(100 + intensity * 120);
-            const blue = Math.round(200 + intensity * 55);
-           
-            for (let i = 0; i < points.length - 1; i++) {
-              const p1 = points[i];
-              const p2 = points[i + 1];
-           
-              drawLine(
-                Math.round(p1.x), Math.round(p1.y),
-                Math.round(p2.x), Math.round(p2.y),
-                red, green, blue, 1 + Math.round(audioData.energy * 2)
-              );
+            for (let i = 0; i < half; i++) {
+              const a1 = (i / spokes) * Math.PI * 2 + this.time, a2 = a1 + Math.PI;
+              const x1 = cx + Math.cos(a1) * rad, y1 = cy + Math.sin(a1) * rad;
+              const x2 = cx + Math.cos(a2) * rad, y2 = cy + Math.sin(a2) * rad;
+              drawLine(x1, y1, x2, y2, r, g, b, Math.max(1, thick - 0));
+            }
+            const seg = Math.max(64, spokes * 2);
+            let px = cx + Math.cos(this.time) * rad, py = cy + Math.sin(this.time) * rad;
+            for (let i = 1; i <= seg; i++) {
+              const ang = (i / seg) * Math.PI * 2 + this.time;
+              const x = cx + Math.cos(ang) * rad, y = cy + Math.sin(ang) * rad;
+              drawLine(px, py, x, y, r, g, b, 1); px = x; py = y;
+            }
+            const rad2 = rad * 0.618;
+            let p2x = cx + Math.cos(-this.time) * rad2, p2y = cy + Math.sin(-this.time) * rad2;
+            for (let i = 1; i <= seg; i++) {
+              const ang = (i / seg) * Math.PI * 2 - this.time * 0.8;
+              const x = cx + Math.cos(ang) * rad2, y = cy + Math.sin(ang) * rad2;
+              drawLine(p2x, p2y, x, y, r, g, b, 1); p2x = x; p2y = y;
             }
           }
+          this.time += PREFERS_REDUCED_MOTION ? 0.006 : 0.012;
         }
       }
-     
-      class SimpleDotsVisualizer {
-        constructor() {
-          this.dots = [];
-          this.time = 0;
+      // 3) LissajousWire
+      class LissajousWire {
+        constructor() { this.time = 0; }
+        resize() {}
+        render(a) {
+          const cx = w >> 1, cy = h >> 1, N = 320, pts = new Array(N);
+          const ax = 2 + (a.bass * 3) | 0, by = 3 + (a.mid * 3) | 0;
+          const rx = Math.min(w, h) * (0.34 + a.average * 0.04);
+          const ry = Math.min(w, h) * (0.28 + a.average * 0.04);
+          for (let i = 0; i < N; i++) {
+            const t = (i / N) * Math.PI * 2;
+            pts[i] = { x: cx + Math.sin(ax * t + this.time) * rx, y: cy + Math.sin(by * t + this.time * 0.8) * ry };
+          }
+          const r = 60, g = 150, b = 210, thick = wireThickness(a);
+          for (let i = 1; i < N; i++) { const p = pts[i], q = pts[i - 1]; drawLine(p.x, p.y, q.x, q.y, r, g, b, thick); }
+          drawLine(pts[0].x, pts[0].y, pts[N - 1].x, pts[N - 1].y, r, g, b, thick);
+          this.time += PREFERS_REDUCED_MOTION ? 0.006 : 0.012;
         }
-       
-        init() {
-          const gridSize = isLowEnd ? 60 : 45;
-          for (let x = gridSize; x < w; x += gridSize) {
-            for (let y = gridSize; y < h; y += gridSize) {
-              this.dots.push({
-                x: x,
-                y: y,
-                phase: Math.random() * Math.PI * 2,
-                speed: 0.05 + Math.random() * 0.05
-              });
+      }
+      // 4) Time-Folded Tunnel
+      class TimeFoldedTunnel {
+        constructor() {
+          this.time = 0; this.segments = 144;
+          this.shells = []; this.maxShells = 8;
+          this.shellPeriodMs = 1400; this.lastShellMs = performance.now();
+          this.cos = new Float32Array(this.segments + 1); this.sin = new Float32Array(this.segments + 1);
+          for (let i = 0; i <= this.segments; i++) { const ang = i * (Math.PI * 2 / this.segments); this.cos[i] = Math.cos(ang); this.sin[i] = Math.sin(ang); }
+          this.baseRadius = Math.max(70, Math.min(w, h) * 0.12);
+          this.chordStep = 6; this.chordPairs = [];
+          for (let j = 0; j < this.segments; j += this.chordStep) this.chordPairs.push([j, (j + (this.segments >> 1)) % this.segments]);
+        }
+        resize() { this.baseRadius = Math.max(70, Math.min(w, h) * 0.12); }
+        snapshot(a) {
+          const prof = new Float32Array(this.segments + 1);
+          const k1 = 0.5 + a.average * 1.2, k2 = 0.8 + a.mid * 1.1;
+          for (let j = 0; j <= this.segments; j++) {
+            prof[j] = 0.1 * Math.sin(j * 0.37 + this.time * 0.6) * k1 + 0.08 * Math.cos(j * 0.19 + this.time * 0.3) * k2;
+          }
+          this.shells.unshift({ profile: prof });
+          this.maxShells = governor.maxShells;
+          if (this.shells.length > this.maxShells) this.shells.pop();
+          this.lastShellMs = performance.now();
+        }
+        render(a) {
+          const now = performance.now(); if (now - this.lastShellMs >= this.shellPeriodMs) this.snapshot(a);
+          const { mx, my } = parallax(); const cx = (w >> 1) - mx * 0.25, cy = (h >> 1) - my * 0.25;
+          for (let s = this.shells.length - 1; s >= 0; s--) {
+            const t = s / Math.max(1, this.shells.length - 1), scale = 0.72 + (1 - t) * 0.40;
+            const cool = [(25 + t*90)|0, (90 + t*100)|0, (160 + t*50)|0]; const thick = 1 + ((1 - t) > 0.6 && a.average > 0.6 ? 1 : 0);
+            const prof = this.shells[s].profile;
+            let px, py;
+            for (let j = 0; j <= this.segments; j++) {
+              const rLocal = this.baseRadius * (1 + prof[j]);
+              const x = cx + this.cos[j] * rLocal * scale, y = cy + this.sin[j] * rLocal * scale;
+              if (j > 0) drawLine(px, py, x, y, cool[0], cool[1], cool[2], thick); px = x; py = y;
+            }
+            for (let p = 0; p < this.chordPairs.length; p++) {
+              const j = this.chordPairs[p][0], k = this.chordPairs[p][1];
+              const r1 = this.baseRadius * (1 + prof[j]), r2 = this.baseRadius * (1 + prof[k]);
+              const x1 = cx + this.cos[j] * r1 * scale, y1 = cy + this.sin[j] * r1 * scale;
+              const x2 = cx + this.cos[k] * r2 * scale, y2 = cy + this.sin[k] * r2 * scale;
+              drawLine(x1, y1, x2, y2, cool[0], cool[1], cool[2], 1);
             }
           }
+          this.time += PREFERS_REDUCED_MOTION ? 0.004 : 0.008;
         }
-       
-        render(audioData) {
-          this.time += 0.02;
-          let mx = 0, my = 0;
-          if (mouseActive || mouseDown) {
-            mx = (w / 2 - mousePos.x);
-            my = (h / 2 - mousePos.y);
-          } else if (orientationActive) {
-            mx = -gamma * (w / 180);
-            my = -beta * (h / 180);
+      }
+      // 5) Kaleido Lens Wire
+      class KaleidoLensWire {
+        constructor() { this.time = 0; this._srcBuf = null; this._bufW = 0; this._bufH = 0; }
+        resize() { this._srcBuf = null; }
+        render(a) {
+          const cx = w >> 1, cy = h >> 1, rings = 5, base = Math.min(w, h) * 0.12;
+          const thick = wireThickness(a), dihedral = currentSym();
+          for (let L = 0; L < rings; L++) {
+            const t = L / (rings - 1), R = base * (1 + L * 0.55 + a.average * 0.1);
+            const seg = Math.max(96, dihedral * 12 + L * 12);
+            const r = (30 + t * 80) | 0, g = (100 + t * 90) | 0, b = (170 + t * 50) | 0;
+            let px = cx + Math.cos(this.time) * R, py = cy + Math.sin(this.time) * R;
+            for (let i = 1; i <= seg; i++) {
+              const ang = (i / seg) * Math.PI * 2 + this.time * (L % 2 ? 0.5 : -0.4);
+              const rr = R + Math.sin(i * (dihedral * 0.05) + this.time) * (8 + a.high * 14);
+              const x = cx + Math.cos(ang) * rr, y = cy + Math.sin(ang) * rr;
+              drawLine(px, py, x, y, r, g, b, thick); px = x; py = y;
+            }
           }
-         
-          this.dots.forEach(dot => {
-            dot.phase += dot.speed * (1 + audioData.energy);
-           
-            const distance = Math.sqrt((dot.x - w/2) * (dot.x - w/2) + (dot.y - h/2) * (dot.y - h/2));
-            const maxDistance = Math.sqrt(w*w + h*h) / 2;
-            const normalizedDistance = distance / maxDistance;
-           
-            const size = (1 - normalizedDistance) * (3 + audioData.average * 8 + Math.sin(dot.phase) * 2);
-            const intensity = (1 - normalizedDistance) * (0.5 + audioData.beat * 0.5 + Math.sin(dot.phase + this.time) * 0.3);
-           
-            if (size > 0.5 && intensity > 0.1) {
-              const red = Math.round(intensity * 200);
-              const green = Math.round(intensity * 150);
-              const blue = Math.round(intensity * 255);
-           
-              const x = dot.x + mx * 0.1;
-              const y = dot.y + my * 0.1;
-              const sizeInt = Math.round(size);
-              for (let dx = -sizeInt; dx <= sizeInt; dx++) {
-                for (let dy = -sizeInt; dy <= sizeInt; dy++) {
-                  if (dx*dx + dy*dy <= sizeInt*sizeInt) {
-                    setPixel(Math.round(x + dx), Math.round(y + dy), red, green, blue);
-                  }
-                }
+          if (governor.lensEnabled) this.applyLens(cx, cy, Math.min(w, h) * 0.18, Math.min(w, h) * 0.32, (a.average * 0.9 + 0.2) * (mouseDown ? -1 : 1));
+          this.time += PREFERS_REDUCED_MOTION ? 0.004 : 0.009;
+        }
+        ensureBuffer(x0, y0, x1, y1) {
+          const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+          if (!this._srcBuf || bw !== this._bufW || bh !== this._bufH) { this._srcBuf = new Uint8ClampedArray(bw * bh * 4); this._bufW = bw; this._bufH = bh; }
+        }
+        applyLens(cx, cy, rInner, rOuter, rot) {
+          const x0 = Math.max(0, Math.floor(cx - rOuter)), y0 = Math.max(0, Math.floor(cy - rOuter));
+          const x1 = Math.min(w - 1, Math.ceil(cx + rOuter)), y1 = Math.min(h - 1, Math.ceil(cy + rOuter));
+          const bw = x1 - x0 + 1, bh = y1 - y0 + 1; if (bw <= 0 || bh <= 0) return;
+          this.ensureBuffer(x0, y0, x1, y1);
+          // Copy block
+          let si = 0;
+          for (let yy = y0; yy <= y1; yy++) {
+            const rowOff = (yy * w + x0) * 4;
+            for (let xx = x0; xx <= x1; xx++) {
+              const i = rowOff + (xx - x0) * 4;
+              this._srcBuf[si++] = data[i]; this._srcBuf[si++] = data[i + 1]; this._srcBuf[si++] = data[i + 2]; this._srcBuf[si++] = 255;
+            }
+          }
+          const rIn2 = rInner * rInner, rOut2 = rOuter * rOuter;
+          const cosR = Math.cos(rot), sinR = Math.sin(rot);
+          for (let yy = y0; yy <= y1; yy++) {
+            const dy = yy - cy;
+            for (let xx = x0; xx <= x1; xx++) {
+              const dx = xx - cx; const d2 = dx*dx + dy*dy;
+              if (d2 >= rIn2 && d2 <= rOut2) {
+                const sx = cx + dx * cosR - dy * sinR;
+                const sy = cy + dx * sinR + dy * cosR;
+                const sxI = Math.max(x0, Math.min(x1, sx | 0));
+                const syI = Math.max(y0, Math.min(y1, sy | 0));
+                const si2 = ((syI - y0) * bw + (sxI - x0)) * 4;
+                const di = (yy * w + xx) * 4;
+                let R = this._srcBuf[si2], G = this._srcBuf[si2 + 1], B = this._srcBuf[si2 + 2];
+                [R, G, B] = deYellow(R, G, B);
+                data[di] = clamp220(R); data[di + 1] = clamp220(G); data[di + 2] = clamp220(B); data[di + 3] = 255;
               }
             }
-          });
+          }
         }
       }
-      const vizManager = new VisualizerManager();
-      // Simple sensor handling
-      let orientationActive = false, beta = 0, gamma = 0;
-     
-      function setupSimpleSensors() {
+      // 6) Moiré Corridor Wire
+      class MoireCorridorWire {
+        constructor() {
+          this.time = 0; this.fov = 280; this.segments = governor.moireSegments;
+          this.zStep = 11; this.baseRadius = Math.max(70, Math.min(w, h) * 0.095);
+          this.initLUT(); this.initRows(); this.phi = 0;
+        }
+        resize() { this.baseRadius = Math.max(70, Math.min(w, h) * 0.095); this.initRows(); }
+        initLUT() { this.cos = new Float32Array(this.segments + 1); this.sin = new Float32Array(this.segments + 1);
+          for (let i = 0; i <= this.segments; i++) { const ang = i * (Math.PI * 2 / this.segments); this.cos[i] = Math.cos(ang); this.sin[i] = Math.sin(ang); } }
+        initRows() {
+          this.rows = []; this.centers = [];
+          for (let z = -this.fov; z < this.fov; z += this.zStep) {
+            const row = new Array(this.segments + 1);
+            for (let i = 0; i <= this.segments; i++) row[i] = { x2d: 0, y2d: 0, radius: this.baseRadius, z };
+            this.rows.push(row); this.centers.push({ x: w / 2, y: h / 2 });
+          }
+        }
+        color(depth) { const t = depth; return [(28 + t*78)|0, (100 + t*105)|0, (170 + t*45)|0]; }
+        render(a) {
+          const { mx, my } = parallax();
+          if (this.segments !== governor.moireSegments) { this.segments = governor.moireSegments; this.initLUT(); this.initRows(); }
+          const rows = this.rows.length; const thick = wireThickness(a);
+          this.phi += (a.average - 0.5) * 0.002 + (a.beat ? 0.006 : 0.0);
+          if (this.phi > Math.PI * 2) this.phi -= Math.PI * 2;
+          if (this.phi < -Math.PI * 2) this.phi += Math.PI * 2;
+          const diagOffset = (Math.sin(this.phi) * 2) | 0;
+          for (let i = 0; i < rows; i++) {
+            const row = this.rows[i], zVal = row[0].z, c = this.centers[i];
+            c.x = mx * ((zVal - this.fov) / 500) + (w >> 1); c.y = my * ((zVal - this.fov) / 500) + (h >> 1);
+            const depth = (zVal + this.fov) / (this.fov * 2); const [cr, cg, cb] = this.color(depth);
+            const twist = this.time * 0.6; const inflate = a.average * 8 + (a.beat ? 8 : 0);
+            for (let j = 0; j <= this.segments; j++) {
+              const radius = row[j].radius + inflate + 6 * Math.sin(j * 0.15 + this.time * 0.8);
+              const rx = this.cos[j] * radius, ry = this.sin[j] * radius;
+              const scale = this.fov / (this.fov + zVal);
+              row[j].x2d = (rx * scale) + c.x; row[j].y2d = (ry * scale) + c.y;
+              row[j].radius = this.baseRadius * (1.0 + 0.04 * Math.sin(j * 0.33 + twist));
+            }
+            for (let j = 1; j <= this.segments; j++) {
+              const p = row[j], q = row[j - 1];
+              drawLine(p.x2d, p.y2d, q.x2d, q.y2d, cr, cg, cb, thick);
+            }
+            for (let j = 0; j <= this.segments; j++) {
+              row[j].z -= (0.85 + a.average * 0.6);
+              if (row[j].z < -this.fov) row[j].z += (this.fov * 2);
+            }
+            if (i > 0) {
+              const prev = this.rows[i - 1];
+              for (let j = 0; j <= this.segments; j++) {
+                const k = (j + diagOffset + (i % 2)) % (this.segments + 1);
+                const p = row[j], q = prev[k];
+                drawLine(p.x2d, p.y2d, q.x2d, q.y2d, cr, cg, cb, Math.max(1, thick - 1));
+              }
+            }
+          }
+          this.time += PREFERS_REDUCED_MOTION ? 0.004 : 0.009;
+        }
+      }
+      // STUDIO: CodePen Warp (Reverted to exact original logic)
+      class StudioCodePenWarp {
+        constructor() {
+          this.time = 0;
+          this.particles = [];
+          this.count = 1000;
+          this.fov = 250;
+          this.speed = 0.75;
+          this.mouseFollowSpeed = 0.015;
+          this.cx = w / 2;
+          this.cy = h / 2;
+          this.initParticles();
+        }
+        resize() {
+          this.cx = w / 2;
+          this.cy = h / 2;
+          this.initParticles();
+        }
+        initParticles() {
+          this.particles = [];
+          for (let i = 0; i < this.count; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const r = Math.random() * 1.2 + 0.1;
+            const z = Math.random() * 1.0 + 0.02;
+            this.particles.push({ a, r, z });
+          }
+        }
+        render(a) {
+          const { mx, my } = parallax();
+          const targetCx = w / 2 - mx;
+          const targetCy = h / 2 - my;
+          this.cx += (targetCx - this.cx) * this.mouseFollowSpeed;
+          this.cy += (targetCy - this.cy) * this.mouseFollowSpeed;
+          for (let i = 0; i < this.particles.length; i++) {
+            const p = this.particles[i];
+            const pz = p.z * this.fov + this.fov;
+            const s = this.fov / pz;
+            const px = Math.cos(p.a) * p.r * w * 0.5;
+            const py = Math.sin(p.a) * p.r * h * 0.5;
+            const x = this.cx + px * s;
+            const y = this.cy + py * s;
+            p.z -= this.speed * (0.5 + a.average * 0.5);
+            if (p.z < 0) p.z = 1.0;
+            const pz2 = p.z * this.fov + this.fov;
+            const s2 = this.fov / pz2;
+            const px2 = Math.cos(p.a) * p.r * w * 0.5;
+            const py2 = Math.sin(p.a) * p.r * h * 0.5;
+            const x2 = this.cx + px2 * s2;
+            const y2 = this.cy + py2 * s2;
+            const r = 255 * p.z;
+            const g = 100 * p.z;
+            const b = 50 * p.z;
+            drawLine(x, y, x2, y2, r, g, b, 1);
+          }
+        }
+      }
+      // Viz manager: production stack + studio
+      class VizManager {
+        constructor() {
+          this.productionVizes = [
+            new WarpTunnelWire(), // immutable
+            new MandalaWire(),
+            new LissajousWire(),
+            new TimeFoldedTunnel(),
+            new KaleidoLensWire(),
+            new MoireCorridorWire()
+          ];
+          this.studioVizes = [
+            new StudioCodePenWarp() // Studio: CodePen Warp (Reverted to exact)
+          ];
+          this.index = 0;
+          this.studioIndex = 0;
+        }
+        isStudioViz() { return STUDIO; }
+        current() { return this.isStudioViz() ? this.studioVizes[this.studioIndex] : this.productionVizes[this.index]; }
+        resize() { [...this.productionVizes, ...this.studioVizes].forEach(v => v.resize?.()); }
+        next() {
+          if (this.isStudioViz()) this.studioIndex = (this.studioIndex + 1) % this.studioVizes.length;
+          else this.index = (this.index + 1) % this.productionVizes.length;
+          showBadge(this.name());
+          persistViz();
+        }
+        prev() {
+          if (this.isStudioViz()) this.studioIndex = (this.studioIndex - 1 + this.studioVizes.length) % this.studioVizes.length;
+          else this.index = (this.index - 1 + this.productionVizes.length) % this.productionVizes.length;
+          showBadge(this.name());
+          persistViz();
+        }
+        selectByName(name) {
+          const map = {
+            warp: 0, mandala: 1, lissajous: 2, time: 3, lens: 4, moire: 5
+          };
+          if (name === 'codepen') {
+            STUDIO = true;
+            localStorage.setItem('mode', 'studio');
+            this.studioIndex = 0;
+            showBadge(this.name());
+            return true;
+          }
+          if (name in map) {
+            STUDIO = false;
+            localStorage.setItem('mode', 'production');
+            this.index = map[name];
+            showBadge(this.name());
+            return true;
+          }
+          return false;
+        }
+        name() {
+          if (this.isStudioViz()) return ['Studio: CodePen Warp (Exact)'][this.studioIndex];
+          return ['Warp Tunnel', 'Mandala', 'Lissajous', 'Time-Folded', 'Kaleido Lens', 'Moiré Corridor'][this.index];
+        }
+      }
+      const viz = new VizManager();
+      // Sensors setup
+      const setupSensors = () => {
         try {
-          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+          if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
             DeviceOrientationEvent.requestPermission().then(state => {
               if (state === 'granted') {
-                window.addEventListener("deviceorientation", (e) => {
-                  beta = e.beta || 0;
-                  gamma = e.gamma || 0;
-                  orientationActive = true;
+                window.addEventListener('deviceorientation', e => {
+                  beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true;
                 }, { passive: true });
               }
-            }).catch(console.error);
+            }).catch(() => {});
           } else if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", (e) => {
-              beta = e.beta || 0;
-              gamma = e.gamma || 0;
-              orientationActive = true;
+            window.addEventListener('deviceorientation', e => {
+              beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true;
             }, { passive: true });
           }
-        } catch(e) { console.error(e); }
-      }
-      // Touch handling
-      let mouseActive = false, mouseDown = false;
-      let mousePos = { x: w/2, y: h/2 };
-      let touchStartX = 0, touchStartY = 0, lastTapTime = 0;
-      const swipeThreshold = 70, doubleTapMs = 300;
-      const swipeHint = document.getElementById("swipeHint");
-      function createRipple(x, y) {
-        const ripple = document.createElement('div');
-        ripple.className = 'touch-ripple';
-        ripple.style.left = (x - 25) + 'px';
-        ripple.style.top = (y - 25) + 'px';
-        document.body.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-      }
-      // Mouse events
-      canvas.addEventListener('mousedown', () => { mouseDown = true; setInversion(true); }, false);
-      canvas.addEventListener('mouseup', () => { mouseDown = false; setInversion(false); }, false);
-      canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        mousePos.x = e.clientX - rect.left;
-        mousePos.y = e.clientY - rect.top;
-        mouseActive = true;
-      }, false);
-      canvas.addEventListener('mouseleave', () => {
-        mouseActive = false;
-        mouseDown = false;
-        setInversion(false);
-      }, false);
-      // Touch events
-      canvas.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        const t = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        const x = t.clientX - rect.left, y = t.clientY - rect.top;
-        touchStartX = x; touchStartY = y;
-        mousePos.x = x; mousePos.y = y;
-        mouseDown = true; setInversion(true);
-        createRipple(x, y);
-        const now = performance.now();
-        if (now - lastTapTime < doubleTapMs && audio.started) {
-          audio.next(); UI.text(audio.trackLabel());
-        }
-        lastTapTime = now;
-      }, { passive: false });
-      canvas.addEventListener("touchmove", (e) => {
-        e.preventDefault();
-        const t = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        mousePos.x = t.clientX - rect.left;
-        mousePos.y = t.clientY - rect.top;
-      }, { passive: false });
-      canvas.addEventListener("touchend", (e) => {
-        e.preventDefault();
-        mouseDown = false; setInversion(false);
-        if (audio.started) {
-          const t = e.changedTouches[0];
-          const rect = canvas.getBoundingClientRect();
-          const endX = t.clientX - rect.left, endY = t.clientY - rect.top;
-          const dx = endX - touchStartX, dy = endY - touchStartY;
-         
-          if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
-            if (Math.abs(dx) > Math.abs(dy)) {
-              // Horizontal swipe - change tracks
-              if (dx > 0) audio.prev(); else audio.next();
-              UI.text(audio.trackLabel());
-            } else {
-              // Vertical swipe - change visualizers
-              if (dy > 0) vizManager.next(); else vizManager.prev();
-              const vizNames = ['Warp Tunnel', 'Spirals', 'Waves', 'Dots'];
-              swipeHint.textContent = vizNames[vizManager.currentViz];
-              swipeHint.classList.add('show');
-              setTimeout(() => swipeHint.classList.remove('show'), 1400);
-            }
+        } catch {}
+      };
+      // Badge
+      let badgeTimer = null;
+      const showBadge = text => {
+        badgeEl.textContent = text;
+        badgeEl.classList.add('show');
+        clearTimeout(badgeTimer);
+        badgeTimer = setTimeout(() => badgeEl.classList.remove('show'), 1800);
+      };
+      // Persist viz selection
+      const persistViz = () => {
+        const v = viz.name();
+        localStorage.setItem('vizName', v);
+      };
+      // Restore last selection
+      const restoreLast = () => {
+        const lastViz = (localStorage.getItem('vizName') || '').toLowerCase();
+        if (lastViz.includes('codepen')) { STUDIO = true; localStorage.setItem('mode', 'studio'); viz.studioIndex = 0; }
+        else if (lastViz) {
+          const names = ['warp', 'mandala', 'lissajous', 'time', 'kaleido', 'moire'];
+          for (let i = 0; i < names.length; i++) {
+            if (lastViz.toLowerCase().includes(names[i])) { viz.index = i; STUDIO = false; localStorage.setItem('mode', 'production'); break; }
           }
         }
-      }, { passive: false });
-      // Keyboard
-      addEventListener("keydown", (e) => {
-        if (e.code === "Space") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
-        if (e.key?.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; }
-        if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); UI.text(audio.trackLabel()); } return; }
-        if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); UI.text(audio.trackLabel()); } return; }
-        if (e.code === "ArrowUp") { e.preventDefault(); if (audio.started) vizManager.prev(); return; }
-        if (e.code === "ArrowDown") { e.preventDefault(); if (audio.started) vizManager.next(); return; }
+        showBadge(viz.name());
+      };
+      // Input
+      canvas.addEventListener('mousedown', e => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
+        mouseDown = true; mouseActive = true;
+        cursorEl.style.opacity = '0.8';
+        cursorEl.style.left = e.clientX + 'px'; cursorEl.style.top = e.clientY + 'px';
+        cursorEl.style.transform = 'translate(-50%, -50%) scale(1.2)';
       });
-      // Overlay
-      const overlay = document.getElementById("overlay");
-      overlay.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(); });
-      overlay.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); } });
+      canvas.addEventListener('mouseup', () => { mouseDown = false; cursorEl.style.transform = 'translate(-50%, -50%) scale(1.0)'; });
+      canvas.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top; mouseActive = true;
+        cursorEl.style.left = e.clientX + 'px'; cursorEl.style.top = e.clientY + 'px';
+      });
+      canvas.addEventListener('mouseleave', () => { mouseActive = false; mouseDown = false; });
+      canvas.addEventListener('touchstart', e => {
+        e.preventDefault();
+        const t = e.touches[0], rect = canvas.getBoundingClientRect();
+        mouseX = t.clientX - rect.left; mouseY = t.clientY - rect.top; mouseDown = true;
+      }, { passive: false });
+      canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const t = e.touches[0], rect = canvas.getBoundingClientRect();
+        mouseX = t.clientX - rect.left; mouseY = t.clientY - rect.top;
+      }, { passive: false });
+      canvas.addEventListener('touchend', e => { e.preventDefault(); mouseDown = false; }, { passive: false });
+      // Keyboard
+      document.addEventListener('keydown', e => {
+        if (!audio.started) return;
+        switch (e.code) {
+          case 'Space': e.preventDefault(); audio.togglePause(); break;
+          case 'KeyM': e.preventDefault(); audio.toggleMute(); break;
+          case 'ArrowRight': e.preventDefault(); audio.next(); break;
+          case 'ArrowLeft': e.preventDefault(); audio.prev(); break;
+          case 'Home': e.preventDefault(); audio.jumpFirst(); break;
+          case 'End': e.preventDefault(); audio.jumpLast(); break;
+          case 'ArrowUp': e.preventDefault(); viz.prev(); break;
+          case 'ArrowDown': e.preventDefault(); viz.next(); break;
+          case 'KeyS': e.preventDefault(); symmetryIndex = (symmetryIndex + 1) % SYMMETRIES.length; showBadge('Symmetry: D' + (SYMMETRIES[symmetryIndex])); break;
+          case 'KeyT':
+            e.preventDefault();
+            STUDIO = !STUDIO;
+            localStorage.setItem('mode', STUDIO ? 'studio' : 'production');
+            // Clear and reset canvas state on switch
+            ctx2d.globalCompositeOperation = 'source-over';
+            ctx2d.globalAlpha = 1; ctx2d.fillStyle = '#000'; ctx2d.fillRect(0, 0, w, h);
+            imageData = ctx2d.getImageData(0, 0, w, h);
+            data = imageData.data;
+            showBadge((STUDIO ? 'Studio' : 'Production') + ' • ' + viz.name());
+            persistViz();
+            break;
+          case 'KeyH':
+            e.preventDefault();
+            if (helpEl.hasAttribute('hidden')) { helpEl.removeAttribute('hidden'); }
+            else { helpEl.setAttribute('hidden', ''); }
+            break;
+        }
+      });
+      // Overlay start + focus trap
       function startApp() {
-        if (!audio.started) {
-          audio.started = true;
-          audio.loadAndPlay(audio.tracks[audio.trackIndex]);
-          overlay.hidden = true;
-         
-          // No citySwiper, as it's now Stimulus
-        }
+        if (audio.started) return;
+        setupSensors(); audio.start(); overlay.hidden = true; canvas.focus?.();
+        // Fresh clear on start (important for studio trails)
+        ctx2d.globalCompositeOperation = 'source-over';
+        ctx2d.globalAlpha = 1; ctx2d.fillStyle = '#000'; ctx2d.fillRect(0, 0, w, h);
+        imageData = ctx2d.getImageData(0, 0, w, h);
+        data = imageData.data;
+        showBadge((STUDIO ? 'Studio' : 'Production') + ' • ' + viz.name());
       }
-      // Inversion
-      let colorInvertValue = 0;
-      const cityCarousel = document.getElementById("cityCarousel");
-      function setInversion(active) {
-        if (active) {
-          cityCarousel.classList.add('city-inverted');
-          document.getElementById('ui').classList.add('ui-inverted');
-        } else {
-          cityCarousel.classList.remove('city-inverted');
-          document.getElementById('ui').classList.remove('ui-inverted');
+      overlay.addEventListener('click', startApp);
+      overlay.addEventListener('keydown', e => {
+        if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); startApp(); return; }
+        if (e.code === 'Tab') { e.preventDefault(); overlay.focus(); return; }
+        if (e.shiftKey && e.code === 'Tab') { e.preventDefault(); overlay.focus(); return; }
+      });
+      // Diagnostics (dev-only)
+      const diagnostics = () => {
+        const inIframe = window.top !== window.self; const notes = [];
+        if (inIframe) notes.push('Embedded viewer may block YouTube/sensors.');
+        if (!('DeviceOrientationEvent' in window)) notes.push('Device orientation API unavailable.');
+        if (notes.length) {
+          const el = document.createElement('div');
+          el.style.cssText = "position:fixed;bottom:0;left:0;right:0;padding:6px 10px;background:#111;color:#aaa;font:11px/1.4 system-ui;z-index:9999";
+          el.textContent = notes.join(' '); document.body.appendChild(el);
+          setTimeout(() => el.remove(), 5000);
         }
-      }
-     
-      function softInvert(value) {
-        for (let j = 0, n = data.length; j < n; j += 4) {
-          data[j] = Math.abs(value - data[j]);
-          data[j+1] = Math.abs(value - data[j+1]);
-          data[j+2] = Math.abs(value - data[j+2]);
-        }
-      }
-      // Main render loop (simple)
-      function renderFrame(audioData) {
+      };
+      // Main loop
+      const frame = () => {
+        const a = audio.started ? audio.data() : { average: 0, bass: 0, mid: 0, high: 0, beat: 0, energy: 0 };
+        clearImageData();
+        viz.current().render(a);
         if (mouseDown) {
-          colorInvertValue = Math.min(255, colorInvertValue + 8);
-          softInvert(colorInvertValue);
+          invertVal = Math.min(220, invertVal + 8);
         } else {
-          colorInvertValue = Math.max(0, colorInvertValue - 8);
-          if (colorInvertValue > 0) softInvert(colorInvertValue);
+          invertVal = Math.max(0, invertVal - 8);
         }
-       
-        vizManager.render(audioData);
-      }
-      function animate() {
-        clearImageData();
-        const audioData = audio.started ? audio.data() : {
-          average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0
-        };
-        renderFrame(audioData);
-        ctx.putImageData(imageData, 0, 0);
-        requestAnimationFrame(animate);
-      }
-      function boot() {
-        onResize();
-        setupSimpleSensors();
-        vizManager.init();
-       
-        clearImageData();
-        renderFrame({ average: 0, bass: 0, mid: 0, high: 0, beat: false, energy: 0 });
-        ctx.putImageData(imageData, 0, 0);
-       
-        UI.text("Ready");
-        requestAnimationFrame(animate);
-      }
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", boot);
-      } else {
-        boot();
-      }
+        if (invertVal > 0) softInvert(invertVal);
+        ctx2d.putImageData(imageData, 0, 0);
+        governor.sample();
+        requestAnimationFrame(frame);
+      };
+      // Controls carousel
+      let controlIndex = 0;
+      const controlTexts = [
+        "SPACE: pause • M: mute",
+        "← →: track • HOME/END: jump",
+        "↑/↓: viz • S: symmetry • T: studio",
+        "H: help"
+      ];
+      const rotateControls = () => {
+        controlsHint.style.opacity = 0;
+        setTimeout(() => {
+          controlIndex = (controlIndex + 1) % controlTexts.length;
+          controlsHint.textContent = controlTexts[controlIndex];
+          controlsHint.style.opacity = 1;
+        }, 500);
+      };
+      // Boot
+      const boot = () => {
+        resizeCanvas();
+        viz.resize();
+        trackText.textContent = "Ready";
+        controlsHint.textContent = controlTexts[0];
+        setInterval(rotateControls, 3000);
+        overlay.focus();
+        restoreLast();
+        if (DEV) diagnostics();
+        requestAnimationFrame(frame);
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
     </script>
   </body>
 </html>
