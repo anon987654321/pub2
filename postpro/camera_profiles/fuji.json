@@ -1,0 +1,44 @@
+{
+  "name": "Fujifilm Profile",
+  "manufacturer": "Fujifilm",
+  "description": "Color profile optimized for Fujifilm cameras",
+  "settings": {
+    "exposure_compensation": 0.3,
+    "highlights": -25,
+    "shadows": 15,
+    "whites": -10,
+    "blacks": 5,
+    "clarity": 15,
+    "vibrance": 20,
+    "saturation": 10,
+    "color_grading": {
+      "shadows": {
+        "hue": 240,
+        "saturation": 10,
+        "luminance": 0
+      },
+      "midtones": {
+        "hue": 0,
+        "saturation": 0,
+        "luminance": 0
+      },
+      "highlights": {
+        "hue": 50,
+        "saturation": 5,
+        "luminance": 0
+      }
+    },
+    "tone_curve": {
+      "point_1": [25, 20],
+      "point_2": [75, 80]
+    }
+  },
+  "compatible_models": [
+    "X-T4",
+    "X-T3", 
+    "X-T30",
+    "X-Pro3",
+    "X100V",
+    "GFX100S"
+  ]
+}
