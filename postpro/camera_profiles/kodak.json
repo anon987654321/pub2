@@ -1,0 +1,52 @@
+{
+  "name": "Kodak Film Emulation",
+  "manufacturer": "Kodak",
+  "description": "Classic film emulation profile for Kodak characteristics",
+  "settings": {
+    "exposure_compensation": 0.2,
+    "highlights": -30,
+    "shadows": 25,
+    "whites": -15,
+    "blacks": 10,
+    "clarity": 5,
+    "vibrance": 15,
+    "saturation": 5,
+    "color_grading": {
+      "shadows": {
+        "hue": 220,
+        "saturation": 15,
+        "luminance": 5
+      },
+      "midtones": {
+        "hue": 0,
+        "saturation": 10,
+        "luminance": 0
+      },
+      "highlights": {
+        "hue": 45,
+        "saturation": 10,
+        "luminance": -5
+      }
+    },
+    "tone_curve": {
+      "point_1": [30, 35],
+      "point_2": [70, 75]
+    },
+    "split_toning": {
+      "highlights": {
+        "hue": 50,
+        "saturation": 8
+      },
+      "shadows": {
+        "hue": 220,
+        "saturation": 12
+      },
+      "balance": -20
+    }
+  },
+  "film_characteristics": {
+    "grain": "medium",
+    "contrast": "soft",
+    "color_rendition": "warm"
+  }
+}

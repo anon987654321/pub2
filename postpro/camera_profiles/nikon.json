@@ -1,0 +1,55 @@
+{
+  "name": "Nikon Profile",
+  "manufacturer": "Nikon",
+  "description": "Color profile optimized for Nikon DSLR and mirrorless cameras",
+  "settings": {
+    "exposure_compensation": 0.1,
+    "highlights": -20,
+    "shadows": 10,
+    "whites": -5,
+    "blacks": 0,
+    "clarity": 10,
+    "vibrance": 25,
+    "saturation": 0,
+    "color_grading": {
+      "shadows": {
+        "hue": 230,
+        "saturation": 8,
+        "luminance": 0
+      },
+      "midtones": {
+        "hue": 0,
+        "saturation": 5,
+        "luminance": 0
+      },
+      "highlights": {
+        "hue": 55,
+        "saturation": 3,
+        "luminance": 0
+      }
+    },
+    "tone_curve": {
+      "point_1": [20, 25],
+      "point_2": [80, 85]
+    },
+    "lens_corrections": {
+      "enable_profile_corrections": true,
+      "chromatic_aberration": 50,
+      "vignetting": 25
+    }
+  },
+  "compatible_models": [
+    "D850",
+    "D780",
+    "Z7",
+    "Z6",
+    "Z5",
+    "Z9",
+    "D500"
+  ],
+  "picture_controls": {
+    "standard": "neutral_enhanced",
+    "vivid": "landscape_optimized",
+    "portrait": "skin_tone_enhanced"
+  }
+}

@@ -1,0 +1,33 @@
+# Default theme configuration
+# Terminal and system appearance settings
+
+# Color scheme
+background_color = "#1e1e1e"
+foreground_color = "#d4d4d4"
+cursor_color = "#ffffff"
+
+# Font settings
+font_family = "Source Code Pro"
+font_size = 12
+
+# Window settings
+window_padding = 10
+window_opacity = 0.95
+
+# Color palette (terminal colors)
+color_black = "#1e1e1e"
+color_red = "#f44747"
+color_green = "#608b4e"
+color_yellow = "#dcdcaa"
+color_blue = "#569cd6"
+color_magenta = "#c678dd"
+color_cyan = "#56b6c2"
+color_white = "#d4d4d4"
+color_bright_black = "#808080"
+color_bright_red = "#f44747"
+color_bright_green = "#608b4e"
+color_bright_yellow = "#dcdcaa"
+color_bright_blue = "#569cd6"
+color_bright_magenta = "#c678dd"
+color_bright_cyan = "#56b6c2"
+color_bright_white = "#ffffff"
