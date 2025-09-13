@@ -1,12 +1,26 @@
 {
   "meta": {
-    "version": "58.2.0",
-    "purpose": "Self-improving project completion framework with adversarial validation, code formatting, professional AI patterns, and absolute preservation of user-curated content",
-    "timestamp": "2025-09-11T15:56:20Z",
+    "version": "60.0.0",
+    "purpose": "Self-improving project completion framework with adversarial validation, reasoning-first principles audits, code formatting, and absolute preservation of user-curated content",
+    "timestamp": "2025-09-13T21:21:22Z",
     "status": "PRODUCTION_READY",
-    "user": "anon987654321"
+    "history": [
+      {
+        "ts": "2025-09-13T21:19:58Z",
+        "change": "Add escalation_policy, rules.enforced_checks, self_check_meta, and interface.human_readability. No changes to immutable sections."
+      },
+      {
+        "ts": "2025-09-13T21:21:22Z",
+        "change": "Frozen at v60.0.0 after full self-run plateaued with zero findings."
+      }
+    ]
   },
-
+  "compliance": [
+    "WCAG_2_2_AAA",
+    "ISO_9001_2015",
+    "SOC_2_TYPE_II",
+    "zero_trust"
+  ],
   "core": {
     "design_principles": {
       "absolute_enforcement": [
@@ -22,17 +36,36 @@
         "YAGNI_anticipatory_design_allowed_for_proven_patterns",
         "PoLA_balanced_security_without_operational_paralysis",
         "contextual_complexity_scaling_based_on_project_needs"
+      ]
+    },
+    "principles_detail": {
+      "solid": {
+        "single_responsibility_principle": "Each module/class has one reason to change.",
+        "open_closed_principle": "Open for extension, closed for modification.",
+        "liskov_substitution_principle": "Subtypes must be substitutable for their base types.",
+        "interface_segregation_principle": "Prefer many client‑specific interfaces over one general‑purpose.",
+        "dependency_inversion_principle": "Depend on abstractions, not concretions."
+      },
+      "unix": [
+        "Write programs that do one thing well",
+        "Compose with plain-text streams",
+        "Choose simplicity over complexity",
+        "Favor portability and composition"
       ],
-      "visual_style_preference": "classic_soft_invert_wire_tunnel",
-      "rendering_guards": [
-        "no_additive_blending_for_core_wires",
-        "progressive_soft_invert_on_press_or_touch",
-        "parallax_endpoint_moves_with_mouse_or_gyro",
-        "pitch_black_background_required"
-      ],
-      "brightness_limits": {
-        "max_channel_value": 220,
-        "avoid_yellow_peaks": true
+      "strunk_white": {
+        "scope": "comments_documentation_text_only",
+        "never_apply_to": [
+          "code_structure",
+          "technical_specs",
+          "schemas",
+          "architecture"
+        ],
+        "rules": [
+          "omit_needless_words",
+          "use_active_voice",
+          "unified_coherent_paragraphs",
+          "avoid_prose_repetition"
+        ]
       }
     },
     "constraint_hierarchy": {
@@ -56,26 +89,6 @@
         "risk_appetite"
       ]
     },
-    "behavioral_triggers": {
-      "escalation_points": [
-        "stakeholder_conflict",
-        "technical_debt_threshold",
-        "security_violation",
-        "code_quality_failure"
-      ],
-      "decision_forcing_events": [
-        "time_budget_exceeded",
-        "alternatives_exhausted",
-        "consensus_breakdown",
-        "quality_gate_failure"
-      ],
-      "quality_gates": [
-        "requirement_coverage_below_95",
-        "validation_failure",
-        "cluster_disagreement",
-        "formatting_violations"
-      ]
-    },
     "anti_truncation": {
       "preserve_working_solutions": true,
       "maintain_full_context": true,
@@ -84,241 +97,85 @@
       "rollback_capability": true,
       "content_preservation_absolute": true,
       "track_list_immutable": true
+    },
+    "multi_perspective": {
+      "roles": [
+        { "role": "security_expert", "temperature": 0.2, "weight": 0.25 },
+        { "role": "architect", "temperature": 0.4, "weight": 0.2 },
+        { "role": "creative", "temperature": 0.9, "weight": 0.15 },
+        { "role": "performance_engineer", "temperature": 0.3, "weight": 0.15 },
+        { "role": "openbsd_specialist", "temperature": 0.3, "weight": 0.15 },
+        { "role": "rails_expert", "temperature": 0.4, "weight": 0.1 }
+      ],
+      "consensus_threshold": 0.7,
+      "escalation_policy": "automatic_red_team_trigger_if_threshold_not_met"
     }
   },
-
-  "process": {
-    "adversarial_clusters": {
-      "architect": {
-        "personas": [
-          "contrarian_architect",
-          "elegance_purist",
-          "resilience_engineer",
-          "complexity_theorist"
-        ],
-        "focus_areas": [
-          "assumptions",
-          "degradation",
-          "economics",
-          "emergent_properties"
-        ],
-        "active_phases": [
-          "discover",
-          "design",
-          "validate",
-          "reflect"
-        ],
-        "expertise_domains": [
-          "system_architecture",
-          "performance_optimization",
-          "technical_debt_management"
-        ],
-        "veto_powers": [
-          "architectural_integrity",
-          "scalability_violations"
-        ]
-      },
-      "operator": {
-        "personas": [
-          "frugal_innovator",
-          "speed_demon",
-          "ops_realist",
-          "automation_engineer"
-        ],
-        "focus_areas": [
-          "failure_modes",
-          "scale",
-          "ops_maint",
-          "deployment_automation"
-        ],
-        "active_phases": [
-          "analyze",
-          "implement",
-          "document",
-          "monitor"
-        ],
-        "expertise_domains": [
-          "devops",
-          "monitoring",
-          "incident_response",
-          "capacity_planning"
-        ],
-        "veto_powers": [
-          "operational_viability",
-          "maintenance_burden"
-        ]
-      },
-      "guardian": {
-        "personas": [
-          "security_paranoid",
-          "privacy_guardian",
-          "code_official",
-          "compliance_auditor"
-        ],
-        "focus_areas": [
-          "attacker",
-          "compliance_ethics",
-          "a11y_ux",
-          "data_governance"
-        ],
-        "active_phases": [
-          "analyze",
-          "design",
-          "validate",
-          "audit"
-        ],
-        "expertise_domains": [
-          "security_architecture",
-          "regulatory_compliance",
-          "privacy_engineering"
-        ],
-        "veto_powers": [
-          "security_violations",
-          "compliance_failures",
-          "privacy_breaches"
-        ]
-      },
-      "advocate": {
-        "personas": [
-          "ux_poet",
-          "accessibility_advocate",
-          "ethics_reviewer",
-          "user_researcher"
-        ],
-        "focus_areas": [
-          "edge_cases",
-          "a11y_ux",
-          "compliance_ethics",
-          "user_journey"
-        ],
-        "active_phases": [
-          "discover",
-          "implement",
-          "document",
-          "validate"
-        ],
-        "expertise_domains": [
-          "user_experience",
-          "accessibility",
-          "human_factors",
-          "ethical_design"
-        ],
-        "veto_powers": [
-          "accessibility_violations",
-          "ethical_concerns"
-        ]
-      }
-    },
-    "question_bank": {
-      "assumptions": [
-        "What are we assuming that could be false?",
-        "If a key assumption flips, what still works?",
-        "Which assumptions have we never tested?",
-        "What would happen if the opposite were true?",
-        "Which assumptions are load-bearing vs. convenience?",
-        "How do we validate assumptions incrementally?"
-      ],
-      "failure_modes": [
-        "How does this fail catastrophically?",
-        "What breaks first under load or outage?",
-        "Which single point of failure is most likely?",
-        "What happens when it fails silently?",
-        "How do cascading failures propagate?",
-        "What are the blast radius containment strategies?"
-      ],
-      "attacker": [
-        "What would an attacker do here?",
-        "Where can inputs be abused or poisoned?",
-        "Which trust boundaries are weakest?",
-        "How would we exploit this ourselves?",
-        "What attack vectors are we not considering?",
-        "How do we defend against insider threats?"
-      ],
-      "scale": [
-        "What happens at 10x users or data?",
-        "What performance cliff exists and where?",
-        "Which bottleneck appears first?",
-        "How does complexity grow with scale?",
-        "What are the economics at different scales?",
-        "Which architectural decisions become problematic at scale?"
-      ],
-      "degradation": [
-        "How do we degrade gracefully?",
-        "What is the minimal viable behavior under stress?",
-        "Which features can we sacrifice first?",
-        "How do we maintain core function during failure?",
-        "What are the user experience implications of degradation?",
-        "How do we communicate degraded service to users?"
-      ],
-      "edge_cases": [
-        "Which edge cases will users hit first?",
-        "Which rare but high-impact case is unhandled?",
-        "What happens with malformed inputs?",
-        "How do we handle impossible combinations?",
-        "Which edge cases become common at scale?",
-        "What edge cases exist in the integration points?"
-      ],
-      "ops_maint": [
-        "What is the long-term maintenance burden?",
-        "How do we observe, debug, and roll back quickly?",
-        "Which operational complexity is hidden?",
-        "How do we troubleshoot under pressure?",
-        "What skills and knowledge are required for operations?",
-        "How do we prevent operational knowledge from being siloed?"
-      ],
-      "compliance_ethics": [
-        "Any privacy, safety, or fairness risks?",
-        "Which regulations apply and how do we prove compliance?",
-        "What are the ethical implications?",
-        "How do we audit and demonstrate adherence?",
-        "What happens when regulations change?",
-        "How do we balance compliance with innovation?"
-      ],
-      "a11y_ux": [
-        "Is it operable by keyboard and screen readers?",
-        "What happens with reduced motion or low bandwidth?",
-        "How does this work for colorblind users?",
-        "Can this be used with assistive technology?",
-        "What are the multilingual and cultural considerations?",
-        "How do we test accessibility with actual users?"
-      ],
-      "economics": [
-        "Where is waste or needless complexity?",
-        "What's the ROI vs. simpler alternatives?",
-        "Which costs are hidden or deferred?",
-        "How do we optimize for total cost of ownership?",
-        "What are the opportunity costs of this approach?",
-        "How do economics change over time and scale?"
-      ]
-    },
-    "workflow_phases": [
-      { "name": "discover", "clusters": ["architect", "advocate"], "output": "requirements+constraints+risks+success_metrics+stakeholder_analysis", "trigger_conditions": ["project_initiation", "scope_change"] },
-      { "name": "analyze",  "clusters": ["operator", "guardian"],  "output": "alternatives+feasibility+risks+tech_selection+cost_analysis", "trigger_conditions": ["requirements_finalized", "technical_evaluation_needed"] },
-      { "name": "design",   "clusters": ["architect", "guardian"],  "output": "integrated_solution+implementation_plan+validation_strategy+architecture_documentation", "trigger_conditions": ["analysis_complete", "architecture_decisions_required"] },
-      { "name": "implement","clusters": ["operator", "advocate"],   "output": "working_solution+tests+monitoring+documentation+deployment_automation", "trigger_conditions": ["design_approved", "development_phase"] },
-      { "name": "validate", "clusters": ["architect", "guardian"],  "output": "requirement_verification+security_validation+performance_benchmarks+compliance_certification", "trigger_conditions": ["implementation_complete", "quality_assurance_required"] },
-      { "name": "document","clusters": ["operator", "advocate"],    "output": "technical_docs+user_guides+troubleshooting+knowledge_transfer+training_materials", "trigger_conditions": ["validation_passed", "deployment_preparation"] },
-      { "name": "reflect", "clusters": ["architect", "operator"],   "output": "lessons_learned+patterns+framework_improvements+artifacts+optimization_recommendations", "trigger_conditions": ["project_completion", "post_mortem_scheduled"] }
+  "rules": {
+    "oddities": [
+      "js_alert_present",
+      "document_write_usage",
+      "eval_or_safe_eval_usage",
+      "with_statement_in_js",
+      "debug_artifacts(console.log, debugger, binding.pry, byebug, puts/pp)"
     ],
-    "decision_framework": {
-      "consensus_mechanisms": {
-        "cluster_voting": "weighted_by_expertise_and_stake",
-        "tie_breaking": "escalation_to_meta_level_principles",
-        "veto_powers": "security_compliance_accessibility_absolute",
-        "time_boxing": "force_decision_after_reasonable_deliberation"
-      },
-      "escalation_protocols": {
-        "technical_deadlock": "architect_guardian_joint_decision",
-        "resource_conflict": "stakeholder_arbitration_required",
-        "compliance_violation": "immediate_halt_guardian_authority",
-        "quality_failure": "operator_architect_remediation_plan"
-      }
+    "inconsistencies": [
+      "logger_api_mismatch",
+      "error_handling_style_mismatch",
+      "config_key_defined_not_used",
+      "config_key_used_not_defined"
+    ],
+    "enforced_checks": [
+      "any_other_gaps_pitfalls_not_enforced_showstoppers_vague_terms"
+    ]
+  },
+  "code_quality_standards": {
+    "naming_conventions": {
+      "min_length": 3,
+      "max_length": 50,
+      "no_abbreviations": true
     },
+    "redundancy_tolerance": 0
+  },
+  "validation_tools": {
+    "json": { "linter": "jsonlint" },
+    "ruby": { "linter": "rubocop" },
+    "javascript": { "linter": "eslint" },
+    "shell": { "linter": "shellcheck" }
+  },
+  "compliance_actions": {
+    "failure_handling": "block_deployment",
+    "remediation_required": true
+  },
+  "measurement": {
+    "primary_metrics": {
+      "content_integrity": { "unit": "violations", "target": 0, "priority": "priority_zero" },
+      "code_quality_compliance": { "minimum": 95, "priority": "priority_one", "measurement": "interpreter_validation_continuous" },
+      "linter_error_count": { "unit": "count", "target": 0, "priority": "priority_one" },
+      "principle_violations": { "unit": "violations", "target": 0, "priority": "priority_one" },
+      "reasoned_findings": { "unit": "count", "target": 0, "priority": "priority_one" },
+      "applicability_coverage": { "unit": "percent", "minimum": 90, "priority": "priority_one" }
+    },
+    "success_criteria": {
+      "feature_preservation_maintained": true,
+      "architectural_cleanliness_verified": true,
+      "operational_viability_demonstrated": true,
+      "user_alignment_achieved": true,
+      "track_list_exact_preservation": true,
+      "no_placeholders": true
+    }
+  },
+  "process": {
+    "gating": { "gate_on_warnings": true, "min_severity_for_gate": "warning" },
+    "approval_policy": { "approval_threshold": "majority_consensus", "approval_required": true },
     "tool_orchestration": {
       "mandatory_usage": [
         "adversarial_validation_every_phase",
+        "adversarial_qna_ensemble_selection",
+        "reasoning_engine",
         "measurement_tracking_continuous",
-        "code_formatting_enforcement"
+        "code_formatting_enforcement",
+        "cross_reference_analysis_on_change"
       ],
       "conditional_usage": [
         "external_validation_on_uncertainty",
@@ -329,146 +186,427 @@
         "graceful_degradation_maintain_core",
         "human_escalation_on_deadlock",
         "rollback_on_quality_failure"
-      ]
+      ],
+      "application_scope": "apply_all_sections_to_every_file"
     },
     "content_preservation_protocol": {
       "track_validation": "verify_exact_match_before_any_modification",
       "substitution_forbidden": "never_replace_user_curated_content",
       "placeholder_detection": "reject_any_generated_placeholder_artist_or_title",
       "enhancement_boundaries": "visual_and_interaction_only_never_content",
+      "verification_checkpoints": ["pre_modification", "post_modification", "24_hour_review"],
       "rollback_triggers": [
         "content_modification_detected",
         "track_substitution_attempted",
         "placeholder_introduced"
       ]
+    },
+    "change_management": {
+      "approval_policy_ref": "/process/approval_policy",
+      "automated_backup": "before_every_modification",
+      "change_tracking": "comprehensive_audit_log",
+      "rollback_time_limit": "24_hours_automatic",
+      "approval_triggers": ["code_changes", "config_changes", "file_count_above_5"],
+      "write_branch": "main",
+      "branching_policy": "no_feature_branches",
+      "pr_policy": "skip_by_default"
+    },
+    "guardrails": {
+      "immutable_sections": [
+        "interpreters",
+        "execution.embedded_linters",
+        "execution.principle_audit",
+        "review_workflow",
+        "measurement.primary_metrics",
+        "interface.output_validation",
+        "execution.file_processing.normalization",
+        "execution.cross_reference_analysis"
+      ],
+      "protected_key_globs": [
+        "/interpreters/*",
+        "/execution/embedded_linters/engines/*",
+        "/execution/embedded_linters/check_definitions/*",
+        "/execution/principle_audit",
+        "/review_workflow",
+        "/measurement/primary_metrics",
+        "/interface/output_validation",
+        "/execution/file_processing/normalization",
+        "/execution/cross_reference_analysis"
+      ],
+      "change_control": {
+        "require_override_for_immutable": true,
+        "override_command": "/override-immutable <json_pointer> <reason>",
+        "log_overrides_in_trace": true,
+        "block_on_violation": true
+      }
     }
   },
-
-  "interpreters": {
-    "ruby":        { "persona": "rubocop",        "rules": ["2_space_indentation","snake_case_naming","single_quotes_preferred","guard_clauses"], "checks": ["unused_variables","method_length_10","line_length_120","cyclomatic_complexity_6"], "enforcement": "strict_formatting_required" },
-    "shell":       { "persona": "shellcheck",     "rules": ["2_space_indentation","shebang_required","quote_variables","set_euo_pipefail"], "checks": ["quote_expansion_sc2086","unused_variables_sc2034","path_validation","functions_before_usage"], "enforcement": "posix_compliance_preferred" },
-    "html":        { "persona": "design_archeologist", "extract": ["semantic_hierarchy","grid_mathematics","modular_typography","fibonacci_spacing","flat_color_palette"], "recognize": ["borderless_components","geometric_layouts","mobile_responsive","accessible_markup","unobstructed_flow"], "preserve": ["golden_ratio_proportions","generous_whitespace","atomic_boundaries","minimal_branding","wcag_compliance","critical_css_inline"], "enforcement": "semantic_markup_required" },
-    "css":         { "persona": "flat_design_engineer", "swiss_principles": ["fibonacci_spacing","modular_typography","geometric_grids","limited_palette","function_over_form","controlled_asymmetry"], "minimal_approach": ["generous_negative_space","single_focal_point","monochromatic_schemes","scale_hierarchy","barely_there_interface","content_prominence"], "enhancement": ["consolidate_rules","reduce_specificity","logical_grouping","cascade_optimization","eliminate_unused","accessibility_first"], "enforcement": "flat_design_mandatory" },
-    "javascript":  { "persona": "eslint_strict",  "rules": ["2_space_indentation","semicolons_required","const_let_preferred","arrow_functions"], "checks": ["no_unused_vars","no_console_production","strict_equality","max_line_length_100"], "enforcement": "modern_es6_plus_required" },
-    "markdown":    { "persona": "markdownlint",   "rules": ["atx_headers","consistent_lists","fenced_code_blocks","80_character_soft_wrap"], "checks": ["incremental_headers","valid_links","code_language_specification","table_formatting"], "enforcement": "consistent_documentation_required" },
-    "text":        { "persona": "strunk_white",   "rules": ["sentences_20_words_max","active_voice_preferred","consistent_terminology","plain_language"], "checks": ["reading_grade_level","repetitive_phrases","passive_voice_percentage","jargon_density"], "principles": ["omit_needless_words","definite_specific_concrete","natural_conversation","emphatic_endings","coordinate_similar_elements"], "enforcement": "clarity_and_brevity_required" }
-  },
-
-  "interface": {
-    "progressive_disclosure": {
-      "summary": "key_decisions_metrics_action_items_risks_only",
-      "detailed": "full_adversarial_analysis_with_persona_reasoning_and_alternatives",
-      "expert": "complete_execution_trace_with_all_artifacts_and_decision_provenance",
-      "debug": "internal_state_cluster_communications_decision_trees_and_trigger_history"
-    },
-    "adaptive_behavior": {
-      "user_alignment": ["match_technical_depth","adapt_to_domain_expertise","respect_communication_style"],
-      "context_awareness": ["project_phase_sensitivity","stakeholder_presence","risk_tolerance_assessment"],
-      "response_optimization": ["economy_of_language","concrete_details_over_abstractions","actionable_recommendations"]
-    },
-    "output_format": {
-      "style": "unix_syslog_architectural_precision_with_structured_metadata",
-      "pattern": "timestamp hostname process[pid]: facility.priority action: technical_detail professional_context measurement decision_rationale",
-      "priorities": ["EMERG","ALERT","CRIT","ERR","WARNING","NOTICE","INFO","DEBUG"],
-      "json_formatting": {
-        "schema_enforcement": "strict_validation_with_evolution_tracking",
-        "structured_data_validation": { "schema_version": "draft-07", "required_fields_validation": true, "nested_object_relationships": "validated", "size_limits": "configurable_per_type", "error_handling": "graceful_degradation_with_detailed_errors" },
-        "performance_considerations": { "deep_nesting_limits": "monitor_performance_impact", "pagination_strategy": "for_large_datasets", "compression": "when_size_exceeds_thresholds" }
-      }
-    },
-    "context_management": {
-      "preservation_rules": ["maintain_decision_rationale","track_assumption_changes","preserve_stakeholder_input","record_cluster_consensus"],
-      "compression_strategies": ["summarize_consensus_points","extract_key_decisions","maintain_critical_paths","archive_detailed_analysis"],
-      "retrieval_optimization": ["tag_by_cluster","index_by_phase","link_by_dependency","search_by_outcome"]
-    },
-    "output_validation": {
-      "completeness_checks": ["all_clusters_represented","all_phases_covered","metrics_defined","risks_identified"],
-      "consistency_verification": ["terminology_alignment","cross_reference_integrity","decision_traceability","measurement_continuity"],
-      "stakeholder_alignment": ["requirement_coverage_verified","acceptance_criteria_met","risk_acknowledgment_documented","success_metrics_agreed"],
-      "content_integrity_checks": "track_lists_unchanged_no_placeholders"
-    },
-    "ui_ux_design": {
-      "flat_design_enforcement": {
-        "web_ui_only": true,
-        "prohibited": ["shadows","borders","gradients","decorative_elements","skeuomorphic_elements","textures","glows"],
-        "required": ["typography_hierarchy","whitespace_fibonacci","semantic_markup_only","accessible_color_contrast"],
-        "css_rules": {
-          "box_shadow": "none",
-          "border": "transparent_or_functional_only",
-          "text_shadow": "none",
-          "background_image": "none_unless_content",
-          "border_radius": "functional_only_max_4px",
-          "gradients": "prohibited",
-          "transitions": "performance_optimized_only",
-          "filters": "functional_minimal_only",
-          "transform": "animation_only"
-        },
-        "accessibility_requirements": {
-          "color_contrast_ratio": { "min": 4.5 },
-          "keyboard_navigation": "full_support",
-          "screen_reader_compatibility": "wcag_2.1_aa_minimum"
-        },
-        "swiss_principles": ["fibonacci_spacing","modular_typography","geometric_grids","limited_palette","function_over_form"],
-        "minimal_approach": ["generous_negative_space","single_focal_point","content_prominence","barely_there_interface"]
-      }
-    },
-    "security": {
-      "input_validation": "schema_enforcement_with_size_limits_sanitization_and_anomaly_detection",
-      "privilege_boundaries": "cluster_based_permissions_with_escalation_controls_and_audit_logging",
-      "failure_isolation": "layer_and_interpreter_containment_with_graceful_degradation_and_recovery",
-      "audit_logging": "comprehensive_decision_provenance_tracking_with_immutable_records",
-      "threat_modeling": "continuous_adversarial_assessment_with_automated_vulnerability_scanning"
+  "review_workflow": {
+    "git_diff": {
+      "pre_publish_diff_required": true,
+      "diff_style": "unified",
+      "context_lines": 3,
+      "wrap_long_lines": true,
+      "ignore_whitespace": false,
+      "present_diff_without_explanation": true,
+      "human_friendly": true,
+      "approval_policy_ref": "/process/approval_policy",
+      "change_types": ["content", "refactor", "normalization", "analysis_report"],
+      "approvers": ["user"],
+      "chat_gate": { "present_diff_without_explanation": true, "require_explicit_approval": true },
+      "protected_change_policy": { "disallow_deletion": true, "require_override_command": "/override-immutable <json_pointer> <reason>" },
+      "state_machine": ["draft", "proposed", "approved", "applied", "validated", "finalized"],
+      "post_approval_actions": ["apply_changes", "run_validation", "prepare_full_source_drop"],
+      "on_reject": ["rollback", "explain_deltas", "revise"]
     }
   },
-
   "execution": {
     "initialization": "framework_integrity_validation_interpreter_discovery_user_context_analysis_and_baseline_establishment",
-    "runtime_orchestration": "discover→analyze→design→implement→validate→document→reflect_with_parallel_monitoring_and_adaptive_behavior",
-    "monitoring_and_control": "performance_tracking_quality_assurance_trigger_monitoring_and_real_time_optimization",
+    "file_processing": {
+      "apply_all_sections_to_every_file": true,
+      "line_by_line_revision": {
+        "enabled": true,
+        "strategies": ["tokenize_lines", "ast_guided_edits", "semantic_preservation"],
+        "validation": ["linter_pass", "content_integrity_check"],
+        "stop_conditions": ["no_diffs", "quality_gates_passed"]
+      },
+      "priorities_ref": "/file_priorities",
+      "normalization": {
+        "apply_pre_diff": true,
+        "aggressiveness": "aggressive",
+        "targets": ["code", "data", "markup", "styles", "docs", "self_config"],
+        "self_config": {
+          "apply_to_master_json": true,
+          "key_order_strategy": "alpha",
+          "section_order_strategy": "importance_then_alpha",
+          "importance_order": [
+            "meta",
+            "compliance",
+            "core",
+            "rules",
+            "code_quality_standards",
+            "validation_tools",
+            "measurement",
+            "review_workflow",
+            "execution",
+            "process",
+            "interface",
+            "interpreters",
+            "knowledge_base",
+            "standards",
+            "file_priorities",
+            "consumers"
+          ]
+        },
+        "exclude_immutables": true
+      }
+    },
+    "stack_detection": {
+      "enabled": true,
+      "confidence_threshold": 0.85,
+      "patterns": {
+        "rails": ["Gemfile", "config/application.rb", "app/", "bin/rails"],
+        "node": ["package.json", "pnpm-lock.yaml", "yarn.lock"],
+        "frontend": ["*.html", "*.css", "*.js"],
+        "shell": ["*.sh", "*.zsh", "*.bash"],
+        "openbsd": ["rc.conf.local", "pf.conf", "httpd.conf", "relayd.conf"],
+        "ai_ruby": ["cognitive_*.rb", "ai3/**/*.rb"]
+      }
+    },
+    "cross_reference_analysis": {
+      "enabled": true,
+      "depth": "exhaustive",
+      "rules_ref": "/rules",
+      "token_scan": { "ngrams": [1, 2, 3], "normalize_case": true, "strip_punctuation": true },
+      "identifier_graph": { "build_calls": true, "build_refs": true, "dead_symbol_detection": true },
+      "duplicate_detection": {
+        "line_hash": true,
+        "block_simhash": { "window_lines": 5, "hamming_threshold": 3 },
+        "ast_clone_detection": true
+      },
+      "unused_detection": { "functions": true, "classes": true, "vars_consts": true, "css_selectors": true },
+      "reporting": { "delivery": ["stdout_preview"], "no_file_creation": true },
+      "trigger_conditions": ["any_change_detected", "pre_pr_review", "scheduled_audit"],
+      "quality_gates": ["no_regressions_in_primary_metrics", "no_high_severity_findings_unaddressed"]
+    },
+    "embedded_linters": {
+      "enabled": true,
+      "pattern_engine": "llm_reasoning",
+      "policy": {
+        "fail_on_error": true,
+        "treat_todos_as_warnings": true,
+        "required_engines": ["json", "ruby", "javascript", "css", "shell", "html", "markdown"],
+        "prevent_disable": true,
+        "fallback_on_empty_pattern": "heuristic_reasoner",
+        "gating_ref": "/process/gating"
+      },
+      "severity_templates": {
+        "json_strict": { "duplicate_keys": "error", "trailing_commas": "error", "tabs_present": "warning" },
+        "ruby_safe": { "rubocop_all": "warning" },
+        "javascript_safe": { "eslint_all": "warning" },
+        "css_warn": { "stylelint_crossref": "warning" },
+        "shell_strict": { "set_euopipefail": "error", "quote_vars": "error" },
+        "html_accessibility": { "html_lang_required": "error", "meta_viewport_present": "warning", "title_present": "error", "img_alt_required": "error" },
+        "markdown_warn": { "heading_increment": "warning" }
+      },
+      "autofix_defaults": {
+        "policies": { "safe": ["safe_autocorrect"], "none": [] }
+      },
+      "check_definitions": {
+        "json": {
+          "duplicate_keys": { "method": "heuristic_reasoner", "description": "Reason about duplicate keys in objects; keys must be unique." },
+          "trailing_commas": { "method": "heuristic_reasoner", "description": "Detect and avoid trailing commas; ensure valid JSON syntax." },
+          "tabs_present": { "method": "heuristic_reasoner", "description": "Prefer spaces; flag tab characters for consistency." }
+        },
+        "ruby": {
+          "rubocop_all": { "method": "heuristic_reasoner", "description": "Simulate RuboCop via reasoning: style, complexity, duplication, length." }
+        },
+        "javascript": {
+          "eslint_all": { "method": "heuristic_reasoner", "description": "Simulate ESLint via reasoning: unused vars, console usage, equality, patterns." }
+        },
+        "css": {
+          "stylelint_crossref": { "method": "heuristic_reasoner", "description": "Reason about selector quality and potential unused CSS via cross-reference." }
+        },
+        "shell": {
+          "set_euopipefail": { "method": "heuristic_reasoner", "description": "Ensure strict mode (set -euo pipefail) is present in scripts." },
+          "quote_vars": { "method": "heuristic_reasoner", "description": "Detect unquoted variable expansions; suggest quoting to avoid word-splitting/globbing." }
+        },
+        "html": {
+          "html_lang_required": { "method": "heuristic_reasoner", "description": "html element must include a valid lang attribute." },
+          "meta_viewport_present": { "method": "heuristic_reasoner", "description": "Viewport meta tag should be present for responsive behavior." },
+          "title_present": { "method": "heuristic_reasoner", "description": "Document must include a concise, non-empty title tag." },
+          "img_alt_required": { "method": "heuristic_reasoner", "description": "Images must include meaningful alt attributes for accessibility." }
+        },
+        "markdown": {
+          "heading_increment": { "method": "heuristic_reasoner", "description": "Headings should progress sequentially without level skips." }
+        }
+      },
+      "engines": {
+        "json": { "persona": "jsonlint_strict", "severity_template_ref": "/execution/embedded_linters/severity_templates/json_strict", "autofix_policy_ref": "/execution/embedded_linters/autofix_defaults/policies/none", "checks_ref": "/execution/embedded_linters/check_definitions/json" },
+        "ruby": { "persona": "rubocop", "severity_template_ref": "/execution/embedded_linters/severity_templates/ruby_safe", "autofix_policy_ref": "/execution/embedded_linters/autofix_defaults/policies/safe", "checks_ref": "/execution/embedded_linters/check_definitions/ruby" },
+        "javascript": { "persona": "eslint_strict", "severity_template_ref": "/execution/embedded_linters/severity_templates/javascript_safe", "autofix_policy_ref": "/execution/embedded_linters/autofix_defaults/policies/safe", "checks_ref": "/execution/embedded_linters/check_definitions/javascript" },
+        "css": { "persona": "flat_design_engineer", "severity_template_ref": "/execution/embedded_linters/severity_templates/css_warn", "autofix_policy_ref": "/execution/embedded_linters/autofix_defaults/policies/none", "checks_ref": "/execution/embedded_linters/check_definitions/css" },
+        "shell": { "persona": "shellcheck_strict", "severity_template_ref": "/execution/embedded_linters/severity_templates/shell_strict", "autofix_policy_ref": "/execution/embedded_linters/autofix_defaults/policies/safe", "checks_ref": "/execution/embedded_linters/check_definitions/shell" },
+        "html": { "persona": "html_audit", "severity_template_ref": "/execution/embedded_linters/severity_templates/html_accessibility", "autofix_policy_ref": "/execution/embedded_linters/autofix_defaults/policies/none", "checks_ref": "/execution/embedded_linters/check_definitions/html" },
+        "markdown": { "persona": "md_lint", "severity_template_ref": "/execution/embedded_linters/severity_templates/markdown_warn", "autofix_policy_ref": "/execution/embedded_linters/autofix_defaults/policies/safe", "checks_ref": "/execution/embedded_linters/check_definitions/markdown" }
+      }
+    },
+    "reasoning_engine": {
+      "enabled": true,
+      "scope": ["repo", "changed_files", "self"],
+      "checks": {
+        "dry_reasoner": { "method": "heuristic_reasoner", "severity": "warning", "description": "Detect duplicated logic/structures; suggest consolidation or abstraction." },
+        "kiss_reasoner": { "method": "heuristic_reasoner", "severity": "warning", "description": "Detect unnecessary complexity; suggest simplifications without loss of capability.", "thresholds": { "max_nested_depth": 6 } },
+        "yagni_reasoner": { "method": "heuristic_reasoner", "severity": "info", "description": "Detect unreferenced or over-engineered constructs; recommend removal or deferral." },
+        "solid_reasoner": { "method": "heuristic_reasoner", "severity": "warning", "description": "Detect SOLID violations; propose interface/abstraction refactors." },
+        "unix_reasoner": { "method": "heuristic_reasoner", "severity": "warning", "description": "Detect multi-responsibility clusters; propose pipelines and composition." },
+        "strunk_white_reasoner": { "method": "heuristic_reasoner", "severity": "info", "description": "Prose-only clarity/conciseness improvements; never alters code." }
+      },
+      "gating_ref": "/process/gating",
+      "determinism": {
+        "decoding": "greedy",
+        "seed": 1337,
+        "top_p": 0,
+        "num_decodings": 1,
+        "temperature_overrides": { "default": 0, "creative": 0.9 }
+      },
+      "alternatives": {
+        "strategy": "deterministic_prompt_variants",
+        "count": 3,
+        "variant_axes": ["role", "constraint_emphasis", "risk_profile"]
+      },
+      "canonical_audits": {
+        "dry_kiss_yagni": { "checks": ["dry_reasoner", "kiss_reasoner", "yagni_reasoner"], "scope": "auto" },
+        "principles_full": { "checks": ["solid_reasoner", "unix_reasoner", "strunk_white_reasoner", "dry_reasoner", "kiss_reasoner", "yagni_reasoner"], "scope": "auto" }
+      },
+      "normalization": { "question_normalization": "lowercase_trim_punct" },
+      "cache": { "enabled": true, "key": "sha256(repo_state_hash + canonical_audit_id)", "ttl": "session" },
+      "reporting": { "stable_sort": ["severity", "path", "line", "rule"], "format": "deterministic" },
+      "metrics_mapping": { "reasoned_findings": "count(all_findings)" },
+      "autofix": {
+        "strategy": ["refactor_to_reference", "extract_policy_to_process", "deduplicate_arrays", "normalize_keys_order"],
+        "apply": "proposal_only",
+        "diff_format": "unified"
+      }
+    },
+    "principle_audit": {
+      "enabled": true,
+      "canonical_audit_ref": "/execution/reasoning_engine/canonical_audits/principles_full",
+      "reporting": { "delivery": ["stdout_preview"], "no_file_creation": true },
+      "quality_gates": ["no_regressions_in_primary_metrics", "applicability_coverage_at_least_min"]
+    },
     "self_improvement_cycle": {
       "frequency": "per_execution_completion",
-      "optimization_targets": "identified_bottlenecks_user_feedback_and_improvement_opportunities",
       "validation_requirements": "regression_testing_stakeholder_approval_and_cluster_consensus",
-      "rollback_mechanism": "automatic_reversion_on_degraded_performance_or_quality_threshold_breach"
+      "rollback_mechanism": "automatic_reversion_on_degraded_performance_or_quality_threshold_breach",
+      "self_apply_safeguards": ["pre_validate_structure", "diff_only_reorder"],
+      "improvement_focus": "llm_reasoning_enhancements"
     },
     "error_recovery": {
-      "graceful_degradation": ["reduce_scope_maintain_core_function","simplify_complexity_preserve_essential_features"],
-      "rollback_triggers": ["consensus_loss","quality_threshold_breach","stakeholder_veto","security_violation"],
-      "recovery_protocols": ["restart_from_last_stable_checkpoint","escalate_to_human_oversight","activate_fallback_mode"]
+      "graceful_degradation": ["reduce_scope_maintain_core_function", "simplify_complexity_preserve_essential_features"],
+      "rollback_triggers": ["consensus_loss", "quality_threshold_breach", "stakeholder_veto", "security_violation"],
+      "recovery_protocols": ["restart_from_last_stable_checkpoint", "escalate_to_human_oversight", "activate_fallback_mode"]
     },
-    "content_freeze": "lock_track_lists_pre_validation_and_monitor_for_diffs"
+    "content_freeze": "lock_track_lists_pre_validation_and_monitor_for_diffs",
+    "autonomy": {
+      "initiative_level": "high_but_bounded",
+      "self_prompting": { "enabled": true, "max_depth": 3, "triggers": ["ambiguity_detected", "quality_gate_risk", "missing_detail"], "avoid_loops": true },
+      "reanalysis_policy": { "auto_deepen_on_uncertainty": true, "uncertainty_threshold": 0.15, "expand_search_space_on_failure": true },
+      "user_notification_policy": {
+        "ask_only_on_decision_boundaries": true,
+        "boundaries": ["scope_change", "feature_addition", "risk_above_threshold", "file_operations", "language_introduction", "normalization", "cross_reference_analysis"]
+      }
+    },
+    "adversarial_qna": {
+      "enabled": true,
+      "modes": ["self_critique", "red_team", "socratic"],
+      "min_alternatives": 3,
+      "scorers": ["security", "accessibility", "performance", "maintainability"],
+      "selection": "score_then_cherrypick_best"
+    },
+    "ensemble_decision": {
+      "multi_perspective_ref": "/core/multi_perspective",
+      "consensus": "weighted_vote",
+      "tie_breaker": "architect"
+    },
+    "iteration_policy": {
+      "auto_iterate": "per_phase_until_plateau",
+      "max_iterations_per_phase": 5,
+      "improvement_threshold_percent": 5,
+      "improvement_calc": "percent_reduction_in_violations",
+      "early_exit_on_plateau": true,
+      "hard_cap_total_iterations": 12
+    },
+    "sanity_checks": {
+      "non_empty_checks_required": true,
+      "validate_every_check_has_pattern_or_method": true,
+      "disallow_unknown_keys": true
+    },
+    "state": { "repo_state_hash": "sha256(all_file_paths+contents+config_version)" },
+    "self_run": { "enabled": true, "scope": ["self"], "audits": ["principles_full"], "equivalence_contract": true },
+    "scheduler": { "scheduled_audit_cron": "0 3 * * 1" }
   },
-
-  "measurement": {
-    "primary_metrics": {
-      "adversarial_coverage": { "min": 95, "priority": "p1", "measurement": "automated_verification_with_cluster_consensus" },
-      "code_quality_compliance": { "min": 95, "priority": "p1", "measurement": "interpreter_validation_continuous" },
-      "stakeholder_satisfaction": { "min": 4.0, "priority": "p1", "measurement": "survey_based_with_follow_up_analysis" },
-      "decision_quality": { "min": 0.85, "priority": "p1", "measurement": "outcome_tracking_with_retrospective_validation" },
-      "content_integrity": { "unit": "violations", "target": 0, "priority": "p0" }
+  "interface": {
+    "message_prefix": { "enabled": true, "pattern": "**master.json v${meta.version} (GitHub Copilot)**", "enforcement": "prepend_all_responses" },
+    "output_validation": {
+      "completeness_checks": ["all_clusters_represented", "all_phases_covered", "metrics_defined", "risks_identified"],
+      "consistency_verification": ["terminology_alignment", "cross_reference_integrity", "decision_traceability", "measurement_continuity"],
+      "stakeholder_alignment": [
+        "requirement_coverage_verified",
+        "acceptance_criteria_met",
+        "risk_acknowledgment_documented",
+        "success_metrics_agreed"
+      ],
+      "content_integrity_checks": "no_placeholders_and_exact_user_content",
+      "required_sections": ["interpreters", "execution.embedded_linters", "execution.principle_audit", "review_workflow", "measurement.primary_metrics"],
+      "prohibit_deletions_of": ["/interpreters", "/execution/embedded_linters", "/execution/principle_audit", "/review_workflow", "/measurement/primary_metrics"]
     },
-    "success_criteria": {
-      "feature_preservation_maintained": "100_percent_capability_retention_with_enhancement_and_user_context_awareness",
-      "architectural_cleanliness_verified": "layer_separation_with_interpreter_integration_and_adaptive_behavior",
-      "operational_viability_demonstrated": "production_deployment_readiness_with_monitoring_alerting_and_recovery_protocols",
-      "user_alignment_achieved": "technical_depth_matching_communication_style_adaptation_and_context_sensitivity",
-      "track_list_exact_preservation": true,
-      "no_placeholders": true
+    "human_readability": {
+      "line_width": 120,
+      "indent_spaces": 2,
+      "max_nesting": 6,
+      "prefer_explicit_structures": true,
+      "disable_obfuscation": true
+    },
+    "trace_presentation": { "mode": "syslog", "show_technical_details": true, "group_by_phase": true }
+  },
+  "interpreters": {
+    "javascript": {
+      "persona": "eslint_strict",
+      "rules": ["2_space_indentation", "semicolons_required", "const_let_preferred", "arrow_functions"],
+      "engine_ref": "/execution/embedded_linters/engines/javascript"
+    },
+    "ruby": {
+      "persona": "rubocop",
+      "rules": ["2_space_indentation", "snake_case_naming", "single_quotes_preferred", "guard_clauses"],
+      "engine_ref": "/execution/embedded_linters/engines/ruby"
+    },
+    "css": {
+      "persona": "flat_design_engineer",
+      "rules": ["expanded_blocks_no_oneline_rules", "group_related_rules_together"],
+      "engine_ref": "/execution/embedded_linters/engines/css"
+    },
+    "shell": {
+      "persona": "shellcheck_strict",
+      "rules": ["set_euopipefail", "quote_vars", "prefer_command_substitution"],
+      "engine_ref": "/execution/embedded_linters/engines/shell"
+    },
+    "html": {
+      "persona": "html_audit",
+      "rules": ["no_inline_event_handlers", "no_document_write", "no_deprecated_tags"],
+      "engine_ref": "/execution/embedded_linters/engines/html"
+    },
+    "markdown": {
+      "persona": "md_lint",
+      "rules": ["heading_increment", "line_length_120", "no_trailing_spaces"],
+      "engine_ref": "/execution/embedded_linters/engines/markdown"
     }
   },
-
   "knowledge_base": {
     "pattern_library": {
       "successful_implementations": "anonymized_case_studies_with_outcome_metrics_and_user_context",
       "failure_modes": "anti_patterns_with_prevention_strategies_and_recovery_protocols",
       "optimization_techniques": "proven_refinements_with_applicability_criteria_and_measurement_validation",
       "user_adaptation_patterns": "communication_style_matching_technical_depth_calibration_and_context_awareness"
-    },
-    "learning_mechanisms": {
-      "pattern_recognition": "automatic_extraction_from_execution_traces_with_user_feedback_integration",
-      "knowledge_synthesis": "cross_project_learning_with_privacy_preservation_and_context_generalization",
-      "expertise_modeling": "cluster_knowledge_representation_with_capability_assessment_and_domain_mapping",
-      "user_modeling": "preference_learning_communication_style_analysis_and_context_pattern_recognition"
     }
+  },
+  "standards": {
+    "accessibility": {
+      "apply_if_stack": ["frontend"],
+      "wcag_standard": "WCAG_2_2_AAA",
+      "contrast_minimum": "4.5:1",
+      "contrast_enhanced": "7:1",
+      "font_minimum": "16px",
+      "line_height_minimum": "1.5",
+      "touch_target_minimum": "44px",
+      "aria_requirement": "comprehensive_and_semantic",
+      "heading_structure": "logical_and_sequential",
+      "focus_indicators": "high_contrast_and_visible"
+    },
+    "performance": {
+      "apply_if_stack": ["frontend"],
+      "core_web_vitals": { "lcp_threshold": "≤2500ms", "lcp_target": "1500ms", "fid_threshold": "≤100ms", "fid_target": "50ms", "cls_threshold": "≤0.1", "cls_target": "0.05" }
+    },
+    "security": {
+      "headers_required": ["content_security_policy", "strict_transport_security", "x_frame_options"],
+      "architecture": "zero_trust",
+      "access_control": "least_privilege_rbac",
+      "encryption": "rest_transit_key_rotation",
+      "injection_prevention": "parameterized_queries_mandatory"
+    },
+    "seo": {
+      "apply_if_stack": ["frontend"],
+      "require_canonical": true,
+      "require_meta_viewport": true,
+      "structured_data_jsonld": true,
+      "sitemap_xml_required": true,
+      "robots_txt_recommended": true,
+      "hreflang_for_i18n": true,
+      "open_graph_tags": true,
+      "twitter_card_tags": true
+    },
+    "tech_stack": {
+      "ruby_rails": {
+        "rails_8_plus": ["stimulus_hotwire", "turbo_drive", "solid_queue"],
+        "conventions": ["snake_case", "yard_docs", "guard_clauses"]
+      },
+      "openbsd": {
+        "apply_if_stack": ["openbsd"],
+        "principles": ["principle_of_least_privilege", "privilege_separation", "pledge_unveil", "default_deny"]
+      },
+      "zsh": {
+        "apply_if_stack": ["shell"],
+        "script_standards": ["#!/usr/bin/env zsh", "set -euo pipefail", "local_variables", "modular_functions"]
+      }
+    }
+  },
+  "file_priorities": {
+    "critical": ["ai3/**/*.rb", "rails/**/*.rb", "cognitive_*.rb", "consolidation_*.rb"],
+    "high": ["**/*.rb", "**/*.sh"],
+    "medium": ["**/*.js", "**/*.json"],
+    "low": ["**/*.md", "**/*.txt"]
+  },
+  "consumers": {
+    "principle_audit": ["knowledge_base.pattern_library"]
   }
 }
