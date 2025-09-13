@@ -1,103 +1,540 @@
 
 # frozen_string_literal: true
 
-require "yaml"
-require "binance"
-require "news-api"
-require "json"
-require "openai"
-require "logger"
-require "localbitcoins"
-require "replicate"
-require "talib"
-require "tensorflow"
-require "decisiontree"
-require "statsample"
-require "reinforcement_learning"
-require "langchainrb"
-require "thor"
-require "mittsu"
-require "sonic_pi"
-require "rubyheat"
-require "networkx"
-require "geokit"
-require "dashing"
-class TradingAssistant
-  def initialize
-    load_configuration
-    connect_to_apis
-    setup_systems
-  end
-  def run
-    loop do
-      begin
-        execute_cycle
-        sleep(60) # Adjust the sleep time based on desired frequency
-      rescue => e
-        handle_error(e)
+# Trading Assistant - Comprehensive financial trading and market analysis
+# Consolidated from trader.rb and trading_assistant.rb
+
+require 'yaml'
+require 'json' 
+require 'logger'
+require_relative '../lib/query_cache'
+require_relative '../lib/rag_engine'
+
+module Assistants
+  class Trader
+    attr_reader :name, :role, :capabilities
+
+    # Trading Knowledge Sources
+    KNOWLEDGE_SOURCES = [
+      'https://www.investopedia.com/',
+      'https://finance.yahoo.com/',
+      'https://www.bloomberg.com/',
+      'https://www.marketwatch.com/',
+      'https://coinmarketcap.com/',
+      'https://tradingview.com/',
+      'https://seekingalpha.com/',
+      'https://www.sec.gov/investor'
+    ].freeze
+
+    TRADING_STRATEGIES = [
+      'day_trading',
+      'swing_trading', 
+      'position_trading',
+      'scalping',
+      'arbitrage',
+      'momentum_trading',
+      'value_investing',
+      'technical_analysis',
+      'fundamental_analysis'
+    ].freeze
+
+    def initialize(config = {})
+      @name = 'Trading Expert'
+      @role = 'Financial Trading and Market Analysis Assistant'
+      @capabilities = [
+        'Market analysis and research',
+        'Technical analysis and charting',
+        'Risk assessment and management',
+        'Portfolio optimization',
+        'Cryptocurrency analysis',
+        'Trading strategy development',
+        'Financial news analysis',
+        'Investment recommendations'
+      ]
+
+      @config = config
+      @market_data_cache = QueryCache.new(ttl: 300) # 5-minute cache
+      @rag_engine = RagEngine.new
+      @logger = Logger.new(STDOUT)
+      
+      initialize_trading_systems
+    end
+
+    def process(input, context = {})
+      trading_intent = classify_trading_intent(input)
+
+      case trading_intent
+      when :market_analysis
+        analyze_market(input, context)
+      when :technical_analysis
+        perform_technical_analysis(input, context)
+      when :risk_assessment
+        assess_risk(input, context)
+      when :portfolio_optimization
+        optimize_portfolio(input, context)
+      when :cryptocurrency_analysis
+        analyze_cryptocurrency(input, context)
+      when :trading_strategy
+        suggest_trading_strategy(input, context)
+      when :news_analysis
+        analyze_financial_news(input, context)
+      else
+        general_trading_advice(input, context)
       end
     end
-  private
-  def load_configuration
-    @config = YAML.load_file("config.yml")
-    @binance_api_key = fetch_config_value("binance_api_key")
-    @binance_api_secret = fetch_config_value("binance_api_secret")
-    @news_api_key = fetch_config_value("news_api_key")
-    @openai_api_key = fetch_config_value("openai_api_key")
-    @localbitcoins_api_key = fetch_config_value("localbitcoins_api_key")
-    @localbitcoins_api_secret = fetch_config_value("localbitcoins_api_secret")
-    Langchainrb.configure do |config|
-      config.openai_api_key = fetch_config_value("openai_api_key")
-      config.replicate_api_key = fetch_config_value("replicate_api_key")
-  def fetch_config_value(key)
-    @config.fetch(key) { raise "Missing #{key}" }
-  def connect_to_apis
-    connect_to_binance
-    connect_to_news_api
-    connect_to_openai
-    connect_to_localbitcoins
-  def connect_to_binance
-    @binance_client = Binance::Client::REST.new(api_key: @binance_api_key, secret_key: @binance_api_secret)
-    @logger.info("Connected to Binance API")
-  rescue StandardError => e
-    log_error("Could not connect to Binance API: #{e.message}")
-    exit
-  def connect_to_news_api
-    @news_client = News::Client.new(api_key: @news_api_key)
-    @logger.info("Connected to News API")
-    log_error("Could not connect to News API: #{e.message}")
-  def connect_to_openai
-    @openai_client = OpenAI::Client.new(api_key: @openai_api_key)
-    @logger.info("Connected to OpenAI API")
-    log_error("Could not connect to OpenAI API: #{e.message}")
-  def connect_to_localbitcoins
-    @localbitcoins_client = Localbitcoins::Client.new(api_key: @localbitcoins_api_key, api_secret: @localbitcoins_api_secret)
-    @logger.info("Connected to Localbitcoins API")
-    log_error("Could not connect to Localbitcoins API: #{e.message}")
-  def setup_systems
-    setup_risk_management
-    setup_logging
-    setup_error_handling
-    setup_monitoring
-    setup_alerts
-    setup_backup
-    setup_documentation
-  def setup_risk_management
-    # Setup risk management parameters
-  def setup_logging
-    @logger = Logger.new("bot_log.txt")
-    @logger.level = Logger::INFO
-  def setup_error_handling
-    # Define error handling mechanisms
-  def setup_monitoring
-    # Setup performance monitoring
-  def setup_alerts
-    @alert_system = AlertSystem.new
-  def setup_backup
-    @backup_system = BackupSystem.new
-  def setup_documentation
-    # Generate or update documentation for the bot
-  def execute_cycle
+
+    # Market Analysis
+    def analyze_market(input, context)
+      symbol = extract_symbol(input)
+      
+      response = "**📈 MARKET ANALYSIS**\n\n"
+      
+      if symbol
+        response += "**Symbol:** #{symbol.upcase}\n\n"
+        response += analyze_specific_asset(symbol)
+      else
+        response += analyze_general_market(input)
+      end
+      
+      response += "\n**Market Factors to Consider:**\n"
+      market_factors = [
+        "Economic indicators and news",
+        "Company earnings and fundamentals",
+        "Technical indicators and chart patterns",
+        "Market sentiment and volume",
+        "Global events and political factors",
+        "Sector performance and trends"
+      ]
+      
+      market_factors.each { |factor| response += "- #{factor}\n" }
+      
+      response += "\n**⚠️ Disclaimer:** This analysis is for educational purposes only. Not financial advice."
+      response
+    end
+
+    # Technical Analysis
+    def perform_technical_analysis(input, context)
+      symbol = extract_symbol(input)
+      timeframe = extract_timeframe(input) || '1D'
+      
+      response = "**📊 TECHNICAL ANALYSIS**\n\n"
+      
+      if symbol
+        response += "**Symbol:** #{symbol.upcase}\n"
+        response += "**Timeframe:** #{timeframe}\n\n"
+      end
+      
+      response += "**Technical Indicators:**\n"
+      
+      technical_indicators = {
+        "Moving Averages" => [
+          "Simple Moving Average (SMA)",
+          "Exponential Moving Average (EMA)",
+          "Moving Average Convergence Divergence (MACD)"
+        ],
+        "Momentum Indicators" => [
+          "Relative Strength Index (RSI)",
+          "Stochastic Oscillator",
+          "Williams %R"
+        ],
+        "Volume Indicators" => [
+          "Volume Moving Average",
+          "On-Balance Volume (OBV)",
+          "Volume Rate of Change"
+        ],
+        "Volatility Indicators" => [
+          "Bollinger Bands",
+          "Average True Range (ATR)",
+          "Volatility Index"
+        ]
+      }
+      
+      technical_indicators.each do |category, indicators|
+        response += "\n**#{category}:**\n"
+        indicators.each { |indicator| response += "- #{indicator}\n" }
+      end
+      
+      response += "\n**Chart Pattern Analysis:**\n"
+      chart_patterns = [
+        "Support and Resistance levels",
+        "Trend lines and channels",
+        "Head and Shoulders patterns",
+        "Double tops and bottoms",
+        "Triangle patterns",
+        "Flag and pennant patterns"
+      ]
+      
+      chart_patterns.each { |pattern| response += "- #{pattern}\n" }
+      
+      response
+    end
+
+    # Risk Assessment
+    def assess_risk(input, context)
+      response = "**⚠️ RISK ASSESSMENT**\n\n"
+      
+      risk_factors = {
+        "Market Risk" => [
+          "Overall market volatility",
+          "Economic downturns",
+          "Interest rate changes",
+          "Inflation effects"
+        ],
+        "Company-Specific Risk" => [
+          "Business model viability",
+          "Management quality",
+          "Competitive position",
+          "Financial health"
+        ],
+        "Technical Risk" => [
+          "Liquidity risk",
+          "Execution risk",
+          "Platform reliability",
+          "Cybersecurity threats"
+        ],
+        "Regulatory Risk" => [
+          "Government policy changes",
+          "Tax law modifications",
+          "Industry regulations",
+          "International trade policies"
+        ]
+      }
+      
+      risk_factors.each do |category, risks|
+        response += "**#{category}:**\n"
+        risks.each { |risk| response += "- #{risk}\n" }
+        response += "\n"
+      end
+      
+      response += "**Risk Management Strategies:**\n"
+      risk_strategies = [
+        "Diversification across assets and sectors",
+        "Position sizing and stop-loss orders",
+        "Regular portfolio rebalancing",
+        "Hedging with derivatives",
+        "Maintaining emergency reserves",
+        "Continuous monitoring and adjustment"
+      ]
+      
+      risk_strategies.each_with_index { |strategy, idx| response += "#{idx + 1}. #{strategy}\n" }
+      
+      response
+    end
+
+    # Portfolio Optimization
+    def optimize_portfolio(input, context)
+      response = "**💼 PORTFOLIO OPTIMIZATION**\n\n"
+      
+      response += "**Asset Allocation Principles:**\n"
+      allocation_principles = [
+        "Age-based allocation (100 - age = stock percentage)",
+        "Risk tolerance assessment",
+        "Time horizon consideration",
+        "Geographic diversification",
+        "Sector diversification",
+        "Market cap diversification"
+      ]
+      
+      allocation_principles.each { |principle| response += "- #{principle}\n" }
+      
+      response += "\n**Sample Asset Allocations:**\n\n"
+      
+      portfolios = {
+        "Conservative (Low Risk)" => {
+          "Bonds/Fixed Income" => "60%",
+          "Large Cap Stocks" => "25%",
+          "REITs" => "10%",
+          "Cash/Money Market" => "5%"
+        },
+        "Moderate (Medium Risk)" => {
+          "Large Cap Stocks" => "40%",
+          "Bonds/Fixed Income" => "35%",
+          "International Stocks" => "15%",
+          "Small Cap Stocks" => "10%"
+        },
+        "Aggressive (High Risk)" => {
+          "Large Cap Stocks" => "50%",
+          "Small Cap Stocks" => "20%",
+          "International Stocks" => "20%",
+          "Growth Stocks" => "10%"
+        }
+      }
+      
+      portfolios.each do |type, allocation|
+        response += "**#{type}:**\n"
+        allocation.each { |asset, percentage| response += "- #{asset}: #{percentage}\n" }
+        response += "\n"
+      end
+      
+      response += "**Rebalancing Guidelines:**\n"
+      rebalancing = [
+        "Review portfolio quarterly",
+        "Rebalance when allocation drifts >5%",
+        "Consider tax implications",
+        "Use new contributions for rebalancing",
+        "Monitor expense ratios and fees"
+      ]
+      
+      rebalancing.each { |guideline| response += "- #{guideline}\n" }
+      
+      response
+    end
+
+    # Cryptocurrency Analysis
+    def analyze_cryptocurrency(input, context)
+      crypto_symbol = extract_crypto_symbol(input)
+      
+      response = "**₿ CRYPTOCURRENCY ANALYSIS**\n\n"
+      
+      if crypto_symbol
+        response += "**Cryptocurrency:** #{crypto_symbol.upcase}\n\n"
+      end
+      
+      response += "**Crypto Market Factors:**\n"
+      crypto_factors = [
+        "Market sentiment and adoption",
+        "Regulatory developments",
+        "Technology updates and improvements",
+        "Partnership announcements",
+        "Mining difficulty and network health",
+        "Institutional investment flows"
+      ]
+      
+      crypto_factors.each { |factor| response += "- #{factor}\n" }
+      
+      response += "\n**Crypto Risk Considerations:**\n"
+      crypto_risks = [
+        "High volatility and price swings",
+        "Regulatory uncertainty",
+        "Technology and security risks",
+        "Market manipulation potential",
+        "Liquidity risks in smaller coins",
+        "Environmental concerns (for PoW coins)"
+      ]
+      
+      crypto_risks.each { |risk| response += "- #{risk}\n" }
+      
+      response += "\n**Popular Cryptocurrencies:**\n"
+      popular_cryptos = [
+        "Bitcoin (BTC) - Digital gold, store of value",
+        "Ethereum (ETH) - Smart contracts platform",
+        "Binance Coin (BNB) - Exchange utility token",
+        "Cardano (ADA) - Proof-of-stake blockchain",
+        "Solana (SOL) - High-speed blockchain",
+        "Polkadot (DOT) - Interoperability protocol"
+      ]
+      
+      popular_cryptos.each { |crypto| response += "- #{crypto}\n" }
+      
+      response
+    end
+
+    # Trading Strategy Suggestions
+    def suggest_trading_strategy(input, context)
+      strategy_type = extract_strategy_type(input)
+      
+      response = "**📋 TRADING STRATEGY RECOMMENDATIONS**\n\n"
+      
+      if strategy_type
+        response += generate_specific_strategy(strategy_type)
+      else
+        response += generate_general_strategies
+      end
+      
+      response += "\n**Strategy Implementation Tips:**\n"
+      implementation_tips = [
+        "Start with paper trading to test strategies",
+        "Define clear entry and exit rules",
+        "Set stop-loss and take-profit levels",
+        "Maintain a trading journal",
+        "Monitor performance metrics",
+        "Adjust strategies based on market conditions"
+      ]
+      
+      implementation_tips.each { |tip| response += "- #{tip}\n" }
+      
+      response
+    end
+
+    private
+
+    def initialize_trading_systems
+      @risk_manager = RiskManager.new
+      @portfolio_tracker = PortfolioTracker.new
+      @technical_indicators = TechnicalIndicators.new
+    end
+
+    def classify_trading_intent(input)
+      input_lower = input.downcase
+      
+      return :market_analysis if input_lower.match?(/\b(market|analysis|price|chart)\b/)
+      return :technical_analysis if input_lower.match?(/\b(technical|indicator|rsi|macd|moving average)\b/)
+      return :risk_assessment if input_lower.match?(/\b(risk|volatility|assessment|manage)\b/)
+      return :portfolio_optimization if input_lower.match?(/\b(portfolio|allocation|diversify|optimize)\b/)
+      return :cryptocurrency_analysis if input_lower.match?(/\b(crypto|bitcoin|ethereum|blockchain)\b/)
+      return :trading_strategy if input_lower.match?(/\b(strategy|trading|buy|sell|position)\b/)
+      return :news_analysis if input_lower.match?(/\b(news|earnings|announcement|event)\b/)
+      
+      :general
+    end
+
+    def extract_symbol(input)
+      # Simple symbol extraction - look for ticker symbols
+      symbol_match = input.match(/\b([A-Z]{1,5})\b/)
+      symbol_match ? symbol_match[1] : nil
+    end
+
+    def extract_crypto_symbol(input)
+      crypto_symbols = %w[BTC ETH ADA SOL DOT LINK UNI AAVE MATIC AVAX]
+      input_upper = input.upcase
+      
+      crypto_symbols.find { |symbol| input_upper.include?(symbol) }
+    end
+
+    def extract_timeframe(input)
+      timeframes = { '1m' => '1 minute', '5m' => '5 minutes', '1h' => '1 hour', '1d' => '1 day', '1w' => '1 week' }
+      
+      timeframes.keys.find { |tf| input.downcase.include?(tf) }
+    end
+
+    def extract_strategy_type(input)
+      TRADING_STRATEGIES.find { |strategy| input.downcase.include?(strategy.gsub('_', ' ')) }
+    end
+
+    def analyze_specific_asset(symbol)
+      "**Analysis for #{symbol.upcase}:**\n" +
+      "- Current price trends and momentum\n" +
+      "- Trading volume and liquidity\n" +
+      "- Key support and resistance levels\n" +
+      "- Recent news and developments\n" +
+      "- Analyst ratings and price targets\n\n"
+    end
+
+    def analyze_general_market(input)
+      "**General Market Overview:**\n" +
+      "- Major market indices performance\n" +
+      "- Sector rotation and leadership\n" +
+      "- Economic indicators and data\n" +
+      "- Central bank policies and interest rates\n" +
+      "- Geopolitical events and market impact\n\n"
+    end
+
+    def generate_specific_strategy(strategy_type)
+      case strategy_type
+      when 'day_trading'
+        "**Day Trading Strategy:**\n" +
+        "- Trade within single trading session\n" +
+        "- Focus on high-volume, liquid stocks\n" +
+        "- Use technical analysis for entry/exit\n" +
+        "- Maintain strict risk management\n" +
+        "- Monitor market news throughout day\n\n"
+      when 'swing_trading'
+        "**Swing Trading Strategy:**\n" +
+        "- Hold positions for days to weeks\n" +
+        "- Identify trend reversals and continuations\n" +
+        "- Use combination of technical and fundamental analysis\n" +
+        "- Set wider stop-losses for volatility\n" +
+        "- Focus on stocks with clear catalysts\n\n"
+      else
+        "**#{strategy_type.humanize} Strategy:**\n" +
+        "- Research and implement proven methodologies\n" +
+        "- Adapt to current market conditions\n" +
+        "- Maintain consistent risk management\n" +
+        "- Monitor and adjust as needed\n\n"
+      end
+    end
+
+    def generate_general_strategies
+      "**Popular Trading Strategies:**\n\n" +
+      "1. **Trend Following:** Trade in direction of prevailing trend\n" +
+      "2. **Mean Reversion:** Buy oversold, sell overbought assets\n" +
+      "3. **Breakout Trading:** Trade momentum after key level breaks\n" +
+      "4. **Scalping:** Quick trades for small profits\n" +
+      "5. **Position Trading:** Long-term holds based on fundamentals\n\n"
+    end
+
+    def analyze_financial_news(input, context)
+      response = "**📰 FINANCIAL NEWS ANALYSIS**\n\n"
+      
+      response += "**Key News Categories to Monitor:**\n"
+      news_categories = [
+        "Earnings reports and guidance",
+        "Economic indicators (GDP, inflation, employment)",
+        "Central bank announcements and policy changes",
+        "Geopolitical events and trade developments",
+        "Industry-specific news and regulations",
+        "Company-specific announcements and events"
+      ]
+      
+      news_categories.each { |category| response += "- #{category}\n" }
+      
+      response += "\n**News Impact Assessment:**\n"
+      impact_factors = [
+        "Immediate market reaction and volatility",
+        "Sector-specific implications",
+        "Long-term trend changes",
+        "Currency and commodity effects",
+        "Options and derivatives activity",
+        "Institutional investor sentiment"
+      ]
+      
+      impact_factors.each { |factor| response += "- #{factor}\n" }
+      
+      response
+    end
+
+    def general_trading_advice(input, context)
+      response = "**💡 GENERAL TRADING ADVICE**\n\n"
+      
+      response += "**Trading Fundamentals:**\n"
+      fundamentals = [
+        "Develop a clear trading plan and stick to it",
+        "Never risk more than you can afford to lose",
+        "Use proper position sizing and risk management",
+        "Keep emotions in check - be disciplined",
+        "Continuously educate yourself about markets",
+        "Start with paper trading to practice"
+      ]
+      
+      fundamentals.each_with_index { |fundamental, idx| response += "#{idx + 1}. #{fundamental}\n" }
+      
+      response += "\n**Common Trading Mistakes to Avoid:**\n"
+      mistakes = [
+        "Trading without a plan",
+        "Revenge trading after losses",
+        "Overleveraging positions",
+        "Ignoring risk management",
+        "Following tips without research",
+        "FOMO (Fear of Missing Out) trading"
+      ]
+      
+      mistakes.each { |mistake| response += "- #{mistake}\n" }
+      
+      response += "\n**⚠️ Important Disclaimer:** Trading involves substantial risk. Past performance does not guarantee future results. Always consult with qualified financial professionals."
+      
+      response
+    end
+
+    # Placeholder classes for advanced features
+    class RiskManager
+      def initialize
+        # Risk management implementation
+      end
+    end
+
+    class PortfolioTracker  
+      def initialize
+        # Portfolio tracking implementation
+      end
+    end
+
+    class TechnicalIndicators
+      def initialize
+        # Technical indicators implementation
+      end
+    end
+  end
+end
     market_data = fetch_market_data
     localbitcoins_data = fetch_localbitcoins_data
     news_headlines = fetch_latest_news
