@@ -2,18 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="color-scheme" content="dark" />
-    <title>Play Bergen</title>
+    <title>Radio Bergen</title>
     <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Classic warp tunnel with multiple views. Tilt device for parallax."
-    />
+    <meta name="description" content="Classic warp tunnel with multiple views. Tilt device for parallax." />
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>"
@@ -24,9 +18,6 @@
         --safe-right: env(safe-area-inset-right, 0px);
         --safe-bottom: env(safe-area-inset-bottom, 0px);
         --safe-left: env(safe-area-inset-left, 0px);
-        /* Title sizing via CSS variable so container height stays in sync (prevents clipping) */
-        --title-size: clamp(32px, 4.6vw, 54px);
-        --title-line: 1.18; /* line-height multiplier */
       }
       html, body {
         margin: 0;
@@ -44,83 +35,53 @@
         display: block;
         background: #000;
         touch-action: none;
-        image-rendering: pixelated; /* crisp, retro-friendly when upscaled */
+        image-rendering: pixelated; /* crisp ImageData upscaling */
       }
       @keyframes start-ack { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
       canvas.start-ack { animation: start-ack 240ms ease-out; }
 
-      /* H1 carousel — refined: slightly smaller and never clipped */
+      /* H1 carousel (v17 sizing) */
       h1.city-carousel {
-        position: fixed;
-        top: calc(12px + var(--safe-top));
-        left: calc(12px + var(--safe-left));
-        width: min(96vw, 720px);
-        /* Height follows font size × line-height to avoid clipping */
-        height: calc(var(--title-size) * var(--title-line));
-        z-index: 95;
-        pointer-events: none;
-        user-select: none;
-        overflow: hidden; /* intentional to slide entries in/out cleanly */
-        margin: 0;
+        position: fixed; top: calc(12px + var(--safe-top)); left: calc(12px + var(--safe-left));
+        width: min(92vw, 560px); height: 40px; z-index: 95; pointer-events: none; user-select: none; overflow: hidden; margin: 0;
       }
       .carousel-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
       .carousel-slide {
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        font-weight: 700;
-        font-size: var(--title-size);
-        line-height: var(--title-line);
-        color: #dcdcdc;
-        letter-spacing: 0.02em;
-        transition: transform 0.24s ease, opacity 0.24s ease;
-        position: absolute;
-        top: 0; left: 0; width: 100%;
-        opacity: 0; transform: translateY(100%);
-        white-space: nowrap;
+        height: 100%; display: flex; align-items: center; justify-content: flex-start;
+        font-weight: 700; font-size: clamp(24px, 3.2vw, 36px); color: #dcdcdc; letter-spacing: 0.02em;
+        transition: transform 0.3s ease, opacity 0.3s ease; position: absolute; top: 0; left: 0; width: 100%;
+        opacity: 0; transform: translateY(100%); white-space: nowrap;
       }
       .carousel-slide.active { opacity: 1; transform: translateY(0%); }
 
-      /* Noise and vignette overlays (non-UI) */
-      .noise-layer, .vignette-layer { position: fixed; inset: 0; pointer-events: none; }
-      .noise-layer { z-index: 2; opacity: 0.04; background-repeat: repeat; }
-      .vignette-layer {
-        z-index: 3;
-        background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.25) 75%, rgba(0,0,0,0.55) 100%);
-        opacity: 0.55; transition: opacity 200ms linear;
-      }
-
-      /* STREAMING … — smaller, more spacing, ultra-minimal */
+      /* Bottom status (STREAMING stays still; only dots animate) */
       .ui {
         position: fixed;
-        right: calc(16px + var(--safe-right));
+        right: calc(12px + var(--safe-right));
         bottom: calc(10px + var(--safe-bottom));
         color: #dcdcdc;
         font: 9px/1.1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         text-transform: uppercase;
-        letter-spacing: 0.28em;           /* more space between letters */
+        letter-spacing: 0.28em;
         white-space: nowrap;
         pointer-events: none;
         user-select: none;
         text-align: right;
-        max-width: min(92vw, 800px);
+        max-width: min(72vw, 800px);
         overflow: hidden;
         text-overflow: ellipsis;
         z-index: 100;
-        opacity: 0.78;                    /* understated */
+        opacity: 0.78;
         background: #000;
-        padding: 0 1px;                   /* near-zero padding */
-        border-radius: 0;
+        padding: 0 1px;
       }
       .ui .label { margin-right: 4px; font-weight: 400; }
-      .ui .dots  { display: inline-block; min-width: 3ch; text-align: left; }
+      .ui .dots  { display: inline-block; width: 3ch; text-align: left; } /* fixed width to prevent label wiggle */
       .ui-inverted { color: #dcdcdc !important; }
 
-      /* Overlay (start) */
+      /* Darker overlay */
       .overlay {
-        position: fixed; inset: 0; display: grid; place-items: center;
-        background: rgba(0,0,0,0.86);
+        position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.86);
         color: #9aa; cursor: pointer; user-select: none; z-index: 1000; text-align: center; padding: 16px;
         opacity: 1; transition: opacity 180ms ease;
       }
@@ -129,105 +90,136 @@
       .overlay h2 { margin: 0 0 20px 0; font-size: 36px; font-weight: 300; color: #dcdcdc; transition: transform 180ms ease; }
       .overlay h2.clicked { transform: scale(1.06); }
 
-      /* Settings panel exists but is hidden unless S is pressed (keeps UI minimal) */
+      .swipe-hint {
+        position: fixed; bottom: calc(50px + var(--safe-bottom)); left: 50%; transform: translateX(-50%);
+        color: #9aa; font-size: 16px; opacity: 0; transition: opacity 0.5s ease; z-index: 99;
+      }
+      .swipe-hint.show { opacity: 1; }
+
       .settings-panel {
         position: fixed; right: calc(10px + var(--safe-right)); top: calc(60px + var(--safe-top));
-        width: min(92vw, 360px); max-height: min(72vh, 560px); overflow: auto; background: rgba(0,0,0,0.72);
+        width: min(92vw, 340px); max-height: min(70vh, 520px); overflow: auto; background: rgba(0,0,0,0.72);
         border: 1px solid rgba(220,220,220,0.12); backdrop-filter: blur(6px); color: #dcdcdc; border-radius: 10px; padding: 12px; z-index: 130; display: none;
       }
       .settings-panel.show { display: block; }
+      .settings-panel h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; }
       .settings-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin: 10px 0; }
+      .settings-row input[type="range"] { width: 100%; }
+      .settings-row .value { min-width: 48px; text-align: right; color: #9bb; }
+      .settings-row select, .settings-row input[type="checkbox"] { justify-self: start; }
 
-      /* Tap ripple micro-animation (very subtle) */
-      .tap-ripple {
-        position: fixed; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%;
-        pointer-events: none; transform: translate(-50%, -50%) scale(0.4); opacity: 0.8;
-        background: radial-gradient(circle, rgba(220,220,220,0.28) 0%, rgba(220,220,220,0.18) 40%, rgba(220,220,220,0) 70%);
-        mix-blend-mode: screen; filter: blur(0.2px); animation: ripple 720ms ease-out forwards; z-index: 999;
+      @media (pointer: coarse) {
+        .settings-row label { min-height: 44px; display: flex; align-items: center; }
+        .settings-row input[type="checkbox"] { width: 28px; height: 28px; }
+        .settings-row input[type="range"] { height: 44px; }
       }
-      @keyframes ripple {
-        0% { transform: translate(var(--x), var(--y)) scale(0.4); opacity: 0.8; }
-        60% { opacity: 0.25; }
-        100% { transform: translate(var(--x), var(--y)) scale(12); opacity: 0; }
-      }
-
       :focus-visible { outline: 2px solid #dcdcdc; outline-offset: 2px; }
       *, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }
+
       @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
       @media (max-width: 768px) {
-        :root { --title-size: clamp(28px, 6.0vw, 48px); --title-line: 1.16; }
-        h1.city-carousel { width: min(96vw, 700px); height: calc(var(--title-size) * var(--title-line)); }
+        h1.city-carousel { width: min(94vw, 520px); }
+        .carousel-slide { font-size: clamp(18px, 4vw, 28px); }
+      }
+
+      /* Tap ripple (subtle) */
+      .tap-ripple {
+        position: fixed; left: 0; top: 0;
+        width: 10px; height: 10px; border-radius: 50%;
+        pointer-events: none;
+        transform: translate(-50%, -50%) scale(0.4); opacity: 0.85;
+        background: radial-gradient(circle, rgba(220,220,220,0.35) 0%, rgba(220,220,220,0.18) 40%, rgba(220,220,220,0) 70%);
+        mix-blend-mode: screen; filter: blur(0.3px);
+        animation: ripple 680ms ease-out forwards;
+        z-index: 999;
+      }
+      @keyframes ripple {
+        0% { transform: translate(var(--x), var(--y)) scale(0.4); opacity: 0.85; }
+        60% { opacity: 0.3; }
+        100% { transform: translate(var(--x), var(--y)) scale(12); opacity: 0; }
       }
     </style>
   </head>
   <body>
     <noscript>
-      <div style="position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#dcdcdc;">Play Bergen requires JavaScript enabled.</div>
+      <div style="position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#dcdcdc;">Radio Bergen requires JavaScript enabled.</div>
     </noscript>
 
-    <!-- City carousel (radio → play) -->
     <h1 class="city-carousel" id="cityCarousel" aria-live="polite">
       <div class="carousel-container">
-        <span class="carousel-slide active">play.brgen.no</span>
-        <span class="carousel-slide">play.oslo.no</span>
-        <span class="carousel-slide">play.trndheim.no</span>
-        <span class="carousel-slide">play.stvanger.no</span>
-        <span class="carousel-slide">play.trmso.no</span>
-        <span class="carousel-slide">play.longyearbyn.no</span>
-        <span class="carousel-slide">play.reykjavk.is</span>
-        <span class="carousel-slide">play.kobenhvn.dk</span>
-        <span class="carousel-slide">play.stholm.se</span>
-        <span class="carousel-slide">play.gtebrg.se</span>
-        <span class="carousel-slide">play.mlmoe.se</span>
-        <span class="carousel-slide">play.hlsinki.fi</span>
-        <span class="carousel-slide">play.lndon.uk</span>
-        <span class="carousel-slide">play.cardff.uk</span>
-        <span class="carousel-slide">play.mnchester.uk</span>
-        <span class="carousel-slide">play.brmingham.uk</span>
-        <span class="carousel-slide">play.lverpool.uk</span>
-        <span class="carousel-slide">play.edinbrgh.uk</span>
-        <span class="carousel-slide">play.glasgw.uk</span>
-        <span class="carousel-slide">play.amstrdam.nl</span>
-        <span class="carousel-slide">play.rottrdam.nl</span>
-        <span class="carousel-slide">play.utrcht.nl</span>
-        <span class="carousel-slide">play.brssels.be</span>
-        <span class="carousel-slide">play.zrich.ch</span>
-        <span class="carousel-slide">play.lchtenstein.li</span>
-        <span class="carousel-slide">play.frankfrt.de</span>
-        <span class="carousel-slide">play.wrsawa.pl</span>
-        <span class="carousel-slide">play.gdnsk.pl</span>
-        <span class="carousel-slide">play.brdeaux.fr</span>
-        <span class="carousel-slide">play.mrseille.fr</span>
-        <span class="carousel-slide">play.mlan.it</span>
-        <span class="carousel-slide">play.lsbon.pt</span>
-        <span class="carousel-slide">play.lsangeles.com</span>
-        <span class="carousel-slide">play.newyrk.us</span>
-        <span class="carousel-slide">play.chcago.us</span>
-        <span class="carousel-slide">play.houstn.us</span>
-        <span class="carousel-slide">play.dllas.us</span>
-        <span class="carousel-slide">play.austn.us</span>
-        <span class="carousel-slide">play.prtland.com</span>
-        <span class="carousel-slide">play.mnneapolis.com</span>
+        <span class="carousel-slide active">brgen.no</span>
+        <span class="carousel-slide">oshlo.no</span>
+        <span class="carousel-slide">trndheim.no</span>
+        <span class="carousel-slide">stvanger.no</span>
+        <span class="carousel-slide">trmso.no</span>
+        <span class="carousel-slide">longyearbyn.no</span>
+        <span class="carousel-slide">reykjavk.is</span>
+        <span class="carousel-slide">kobenhvn.dk</span>
+        <span class="carousel-slide">stholm.se</span>
+        <span class="carousel-slide">gtebrg.se</span>
+        <span class="carousel-slide">mlmoe.se</span>
+        <span class="carousel-slide">hlsinki.fi</span>
+        <span class="carousel-slide">lndon.uk</span>
+        <span class="carousel-slide">cardff.uk</span>
+        <span class="carousel-slide">mnchester.uk</span>
+        <span class="carousel-slide">brmingham.uk</span>
+        <span class="carousel-slide">lverpool.uk</span>
+        <span class="carousel-slide">edinbrgh.uk</span>
+        <span class="carousel-slide">glasgw.uk</span>
+        <span class="carousel-slide">amstrdam.nl</span>
+        <span class="carousel-slide">rottrdam.nl</span>
+        <span class="carousel-slide">utrcht.nl</span>
+        <span class="carousel-slide">brssels.be</span>
+        <span class="carousel-slide">zrich.ch</span>
+        <span class="carousel-slide">lchtenstein.li</span>
+        <span class="carousel-slide">frankfrt.de</span>
+        <span class="carousel-slide">wrsawa.pl</span>
+        <span class="carousel-slide">gdnsk.pl</span>
+        <span class="carousel-slide">brdeaux.fr</span>
+        <span class="carousel-slide">mrseille.fr</span>
+        <span class="carousel-slide">mlan.it</span>
+        <span class="carousel-slide">lsbon.pt</span>
+        <span class="carousel-slide">lsangeles.com</span>
+        <span class="carousel-slide">newyrk.us</span>
+        <span class="carousel-slide">chcago.us</span>
+        <span class="carousel-slide">houstn.us</span>
+        <span class="carousel-slide">dllas.us</span>
+        <span class="carousel-slide">austn.us</span>
+        <span class="carousel-slide">prtland.com</span>
+        <span class="carousel-slide">mnneapolis.com</span>
       </div>
     </h1>
 
-    <canvas id="canvas" aria-label="Warp tunnel visualizer" tabindex="0"></canvas>
-    <div class="noise-layer" id="noiseLayer"></div>
-    <div class="vignette-layer" id="vignetteLayer"></div>
+    <canvas id="canvas" aria-label="Classic warp tunnel visualizer" tabindex="0"></canvas>
 
-    <!-- Minimal overlay -->
+    <!-- Overlay (instructions carousel removed) -->
     <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" aria-modal="true" tabindex="0">
-      <div><h2 id="start-title">Tap to start</h2></div>
+      <div>
+        <h2 id="start-title">Tap to start</h2>
+      </div>
     </div>
 
-    <!-- Bottom status (tiny, spaced) -->
+    <!-- Bottom status (STREAMING fixed) -->
     <div class="ui" id="ui" role="status" aria-live="off" aria-atomic="true">
       <span class="label">Streaming</span><span class="dots" id="uiDots" aria-hidden="true"></span>
     </div>
 
-    <!-- Hidden players -->
+    <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
+
+    <!-- YouTube IFrame API target (hidden, for audio only) -->
     <div id="yt-player" aria-hidden="true" role="none" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></div>
-    <iframe id="player-fallback" src="about:blank" title="YouTube audio player (hidden)" aria-hidden="true" tabindex="-1" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></iframe>
+    <!-- Fallback iframe (if API blocked) -->
+    <iframe
+      id="player-fallback"
+      src="about:blank"
+      title="YouTube audio player (hidden)"
+      aria-hidden="true"
+      tabindex="-1"
+      frameborder="0"
+      allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen"
+      allowfullscreen
+      style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"
+    ></iframe>
 
     <script src="https://www.youtube.com/iframe_api"></script>
 
@@ -235,80 +227,14 @@
       "use strict";
 
       const DEBUG = false;
-      const warn = (...a) => { if (DEBUG) try { console.warn(...a); } catch {} };
+      const warn = (...args) => { if (DEBUG) { try { console.warn(...args); } catch {} } };
 
       const DPR = Math.min(2, window.devicePixelRatio || 1);
       const isLowEnd =
         (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) ||
         (navigator.deviceMemory && navigator.deviceMemory <= 2);
 
-      const DEFAULTS = {
-        mode: "experimental",   // classic (frozen) or experimental (default)
-        speed: 1.15,            // faster default
-        reducedMotion: false
-      };
-
-      function loadSettings() {
-        try { const raw = localStorage.getItem("rb_settings"); return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : { ...DEFAULTS }; }
-        catch { return { ...DEFAULTS }; }
-      }
-      function saveSettings(s){ try { localStorage.setItem("rb_settings", JSON.stringify(s)); } catch {} }
-      let settings = loadSettings();
-
-      function motionScale(){
-        const prefers = typeof matchMedia==="function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-        return (settings.reducedMotion || prefers) ? 0.35 : 1;
-      }
-
-      // Settings (hidden unless S)
-      const settingsPanel = document.createElement("div");
-      settingsPanel.id = "settingsPanel";
-      settingsPanel.className = "settings-panel";
-      settingsPanel.setAttribute("role","dialog");
-      settingsPanel.setAttribute("aria-modal","false");
-      settingsPanel.setAttribute("aria-label","Settings");
-      settingsPanel.innerHTML = `
-        <h3>Settings</h3>
-        <div class="settings-row">
-          <label for="rendererMode">Renderer mode</label>
-          <select id="rendererMode">
-            <option value="experimental">Experimental (default)</option>
-            <option value="classic">Classic (frozen)</option>
-          </select>
-        </div>
-        <div class="settings-row">
-          <label for="speedRange">Speed</label>
-          <div>
-            <input id="speedRange" type="range" min="0.6" max="2.0" step="0.01" />
-            <span class="value" id="speedValue"></span>
-          </div>
-        </div>
-        <div class="settings-row">
-          <label for="reducedMotion">Reduced motion</label>
-          <input id="reducedMotion" type="checkbox" />
-        </div>
-      `;
-      document.body.appendChild(settingsPanel);
-      const modeEl = settingsPanel.querySelector("#rendererMode");
-      const speedEl = settingsPanel.querySelector("#speedRange");
-      const speedVal = settingsPanel.querySelector("#speedValue");
-      const reducedEl = settingsPanel.querySelector("#reducedMotion");
-      function syncSettingsUI(){
-        modeEl.value = settings.mode;
-        speedEl.value = String(settings.speed);
-        speedVal.textContent = settings.speed.toFixed(2) + "×";
-        reducedEl.checked = !!settings.reducedMotion;
-      }
-      function broadcastSettings(){
-        saveSettings(settings);
-        if (window.tunnelRenderer?.applySettings) window.tunnelRenderer.applySettings(settings);
-      }
-      syncSettingsUI();
-      modeEl.addEventListener("change", ()=>{ settings.mode = modeEl.value==="classic" ? "classic" : "experimental"; saveSettings(settings); swapRenderer(settings.mode); });
-      speedEl.addEventListener("input", ()=>{ settings.speed = parseFloat(speedEl.value)||1.0; speedVal.textContent = settings.speed.toFixed(2) + "×"; broadcastSettings(); });
-      reducedEl.addEventListener("change", ()=>{ settings.reducedMotion = !!reducedEl.checked; broadcastSettings(); });
-
-      // Tiny Streaming dots animation: none, ., .., ..., ., .., ...
+      // STREAMING dots animation (only dots move)
       (function dots(){
         const el = document.getElementById("uiDots"); if(!el) return;
         const seq = [0,1,2,3,1,2,3]; let i=0;
@@ -316,17 +242,66 @@
         tick(); try{ clearInterval(window.__RB_DOTS_IV); }catch{} window.__RB_DOTS_IV = setInterval(tick, 600);
       })();
 
-      // Tiled micro-noise
-      (function buildNoise(){
-        const el = document.getElementById("noiseLayer"); if(!el) return;
-        const c = document.createElement("canvas"); const s=64; c.width=s; c.height=s;
-        const ctx = c.getContext("2d", { willReadFrequently:true });
-        const img = ctx.createImageData(s,s); const d = img.data;
-        for(let i=0;i<d.length;i+=4){ const v = 200 + ((Math.random()*55)|0); d[i]=v; d[i+1]=v; d[i+2]=v; d[i+3]=20; }
-        ctx.putImageData(img,0,0); try{ el.style.backgroundImage = `url(${c.toDataURL("image/png")})`; }catch{}
-      })();
+      const DEFAULTS = { reducedMotion: false };
 
-      // Playlist (curated)
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem("rb_settings");
+          if (!raw) return { ...DEFAULTS };
+          const parsed = JSON.parse(raw);
+          return { ...DEFAULTS, ...parsed };
+        } catch { return { ...DEFAULTS }; }
+      }
+      function saveSettings(s) { try { localStorage.setItem("rb_settings", JSON.stringify(s)); } catch {} }
+
+      let settings = loadSettings();
+
+      function motionScale() {
+        const prefersReduced =
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        return (settings.reducedMotion || prefersReduced) ? 0.35 : 1;
+      }
+
+      // Settings panel (minimal; original v17 behavior)
+      const settingsPanel = document.createElement("div");
+      settingsPanel.id = "settingsPanel";
+      settingsPanel.className = "settings-panel";
+      settingsPanel.setAttribute("role", "dialog");
+      settingsPanel.setAttribute("aria-modal", "false");
+      settingsPanel.setAttribute("aria-label", "Settings");
+      settingsPanel.innerHTML = `
+        <h3>Settings</h3>
+        <div class="settings-row">
+          <label for="reducedMotion">Reduced motion</label>
+          <input id="reducedMotion" type="checkbox" />
+        </div>
+      `;
+      document.body.appendChild(settingsPanel);
+      const reducedMotionEl = settingsPanel.querySelector("#reducedMotion");
+      function applySettingsToUI() { reducedMotionEl.checked = settings.reducedMotion; }
+      applySettingsToUI();
+      function broadcastSettings() {
+        saveSettings(settings);
+        if (rendererWorker) {
+          rendererWorker.postMessage({ type: "settings", settings });
+        } else if (window.tunnelRenderer && window.tunnelRenderer.applySettings) {
+          window.tunnelRenderer.applySettings(settings);
+        }
+      }
+      reducedMotionEl.addEventListener("change", () => { settings.reducedMotion = !!reducedMotionEl.checked; broadcastSettings(); });
+
+      class SimpleCarousel {
+        constructor(element, interval = 2800) {
+          this.slides = Array.from(element.querySelectorAll(".carousel-slide"));
+          this.i = 0; this.n = this.slides.length;
+          if (this.n > 1) this.t = setInterval(() => this.next(), interval);
+        }
+        next() { this.slides[this.i].classList.remove("active"); this.i = (this.i + 1) % this.n; this.slides[this.i].classList.add("active"); }
+      }
+      new SimpleCarousel(document.getElementById("cityCarousel"));
+
+      // PLAYLIST_START (curated)
       const YOUTUBE_TRACKS = [
         { artist: "J Dilla", title: "Microphone Master", id: "9EGHwkDix78" },
         { artist: "J Dilla", title: "In Space", id: "vO2nWXCVt6o" },
@@ -350,348 +325,490 @@
         { artist: "Slum Village", title: "Worlds Full of Sadness", id: "MU3nfxsz2XA" },
         { artist: "Bob Marley", title: "Forever Loving Jah", id: "WFCh0Ycjd4Q" }
       ];
+      // PLAYLIST_END
 
       const YT_ORIGIN = "https://www.youtube.com";
       class AudioEngine {
-        constructor(){
-          this.apiReady=false; this.player=null; this.fallbackIframe=document.getElementById("player-fallback");
-          this.started=false; this.muted=true; this.volume=100; this.trackIndex=0; this.tracks=[...YOUTUBE_TRACKS];
-          this._advanceTimer=null; this._loadTimeout=null; this._fadeTimer=null; this._fadeInterval=null;
-          this.beatPhase=0; this.energyLevel=0.5; this.TRACK_MS=90_000; this.FADE_MS=3_000;
+        constructor() {
+          this.apiReady = false; this.player = null; this.fallbackIframe = document.getElementById("player-fallback");
+          this.started = false; this.muted = true; this.trackIndex = 0; this.tracks = [...YOUTUBE_TRACKS];
+          this._advanceTimer = null; this._loadTimeout = null; this.beatPhase = 0; this.energyLevel = 0.5;
         }
-        initAPI(){
-          try{
+        initAPI() {
+          try {
             this.player = new YT.Player("yt-player", {
-              width:"1", height:"1",
-              playerVars:{ autoplay:1, controls:0, disablekb:1, fs:0, iv_load_policy:3, modestbranding:1, rel:0, playsinline:1, origin:location.origin },
-              events:{ onReady:()=>this.onReady(), onStateChange:(e)=>this.onStateChange(e), onError:()=>this.onError() }
-            });
-            this.apiReady=true;
-          }catch{ this.apiReady=false; }
+              width: "1", height: "1",
+              playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0, playsinline: 1, origin: location.origin },
+              events: { onReady: () => this.onReady(), onStateChange: (e) => this.onStateChange(e), onError: () => this.onError() }
+            }); this.apiReady = true;
+          } catch { this.apiReady = false; }
         }
-        onReady(){ try{ this.player.unMute(); this.muted=false; this.setVolume(100);}catch{} if(this.started) this.loadAndPlay(this.tracks[this.trackIndex]); }
-        onStateChange(e){ const S=YT.PlayerState; if(e.data===S.ENDED) this.next(); else if(e.data===S.PLAYING){ clearTimeout(this._loadTimeout); } }
-        onError(){ this._clearTimers(); this.next(); }
-        start(){ this.started=true; this.loadAndPlay(this.tracks[this.trackIndex]); }
-        setVolume(v){
-          this.volume=Math.max(0,Math.min(100,v|0));
-          try{
-            if(this.apiReady && this.player?.setVolume) this.player.setVolume(this.volume);
-            else if(this.fallbackIframe?.contentWindow) this.fallbackIframe.contentWindow.postMessage({event:"command",func:"setVolume",args:[this.volume]}, YT_ORIGIN);
-          }catch{}
+        onReady() { try { this.player.unMute(); this.muted = false; } catch {}; if (this.started) this.loadAndPlay(this.tracks[this.trackIndex]); }
+        onStateChange(e) {
+          const S = YT.PlayerState;
+          if (e.data === S.ENDED) this.next();
+          else if (e.data === S.PLAYING) { clearTimeout(this._loadTimeout); }
         }
-        _scheduleDurations(){ this._clearTimers(); this._fadeTimer=setTimeout(()=>this._fadeOut(this.FADE_MS), Math.max(0,this.TRACK_MS-this.FADE_MS)); this._advanceTimer=setTimeout(()=>this.next(true), this.TRACK_MS); }
-        _fadeOut(ms=2000){ if(this.muted) return; const steps=10, stepMs=Math.max(30,Math.floor(ms/steps)); const start=this.volume; let n=0; clearInterval(this._fadeInterval);
-          this._fadeInterval=setInterval(()=>{ n++; this.setVolume(Math.max(0, Math.round(start*(1-n/steps)))); if(n>=steps) clearInterval(this._fadeInterval); }, stepMs);
+        onError() {
+          clearTimeout(this._loadTimeout);
+          try { navigator.vibrate?.([8, 40, 8]); } catch {}
+          this.next();
         }
-        _clearTimers(){ clearTimeout(this._advanceTimer); this._advanceTimer=null; clearTimeout(this._loadTimeout); this._loadTimeout=null; clearTimeout(this._fadeTimer); this._fadeTimer=null; clearInterval(this._fadeInterval); this._fadeInterval=null; }
-        loadAndPlay(track){
-          const id=track.id; this._clearTimers(); this.setVolume(100);
-          try{ this.player?.unMute?.(); this.muted=false; }catch{}
-          if(this.apiReady && this.player?.loadVideoById){
-            try{ this.player.loadVideoById({videoId:id,startSeconds:0,suggestedQuality:"small"}); this._scheduleDurations(); this._loadTimeout=setTimeout(()=>{this.next();},7000); return; }catch{}
+        start() { this.started = true; this.loadAndPlay(this.tracks[this.trackIndex]); }
+        loadAndPlay(track) {
+          const id = track.id; clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout);
+          if (this.apiReady && this.player && this.player.loadVideoById) {
+            try {
+              this.player.loadVideoById({ videoId: id, startSeconds: 0, suggestedQuality: "small" });
+              try { this.player.unMute(); this.muted = false; } catch {}
+              this.afterStart();
+              this._loadTimeout = setTimeout(() => { this.next(); }, 7000);
+              return;
+            } catch {}
           }
-          const src = "https://www.youtube.com/embed/"+id+"?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute="+(this.muted?1:0)+"&enablejsapi=1&origin="+encodeURIComponent(location.origin);
+          const src = "https://www.youtube.com/embed/" + id + "?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=" + (this.muted ? 1 : 0) + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
           this.fallbackIframe.src = src;
           this.fallbackIframe.onload = () => {
-            clearTimeout(this._loadTimeout);
-            setTimeout(()=>{ try{ this.fallbackIframe.contentWindow.postMessage({event:"command",func:"unMute",args:[]}, YT_ORIGIN); this.muted=false; this.setVolume(100); }catch{} }, 800);
-            this._scheduleDurations();
+            clearTimeout(this._loadTimeout); this.afterStart();
+            setTimeout(() => {
+              try {
+                this.fallbackIframe.contentWindow.postMessage({ event: "command", func: "unMute", args: [] }, YT_ORIGIN);
+                this.muted = false;
+              } catch {}
+            }, 800);
           };
-          this._loadTimeout = setTimeout(()=>{ this.next(); }, 7000);
+          this._loadTimeout = setTimeout(() => { this.next(); }, 7000);
         }
-        next(fromTimer=false){ this._clearTimers(); this.trackIndex=(this.trackIndex+1)%this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); try{ if(!fromTimer) navigator.vibrate?.(10);}catch{} }
-        prev(){ this._clearTimers(); this.trackIndex=(this.trackIndex-1+this.tracks.length)%this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); try{ navigator.vibrate?.(10);}catch{} }
-        toggleMute(){ this.muted=!this.muted; try{ if(this.apiReady && this.player){ if(this.muted) this.player.mute(); else this.player.unMute(); } else { const cmd=this.muted?"mute":"unMute"; this.fallbackIframe.contentWindow.postMessage({event:"command",func:cmd,args:[]}, YT_ORIGIN); } }catch{} }
-        data(){
+        afterStart() { clearTimeout(this._advanceTimer); this._advanceTimer = setTimeout(() => this.next(), 180000); }
+        next() { clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout); this.trackIndex = (this.trackIndex + 1) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); try { navigator.vibrate?.(10); } catch {} }
+        prev() { clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout); this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); try { navigator.vibrate?.(10); } catch {} }
+        toggleMute() {
+          this.muted = !this.muted;
+          try {
+            if (this.apiReady && this.player) { if (this.muted) this.player.mute(); else this.player.unMute(); }
+            else {
+              const cmd = this.muted ? "mute" : "unMute";
+              this.fallbackIframe.contentWindow.postMessage({ event: "command", func: cmd, args: [] }, YT_ORIGIN);
+            }
+          } catch {}
+          try { navigator.vibrate?.(6); } catch {}
+        }
+        trackLabel() { const t = this.tracks[this.trackIndex]; return t.artist + " — " + t.title; }
+        data() {
           const ms = motionScale();
           this.beatPhase += 0.08 * ms;
           this.energyLevel = this.energyLevel*0.999 + Math.random()*0.001;
-          const bass=0.5+0.4*Math.sin(this.beatPhase*0.8);
-          const mid =0.45+0.35*Math.sin(this.beatPhase*1.2+0.7);
-          const high=0.35+0.35*Math.sin(this.beatPhase*1.8+1.2);
-          const avg=(bass+mid+high)/3;
+          const bass = 0.5 + 0.4 * Math.sin(this.beatPhase * 0.8);
+          const mid  = 0.45 + 0.35 * Math.sin(this.beatPhase * 1.2 + 0.7);
+          const high = 0.35 + 0.35 * Math.sin(this.beatPhase * 1.8 + 1.2);
+          const avg = (bass + mid + high) / 3;
           const beatRaw = Math.sin(this.beatPhase) > 0.8 ? 1 : 0;
-          this._beatEnv = (this._beatEnv||0) + (beatRaw - (this._beatEnv||0)) * (beatRaw ? 0.4 : 0.06);
-          return { bass, mid, high, average: avg, beat: this._beatEnv, energy: this.energyLevel };
+          this._beatEnv = (this._beatEnv || 0) + (beatRaw - (this._beatEnv || 0)) * (beatRaw ? 0.4 : 0.06);
+          const beat = this._beatEnv;
+          return { bass, mid, high, average: avg, beat, energy: this.energyLevel };
         }
       }
       let audio = new AudioEngine();
-      window.onYouTubeIframeAPIReady = function(){ audio.initAPI(); };
+      window.onYouTubeIframeAPIReady = function () { audio.initAPI(); };
 
-      // Renderers: Classic (frozen) and Experimental (polished)
+      // Renderer: Original v17 geometry (centers array), worker-first with main-thread fallback
       const canvas = document.getElementById("canvas");
-      const ctx2d  = canvas.getContext("2d", { alpha:false, willReadFrequently:true }) || canvas.getContext("2d");
-      let INTERNAL_SCALE=1, w=0, h=0;
+      const canOffscreen = !!HTMLCanvasElement.prototype.transferControlToOffscreen && typeof Worker !== "undefined";
+      let rendererWorker = null, workerInitialized = false;
+      let INTERNAL_SCALE = 1, w = 0, h = 0;
 
-      function applyInternalScale(base=(isLowEnd?0.75:1)){ INTERNAL_SCALE = base * Math.min(2, DPR); }
+      function applyInternalScale(baseQuality = (isLowEnd ? 0.75 : 1)) { INTERNAL_SCALE = baseQuality * Math.min(2, DPR); }
 
-      class PixelTunnelClassic {
-        constructor(ctx){
-          this.ctx=ctx; this.w=0; this.h=0; this.s=1;
-          this.imageData=null; this.data=null;
-          this.fov=250; this.speed=0.75; this.speedMult=settings.speed||1;
-          this.segments=64; this.baseRadius=75; this.zStep=4;
-          this.particles=[]; this.centers=[]; this.time=0;
-          this.mouse={x:0,y:0,down:false,active:false}; this.ori={active:false,beta:0,gamma:0};
-          this.invertValue=0;
-        }
-        applySettings(s){ this.speedMult = s?.speed || 1; }
-        resize(w,h,s){
-          this.w=w; this.h=h; this.s=s;
-          this.ctx.fillStyle="#000"; this.ctx.fillRect(0,0,w,h);
-          this.imageData=this.ctx.getImageData(0,0,w,h); this.data=this.imageData.data; this.init();
-        }
-        clear(){ const d=this.data; for(let i=0;i<d.length;i+=4){ d[i]=0; d[i+1]=0; d[i+2]=0; d[i+3]=255; } }
-        setPixel(x,y,r,g,b,a){ if(x<=0||x>=this.w||y<=0||y>=this.h)return; const i=(x+y*this.imageData.width)*4; this.data[i]=r; this.data[i+1]=g; this.data[i+2]=b; this.data[i+3]=a; }
-        line(x1,y1,x2,y2,r,g,b,a){ let dx=Math.abs(x2-x1), dy=Math.abs(y2-y1), sx=x1<x2?1:-1, sy=y1<y2?1:-1, err=dx-dy, lx=x1, ly=y1;
-          for(;;){ if(lx>0&&lx<this.w&&ly>0&&ly<this.h) this.setPixel(lx,ly,r,g,b,a); if(lx===x2&&ly===y2) break; const e2=2*err; if(e2>-dx){ err-=dy; lx+=sx; } if(e2<dx){ err+=dx; ly+=sy; } }
-        }
-        circlePos(cx,cy,radius,i,segs){ const a = i*((Math.PI*2)/segs)+this.time; return { x: cx+Math.cos(a)*radius, y: cy+Math.sin(a)*radius }; }
-        addP(x,y,z,idx){ return { x,y,z,x2d:0,y2d:0,radius:this.baseRadius,radiusAudio:this.baseRadius,index:0,segments:this.segments,centerX:0,centerY:0,audioIndex:idx }; }
-        init(){
-          this.particles=[]; this.centers=[];
-          const w1=Math.random()*(this.w/1), h1=Math.random()*(this.h/1); let c=0;
-          for(let z=-this.fov; z<this.fov; z+=this.zStep){
-            const coords=[]; for(let i=0;i<this.segments;i++){ const p=this.circlePos(0,0,this.baseRadius,i,this.segments); coords.push({x:p.x,y:p.y,index:i,radius:this.baseRadius,segments:this.segments,centerX:0,centerY:0}); }
-            const center={ x:(((this.w/2)-w1)*(c/15))+this.w/2, y:(((this.h/2)-h1)*(c/15))+this.h/2 }; c++; this.centers.push(center);
-            const row=[]; let idx=8+Math.floor(Math.random()*1024);
-            for(let i=0;i<coords.length;i++){ const co=coords[i]; const p=this.addP(co.x,co.y,z,idx); p.index=co.index; p.radius=co.radius; p.radiusAudio=p.radius; p.segments=co.segments; p.centerX=co.centerX; p.centerY=co.centerY; row.push(p);
-              if(i<coords.length/2) idx++; else idx--; if(idx>1024) idx=8; if(idx<8) idx=1024; }
-            this.particles.push(row);
+      // Main-thread fallback (original)
+      (function setupFallbackRenderer() {
+        class PixelTunnel {
+          constructor(ctx) {
+            this.ctx = ctx;
+            this.w = 0; this.h = 0; this.s = 1;
+            this.imageData = null; this.data = null;
+            this.fov = 250;
+            this.speed = 0.75;
+            this.segments = 64;
+            this.baseRadius = 75;
+            this.zStep = 4;
+            this.particles = [];
+            this.centers = [];
+            this.time = 0;
+            this.mouse = { x: 0, y: 0, down: false, active: false };
+            this.ori = { active: false, beta: 0, gamma: 0 };
+            this.invertValue = 0;
           }
-        }
-        color(i,l){ const v=Math.max(0,Math.min(255,Math.round((i/l)*200))); return { r:0,g:(v>>1),b:v,a:255 }; }
-        invert(v){ const d=this.data; for(let j=0;j<d.length;j+=4){ d[j]=Math.abs(v-d[j]); d[j+1]=Math.abs(v-d[j+1]); d[j+2]=Math.abs(v-d[j+2]); d[j+3]=255; } }
-        frame(audioData){
-          const ms=motionScale(); this.clear();
-          const l=this.particles.length; let sort=false;
-          for(let i=0;i<l;i++){
-            const row=this.particles[i]; const back = i>0?this.particles[i-1]:null; const center=this.centers[i];
-            if(this.mouse.active){
-              center.x = (((this.w/2)-(this.mouse.x/this.s))*((row[0].z - this.fov)/500)) + this.w/2;
-              center.y = (((this.h/2)-(this.mouse.y/this.s))*((row[0].z - this.fov)/500)) + this.h/2;
-            } else if (this.ori.active){
-              const mx = -this.ori.gamma*(this.w/180), my=-this.ori.beta*(this.h/180);
-              center.x = (this.w/2) + mx*((row[0].z - this.fov)/500);
-              center.y = (this.h/2) + my*((row[0].z - this.fov)/500);
-            } else { center.x+=((this.w/2)-center.x)*0.015; center.y+=((this.h/2)-center.y)*0.015; }
-            for(let j=0;j<row.length;j++){
-              const p=row[j]; const scale=this.fov/(this.fov + p.z);
-              p.x2d=(p.x*scale)+center.x; p.y2d=(p.y*scale)+center.y;
-              const add=((audioData?.average||0)*64)+((audioData?.beat?1:0)*8); p.radiusAudio=p.radius+add;
-              if (this.mouse.down){ p.z += (this.speed* this.speedMult) * ms; if(p.z>this.fov){ p.z -= this.fov*2; sort=true; } }
-              else { p.z -= (this.speed* this.speedMult) * ms; if(p.z<-this.fov){ p.z += this.fov*2; sort=true; } }
-              const c=this.circlePos(p.centerX,p.centerY,p.radiusAudio,p.index,p.segments); p.x=c.x; p.y=c.y;
+          resize(w, h, s) {
+            this.w = w; this.h = h; this.s = s;
+            this.ctx.fillStyle = "#000"; this.ctx.fillRect(0, 0, w, h);
+            this.imageData = this.ctx.getImageData(0, 0, w, h);
+            this.data = this.imageData.data;
+            this.init();
+          }
+          applySettings(s) { /* original geometry fixed */ }
+          clearImageData() {
+            const d = this.data;
+            for (let i = 0, l = d.length; i < l; i += 4) { d[i]=0; d[i+1]=0; d[i+2]=0; d[i+3]=255; }
+          }
+          setPixel(x, y, r, g, b, a) {
+            if (x <= 0 || x >= this.w || y <= 0 || y >= this.h) return;
+            const i = (x + y * this.imageData.width) * 4;
+            this.data[i]=r; this.data[i+1]=g; this.data[i+2]=b; this.data[i+3]=a;
+          }
+          drawLine(x1, y1, x2, y2, r, g, b, a) {
+            let dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
+            let sx = (x1 < x2) ? 1 : -1, sy = (y1 < y2) ? 1 : -1;
+            let err = dx - dy, lx = x1, ly = y1;
+            for (;;) {
+              if (lx > 0 && lx < this.w && ly > 0 && ly < this.h) this.setPixel(lx, ly, r, g, b, a);
+              if (lx === x2 && ly === y2) break;
+              const e2 = 2 * err;
+              if (e2 > -dy) { err -= dy; lx += sx; }
+              if (e2 < dx)  { err += dx; ly += sy; }
             }
-            const col=this.color(i,l);
-            for(let j=1;j<row.length;j++){ const p=row[j], prev=row[j-1]; this.line(p.x2d|0,p.y2d|0,prev.x2d|0,prev.y2d|0,col.r,col.g,col.b,col.a); }
-            if(row.length>2){ const f=row[0], lst=row[row.length-1]; this.line(lst.x2d|0,lst.y2d|0,f.x2d|0,f.y2d|0,col.r,col.g,col.b,col.a); }
-            if(i>0 && i<l-1 && back){ for(let j=0;j<row.length;j++){ const p=row[j]; const pb=(j===0)?back[back.length-1]:back[j-1]; this.line(p.x2d|0,p.y2d|0,pb.x2d|0,pb.y2d|0,col.r,col.g,col.b,col.a); } }
           }
-          if(sort){ this.particles = this.particles.sort((a,b)=>(b[0].z-a[0].z)); }
-          this.time += (this.mouse.down?-0.005:0.005)*ms;
-          if(this.mouse.down){ this.invertValue=Math.min(255,this.invertValue+5); this.invert(this.invertValue); }
-          else { this.invertValue=Math.max(0,this.invertValue-5); if(this.invertValue>0) this.invert(this.invertValue); }
-          this.ctx.putImageData(this.imageData,0,0);
-        }
-      }
+          getCirclePos(cx, cy, radius, index, segments) {
+            const angle = index * ((Math.PI * 2) / segments) + this.time;
+            return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius };
+          }
+          addParticle(x, y, z, audioIndex) {
+            return { x, y, z, x2d: 0, y2d: 0, radius: this.baseRadius, radiusAudio: this.baseRadius, index: 0, segments: this.segments, centerX: 0, centerY: 0, audioIndex };
+          }
+          init() {
+            this.particles = []; this.centers = [];
+            const w1 = Math.random() * (this.w / 1);
+            const h1 = Math.random() * (this.h / 1);
+            let c = 0;
+            for (let z = -this.fov; z < this.fov; z += this.zStep) {
+              const coords = [];
+              for (let i = 0; i < this.segments; i++) {
+                const p = this.getCirclePos(0, 0, this.baseRadius, i, this.segments);
+                coords.push({ x: p.x, y: p.y, index: i, radius: this.baseRadius, segments: this.segments, centerX: 0, centerY: 0 });
+              }
+              const center = { x: ((this.w / 2) - w1) * (c / 15) + this.w / 2, y: ((this.h / 2) - h1) * (c / 15) + this.h / 2 };
+              c++;
+              this.centers.push(center);
+              const row = [];
+              let audioIndex = 8 + Math.floor(Math.random() * 1024);
+              for (let i = 0; i < coords.length; i++) {
+                const co = coords[i];
+                const p = this.addParticle(co.x, co.y, z, audioIndex);
+                p.index = co.index; p.radius = co.radius; p.radiusAudio = p.radius; p.segments = co.segments; p.centerX = co.centerX; p.centerY = co.centerY;
+                row.push(p);
+                if (i < coords.length / 2) audioIndex++; else audioIndex--;
+                if (audioIndex > 1024) audioIndex = 8; if (audioIndex < 8) audioIndex = 1024;
+              }
+              this.particles.push(row);
+            }
+          }
+          softInvert(value) {
+            const d = this.data;
+            for (let j = 0, n = d.length; j < n; j += 4) {
+              d[j] = Math.abs(value - d[j]);
+              d[j+1] = Math.abs(value - d[j+1]);
+              d[j+2] = Math.abs(value - d[j+2]);
+              d[j+3] = 255;
+            }
+          }
+          frame(audioData) {
+            const ms = motionScale();
+            this.clearImageData();
 
-      class PixelTunnelExperimental {
-        constructor(ctx){
-          this.ctx=ctx; this.w=0; this.h=0; this.s=1;
-          this.imageData=null; this.data=null;
-          this.fov=250; this.speed=0.75; this.speedMult=settings.speed||1;
-          this.segments=64; this.baseRadius=75; this.zStep=4;
-          this.particles=[]; this.centers=[]; this.time=0; this.colorPhase=0;
-          this.mouse={x:0,y:0,down:false,active:false}; this.ori={active:false,beta:0,gamma:0};
-          this.invertValue=0;
-        }
-        applySettings(s){ this.speedMult=s?.speed||1; }
-        resize(w,h,s){ this.w=w; this.h=h; this.s=s; this.ctx.fillStyle="#000"; this.ctx.fillRect(0,0,w,h); this.imageData=this.ctx.getImageData(0,0,w,h); this.data=this.imageData.data; this.init(); }
-        clear(){ const d=this.data; for(let i=0;i<d.length;i+=4){ d[i]=0; d[i+1]=0; d[i+2]=0; d[i+3]=255; } }
-        setPixel(x,y,r,g,b,a){ if(x<=0||x>=this.w||y<=0||y>=this.h) return; const i=(x+y*this.imageData.width)*4; this.data[i]=r; this.data[i+1]=g; this.data[i+2]=b; this.data[i+3]=a; }
-        line(x1,y1,x2,y2,r,g,b,a){ let dx=Math.abs(x2-x1), dy=Math.abs(y2-y1), sx=x1<x2?1:-1, sy=y1<y2?1:-1, err=dx-dy, lx=x1, ly=y1;
-          for(;;){ if(lx>0&&lx<this.w&&ly>0&&ly<this.h) this.setPixel(lx,ly,r,g,b,a); if(lx===x2&&ly===y2) break; const e2=2*err; if(e2>-dx){ err-=dy; lx+=sx; } if(e2<dx){ err+=dx; ly+=sy; } }
-        }
-        circlePos(cx,cy,radius,i,segs){ const a=i*((Math.PI*2)/segs)+this.time; return { x: cx+Math.cos(a)*radius, y: cy+Math.sin(a)*radius }; }
-        addP(x,y,z,idx){ return { x,y,z,x2d:0,y2d:0,radius:this.baseRadius,radiusAudio:this.baseRadius,index:0,segments:this.segments,centerX:0,centerY:0,audioIndex:idx }; }
-        init(){
-          this.particles=[]; this.centers=[];
-          const w1=Math.random()*(this.w/1), h1=Math.random()*(this.h/1); let c=0;
-          for(let z=-this.fov; z<this.fov; z+=this.zStep){
-            const coords=[]; for(let i=0;i<this.segments;i++){ const p=this.circlePos(0,0,this.baseRadius,i,this.segments); coords.push({x:p.x,y:p.y,index:i,radius:this.baseRadius,segments:this.segments,centerX:0,centerY:0}); }
-            const center={ x:(((this.w/2)-w1)*(c/15))+this.w/2, y:(((this.h/2)-h1)*(c/15))+this.h/2 }; c++; this.centers.push(center);
-            const row=[]; let idx=8+Math.floor(Math.random()*1024);
-            for(let i=0;i<coords.length;i++){ const co=coords[i]; const p=this.addP(co.x,co.y,z,idx); p.index=co.index; p.radius=co.radius; p.radiusAudio=p.radius; p.segments=co.segments; p.centerX=co.centerX; p.centerY=co.centerY; row.push(p);
-              if(i<coords.length/2) idx++; else idx--; if(idx>1024) idx=8; if(idx<8) idx=1024; }
-            this.particles.push(row);
-          }
-        }
-        colorForRow(i,l,phase=0){ const k=i/l; const b=Math.max(0,Math.min(255,Math.round(k*200))); const g=((b>>1)+Math.round(20*Math.sin(phase+k*6.283)))|0; return { r:0,g,b,a:255 }; }
-        invert(v){ const d=this.data; for(let j=0;j<d.length;j+=4){ d[j]=Math.abs(v-d[j]); d[j+1]=Math.abs(v-d[j+1]); d[j+2]=Math.abs(v-d[j+2]); d[j+3]=255; } }
-        frame(audioData){
-          const ms=motionScale(); const avg=audioData?.average||0; const beat=audioData?.beat||0;
-          this.clear();
-          const driftX=Math.sin(this.time*0.25)*2*ms, driftY=Math.cos(this.time*0.33)*2*ms;
-          const fov = this.fov*(1+0.025*beat);
-          const l=this.particles.length; let sort=false;
-          for(let i=0;i<l;i++){
-            const row=this.particles[i], back=i>0?this.particles[i-1]:null, center=this.centers[i];
-            if(this.mouse.active){
-              center.x = (((this.w/2)-(this.mouse.x/this.s))*((row[0].z - fov)/500)) + this.w/2;
-              center.y = (((this.h/2)-(this.mouse.y/this.s))*((row[0].z - fov)/500)) + this.h/2;
-            } else if (this.ori.active){
-              const mx=-this.ori.gamma*(this.w/180), my=-this.ori.beta*(this.h/180);
-              center.x=(this.w/2)+mx*((row[0].z - fov)/500)+driftX;
-              center.y=(this.h/2)+my*((row[0].z - fov)/500)+driftY;
+            const l = this.particles.length;
+            let sortArray = false;
+
+            for (let i = 0; i < l; i++) {
+              const row = this.particles[i];
+              const rowBack = i > 0 ? this.particles[i - 1] : null;
+              const center = this.centers[i];
+
+              if (this.mouse.active) {
+                center.x = ((this.w / 2) - (this.mouse.x / this.s)) * ((row[0].z - this.fov) / 500) + this.w / 2;
+                center.y = ((this.h / 2) - (this.mouse.y / this.s)) * ((row[0].z - this.fov) / 500) + this.h / 2;
+              } else if (this.ori.active) {
+                const mx = -this.ori.gamma * (this.w / 180);
+                const my = -this.ori.beta * (this.h / 180);
+                center.x = (this.w / 2) + mx * ((row[0].z - this.fov) / 500);
+                center.y = (this.h / 2) + my * ((row[0].z - this.fov) / 500);
+              } else {
+                center.x += ((this.w / 2) - center.x) * 0.015;
+                center.y += ((this.h / 2) - center.y) * 0.015;
+              }
+
+              // project + update geometry
+              for (let j = 0, k = row.length; j < k; j++) {
+                const p = row[j];
+                const scale = this.fov / (this.fov + p.z);
+                p.x2d = (p.x * scale) + center.x;
+                p.y2d = (p.y * scale) + center.y;
+
+                const freqAdd = ((audioData?.average || 0) * 64) + ((audioData?.beat ? 1 : 0) * 8);
+                p.radiusAudio = p.radius + freqAdd;
+
+                if (this.mouse.down) {
+                  p.z += this.speed * ms;
+                  if (p.z > this.fov) { p.z -= (this.fov * 2); sortArray = true; }
+                } else {
+                  p.z -= this.speed * ms;
+                  if (p.z < -this.fov) { p.z += (this.fov * 2); sortArray = true; }
+                }
+
+                const curPos = this.getCirclePos(p.centerX, p.centerY, p.radiusAudio, p.index, p.segments);
+                p.x = curPos.x; p.y = curPos.y;
+              }
+
+              // Draw ring (original color mapping)
+              for (let j = 1; j < row.length; j++) {
+                const p = row[j], prev = row[j - 1];
+                this.drawLine(p.x2d | 0, p.y2d | 0, prev.x2d | 0, prev.y2d | 0, 0, Math.round(i/l*100), Math.round(i/l*200), 255);
+              }
+              if (row.length > 2) {
+                const first = row[0], last = row[row.length - 1];
+                this.drawLine(last.x2d | 0, last.y2d | 0, first.x2d | 0, first.y2d | 0, 0, Math.round(i/l*100), Math.round(i/l*200), 255);
+              }
+
+              // Ties (original)
+              if (i > 0 && i < l - 1 && rowBack) {
+                for (let j = 0; j < row.length; j++) {
+                  const p = row[j];
+                  const pB = (j === 0) ? rowBack[rowBack.length - 1] : rowBack[j - 1];
+                  this.drawLine(p.x2d | 0, p.y2d | 0, pB.x2d | 0, pB.y2d | 0, 0, Math.round(i/l*100), Math.round(i/l*200), 255);
+                }
+              }
+            }
+
+            if (sortArray) {
+              this.particles = this.particles.sort((a, b) => (b[0].z - a[0].z));
+            }
+
+            this.time += (this.mouse.down ? -0.005 : 0.005) * ms;
+
+            if (this.mouse.down) {
+              this.invertValue = Math.min(255, this.invertValue + 5);
+              this.softInvert(this.invertValue);
             } else {
-              center.x+=((this.w/2)-center.x)*0.015 + driftX*0.01;
-              center.y+=((this.h/2)-center.y)*0.015 + driftY*0.01;
+              this.invertValue = Math.max(0, this.invertValue - 5);
+              if (this.invertValue > 0) this.softInvert(this.invertValue);
             }
-            for(let j=0;j<row.length;j++){
-              const p=row[j]; const scale=fov/(fov+p.z);
-              p.x2d=(p.x*scale)+center.x; p.y2d=(p.y*scale)+center.y;
-              const add = (avg*64)+(beat?8:0); p.radiusAudio=p.radius+add;
-              if(this.mouse.down){ p.z += (this.speed*this.speedMult)*ms; if(p.z>fov){ p.z-=fov*2; sort=true; } }
-              else { p.z -= (this.speed*this.speedMult)*(0.92+avg*0.16)*ms; if(p.z<-fov){ p.z+=fov*2; sort=true; } }
-              const c=this.circlePos(p.centerX,p.centerY,p.radiusAudio,p.index,p.segments); p.x=c.x; p.y=c.y;
-            }
-            const col=this.colorForRow(i,l,this.colorPhase);
-            for(let j=1;j<row.length;j++){ const p=row[j], prev=row[j-1]; this.line(p.x2d|0,p.y2d|0,prev.x2d|0,prev.y2d|0,col.r,col.g,col.b,col.a); }
-            if(row.length>2){ const f=row[0], lst=row[row.length-1]; this.line(lst.x2d|0,lst.y2d|0,f.x2d|0,f.y2d|0,col.r,col.g,col.b,col.a); }
-            if(i>0 && i<l-1 && back){
-              const stride = beat>0.6 ? 2 : 1;
-              for(let j=0;j<row.length;j+=stride){ const p=row[j]; const pb=(j===0)?back[back.length-1]:back[j-1]; this.line(p.x2d|0,p.y2d|0,pb.x2d|0,pb.y2d|0,col.r,col.g,col.b,col.a); }
-            }
+
+            this.ctx.putImageData(this.imageData, 0, 0);
           }
-          if(sort) this.particles=this.particles.sort((a,b)=> (b[0].z - a[0].z));
-          this.time += (this.mouse.down?-0.005:0.005)*ms; this.colorPhase += 0.0025*ms;
-          if(this.mouse.down){ this.invertValue=Math.min(255,this.invertValue+5); this.invert(this.invertValue); }
-          else { this.invertValue=Math.max(0,this.invertValue-5); if(this.invertValue>0) this.invert(this.invertValue); }
-          this.ctx.putImageData(this.imageData,0,0);
         }
-      }
+        const ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true }) || canvas.getContext("2d");
+        window.tunnelRenderer = new PixelTunnel(ctx);
+      })();
 
-      // Renderer wiring
-      let tunnelRenderer = null;
-      window.tunnelRenderer = null;
-
-      function applyInternalScaleBase(){ INTERNAL_SCALE = (isLowEnd ? 0.75 : 1) * Math.min(2, DPR); }
-      function sizeCanvas(){
-        applyInternalScaleBase();
-        w = Math.floor(window.innerWidth*INTERNAL_SCALE);
-        h = Math.floor(window.innerHeight*INTERNAL_SCALE);
-        canvas.width=w; canvas.height=h;
+      function sizeCanvas() {
+        applyInternalScale();
+        w = Math.floor(window.innerWidth * INTERNAL_SCALE);
+        h = Math.floor(window.innerHeight * INTERNAL_SCALE);
+        canvas.width = w; canvas.height = h;
         canvas.style.width = window.innerWidth + "px";
         canvas.style.height = window.innerHeight + "px";
-        if (tunnelRenderer?.resize) tunnelRenderer.resize(w,h,INTERNAL_SCALE);
-      }
-      function makeRenderer(mode){ return mode==="classic" ? new PixelTunnelClassic(ctx2d) : new PixelTunnelExperimental(ctx2d); }
-      function swapRenderer(mode){
-        tunnelRenderer = makeRenderer(mode);
-        window.tunnelRenderer = tunnelRenderer;
-        tunnelRenderer.applySettings?.(settings);
-        tunnelRenderer.resize(w,h,INTERNAL_SCALE);
+        if (rendererWorker && workerInitialized) {
+          rendererWorker.postMessage({ type: "resize", width: w, height: h, internalScale: INTERNAL_SCALE });
+        }
+        if (window.tunnelRenderer && window.tunnelRenderer.resize) {
+          window.tunnelRenderer.resize(w, h, INTERNAL_SCALE);
+        }
       }
 
-      // Inputs / sensors
-      let mouseDown=false, mouseActive=false, mousePos={x:0,y:0};
-      let orientationActive=false, beta=0, gamma=0, sBeta=0, sGamma=0;
+      // Worker: Original algorithm (centers array), color and ties identical to v17
+      function bootWorkerInline() {
+        try {
+          let workerCode =
+            '"use strict";\\n' +
+            '(function(){\\n' +
+            'let canvas, ctx, imageData, data, w=0, h=0, SCALE=1;\\n' +
+            'const fov=250, baseRadius=75, segments=64, zStep=4; let speed=0.75;\\n' +
+            'let particles=[], centers=[], time=0;\\n' +
+            'let mouse={x:0,y:0,down:false,active:false}; let ori={active:false,beta:0,gamma:0};\\n' +
+            'let MOTION=1.0; function clearImageData(){ for(let i=0,l=data.length;i<l;i+=4){ data[i]=0; data[i+1]=0; data[i+2]=0; data[i+3]=255; } }\\n' +
+            'function setPixel(x,y,r,g,b,a){ if(x<=0||x>=w||y<=0||y>=h) return; const i=(x + y*imageData.width)*4; data[i]=r; data[i+1]=g; data[i+2]=b; data[i+3]=a; }\\n' +
+            'function drawLine(x1,y1,x2,y2,r,g,b,a){ let dx=Math.abs(x2-x1), dy=Math.abs(y2-y1); let sx=(x1<x2)?1:-1, sy=(y1<y2)?1:-1; let err=dx-dy, lx=x1, ly=y1; for(;;){ if(lx>0&&lx<w&&ly>0&&ly<h) setPixel(lx,ly,r,g,b,a); if(lx===x2 && ly===y2) break; const e2=2*err; if(e2>-dx){ err-=dy; lx+=sx; } if(e2<dx){ err+=dx; ly+=sy; } } }\\n' +
+            'function getCirclePos(cx,cy,radius,index,seg){ const angle=index*((Math.PI*2)/seg)+time; return {x: cx + Math.cos(angle)*radius, y: cy + Math.sin(angle)*radius}; }\\n' +
+            'function init(){ particles=[]; centers=[]; const w1=Math.random()*(w/1); const h1=Math.random()*(h/1); let c=0; for(let z=-fov; z<fov; z+=zStep){ const coords=[]; for(let i=0;i<segments;i++){ const p=getCirclePos(0,0,baseRadius,i,segments); coords.push({x:p.x,y:p.y,index:i,radius:baseRadius,segments:segments,centerX:0,centerY:0}); } const center={ x:(((w/2)-w1)*(c/15))+w/2, y:(((h/2)-h1)*(c/15))+h/2 }; c++; centers.push(center); const row=[]; let audioIndex=8+Math.floor(Math.random()*1024); for(let i=0;i<coords.length;i++){ const co=coords[i]; const p={ x:co.x, y:co.y, z, x2d:0, y2d:0, audioIndex, index:co.index, radius:co.radius, radiusAudio:co.radius, segments:co.segments, centerX:co.centerX, centerY:co.centerY }; row.push(p); if(i<coords.length/2) audioIndex++; else audioIndex--; if(audioIndex>1024) audioIndex=8; if(audioIndex<8) audioIndex=1024; } particles.push(row); } }\\n' +
+            'function frame(audio){ clearImageData(); const l=particles.length; let sortArray=false; for(let i=0;i<l;i++){ const row=particles[i]; const rowBack = (i>0)?particles[i-1]:null; const center=centers[i]; if(mouse.active){ center.x = (((w/2)-(mouse.x/SCALE))*((row[0].z - fov)/500)) + w/2; center.y = (((h/2)-(mouse.y/SCALE))*((row[0].z - fov)/500)) + h/2; } else if(ori.active){ const mx = -ori.gamma*(w/180); const my = -ori.beta*(h/180); center.x = (w/2) + mx*((row[0].z - fov)/500); center.y = (h/2) + my*((row[0].z - fov)/500); } else { center.x += ((w/2)-center.x)*0.015; center.y += ((h/2)-center.y)*0.015; } for(let j=0,k=row.length;j<k;j++){ const p=row[j]; const scale=fov/(fov+p.z); p.x2d = (p.x*scale) + center.x; p.y2d = (p.y*scale) + center.y; const freqAdd = ((audio?.average||0)*64)+((audio?.beat?1:0)*8); p.radiusAudio = p.radius + freqAdd; if(mouse.down){ p.z += speed*MOTION; if(p.z>fov){ p.z -= (fov*2); sortArray=true; } } else { p.z -= speed*MOTION; if(p.z<-fov){ p.z += (fov*2); sortArray=true; } } const curPos = getCirclePos(p.centerX, p.centerY, p.radiusAudio, p.index, p.segments); p.x=curPos.x; p.y=curPos.y; } for(let j=1;j<row.length;j++){ const p=row[j], prev=row[j-1]; drawLine(p.x2d|0, p.y2d|0, prev.x2d|0, prev.y2d|0, 0, Math.round(i/l*100), Math.round(i/l*200), 255); } if(row.length>2){ const first=row[0], last=row[row.length-1]; drawLine(last.x2d|0, last.y2d|0, first.x2d|0, first.y2d|0, 0, Math.round(i/l*100), Math.round(i/l*200), 255); } if(i>0 && i<l-1 && rowBack){ for(let j=0;j<row.length;j++){ const p=row[j]; const pB=(j===0)?rowBack[rowBack.length-1]:rowBack[j-1]; drawLine(p.x2d|0, p.y2d|0, pB.x2d|0, pB.y2d|0, 0, Math.round(i/l*100), Math.round(i/l*200), 255); } } } if(sortArray){ particles = particles.sort((a,b)=> (b[0].z - a[0].z)); } time += (mouse.down ? -0.005 : 0.005)*MOTION; ctx.putImageData(imageData,0,0); }\\n' +
+            'self.onmessage=(e)=>{ const msg=e.data||{}; if(msg.type==="init"){ canvas=msg.canvas; w=msg.width|0; h=msg.height|0; SCALE=msg.internalScale||1; ctx=canvas.getContext("2d",{alpha:false,desynchronized:true,willReadFrequently:true}); ctx.fillStyle="#000"; ctx.fillRect(0,0,w,h); imageData=ctx.getImageData(0,0,w,h); data=imageData.data; const s=msg.settings||{}; MOTION = (s.reducedMotion?0.35:1.0); init(); } else if(msg.type==="resize"){ w=msg.width|0; h=msg.height|0; SCALE=msg.internalScale||1; canvas.width=w; canvas.height=h; ctx.fillStyle="#000"; ctx.fillRect(0,0,w,h); imageData=ctx.getImageData(0,0,w,h); data=imageData.data; init(); } else if(msg.type==="settings"){ const s=msg.settings||{}; MOTION=(s.reducedMotion?0.35:1.0); } else if(msg.type==="input"){ const m=msg.mouse||{}; mouse.x=m.x|0; mouse.y=m.y|0; mouse.down=!!m.down; mouse.active=!!m.active; const o=msg.orientation||{}; ori.active=!!o.active; ori.beta=o.beta||0; ori.gamma=o.gamma||0; } else if(msg.type==="frame"){ frame(msg.audio||{average:0,beat:0}); } };\\n' +
+            '})();\\n';
+          const blob = new Blob([workerCode], { type: "application/javascript" });
+          const url = URL.createObjectURL(blob);
+          rendererWorker = new Worker(url);
+          rendererWorker.onmessage = () => {};
+          rendererWorker.onerror = () => {
+            try { rendererWorker.terminate(); } catch {};
+            rendererWorker = null;
+            warn("Worker failed; falling back to main-thread renderer.");
+          };
 
-      function sendInput(){
-        if(!tunnelRenderer) return;
-        tunnelRenderer.mouse = { x: mousePos.x, y: mousePos.y, down: mouseDown, active: mouseActive };
-        tunnelRenderer.ori   = { active: orientationActive, beta: sBeta, gamma: sGamma };
+          const off = canvas.transferControlToOffscreen();
+          applyInternalScale();
+          w = Math.floor(window.innerWidth * INTERNAL_SCALE);
+          h = Math.floor(window.innerHeight * INTERNAL_SCALE);
+          canvas.style.width = window.innerWidth + "px";
+          canvas.style.height = window.innerHeight + "px";
+          rendererWorker.postMessage({ type: "init", canvas: off, width: w, height: h, internalScale: INTERNAL_SCALE, settings }, [off]);
+          setTimeout(() => { try { URL.revokeObjectURL(url); } catch {} }, 1500);
+
+          workerInitialized = true;
+          return true;
+        } catch (e) {
+          warn("bootWorkerInline error:", e);
+          rendererWorker = null;
+          workerInitialized = false;
+          return false;
+        }
       }
 
-      function spawnRipple(x,y){ const r=document.createElement("div"); r.className="tap-ripple"; r.style.setProperty("--x",x+"px"); r.style.setProperty("--y",y+"px"); document.body.appendChild(r); r.addEventListener("animationend", ()=>r.remove(), { once:true }); }
-      function rippleAtEvent(e){ try{ const p=("touches" in e && e.touches.length)?e.touches[0]:("changedTouches" in e && e.changedTouches?.length?e.changedTouches[0]:e); spawnRipple(p.clientX,p.clientY); }catch{} }
+      // No-op HUD (legacy placeholders)
+      function updateHud() {}
+
+      function doResize() { sizeCanvas(); }
+      window.addEventListener("resize", () => { clearTimeout(window.__rzT); window.__rzT = setTimeout(doResize, 80); });
+
+      // Inputs/Sensors
+      let mouseDown = false, mouseActive = false, mousePos = { x: 0, y: 0 };
+      let orientationActive = false, beta = 0, gamma = 0;
+
+      function sendInput() {
+        const payload = { type: "input",
+          mouse: { x: mousePos.x, y: mousePos.y, down: mouseDown, active: mouseActive },
+          orientation: { active: orientationActive, beta, gamma }
+        };
+        if (rendererWorker) rendererWorker.postMessage(payload);
+        else if (window.tunnelRenderer) {
+          window.tunnelRenderer.mouse = { ...payload.mouse };
+          window.tunnelRenderer.ori = { ...payload.orientation };
+        }
+      }
+
+      // Tap ripple helper
+      function spawnRipple(x, y) {
+        try {
+          const r = document.createElement("div");
+          r.className = "tap-ripple";
+          r.style.setProperty("--x", x + "px");
+          r.style.setProperty("--y", y + "px");
+          document.body.appendChild(r);
+          r.addEventListener("animationend", () => r.remove(), { once: true });
+        } catch {}
+      }
+      function rippleAtEvent(e) {
+        try {
+          let x=0, y=0;
+          if ("touches" in e && e.touches.length) { x = e.touches[0].clientX; y = e.touches[0].clientY; }
+          else if ("changedTouches" in e && e.changedTouches?.length) { x = e.changedTouches[0].clientX; y = e.changedTouches[0].clientY; }
+          else { x = e.clientX; y = e.clientY; }
+          spawnRipple(x, y);
+        } catch {}
+      }
 
       const overlayEl = document.getElementById("overlay");
       const startTitle = document.getElementById("start-title");
+      const swipeHint = document.getElementById("swipeHint");
       const uiEl = document.getElementById("ui");
-      const vignetteLayer = document.getElementById("vignetteLayer");
 
-      function setInversion(on){ if(on) uiEl.classList.add("ui-inverted"); else uiEl.classList.remove("ui-inverted"); }
-      function startApp(){
-        if(audio.started) return;
-        try{ navigator.vibrate?.(10); }catch{}
-        overlayEl.style.pointerEvents="none"; overlayEl.classList.add("ack"); startTitle.classList.add("clicked"); canvas.classList.add("start-ack");
+      function setInversion(active) { if (active) uiEl.classList.add("ui-inverted"); else uiEl.classList.remove("ui-inverted"); }
+      function startApp(ev) {
+        if (audio.started) return;
+        try { navigator.vibrate?.(12); } catch {}
+        if (ev) rippleAtEvent(ev);
+        overlayEl.style.pointerEvents = "none"; overlayEl.classList.add("ack"); startTitle.classList.add("clicked"); canvas.classList.add("start-ack");
         setupSensors(); audio.start();
-        setTimeout(()=>{ overlayEl.hidden=true; overlayEl.classList.remove("ack"); startTitle.classList.remove("clicked"); canvas.classList.remove("start-ack"); canvas.focus?.(); }, 220);
+        setTimeout(() => { overlayEl.hidden = true; overlayEl.classList.remove("ack"); startTitle.classList.remove("clicked"); canvas.classList.remove("start-ack"); canvas.focus?.(); }, 220);
       }
-      overlayEl.addEventListener("click", (e)=>{ rippleAtEvent(e); e.stopPropagation(); e.preventDefault(); startApp(); });
-      overlayEl.addEventListener("pointerdown", rippleAtEvent, { passive:true });
-      overlayEl.addEventListener("keydown", (e)=>{ if(e.code==="Enter"||e.code==="Space"){ e.preventDefault(); startApp(); } if(e.code==="Tab"){ e.preventDefault(); overlayEl.focus(); } });
-
-      canvas.addEventListener("mousedown", (e)=>{ mouseDown=true; setInversion(true); sendInput(); rippleAtEvent(e); }, false);
-      canvas.addEventListener("mouseup",   (e)=>{ mouseDown=false; setInversion(false); sendInput(); rippleAtEvent(e); }, false);
-      canvas.addEventListener("mousemove", (e)=>{ const r=canvas.getBoundingClientRect(); const x=e.clientX-r.left, y=e.clientY-r.top; mousePos.x=x*INTERNAL_SCALE; mousePos.y=y*INTERNAL_SCALE; mouseActive=true; sendInput(); }, false);
-      canvas.addEventListener("mouseleave",()=>{ mouseActive=false; mouseDown=false; setInversion(false); sendInput(); }, false);
-
-      let touchStartX=0, touchStartY=0, lastTapTime=0; const swipeThreshold=70, doubleTapMs=300;
-      canvas.addEventListener("touchstart",(e)=>{ e.preventDefault(); const t=e.touches[0]; const r=canvas.getBoundingClientRect(); const x=t.clientX-r.left, y=t.clientY-r.top;
-        touchStartX=x; touchStartY=y; mousePos.x=x*INTERNAL_SCALE; mousePos.y=y*INTERNAL_SCALE; mouseDown=true; setInversion(true); sendInput(); rippleAtEvent(e);
-        const now=performance.now(); if(now-lastTapTime<doubleTapMs && audio.started){ audio.next(); try{navigator.vibrate?.(8);}catch{} } lastTapTime=now;
-      }, { passive:false });
-      canvas.addEventListener("touchmove",(e)=>{ e.preventDefault(); const t=e.touches[0]; const r=canvas.getBoundingClientRect(); const x=t.clientX-r.left, y=t.clientY-r.top; mousePos.x=x*INTERNAL_SCALE; mousePos.y=y*INTERNAL_SCALE; sendInput(); }, { passive:false });
-      canvas.addEventListener("touchend",(e)=>{ e.preventDefault(); mouseDown=false; setInversion(false); sendInput(); rippleAtEvent(e);
-        if(audio.started){ const t=e.changedTouches[0]; const r=canvas.getBoundingClientRect(); const ex=t.clientX-r.left, ey=t.clientY-r.top; const dx=ex-touchStartX, dy=ey-touchStartY;
-          if(Math.abs(dx)>swipeThreshold || Math.abs(dy)>swipeThreshold){ if(Math.abs(dx)>Math.abs(dy)){ if(dx>0) audio.prev(); else audio.next(); } try{ navigator.vibrate?.(10);}catch{} }
-        }
-      }, { passive:false });
-
-      function setupSensors(){
-        try{
-          if(typeof DeviceOrientationEvent!=="undefined" && typeof DeviceOrientationEvent.requestPermission==="function"){
-            DeviceOrientationEvent.requestPermission().then((state)=>{ if(state==="granted"){ window.addEventListener("deviceorientation",(e)=>{ const a=0.08; beta=e.beta||0; gamma=e.gamma||0; sBeta+= (beta-sBeta)*a; sGamma+= (gamma-sGamma)*a; orientationActive=true; sendInput(); }, { passive:true }); } }).catch(()=>{});
-          } else if (window.DeviceOrientationEvent){
-            window.addEventListener("deviceorientation",(e)=>{ const a=0.08; beta=e.beta||0; gamma=e.gamma||0; sBeta+= (beta-sBeta)*a; sGamma+= (gamma-sGamma)*a; orientationActive=true; sendInput(); }, { passive:true });
-          }
-        }catch{}
-      }
-
-      // Minimal controls
-      addEventListener("keydown",(e)=>{
-        if (e.key && e.key.toLowerCase()==="m"){ e.preventDefault(); if(audio.started) audio.toggleMute(); return; }
-        if (e.code==="ArrowRight"){ e.preventDefault(); if(audio.started) audio.next(); return; }
-        if (e.code==="ArrowLeft"){ e.preventDefault(); if(audio.started) audio.prev(); return; }
-        if (e.code==="KeyS"){ e.preventDefault(); settingsPanel.classList.toggle("show"); return; }  // hidden unless toggled
-        if (e.code==="KeyR"){ e.preventDefault(); settings={...DEFAULTS}; syncSettingsUI(); swapRenderer(settings.mode); broadcastSettings(); return; }
-        if (e.code==="KeyC"){ e.preventDefault(); settings.mode="classic"; syncSettingsUI(); swapRenderer("classic"); broadcastSettings(); return; }
-        if (e.code==="KeyE"){ e.preventDefault(); settings.mode="experimental"; syncSettingsUI(); swapRenderer("experimental"); broadcastSettings(); return; }
+      overlayEl.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(e); });
+      overlayEl.addEventListener("pointerdown", (e) => { rippleAtEvent(e); try { navigator.vibrate?.(8); } catch {} }, { passive: true });
+      overlayEl.addEventListener("keydown", (e) => {
+        if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); return; }
+        if (e.code === "Tab") { e.preventDefault(); overlayEl.focus(); return; }
       });
 
-      // Carousel
-      class SimpleCarousel {
-        constructor(el, interval=2800){ this.slides=[...el.querySelectorAll(".carousel-slide")]; this.i=0; this.n=this.slides.length; this.t=setInterval(()=>this.next(), interval); }
-        next(){ this.slides[this.i].classList.remove("active"); this.i=(this.i+1)%this.n; this.slides[this.i].classList.add("active"); }
-      }
-      new SimpleCarousel(document.getElementById("cityCarousel"));
+      canvas.addEventListener("mousedown", (e) => { mouseDown = true; setInversion(true); sendInput(); rippleAtEvent(e); }, false);
+      canvas.addEventListener("mouseup",   (e) => { mouseDown = false; setInversion(false); sendInput(); rippleAtEvent(e); }, false);
+      canvas.addEventListener("mousemove", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const xCSS = e.clientX - rect.left, yCSS = e.clientY - rect.top;
+        mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; mouseActive = true; sendInput();
+      }, false);
+      canvas.addEventListener("mouseleave", () => { mouseActive = false; mouseDown = false; setInversion(false); sendInput(); }, false);
 
-      // Render loop + subtle UI breathing
-      let pageHidden=document.hidden; document.addEventListener("visibilitychange",()=>{ pageHidden=document.hidden; });
-      function animate(){
-        if(pageHidden){ requestAnimationFrame(animate); return; }
-        const a = audio.started ? audio.data() : { average:0, beat:0 };
-        if (tunnelRenderer) tunnelRenderer.frame(a);
-        try{
-          const avg=a.average||0, beat=a.beat||0;
-          if (uiEl){ const base=0.76, amp=0.04; uiEl.style.opacity = String(Math.max(0.68, Math.min(0.9, base + amp*avg))); }
-          if (vignetteLayer){ const vBase=0.50, vAmp=0.10; vignetteLayer.style.opacity = String(Math.max(0.3, Math.min(0.8, vBase + vAmp*beat))); }
-        }catch{}
+      let touchStartX = 0, touchStartY = 0, lastTapTime = 0;
+      const swipeThreshold = 70, doubleTapMs = 300;
+      canvas.addEventListener("touchstart", (e) => {
+        e.preventDefault(); const t = e.touches[0]; const rect = canvas.getBoundingClientRect();
+        const xCSS = t.clientX - rect.left, yCSS = t.clientY - rect.top;
+        touchStartX = xCSS; touchStartY = yCSS;
+        mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE;
+        mouseDown = true; setInversion(true); sendInput(); rippleAtEvent(e);
+        const now = performance.now();
+        if (now - lastTapTime < doubleTapMs && audio.started) { audio.next(); try { navigator.vibrate?.(8); } catch {} }
+        lastTapTime = now;
+      }, { passive: false });
+      canvas.addEventListener("touchmove", (e) => {
+        e.preventDefault(); const t = e.touches[0]; const rect = canvas.getBoundingClientRect();
+        const xCSS = t.clientX - rect.left, yCSS = t.clientY - rect.top;
+        mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; sendInput();
+      }, { passive: false });
+      canvas.addEventListener("touchend", (e) => {
+        e.preventDefault(); mouseDown = false; setInversion(false); sendInput(); rippleAtEvent(e);
+        if (audio.started) {
+          const t = e.changedTouches[0]; const rect = canvas.getBoundingClientRect();
+          const endXCSS = t.clientX - rect.left, endYCSS = t.clientY - rect.top;
+          const dx = endXCSS - touchStartX, dy = endYCSS - touchStartY;
+          if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
+            if (Math.abs(dx) > Math.abs(dy)) {
+              if (dx > 0) { audio.prev(); }
+              else { audio.next(); }
+            } else {
+              swipeHint.textContent = "Warp Tunnel"; swipeHint.classList.add("show"); setTimeout(() => swipeHint.classList.remove("show"), 1400);
+            }
+            try { navigator.vibrate?.(10); } catch {}
+          }
+        }
+      }, { passive: false });
+
+      function setupSensors() {
+        try {
+          if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+            DeviceOrientationEvent.requestPermission().then((state) => {
+              if (state === "granted") window.addEventListener("deviceorientation", (e) => {
+                beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true; sendInput();
+              }, { passive: true });
+            }).catch(() => {});
+          } else if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", (e) => {
+              beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true; sendInput();
+            }, { passive: true });
+          }
+        } catch {}
+      }
+
+      addEventListener("keydown", (e) => {
+        if (e.key && e.key.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; }
+        if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); } return; }
+        if (e.code === "ArrowLeft")  { e.preventDefault(); if (audio.started) { audio.prev(); } return; }
+        if (e.code === "KeyS") { e.preventDefault(); settingsPanel.classList.toggle("show"); return; }
+        if (e.code === "KeyR") { e.preventDefault(); settings = { ...DEFAULTS }; applySettingsToUI(); broadcastSettings(); return; }
+      });
+
+      let pageHidden = document.hidden; document.addEventListener("visibilitychange", () => { pageHidden = document.hidden; });
+
+      function animate() {
+        if (pageHidden) { requestAnimationFrame(animate); return; }
+        const audioData = audio.started ? audio.data() : { average: 0, beat: 0 };
+        if (rendererWorker) rendererWorker.postMessage({ type: "frame", audio: audioData });
+        else if (window.tunnelRenderer) window.tunnelRenderer.frame(audioData);
         requestAnimationFrame(animate);
       }
 
-      function sizeAndBoot(){
+      function boot() {
+        if (canOffscreen) bootWorkerInline();
         sizeCanvas();
-        swapRenderer(settings.mode);
         document.getElementById("overlay").focus();
         requestAnimationFrame(animate);
       }
-      if (document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", sizeAndBoot); } else { sizeAndBoot(); }
-      window.addEventListener("resize", ()=>{ clearTimeout(window.__rzT); window.__rzT=setTimeout(sizeCanvas, 80); });
+      if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
     </script>
   </body>
 </html>
