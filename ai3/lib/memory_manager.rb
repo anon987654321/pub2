@@ -1,4 +1,3 @@
-# encoding: utf-8
 # Memory management for session data
 
 class MemoryManager

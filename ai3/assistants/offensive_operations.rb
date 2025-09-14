@@ -61,7 +61,7 @@ module Assistants
       @sentiment_analyzer.load_defaults
       @logger = Logger.new('offensive_ops.log', 'daily')
       @profiles = []
-      
+
       configure_replicate if defined?(Replicate)
     end
 
@@ -84,9 +84,9 @@ module Assistants
 
     # Engage target with created profiles
     def engage_target
-      return "No target specified" unless @target
-      
-      @profiles.each_with_index do |profile, index|
+      return 'No target specified' unless @target
+
+      @profiles.each_with_index do |_profile, index|
         puts "Profile #{index + 1} engaging target: #{@target}"
         # Simulation of engagement
       end
@@ -111,10 +111,10 @@ module Assistants
     end
 
     def configure_replicate
-      return unless ENV["REPLICATE_API_KEY"]
-      
+      return unless ENV['REPLICATE_API_KEY']
+
       Replicate.configure do |config|
-        config.api_token = ENV["REPLICATE_API_KEY"]
+        config.api_token = ENV['REPLICATE_API_KEY']
       end
     end
 
@@ -127,9 +127,9 @@ module Assistants
         # Handle gender-based generation from operations2
         source_video_path = "path/to/source_video_#{input_description}.mp4"
         target_face_path = "path/to/target_face_#{input_description}.jpg"
-        
+
         if defined?(Replicate)
-          model = Replicate::Model.new("deepfake_model_path")
+          model = Replicate::Model.new('deepfake_model_path')
           deepfake_video = model.predict(source_video: source_video_path, target_face: target_face_path)
           save_video(deepfake_video, "path/to/output_deepfake_#{input_description}.mp4")
         else
@@ -158,22 +158,22 @@ module Assistants
       else
         # Handle gender-based analysis from operations2
         user_id = "#{text_sample}_user"
-        
+
         if defined?(Twitter)
           begin
             client = Twitter::REST::Client.new
             tweets = client.user_timeline(user_id, count: 100)
             sentiments = tweets.map { |tweet| @sentiment_analyzer.sentiment(tweet.text) }
             average_sentiment = sentiments.sum / sentiments.size.to_f
-            
+
             traits = {
-              openness: average_sentiment > 0.5 ? "high" : "low",
-              conscientiousness: average_sentiment > 0.3 ? "medium" : "low",
-              extraversion: average_sentiment > 0.4 ? "medium" : "low",
-              agreeableness: average_sentiment > 0.6 ? "high" : "medium",
-              neuroticism: average_sentiment < 0.2 ? "high" : "low"
+              openness: average_sentiment > 0.5 ? 'high' : 'low',
+              conscientiousness: average_sentiment > 0.3 ? 'medium' : 'low',
+              extraversion: average_sentiment > 0.4 ? 'medium' : 'low',
+              agreeableness: average_sentiment > 0.6 ? 'high' : 'medium',
+              neuroticism: average_sentiment < 0.2 ? 'high' : 'low'
             }
-            
+
             { user_id: user_id, traits: traits }
           rescue StandardError => e
             "Twitter analysis failed: #{e.message}"
@@ -290,7 +290,7 @@ module Assistants
         prompt = "Manipulate search engine results for the query: #{query}."
         invoke_llm(prompt)
       else
-        queries = ["keyword1", "keyword2"]
+        queries = %w[keyword1 keyword2]
         queries.each { |q| adjust_search_results(q) }
       end
     end
@@ -300,7 +300,7 @@ module Assistants
       if target
         "Engaging in hacking activities targeting #{target}."
       else
-        targets = ["system1", "system2"]
+        targets = %w[system1 system2]
         targets.each { |t| hack_system(t) }
       end
     end
@@ -311,7 +311,7 @@ module Assistants
         prompt = "Perform social engineering on #{target}."
         invoke_llm(prompt)
       else
-        targets = ["target1", "target2"]
+        targets = %w[target1 target2]
         targets.each { |t| engineer_socially(t) }
       end
     end
@@ -322,7 +322,7 @@ module Assistants
         prompt = "Generate a disinformation operation for the topic: #{topic}."
         invoke_llm(prompt)
       else
-        topics = ["disinformation_topic_1", "disinformation_topic_2"]
+        topics = %w[disinformation_topic_1 disinformation_topic_2]
         topics.each { |t| spread_disinformation(t) }
       end
     end
@@ -333,14 +333,14 @@ module Assistants
         prompt = "Infiltrate the online community: #{community}."
         invoke_llm(prompt)
       else
-        communities = ["community1", "community2"]
+        communities = %w[community1 community2]
         communities.each { |c| join_community(c) }
       end
     end
 
     # Data Leak Exploitation
     def data_leak_exploitation(leak = nil)
-      leak ||= "default_leak"
+      leak ||= 'default_leak'
       leaked_data = obtain_leaked_data(leak)
       analyze_leaked_data(leaked_data)
       use_exploited_data(leaked_data)
@@ -349,7 +349,7 @@ module Assistants
 
     # Fake Event Organization
     def fake_event_organization(event = nil)
-      event ||= "default_event"
+      event ||= 'default_event'
       fake_details = create_fake_event_details(event)
       promote_fake_event(fake_details)
       gather_attendee_data(fake_details)
@@ -358,7 +358,7 @@ module Assistants
 
     # Doxing
     def doxing(target = nil)
-      target ||= @target || "default_target"
+      target ||= @target || 'default_target'
       personal_info = gather_personal_info(target)
       publish_personal_info(personal_info)
       puts "Doxed person: #{target}"
@@ -366,11 +366,9 @@ module Assistants
 
     # Reputation Management
     def reputation_management(entity = nil)
-      entity ||= @target || "default_entity"
+      entity ||= @target || 'default_entity'
       reputation_score = assess_reputation(entity)
-      if reputation_score < threshold
-        deploy_reputation_management_tactics(entity)
-      end
+      deploy_reputation_management_tactics(entity) if reputation_score < threshold
       puts "Managed reputation for entity: #{entity}"
     end
 
@@ -380,7 +378,7 @@ module Assistants
         prompt = "Manipulate online reviews for #{product}."
         invoke_llm(prompt)
       else
-        product ||= "default_product"
+        product ||= 'default_product'
         reviews = fetch_reviews(product)
         altered_reviews = alter_reviews(reviews)
         post_altered_reviews(altered_reviews)
@@ -394,7 +392,7 @@ module Assistants
         prompt = "Influence political sentiment on the issue: #{issue}."
         invoke_llm(prompt)
       else
-        issue ||= "default_issue"
+        issue ||= 'default_issue'
         sentiment_campaign = create_sentiment_campaign(issue)
         distribute_campaign(sentiment_campaign)
         monitor_campaign_impact(sentiment_campaign)
@@ -404,7 +402,7 @@ module Assistants
 
     # Cyberbullying
     def cyberbullying(target = nil)
-      target ||= @target || "default_target"
+      target ||= @target || 'default_target'
       harassment_tactics = select_harassment_tactics(target)
       execute_harassment_tactics(target, harassment_tactics)
       puts "Cyberbullied target: #{target}"
@@ -412,7 +410,7 @@ module Assistants
 
     # Identity Theft
     def identity_theft(target = nil)
-      target ||= @target || "default_target"
+      target ||= @target || 'default_target'
       stolen_identity_data = obtain_identity_data(target)
       misuse_identity(stolen_identity_data)
       puts "Stole identity: #{target}"
@@ -420,7 +418,7 @@ module Assistants
 
     # Fabricating Evidence
     def fabricate_evidence(claim = nil)
-      claim ||= "default_claim"
+      claim ||= 'default_claim'
       fake_evidence = create_fake_evidence(claim)
       plant_evidence(fake_evidence)
       defend_fabricated_claim(claim, fake_evidence)
@@ -445,37 +443,37 @@ module Assistants
 
     # Mass Disinformation via Social Media Bots
     def mass_disinformation(target_name = nil, topic = nil, target_demographic = nil)
-      target_name ||= @target || "default_target"
-      topic ||= "default_topic"
-      target_demographic ||= "general_public"
-      
+      target_name ||= @target || 'default_target'
+      topic ||= 'default_topic'
+      target_demographic ||= 'general_public'
+
       prompt = "Generate mass disinformation on the topic '#{topic}' targeted at the demographic of #{target_demographic}."
       invoke_llm(prompt)
     end
 
     # Reverse Social Engineering (Making the Target Do the Work)
     def reverse_social_engineering(target_name = nil)
-      target_name ||= @target || "default_target"
+      target_name ||= @target || 'default_target'
       prompt = "Create a scenario where #{target_name} is tricked into revealing confidential information under the pretext of helping a cause."
       invoke_llm(prompt)
     end
 
     # Real-Time Quantum Strategy for Predicting Enemy Actions
     def real_time_quantum_strategy(current_situation = nil)
-      current_situation ||= "default_situation"
+      current_situation ||= 'default_situation'
       'Analyzing real-time strategic situation using quantum computing and predicting the next moves of the adversary.'
     end
 
     # New activities from operations2
     def online_stock_market_manipulation(stock = nil)
-      stock ||= "default_stock"
+      stock ||= 'default_stock'
       price_manipulation_tactics = develop_price_manipulation_tactics(stock)
       execute_price_manipulation(stock, price_manipulation_tactics)
       puts "Manipulated price of #{stock}"
     end
 
     def targeted_scam_operations(target = nil)
-      target ||= @target || "default_target"
+      target ||= @target || 'default_target'
       scam_tactics = select_scam_tactics(target)
       execute_scam(target, scam_tactics)
       collect_scam_proceeds(target)
@@ -483,13 +481,13 @@ module Assistants
     end
 
     def adaptive_threat_response(system = nil)
-      system ||= "default_system"
+      system ||= 'default_system'
       deploy_adaptive_threat_response(system)
       puts "Adaptive threat response activated for #{system}."
     end
 
     def information_warfare_operations(target = nil)
-      target ||= @target || "default_target"
+      target ||= @target || 'default_target'
       conduct_information_warfare(target)
       puts "Information warfare operations conducted against #{target}."
     end
@@ -508,60 +506,224 @@ module Assistants
     end
 
     # Helper methods for various activities (simulated implementations)
-    def save_video(video, path); "Video saved to #{path}"; end
-    def apply_adversarial_modifications(path); "Modified #{path}"; end
-    def generate_3d_views(path); ["view1", "view2", "view3"]; end
-    def save_views(views, path); "Saved #{views.length} views to #{path}"; end
-    def simulate_chatbot_response(question, context); "Response to #{question} in context #{context}"; end
-    def fetch_related_texts(context); "Related text for #{context}"; end
-    def generate_fake_profile(context); { name: "Fake Profile", context: context }; end
-    def join_online_community(group, profile); "Joined #{group} with profile #{profile}"; end
-    def authenticate_to_system(system); true; end
-    def extract_sensitive_data(system); "Sensitive data from #{system}"; end
-    def store_data_safely(data); "Stored #{data}"; end
-    def fetch_user_logs(context); ["log1", "log2"]; end
-    def segment_users(logs); { segment1: ["user1"], segment2: ["user2"] }; end
-    def create_segment_specific_content(segment); "Content for #{segment}"; end
-    def deliver_content(users, content); "Delivered #{content} to #{users}"; end
-    def generate_phishing_emails; ["email1", "email2"]; end
-    def send_phishing_email(email); "Sent #{email}"; end
-    def adjust_search_results(query); "Adjusted results for #{query}"; end
-    def hack_system(target); "Hacked #{target}"; end
-    def engineer_socially(target); "Socially engineered #{target}"; end
-    def spread_disinformation(topic); "Spread disinformation about #{topic}"; end
-    def join_community(community); "Joined #{community}"; end
-    def obtain_leaked_data(leak); "Data from #{leak}"; end
-    def analyze_leaked_data(data); "Analyzed #{data}"; end
-    def use_exploited_data(data); "Used #{data}"; end
-    def create_fake_event_details(event); { name: event, details: "fake" }; end
-    def promote_fake_event(details); "Promoted #{details}"; end
-    def gather_attendee_data(details); "Gathered data for #{details}"; end
-    def gather_personal_info(target); "Personal info for #{target}"; end
-    def publish_personal_info(info); "Published #{info}"; end
-    def assess_reputation(entity); 30; end
-    def threshold; 50; end
-    def deploy_reputation_management_tactics(entity); "Deployed tactics for #{entity}"; end
-    def fetch_reviews(product); ["review1", "review2"]; end
-    def alter_reviews(reviews); reviews.map { |r| "altered_#{r}" }; end
-    def post_altered_reviews(reviews); "Posted #{reviews}"; end
-    def create_sentiment_campaign(topic); "Campaign for #{topic}"; end
-    def distribute_campaign(campaign); "Distributed #{campaign}"; end
-    def monitor_campaign_impact(campaign); "Monitored #{campaign}"; end
-    def select_harassment_tactics(target); ["tactic1", "tactic2"]; end
-    def execute_harassment_tactics(target, tactics); "Executed #{tactics} on #{target}"; end
-    def obtain_identity_data(target); "Identity data for #{target}"; end
-    def misuse_identity(data); "Misused #{data}"; end
-    def create_fake_evidence(claim); "Fake evidence for #{claim}"; end
-    def plant_evidence(evidence); "Planted #{evidence}"; end
-    def defend_fabricated_claim(claim, evidence); "Defended #{claim} with #{evidence}"; end
-    def develop_price_manipulation_tactics(stock); ["tactic1", "tactic2"]; end
-    def execute_price_manipulation(stock, tactics); "Manipulated #{stock} with #{tactics}"; end
-    def select_scam_tactics(target); ["scam1", "scam2"]; end
-    def execute_scam(target, tactics); "Scammed #{target} with #{tactics}"; end
-    def collect_scam_proceeds(target); "Collected proceeds from #{target}"; end
-    def deploy_adaptive_threat_response(system); "Deployed response for #{system}"; end
-    def conduct_information_warfare(target); "Conducted warfare against #{target}"; end
-    def generate_ai_disinformation_article(topic); "Article about #{topic}"; end
-    def distribute_article(article); "Distributed #{article}"; end
+    def save_video(_video, path)
+      "Video saved to #{path}"
+    end
+
+    def apply_adversarial_modifications(path)
+      "Modified #{path}"
+    end
+
+    def generate_3d_views(_path)
+      %w[view1 view2 view3]
+    end
+
+    def save_views(views, path)
+      "Saved #{views.length} views to #{path}"
+    end
+
+    def simulate_chatbot_response(question, context)
+      "Response to #{question} in context #{context}"
+    end
+
+    def fetch_related_texts(context)
+      "Related text for #{context}"
+    end
+
+    def generate_fake_profile(context)
+      { name: 'Fake Profile', context: context }
+    end
+
+    def join_online_community(group, profile)
+      "Joined #{group} with profile #{profile}"
+    end
+
+    def authenticate_to_system(_system)
+      true
+    end
+
+    def extract_sensitive_data(system)
+      "Sensitive data from #{system}"
+    end
+
+    def store_data_safely(data)
+      "Stored #{data}"
+    end
+
+    def fetch_user_logs(_context)
+      %w[log1 log2]
+    end
+
+    def segment_users(_logs)
+      { segment1: ['user1'], segment2: ['user2'] }
+    end
+
+    def create_segment_specific_content(segment)
+      "Content for #{segment}"
+    end
+
+    def deliver_content(users, content)
+      "Delivered #{content} to #{users}"
+    end
+
+    def generate_phishing_emails
+      %w[email1 email2]
+    end
+
+    def send_phishing_email(email)
+      "Sent #{email}"
+    end
+
+    def adjust_search_results(query)
+      "Adjusted results for #{query}"
+    end
+
+    def hack_system(target)
+      "Hacked #{target}"
+    end
+
+    def engineer_socially(target)
+      "Socially engineered #{target}"
+    end
+
+    def spread_disinformation(topic)
+      "Spread disinformation about #{topic}"
+    end
+
+    def join_community(community)
+      "Joined #{community}"
+    end
+
+    def obtain_leaked_data(leak)
+      "Data from #{leak}"
+    end
+
+    def analyze_leaked_data(data)
+      "Analyzed #{data}"
+    end
+
+    def use_exploited_data(data)
+      "Used #{data}"
+    end
+
+    def create_fake_event_details(event)
+      { name: event, details: 'fake' }
+    end
+
+    def promote_fake_event(details)
+      "Promoted #{details}"
+    end
+
+    def gather_attendee_data(details)
+      "Gathered data for #{details}"
+    end
+
+    def gather_personal_info(target)
+      "Personal info for #{target}"
+    end
+
+    def publish_personal_info(info)
+      "Published #{info}"
+    end
+
+    def assess_reputation(_entity)
+      30
+    end
+
+    def threshold
+      50
+    end
+
+    def deploy_reputation_management_tactics(entity)
+      "Deployed tactics for #{entity}"
+    end
+
+    def fetch_reviews(_product)
+      %w[review1 review2]
+    end
+
+    def alter_reviews(reviews)
+      reviews.map { |r| "altered_#{r}" }
+    end
+
+    def post_altered_reviews(reviews)
+      "Posted #{reviews}"
+    end
+
+    def create_sentiment_campaign(topic)
+      "Campaign for #{topic}"
+    end
+
+    def distribute_campaign(campaign)
+      "Distributed #{campaign}"
+    end
+
+    def monitor_campaign_impact(campaign)
+      "Monitored #{campaign}"
+    end
+
+    def select_harassment_tactics(_target)
+      %w[tactic1 tactic2]
+    end
+
+    def execute_harassment_tactics(target, tactics)
+      "Executed #{tactics} on #{target}"
+    end
+
+    def obtain_identity_data(target)
+      "Identity data for #{target}"
+    end
+
+    def misuse_identity(data)
+      "Misused #{data}"
+    end
+
+    def create_fake_evidence(claim)
+      "Fake evidence for #{claim}"
+    end
+
+    def plant_evidence(evidence)
+      "Planted #{evidence}"
+    end
+
+    def defend_fabricated_claim(claim, evidence)
+      "Defended #{claim} with #{evidence}"
+    end
+
+    def develop_price_manipulation_tactics(_stock)
+      %w[tactic1 tactic2]
+    end
+
+    def execute_price_manipulation(stock, tactics)
+      "Manipulated #{stock} with #{tactics}"
+    end
+
+    def select_scam_tactics(_target)
+      %w[scam1 scam2]
+    end
+
+    def execute_scam(target, tactics)
+      "Scammed #{target} with #{tactics}"
+    end
+
+    def collect_scam_proceeds(target)
+      "Collected proceeds from #{target}"
+    end
+
+    def deploy_adaptive_threat_response(system)
+      "Deployed response for #{system}"
+    end
+
+    def conduct_information_warfare(target)
+      "Conducted warfare against #{target}"
+    end
+
+    def generate_ai_disinformation_article(topic)
+      "Article about #{topic}"
+    end
+
+    def distribute_article(article)
+      "Distributed #{article}"
+    end
   end
 end

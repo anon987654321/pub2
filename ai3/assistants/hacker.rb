@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 # encoding: utf-8
+
 # Super-Hacker Assistant
 
 require_relative '../lib/universal_scraper'
@@ -22,6 +23,7 @@ module Assistants
       @language = language
       ensure_data_prepared
     end
+
     def conduct_security_analysis
       puts 'Conducting security analysis and penetration testing...'
       URLS.each do |url|

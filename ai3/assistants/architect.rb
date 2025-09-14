@@ -89,15 +89,15 @@ module Assistants
 
     # Comprehensive inspiration gathering with analysis
     def gather_inspiration(project_type: nil, style: nil, location: nil)
-      puts "🎨 Gathering comprehensive architectural inspiration..."
-      
+      puts '🎨 Gathering comprehensive architectural inspiration...'
+
       search_criteria = {
         project_type: project_type || :general,
         style: style || :contemporary,
         location: location || :global,
         specialty: @specialty
       }
-      
+
       inspiration_data = {
         sources: collect_inspiration_sources(search_criteria),
         case_studies: analyze_relevant_case_studies(search_criteria),
@@ -106,24 +106,24 @@ module Assistants
         technologies: recommend_technologies(search_criteria),
         trends: current_architectural_trends(search_criteria)
       }
-      
+
       @knowledge_sources.each do |url|
         puts "🔍 Analyzing architectural insights from: #{url}"
         # Simulated content analysis
         add_inspiration_to_database(url, search_criteria)
       end
-      
+
       format_inspiration_report(inspiration_data)
     end
 
     # Advanced design creation with comprehensive analysis
     def create_design(brief)
-      puts "📐 Creating comprehensive architectural design..."
-      
+      puts '📐 Creating comprehensive architectural design...'
+
       design_analysis = analyze_design_brief(brief)
       conceptual_design = develop_conceptual_design(design_analysis)
       detailed_design = elaborate_design_details(conceptual_design)
-      
+
       design_package = {
         brief_analysis: design_analysis,
         concept: conceptual_design,
@@ -133,15 +133,15 @@ module Assistants
         cost_estimation: estimate_project_costs(detailed_design),
         timeline: create_project_timeline(detailed_design)
       }
-      
+
       @project_portfolio << design_package
       format_design_output(design_package)
     end
 
     # Site analysis and planning
     def analyze_site(site_data)
-      puts "🏗️ Conducting comprehensive site analysis..."
-      
+      puts '🏗️ Conducting comprehensive site analysis...'
+
       analysis = {
         topography: analyze_topography(site_data),
         climate: assess_climate_conditions(site_data),
@@ -152,14 +152,14 @@ module Assistants
         constraints: identify_site_constraints(site_data),
         opportunities: identify_site_opportunities(site_data)
       }
-      
+
       format_site_analysis(analysis)
     end
 
     # Sustainability assessment and green design
     def sustainability_assessment(design_data)
-      puts "🌱 Performing comprehensive sustainability assessment..."
-      
+      puts '🌱 Performing comprehensive sustainability assessment...'
+
       assessment = {
         energy_performance: analyze_energy_performance(design_data),
         carbon_footprint: calculate_carbon_footprint(design_data),
@@ -170,14 +170,14 @@ module Assistants
         certification_potential: evaluate_green_certifications(design_data),
         lifecycle_analysis: perform_lifecycle_assessment(design_data)
       }
-      
+
       format_sustainability_report(assessment)
     end
 
     # Space planning and programming
     def space_planning(program_requirements)
-      puts "📏 Developing comprehensive space planning solution..."
-      
+      puts '📏 Developing comprehensive space planning solution...'
+
       planning = {
         program_analysis: analyze_space_program(program_requirements),
         adjacency_matrix: create_adjacency_relationships(program_requirements),
@@ -187,14 +187,14 @@ module Assistants
         accessibility: ensure_accessibility_compliance(program_requirements),
         flexibility: design_for_adaptability(program_requirements)
       }
-      
+
       format_space_planning_output(planning)
     end
 
     # Building systems integration
     def integrate_building_systems(building_data)
-      puts "⚙️ Integrating comprehensive building systems..."
-      
+      puts '⚙️ Integrating comprehensive building systems...'
+
       systems = {
         structural: design_structural_system(building_data),
         mechanical: design_hvac_system(building_data),
@@ -205,14 +205,14 @@ module Assistants
         automation: design_building_automation(building_data),
         telecommunications: design_telecom_infrastructure(building_data)
       }
-      
+
       format_systems_integration_report(systems)
     end
 
     # Code compliance and regulatory analysis
     def code_compliance_check(design_data, jurisdiction)
-      puts "📋 Performing comprehensive code compliance analysis..."
-      
+      puts '📋 Performing comprehensive code compliance analysis...'
+
       compliance = {
         building_code: check_building_code_compliance(design_data, jurisdiction),
         zoning_compliance: verify_zoning_compliance(design_data, jurisdiction),
@@ -222,14 +222,14 @@ module Assistants
         environmental: check_environmental_regulations(design_data, jurisdiction),
         historic_preservation: assess_historic_requirements(design_data, jurisdiction)
       }
-      
+
       format_compliance_report(compliance)
     end
 
     # Construction documentation
     def generate_construction_documents(design_data)
-      puts "📑 Generating comprehensive construction documentation..."
-      
+      puts '📑 Generating comprehensive construction documentation...'
+
       documents = {
         architectural_drawings: generate_architectural_drawings(design_data),
         specifications: create_technical_specifications(design_data),
@@ -238,14 +238,14 @@ module Assistants
         coordination: coordinate_with_consultants(design_data),
         quality_control: establish_quality_standards(design_data)
       }
-      
+
       format_construction_documents(documents)
     end
 
     # Project management and coordination
     def project_coordination(project_data)
-      puts "👥 Coordinating comprehensive project management..."
-      
+      puts '👥 Coordinating comprehensive project management...'
+
       coordination = {
         team_structure: organize_project_team(project_data),
         communication_plan: establish_communication_protocols(project_data),
@@ -254,7 +254,7 @@ module Assistants
         risk_management: identify_and_mitigate_risks(project_data),
         budget_management: manage_project_budget(project_data)
       }
-      
+
       format_project_coordination_report(coordination)
     end
 
@@ -305,17 +305,17 @@ module Assistants
       [
         {
           project: "Case Study 1 - #{criteria[:project_type]} project",
-          architect: "Notable Architect",
+          architect: 'Notable Architect',
           location: criteria[:location],
-          key_features: ["Innovative design approach", "Sustainable solutions", "Cultural integration"],
-          lessons_learned: ["Design principle 1", "Technical solution 1", "Process improvement 1"]
+          key_features: ['Innovative design approach', 'Sustainable solutions', 'Cultural integration'],
+          lessons_learned: ['Design principle 1', 'Technical solution 1', 'Process improvement 1']
         },
         {
           project: "Case Study 2 - #{criteria[:style]} style",
-          architect: "Renowned Designer",
-          location: "International",
-          key_features: ["Material innovation", "Spatial quality", "Environmental response"],
-          lessons_learned: ["Construction technique", "Design methodology", "User experience"]
+          architect: 'Renowned Designer',
+          location: 'International',
+          key_features: ['Material innovation', 'Spatial quality', 'Environmental response'],
+          lessons_learned: ['Construction technique', 'Design methodology', 'User experience']
         }
       ]
     end
@@ -324,7 +324,7 @@ module Assistants
       ARCHITECTURE_STYLES.sample(3).map do |style|
         {
           style: style,
-          key_buildings: ["Iconic Building 1", "Notable Project 2"],
+          key_buildings: ['Iconic Building 1', 'Notable Project 2'],
           principles: DESIGN_PRINCIPLES.keys.sample(3),
           influence: "Impact on #{criteria[:project_type]} design"
         }
@@ -349,7 +349,7 @@ module Assistants
         'Smart building systems', 'Renewable energy integration',
         'Advanced materials', 'Modular construction', 'Digital fabrication'
       ]
-      
+
       technologies.sample(4).map do |tech|
         {
           technology: tech,
@@ -366,7 +366,7 @@ module Assistants
         'Resilient design', 'Mass timber construction', 'Prefabrication',
         'Mixed-use development', 'Community-centered design'
       ]
-      
+
       trends.sample(3).map do |trend|
         {
           trend: trend,
@@ -392,24 +392,24 @@ module Assistants
     def develop_conceptual_design(analysis)
       {
         design_concept: "Conceptual design based on #{analysis[:project_scope]}",
-        parti_diagram: "Organizing principle for the design",
-        massing_strategy: "Building form and volume strategy",
-        site_strategy: "Site planning and landscape integration",
-        circulation_concept: "Movement and access strategy",
-        spatial_organization: "Interior space planning concept",
-        architectural_expression: "Aesthetic and stylistic approach"
+        parti_diagram: 'Organizing principle for the design',
+        massing_strategy: 'Building form and volume strategy',
+        site_strategy: 'Site planning and landscape integration',
+        circulation_concept: 'Movement and access strategy',
+        spatial_organization: 'Interior space planning concept',
+        architectural_expression: 'Aesthetic and stylistic approach'
       }
     end
 
-    def elaborate_design_details(concept)
+    def elaborate_design_details(_concept)
       {
-        floor_plans: "Detailed floor plan development",
-        elevations: "Building elevation design",
-        sections: "Building section studies",
-        details: "Construction detail development",
-        materials_palette: "Material selection and specification",
-        landscape_design: "Exterior space and landscape planning",
-        interior_design: "Interior space design and finishes"
+        floor_plans: 'Detailed floor plan development',
+        elevations: 'Building elevation design',
+        sections: 'Building section studies',
+        details: 'Construction detail development',
+        materials_palette: 'Material selection and specification',
+        landscape_design: 'Exterior space and landscape planning',
+        interior_design: 'Interior space design and finishes'
       }
     end
 
@@ -422,7 +422,7 @@ module Assistants
         "**Materials:** #{data[:materials].length} recommended materials\n" \
         "**Technologies:** #{data[:technologies].length} applicable technologies\n" \
         "**Current Trends:** #{data[:trends].length} relevant trends identified\n\n" \
-        "*Comprehensive inspiration database compiled for architectural design development.*"
+        '*Comprehensive inspiration database compiled for architectural design development.*'
     end
 
     def format_design_output(package)
@@ -433,64 +433,212 @@ module Assistants
         "**Sustainability Rating:** #{package[:sustainability_analysis]}\n" \
         "**Estimated Cost:** #{package[:cost_estimation]}\n" \
         "**Project Timeline:** #{package[:timeline]}\n\n" \
-        "*Complete architectural design package ready for development.*"
+        '*Complete architectural design package ready for development.*'
     end
 
     # Additional helper methods for comprehensive functionality
     def add_inspiration_to_database(url, criteria); end
-    def calculate_relevance_score(source, criteria); 8.5; end
-    def determine_content_type(source); 'architectural_portfolio'; end
-    def assess_inspiration_value(source, criteria); 'high'; end
-    def assess_material_suitability(material, criteria); 'excellent'; end
-    def assess_material_sustainability(material); 'eco-friendly'; end
-    def assess_material_cost(material); 'moderate'; end
-    def assess_material_availability(material, location); 'readily_available'; end
-    def assess_technology_fit(tech, criteria); 'highly_applicable'; end
-    def generate_technology_benefits(tech); ['efficiency', 'innovation', 'sustainability']; end
-    def describe_implementation_approach(tech); 'phased_implementation'; end
-    def assess_trend_relevance(trend, criteria); 'highly_relevant'; end
-    def generate_trend_examples(trend); ['Example Project 1', 'Example Project 2']; end
-    def assess_trend_future(trend); 'growing_influence'; end
-    def extract_project_scope(brief); 'comprehensive_project_scope'; end
-    def identify_functional_needs(brief); ['space_requirements', 'performance_needs']; end
-    def establish_performance_targets(brief); { energy: 'high_performance', comfort: 'optimal' }; end
-    def identify_project_constraints(brief); ['budget', 'schedule', 'site_limitations']; end
-    def analyze_budget_requirements(brief); 'budget_analysis_complete'; end
-    def assess_schedule_constraints(brief); 'timeline_assessment_complete'; end
-    def identify_stakeholder_requirements(brief); ['client_needs', 'user_requirements', 'community_input']; end
-    def generate_technical_specs(design); 'comprehensive_technical_specifications'; end
-    def assess_sustainability(design); 'high_sustainability_rating'; end
-    def estimate_project_costs(design); 'detailed_cost_estimation'; end
-    def create_project_timeline(design); 'comprehensive_project_schedule'; end
+
+    def calculate_relevance_score(_source, _criteria)
+      8.5
+    end
+
+    def determine_content_type(_source)
+      'architectural_portfolio'
+    end
+
+    def assess_inspiration_value(_source, _criteria)
+      'high'
+    end
+
+    def assess_material_suitability(_material, _criteria)
+      'excellent'
+    end
+
+    def assess_material_sustainability(_material)
+      'eco-friendly'
+    end
+
+    def assess_material_cost(_material)
+      'moderate'
+    end
+
+    def assess_material_availability(_material, _location)
+      'readily_available'
+    end
+
+    def assess_technology_fit(_tech, _criteria)
+      'highly_applicable'
+    end
+
+    def generate_technology_benefits(_tech)
+      %w[efficiency innovation sustainability]
+    end
+
+    def describe_implementation_approach(_tech)
+      'phased_implementation'
+    end
+
+    def assess_trend_relevance(_trend, _criteria)
+      'highly_relevant'
+    end
+
+    def generate_trend_examples(_trend)
+      ['Example Project 1', 'Example Project 2']
+    end
+
+    def assess_trend_future(_trend)
+      'growing_influence'
+    end
+
+    def extract_project_scope(_brief)
+      'comprehensive_project_scope'
+    end
+
+    def identify_functional_needs(_brief)
+      %w[space_requirements performance_needs]
+    end
+
+    def establish_performance_targets(_brief)
+      { energy: 'high_performance', comfort: 'optimal' }
+    end
+
+    def identify_project_constraints(_brief)
+      %w[budget schedule site_limitations]
+    end
+
+    def analyze_budget_requirements(_brief)
+      'budget_analysis_complete'
+    end
+
+    def assess_schedule_constraints(_brief)
+      'timeline_assessment_complete'
+    end
+
+    def identify_stakeholder_requirements(_brief)
+      %w[client_needs user_requirements community_input]
+    end
+
+    def generate_technical_specs(_design)
+      'comprehensive_technical_specifications'
+    end
+
+    def assess_sustainability(_design)
+      'high_sustainability_rating'
+    end
+
+    def estimate_project_costs(_design)
+      'detailed_cost_estimation'
+    end
+
+    def create_project_timeline(_design)
+      'comprehensive_project_schedule'
+    end
 
     # Site analysis methods
-    def analyze_topography(data); 'topographical_analysis_complete'; end
-    def assess_climate_conditions(data); 'climate_assessment_complete'; end
-    def review_zoning_requirements(data); 'zoning_compliance_verified'; end
-    def evaluate_utility_access(data); 'utility_infrastructure_assessed'; end
-    def assess_transportation_links(data); 'transportation_analysis_complete'; end
-    def analyze_surrounding_context(data); 'contextual_analysis_complete'; end
-    def identify_site_constraints(data); ['constraint1', 'constraint2']; end
-    def identify_site_opportunities(data); ['opportunity1', 'opportunity2']; end
-    def format_site_analysis(analysis); 'Comprehensive site analysis report'; end
+    def analyze_topography(_data)
+      'topographical_analysis_complete'
+    end
+
+    def assess_climate_conditions(_data)
+      'climate_assessment_complete'
+    end
+
+    def review_zoning_requirements(_data)
+      'zoning_compliance_verified'
+    end
+
+    def evaluate_utility_access(_data)
+      'utility_infrastructure_assessed'
+    end
+
+    def assess_transportation_links(_data)
+      'transportation_analysis_complete'
+    end
+
+    def analyze_surrounding_context(_data)
+      'contextual_analysis_complete'
+    end
+
+    def identify_site_constraints(_data)
+      %w[constraint1 constraint2]
+    end
+
+    def identify_site_opportunities(_data)
+      %w[opportunity1 opportunity2]
+    end
+
+    def format_site_analysis(_analysis)
+      'Comprehensive site analysis report'
+    end
 
     # Additional placeholder methods for full functionality
-    def analyze_energy_performance(data); 'energy_analysis_complete'; end
-    def calculate_carbon_footprint(data); 'carbon_footprint_calculated'; end
-    def assess_water_systems(data); 'water_management_assessed'; end
-    def evaluate_material_choices(data); 'sustainable_material_evaluation'; end
-    def analyze_waste_strategies(data); 'waste_management_strategy'; end
-    def assess_biodiversity_impact(data); 'biodiversity_impact_assessed'; end
-    def evaluate_green_certifications(data); 'certification_potential_evaluated'; end
-    def perform_lifecycle_assessment(data); 'lifecycle_analysis_complete'; end
-    def format_sustainability_report(assessment); 'Comprehensive sustainability report'; end
-    def analyze_space_program(requirements); 'space_program_analysis'; end
-    def create_adjacency_relationships(requirements); 'adjacency_matrix_created'; end
-    def design_circulation_patterns(requirements); 'circulation_design_complete'; end
-    def develop_functional_zoning(requirements); 'functional_zoning_developed'; end
-    def apply_space_standards(requirements); 'space_standards_applied'; end
-    def ensure_accessibility_compliance(requirements); 'accessibility_compliance_ensured'; end
-    def design_for_adaptability(requirements); 'adaptability_features_included'; end
-    def format_space_planning_output(planning); 'Comprehensive space planning solution'; end
+    def analyze_energy_performance(_data)
+      'energy_analysis_complete'
+    end
+
+    def calculate_carbon_footprint(_data)
+      'carbon_footprint_calculated'
+    end
+
+    def assess_water_systems(_data)
+      'water_management_assessed'
+    end
+
+    def evaluate_material_choices(_data)
+      'sustainable_material_evaluation'
+    end
+
+    def analyze_waste_strategies(_data)
+      'waste_management_strategy'
+    end
+
+    def assess_biodiversity_impact(_data)
+      'biodiversity_impact_assessed'
+    end
+
+    def evaluate_green_certifications(_data)
+      'certification_potential_evaluated'
+    end
+
+    def perform_lifecycle_assessment(_data)
+      'lifecycle_analysis_complete'
+    end
+
+    def format_sustainability_report(_assessment)
+      'Comprehensive sustainability report'
+    end
+
+    def analyze_space_program(_requirements)
+      'space_program_analysis'
+    end
+
+    def create_adjacency_relationships(_requirements)
+      'adjacency_matrix_created'
+    end
+
+    def design_circulation_patterns(_requirements)
+      'circulation_design_complete'
+    end
+
+    def develop_functional_zoning(_requirements)
+      'functional_zoning_developed'
+    end
+
+    def apply_space_standards(_requirements)
+      'space_standards_applied'
+    end
+
+    def ensure_accessibility_compliance(_requirements)
+      'accessibility_compliance_ensured'
+    end
+
+    def design_for_adaptability(_requirements)
+      'adaptability_features_included'
+    end
+
+    def format_space_planning_output(_planning)
+      'Comprehensive space planning solution'
+    end
   end
 end

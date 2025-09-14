@@ -1,4 +1,3 @@
-# encoding: utf-8
 # Efficient data retrieval module
 
 class EfficientDataRetrieval
@@ -17,7 +16,7 @@ class EfficientDataRetrieval
     results.select { |result| relevant?(result) }
   end
 
-  def relevant?(result)
+  def relevant?(_result)
     # Define relevance criteria
     true
   end

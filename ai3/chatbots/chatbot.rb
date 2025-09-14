@@ -26,11 +26,11 @@ module AI3
       puts "Starting #{@platform} chatbot..."
       @running = true
       @module.connect(@config)
-      
+
       @module.on_message do |message|
         handle_message(message)
       end
-      
+
       puts "#{@platform} chatbot is now running"
     end
 
@@ -42,11 +42,13 @@ module AI3
 
     def send_message(options = {})
       return unless @running
+
       @module.send_message(options)
     end
 
     def reply(original_message, content)
       return unless @running
+
       @module.reply(original_message, content)
     end
 
@@ -84,13 +86,12 @@ module AI3
 
         # Apply platform-specific formatting
         formatted_response = @module.format_response(response)
-        
+
         # Send response
         reply(message, formatted_response)
-        
-      rescue => e
+      rescue StandardError => e
         puts "Error handling message: #{e.message}"
-        reply(message, "Sorry, I encountered an error processing your message.")
+        reply(message, 'Sorry, I encountered an error processing your message.')
       end
     end
 
@@ -99,7 +100,7 @@ module AI3
       return true if message.mentions_bot?
       return true if message.is_direct_message?
       return true if message.content.match?(/\b(help|ai3|assistant)\b/i)
-      
+
       # Platform-specific logic
       @module.should_respond?(message)
     end
@@ -107,7 +108,7 @@ module AI3
     def determine_assistant_type(message)
       # Analyze message content to determine best assistant
       content = message.content.downcase
-      
+
       return :healthcare if content.match?(/\b(health|medical|doctor|medicine)\b/)
       return :lawyer if content.match?(/\b(legal|law|contract|attorney)\b/)
       return :trader if content.match?(/\b(stock|crypto|trading|investment)\b/)
@@ -115,7 +116,7 @@ module AI3
       return :sys_admin if content.match?(/\b(server|linux|admin|system)\b/)
       return :web_developer if content.match?(/\b(web|html|css|javascript|react)\b/)
       return :seo if content.match?(/\b(seo|search|ranking|optimization)\b/)
-      
+
       # Default to general assistant
       :base
     end

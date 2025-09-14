@@ -59,9 +59,7 @@ class EnhancedSessionManager
     end
 
     # Update session data with advanced context merging
-    if new_context.is_a?(Hash)
-      session[:context] = merge_context_intelligently(session[:context], new_context)
-    end
+    session[:context] = merge_context_intelligently(session[:context], new_context) if new_context.is_a?(Hash)
     session[:timestamp] = Time.now
     session[:cognitive_load] += cognitive_delta
     session[:concept_count] = count_concepts(session[:context])
@@ -80,23 +78,23 @@ class EnhancedSessionManager
     merged = existing_context.dup
 
     new_context.each do |key, value|
-      if merged.key?(key)
-        # Smart merging based on value types
-        case [merged[key].class, value.class]
-        when [Hash, Hash]
-          merged[key] = merge_context_intelligently(merged[key], value)
-        when [Array, Array]
-          merged[key] = (merged[key] + value).uniq
-        when [String, String]
-          # Concatenate strings with separator if they're different
-          merged[key] = merged[key] == value ? value : "#{merged[key]} | #{value}"
-        else
-          # Replace with new value for different types
-          merged[key] = value
-        end
-      else
-        merged[key] = value
-      end
+      merged[key] = if merged.key?(key)
+                      # Smart merging based on value types
+                      case [merged[key].class, value.class]
+                      when [Hash, Hash]
+                        merge_context_intelligently(merged[key], value)
+                      when [Array, Array]
+                        (merged[key] + value).uniq
+                      when [String, String]
+                        # Concatenate strings with separator if they're different
+                        merged[key] == value ? value : "#{merged[key]} | #{value}"
+                      else
+                        # Replace with new value for different types
+                        value
+                      end
+                    else
+                      value
+                    end
     end
 
     merged

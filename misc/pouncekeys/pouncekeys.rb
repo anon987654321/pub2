@@ -17,9 +17,9 @@ module PounceKeys
 
     def start
       @running = true
-      puts "Starting keystroke monitoring..."
-      puts "Press Ctrl+C to stop"
-      
+      puts 'Starting keystroke monitoring...'
+      puts 'Press Ctrl+C to stop'
+
       begin
         monitor_keystrokes
       rescue Interrupt
@@ -40,9 +40,7 @@ module PounceKeys
       while @running
         sleep(0.1)
         # Simulate random keystroke data for demonstration
-        if rand < 0.3
-          record_keystroke(generate_sample_keystroke)
-        end
+        record_keystroke(generate_sample_keystroke) if rand < 0.3
       end
     end
 
@@ -76,7 +74,7 @@ module PounceKeys
     end
 
     def summary
-      return "No data available" if @data.empty?
+      return 'No data available' if @data.empty?
 
       total_keys = @data.length
       duration = @data.last[:timestamp] - @data.first[:timestamp]
@@ -90,7 +88,7 @@ module PounceKeys
         Words per minute: #{wpm.round(2)}
         Average key duration: #{average_duration.round(3)} seconds
         Most common key: #{most_common_key}
-        
+
         Typing rhythm: #{rhythm_analysis}
       SUMMARY
     end
@@ -109,24 +107,26 @@ module PounceKeys
 
     def average_duration
       return 0 if @data.empty?
+
       @data.sum { |k| k[:duration] } / @data.length.to_f
     end
 
     def most_common_key
       return 'none' if @data.empty?
+
       @data.map { |k| k[:key] }.tally.max_by { |_, count| count }&.first || 'none'
     end
 
     def rhythm_analysis
       return 'insufficient data' if @data.length < 10
-      
+
       intervals = []
       @data.each_cons(2) do |a, b|
         intervals << b[:timestamp] - a[:timestamp]
       end
 
       avg_interval = intervals.sum / intervals.length.to_f
-      variance = intervals.sum { |i| (i - avg_interval) ** 2 } / intervals.length.to_f
+      variance = intervals.sum { |i| (i - avg_interval)**2 } / intervals.length.to_f
 
       if variance < 0.01
         'very consistent'
@@ -146,14 +146,14 @@ if __FILE__ == $0
   if ARGV.include?('--help') || ARGV.include?('-h')
     puts <<~HELP
       PounceKeys - Keystroke Analysis Tool
-      
+
       Usage: #{$0} [options]
-      
+
       Options:
         --monitor    Start keystroke monitoring
         --analyze    Analyze existing data
         --help       Show this help
-        
+      #{'  '}
       Examples:
         ruby pouncekeys.rb --monitor
         ruby pouncekeys.rb --analyze
@@ -164,12 +164,12 @@ if __FILE__ == $0
   if ARGV.include?('--monitor')
     monitor = PounceKeys::Monitor.new
     monitor.start
-    
+
     if monitor.data.any?
       analyzer = PounceKeys::Analyzer.new(monitor.data)
       stats = analyzer.generate_stats
       puts "\n" + stats.summary
-      
+
       # Save data
       File.write('keystroke_data.json', stats.export_json)
       puts "\nData saved to keystroke_data.json"
@@ -181,9 +181,9 @@ if __FILE__ == $0
       stats = analyzer.generate_stats
       puts stats.summary
     else
-      puts "No data file found. Run with --monitor first."
+      puts 'No data file found. Run with --monitor first.'
     end
   else
-    puts "Use --help for usage information"
+    puts 'Use --help for usage information'
   end
 end

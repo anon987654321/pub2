@@ -1,7 +1,6 @@
-# encoding: utf-8
 # Feedback manager for handling user feedback and improving services
 
-require_relative "error_handling"
+require_relative 'error_handling'
 
 class FeedbackManager
   include ErrorHandling
@@ -17,7 +16,7 @@ class FeedbackManager
         "query": query,
         "feedback": feedback
       }
-      @client.data_object.create(feedback_data, "UserFeedback")
+      @client.data_object.create(feedback_data, 'UserFeedback')
       update_model_based_on_feedback(feedback_data)
     end
   end

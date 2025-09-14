@@ -21,18 +21,18 @@ module VulCheck
 
     def scan
       puts "Starting vulnerability scan for #{@host}"
-      
+
       port_scan if @options[:ports] != false
       http_scan if @options[:http] != false
       ssl_scan if @options[:ssl] != false
-      
+
       @results
     end
 
     private
 
     def port_scan
-      puts "Performing port scan..."
+      puts 'Performing port scan...'
       common_ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995]
       open_ports = []
 
@@ -50,19 +50,19 @@ module VulCheck
     end
 
     def http_scan
-      puts "Performing HTTP scan..."
+      puts 'Performing HTTP scan...'
       http_results = {}
 
       [80, 443].each do |port|
         next unless port_open?(port)
-        
+
         scheme = port == 443 ? 'https' : 'http'
         url = "#{scheme}://#{@host}"
-        
+
         begin
           response = get_http_response(url)
           http_results[port] = analyze_http_response(response)
-        rescue => e
+        rescue StandardError => e
           http_results[port] = { error: e.message }
         end
       end
@@ -71,8 +71,8 @@ module VulCheck
     end
 
     def ssl_scan
-      puts "Performing SSL/TLS scan..."
-      
+      puts 'Performing SSL/TLS scan...'
+
       return unless port_open?(443)
 
       begin
@@ -96,19 +96,17 @@ module VulCheck
         socket.close
 
         @results[:scans][:ssl] = ssl_info
-      rescue => e
+      rescue StandardError => e
         @results[:scans][:ssl] = { error: e.message }
       end
     end
 
     def port_open?(port)
-      begin
-        socket = TCPSocket.new(@host, port)
-        socket.close
-        true
-      rescue
-        false
-      end
+      socket = TCPSocket.new(@host, port)
+      socket.close
+      true
+    rescue StandardError
+      false
     end
 
     def get_http_response(url)
@@ -116,10 +114,9 @@ module VulCheck
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == 'https'
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE if uri.scheme == 'https'
-      
+
       request = Net::HTTP::Get.new(uri)
-      response = http.request(request)
-      response
+      http.request(request)
     end
 
     def analyze_http_response(response)
@@ -169,41 +166,39 @@ module VulCheck
     def summary
       output = []
       output << "Vulnerability Scan Report for #{@results[:host]}"
-      output << "=" * 50
+      output << '=' * 50
 
       if @results[:scans][:ports]
         output << "\nPort Scan Results:"
         open_ports = @results[:scans][:ports][:open_ports]
-        if open_ports.any?
-          output << "  Open ports: #{open_ports.join(', ')}"
-        else
-          output << "  No open ports found"
-        end
+        output << if open_ports.any?
+                    "  Open ports: #{open_ports.join(', ')}"
+                  else
+                    '  No open ports found'
+                  end
       end
 
       if @results[:scans][:http]
         output << "\nHTTP Scan Results:"
         @results[:scans][:http].each do |port, data|
           next if data[:error]
-          
+
           output << "  Port #{port}:"
           output << "    Status: #{data[:status]}"
           output << "    Server: #{data[:server] || 'Unknown'}"
-          
+
           if data[:security_headers][:missing].any?
             output << "    Missing security headers: #{data[:security_headers][:missing].join(', ')}"
           end
-          
-          if data[:vulnerabilities].any?
-            output << "    Vulnerabilities: #{data[:vulnerabilities].join(', ')}"
-          end
+
+          output << "    Vulnerabilities: #{data[:vulnerabilities].join(', ')}" if data[:vulnerabilities].any?
         end
       end
 
       if @results[:scans][:ssl]
         output << "\nSSL/TLS Scan Results:"
         ssl = @results[:scans][:ssl]
-        
+
         if ssl[:error]
           output << "  Error: #{ssl[:error]}"
         else
@@ -229,36 +224,36 @@ if __FILE__ == $0
   require 'optparse'
 
   options = {}
-  
+
   OptionParser.new do |opts|
     opts.banner = "Usage: #{$0} [options]"
-    
+
     opts.on('--host HOST', 'Target host to scan') do |host|
       options[:host] = host
     end
-    
+
     opts.on('--ports PORTS', 'Comma-separated list of ports to scan') do |ports|
       options[:ports] = ports.split(',').map(&:to_i)
     end
-    
+
     opts.on('--[no-]http', 'Enable/disable HTTP scanning') do |http|
       options[:http] = http
     end
-    
+
     opts.on('--[no-]ssl', 'Enable/disable SSL scanning') do |ssl|
       options[:ssl] = ssl
     end
-    
+
     opts.on('--full', 'Perform full scan (all options enabled)') do
       options[:http] = true
       options[:ssl] = true
       options[:ports] = true
     end
-    
+
     opts.on('--report FORMAT', 'Report format (summary or json)') do |format|
       options[:report] = format
     end
-    
+
     opts.on('-h', '--help', 'Show this help') do
       puts opts
       exit
@@ -266,7 +261,7 @@ if __FILE__ == $0
   end.parse!
 
   unless options[:host]
-    puts "Error: --host is required"
+    puts 'Error: --host is required'
     exit 1
   end
 
@@ -274,7 +269,7 @@ if __FILE__ == $0
   results = scanner.scan
 
   reporter = VulCheck::Reporter.new(results)
-  
+
   if options[:report] == 'json'
     puts reporter.json_report
   else

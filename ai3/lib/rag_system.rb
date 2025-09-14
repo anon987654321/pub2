@@ -1,24 +1,20 @@
-# encoding: utf-8
-
-require "langchain"
-require "httparty"
+require 'langchain'
+require 'httparty'
 
 class RAGSystem
   def initialize(weaviate_integration)
     @weaviate_integration = weaviate_integration
-    @raft_system = Langchain::LLM::OpenAI.new(api_key: ENV["OPENAI_API_KEY"])
+    @raft_system = Langchain::LLM::OpenAI.new(api_key: ENV['OPENAI_API_KEY'])
   end
 
   def generate_answer(query)
     results = @weaviate_integration.similarity_search(query, 5)
-    combined_context = results.map { |r| r["content"] }.join("\n")
-    response = "Based on the context:\n#{combined_context}\n\nAnswer: [Generated response based on the context]"
-    response
+    combined_context = results.map { |r| r['content'] }.join("\n")
+    "Based on the context:\n#{combined_context}\n\nAnswer: [Generated response based on the context]"
   end
 
   def advanced_raft_answer(query, context)
-    results = @raft_system.generate_answer("#{query}\nContext: #{context}")
-    results
+    @raft_system.generate_answer("#{query}\nContext: #{context}")
   end
 
   def process_urls(urls)

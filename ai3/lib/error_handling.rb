@@ -1,4 +1,3 @@
-# encoding: utf-8
 # Error handling module to encapsulate common error handling logic
 
 module ErrorHandling

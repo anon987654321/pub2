@@ -1,9 +1,8 @@
-# encoding: utf-8
 # Filesystem tool for managing files
 
-require "fileutils"
-require "logger"
-require "safe_ruby"
+require 'fileutils'
+require 'logger'
+require 'safe_ruby'
 
 class FileSystemTool
   def initialize
@@ -11,33 +10,33 @@ class FileSystemTool
   end
 
   def read_file(path)
-    return "File not found or not readable" unless file_accessible?(path, :readable?)
+    return 'File not found or not readable' unless file_accessible?(path, :readable?)
 
     content = safe_eval("File.read(#{path.inspect})")
-    log_action("read", path)
+    log_action('read', path)
     content
-  rescue => e
-    handle_error("read", e)
+  rescue StandardError => e
+    handle_error('read', e)
   end
 
   def write_file(path, content)
-    return "Permission denied" unless file_accessible?(path, :writable?)
+    return 'Permission denied' unless file_accessible?(path, :writable?)
 
     safe_eval("File.open(#{path.inspect}, 'w') {|f| f.write(#{content.inspect})}")
-    log_action("write", path)
-    "File written successfully"
-  rescue => e
-    handle_error("write", e)
+    log_action('write', path)
+    'File written successfully'
+  rescue StandardError => e
+    handle_error('write', e)
   end
 
   def delete_file(path)
-    return "File not found" unless File.exist?(path)
+    return 'File not found' unless File.exist?(path)
 
     safe_eval("FileUtils.rm(#{path.inspect})")
-    log_action("delete", path)
-    "File deleted successfully"
-  rescue => e
-    handle_error("delete", e)
+    log_action('delete', path)
+    'File deleted successfully'
+  rescue StandardError => e
+    handle_error('delete', e)
   end
 
   private

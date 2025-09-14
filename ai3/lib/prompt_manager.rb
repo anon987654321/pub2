@@ -1,7 +1,6 @@
-# encoding: utf-8
 # Manages dynamic prompts for the system
 
-require "langchain"
+require 'langchain'
 
 class PromptManager
   attr_accessor :prompts

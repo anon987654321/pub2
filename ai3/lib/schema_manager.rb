@@ -1,4 +1,3 @@
-# encoding: utf-8
 # Dynamic schema manager for Weaviate
 
 class SchemaManager
@@ -14,15 +13,15 @@ class SchemaManager
           "description": "Data related to the #{profession} profession",
           "properties": [
             {
-              "name": "content",
-              "dataType": ["text"],
+              "name": 'content',
+              "dataType": ['text'],
               "indexInverted": true
             },
             {
-              "name": "vector",
-              "dataType": ["number"],
-              "vectorIndexType": "hnsw",
-              "vectorizer": "text2vec-transformers"
+              "name": 'vector',
+              "dataType": ['number'],
+              "vectorIndexType": 'hnsw',
+              "vectorizer": 'text2vec-transformers'
             }
           ]
         }

@@ -18,13 +18,13 @@ module AI3
         @user_agent = config[:user_agent] || 'AI3Bot/1.0'
         @username = config[:username]
         @password = config[:password]
-        @subreddits = config[:subreddits] || ['AskReddit', 'programming', 'technology']
-        
+        @subreddits = config[:subreddits] || %w[AskReddit programming technology]
+
         # Initialize Reddit API client (PRAW equivalent in Ruby)
         setup_reddit_client
         @connected = true
-        puts "Connected to Reddit API"
-      rescue => e
+        puts 'Connected to Reddit API'
+      rescue StandardError => e
         puts "Reddit connection failed: #{e.message}"
       end
 
@@ -35,7 +35,7 @@ module AI3
 
       def send_message(options = {})
         return unless @connected
-        
+
         if options[:type] == 'comment'
           post_comment(options[:submission_id], options[:content])
         elsif options[:type] == 'reply'
@@ -66,30 +66,28 @@ module AI3
         # - Support for **bold**, *italic*, `code`
         # - Link formatting
         # - Line breaks
-        
+
         # Ensure proper markdown formatting
-        response = response.gsub(/\n\n+/, "\n\n")  # Clean up extra line breaks
-        
+        response = response.gsub(/\n\n+/, "\n\n") # Clean up extra line breaks
+
         # Add proper citation format for Reddit
-        if response.length > 1000
-          response = response[0..996] + "...\n\n*[Response truncated]*"
-        end
-        
+        response = response[0..996] + "...\n\n*[Response truncated]*" if response.length > 1000
+
         # Add bot signature
         response += "\n\n---\n*I'm an AI assistant. [Learn more](https://example.com/ai3)*"
-        
+
         response
       end
 
       def should_respond?(message)
         content = message.content.downcase
-        
+
         # Respond to mentions
         return true if content.include?('/u/ai3bot') || content.include?('u/ai3bot')
-        
+
         # Respond to specific keywords in monitored subreddits
         subreddit = message.platform_data[:subreddit]
-        
+
         case subreddit
         when 'programming', 'learnprogramming'
           return true if content.match?(/\b(help|question|bug|error|code)\b/)
@@ -98,7 +96,7 @@ module AI3
         when 'technology'
           return true if content.match?(/\b(ai|machine learning|automation)\b/)
         end
-        
+
         # Respond to direct messages
         message.is_direct_message?
       end
@@ -106,7 +104,7 @@ module AI3
       def disconnect
         @monitoring = false
         @connected = false
-        puts "Disconnected from Reddit"
+        puts 'Disconnected from Reddit'
       end
 
       private
@@ -114,33 +112,32 @@ module AI3
       def setup_reddit_client
         # Placeholder for Reddit API client setup
         # In a real implementation, this would use a Ruby Reddit gem like 'redd'
-        puts "Setting up Reddit API client"
+        puts 'Setting up Reddit API client'
       end
 
       def start_monitoring
         @monitoring = true
-        
+
         Thread.new do
           while @monitoring
             @subreddits.each do |subreddit|
               monitor_subreddit(subreddit)
             end
-            sleep(30)  # Rate limiting
+            sleep(30) # Rate limiting
           end
         end
       end
 
       def monitor_subreddit(subreddit)
         return unless @monitoring
-        
+
         begin
           # Monitor new submissions
           monitor_new_submissions(subreddit)
-          
+
           # Monitor new comments
           monitor_new_comments(subreddit)
-          
-        rescue => e
+        rescue StandardError => e
           puts "Error monitoring r/#{subreddit}: #{e.message}"
         end
       end
@@ -148,7 +145,7 @@ module AI3
       def monitor_new_submissions(subreddit)
         # Fetch new submissions from subreddit
         submissions = fetch_new_submissions(subreddit)
-        
+
         submissions.each do |submission|
           message = create_submission_message(submission, subreddit)
           @message_handler&.call(message) if should_process_submission?(submission)
@@ -158,20 +155,20 @@ module AI3
       def monitor_new_comments(subreddit)
         # Fetch new comments from subreddit
         comments = fetch_new_comments(subreddit)
-        
+
         comments.each do |comment|
           message = create_comment_message(comment, subreddit)
           @message_handler&.call(message) if should_process_comment?(comment)
         end
       end
 
-      def fetch_new_submissions(subreddit)
+      def fetch_new_submissions(_subreddit)
         # Placeholder for Reddit API call
         # Would fetch from Reddit API: /r/subreddit/new.json
         []
       end
 
-      def fetch_new_comments(subreddit)
+      def fetch_new_comments(_subreddit)
         # Placeholder for Reddit API call
         # Would fetch from Reddit API: /r/subreddit/comments.json
         []
@@ -218,16 +215,16 @@ module AI3
       def should_process_submission?(submission)
         # Filter criteria for submissions
         return false if submission['author'] == @username
-        return false if submission['created_utc'] < (Time.now - 3600).to_i  # Only last hour
-        
+        return false if submission['created_utc'] < (Time.now - 3600).to_i # Only last hour
+
         true
       end
 
       def should_process_comment?(comment)
         # Filter criteria for comments
         return false if comment['author'] == @username
-        return false if comment['created_utc'] < (Time.now - 1800).to_i  # Only last 30 minutes
-        
+        return false if comment['created_utc'] < (Time.now - 1800).to_i # Only last 30 minutes
+
         true
       end
 
@@ -241,7 +238,7 @@ module AI3
         # Real implementation would use Reddit API to reply to comment
       end
 
-      def send_private_message(username, subject, content)
+      def send_private_message(username, subject, _content)
         puts "Sending PM to #{username}: #{subject}"
         # Real implementation would use Reddit API to send private message
       end

@@ -1,4 +1,3 @@
-# encoding: utf-8
 # Enhanced user interaction module
 
 class UserInteraction

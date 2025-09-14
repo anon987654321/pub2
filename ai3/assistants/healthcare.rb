@@ -1,5 +1,5 @@
 class Doctor
-  def process_input(input)
+  def process_input(_input)
     'This is a response from Doctor'
   end
 end
@@ -12,7 +12,7 @@ require_relative 'assistant'
 
 class DoctorAssistant < Assistant
   def initialize(specialization)
-    super("Doctor", specialization)
+    super('Doctor', specialization)
   end
 
   def diagnose_patient(symptoms)

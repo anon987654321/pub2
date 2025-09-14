@@ -13,23 +13,23 @@ module AI3
 
       def connect(config)
         require 'discordrb'
-        
+
         @client = Discordrb::Bot.new(
           token: config[:token],
-          intents: [:server_messages, :direct_messages]
+          intents: %i[server_messages direct_messages]
         )
-        
+
         @connected = true
-        puts "Connected to Discord"
+        puts 'Connected to Discord'
       rescue LoadError
-        puts "discordrb gem not available - Discord integration disabled"
-      rescue => e
+        puts 'discordrb gem not available - Discord integration disabled'
+      rescue StandardError => e
         puts "Discord connection failed: #{e.message}"
       end
 
       def on_message(&block)
         return unless @client && @connected
-        
+
         @client.message do |event|
           message = AI3::Message.new(
             content: event.content,
@@ -44,28 +44,28 @@ module AI3
               discord_event: event
             }
           )
-          
+
           block.call(message)
         end
-        
+
         @client.run
       end
 
       def send_message(options = {})
         return unless @client && @connected
-        
+
         channel = find_channel(options[:channel])
         return unless channel
-        
+
         channel.send_message(options[:content])
       end
 
       def reply(original_message, content)
         return unless @client && @connected
-        
+
         discord_event = original_message.platform_data[:discord_event]
         return unless discord_event
-        
+
         discord_event.respond(content)
       end
 
@@ -74,12 +74,10 @@ module AI3
         response = response.gsub(/\*\*(.*?)\*\*/, '**\1**')  # Bold
         response = response.gsub(/\*(.*?)\*/, '*\1*')        # Italic
         response = response.gsub(/`(.*?)`/, '`\1`')          # Code
-        
+
         # Limit message length (Discord limit is 2000 characters)
-        if response.length > 1900
-          response = response[0..1896] + "..."
-        end
-        
+        response = response[0..1896] + '...' if response.length > 1900
+
         response
       end
 
@@ -91,14 +89,14 @@ module AI3
       def disconnect
         @client&.stop
         @connected = false
-        puts "Disconnected from Discord"
+        puts 'Disconnected from Discord'
       end
 
       private
 
       def find_channel(channel_name)
         return nil unless @client
-        
+
         # Handle channel ID or name
         if channel_name.is_a?(Integer) || channel_name.match?(/^\d+$/)
           @client.channel(channel_name.to_i)

@@ -70,7 +70,7 @@ module Assistants
     # Enhanced medical condition lookup with comprehensive analysis
     def lookup_condition(condition)
       puts "🔍 Searching comprehensive medical databases for: #{condition}"
-      
+
       condition_info = {
         condition: condition,
         specialty: determine_specialty(condition),
@@ -80,19 +80,19 @@ module Assistants
         prognosis: assess_prognosis(condition),
         prevention: prevention_measures(condition)
       }
-      
+
       @diagnostic_history << condition_info
       format_medical_information(condition_info)
     end
 
     # Comprehensive medical advice with symptom analysis
     def provide_medical_advice(symptoms)
-      puts "🩺 Analyzing symptoms for medical guidance..."
-      
+      puts '🩺 Analyzing symptoms for medical guidance...'
+
       symptom_analysis = analyze_symptom_cluster(symptoms)
       urgency_level = assess_urgency(symptoms)
       recommendations = generate_recommendations(symptoms, urgency_level)
-      
+
       advice = {
         symptoms: symptoms,
         analysis: symptom_analysis,
@@ -101,18 +101,18 @@ module Assistants
         next_steps: determine_next_steps(urgency_level),
         red_flags: identify_red_flags(symptoms)
       }
-      
+
       format_medical_advice(advice)
     end
 
     # Symptom checker with diagnostic assistance
     def symptom_checker(symptom_list)
-      puts "🔍 Running comprehensive symptom analysis..."
-      
+      puts '🔍 Running comprehensive symptom analysis...'
+
       categorized_symptoms = categorize_symptoms(symptom_list)
       possible_conditions = match_symptoms_to_conditions(categorized_symptoms)
       risk_assessment = assess_symptom_risk(symptom_list)
-      
+
       {
         input_symptoms: symptom_list,
         categorized_symptoms: categorized_symptoms,
@@ -124,11 +124,11 @@ module Assistants
 
     # Drug interaction checker
     def check_drug_interactions(medications)
-      puts "💊 Checking for potential drug interactions..."
-      
+      puts '💊 Checking for potential drug interactions...'
+
       interactions = analyze_drug_interactions(medications)
       severity_levels = assess_interaction_severity(interactions)
-      
+
       {
         medications: medications,
         interactions_found: interactions,
@@ -139,12 +139,12 @@ module Assistants
 
     # Medical history analysis
     def analyze_medical_history(history)
-      puts "📋 Analyzing comprehensive medical history..."
-      
+      puts '📋 Analyzing comprehensive medical history...'
+
       risk_factors = identify_risk_factors(history)
       patterns = detect_health_patterns(history)
       preventive_measures = suggest_preventive_care(risk_factors)
-      
+
       {
         history_summary: summarize_history(history),
         identified_risks: risk_factors,
@@ -155,8 +155,8 @@ module Assistants
 
     # Generate health assessment report
     def generate_health_report(patient_data)
-      puts "📊 Generating comprehensive health assessment report..."
-      
+      puts '📊 Generating comprehensive health assessment report...'
+
       report = {
         patient_overview: create_patient_overview(patient_data),
         risk_assessment: comprehensive_risk_assessment(patient_data),
@@ -165,17 +165,17 @@ module Assistants
         follow_up_plan: create_follow_up_plan(patient_data),
         lifestyle_advice: generate_lifestyle_advice(patient_data)
       }
-      
+
       format_health_report(report)
     end
 
     # Emergency triage assessment
     def emergency_triage(symptoms, vitals = {})
-      puts "🚨 Performing emergency triage assessment..."
-      
+      puts '🚨 Performing emergency triage assessment...'
+
       triage_level = determine_triage_level(symptoms, vitals)
       immediate_actions = determine_immediate_actions(triage_level)
-      
+
       {
         triage_level: triage_level,
         urgency_score: calculate_urgency_score(symptoms, vitals),
@@ -211,7 +211,7 @@ module Assistants
         'mental' => :psychiatry,
         'lung' => :pulmonology
       }
-      
+
       condition_lower = condition.downcase
       specialty_mappings.find { |key, _| condition_lower.include?(key) }&.last || :general_medicine
     end
@@ -220,27 +220,27 @@ module Assistants
       # Generate related symptoms based on condition
       [
         "Primary symptoms of #{condition}",
-        "Secondary manifestations",
-        "Associated findings",
-        "Complications to monitor"
+        'Secondary manifestations',
+        'Associated findings',
+        'Complications to monitor'
       ]
     end
 
     def generate_differential_diagnosis(condition)
       [
         "Primary diagnosis: #{condition}",
-        "Alternative diagnoses to consider",
-        "Ruling out serious conditions",
-        "Further testing recommendations"
+        'Alternative diagnoses to consider',
+        'Ruling out serious conditions',
+        'Further testing recommendations'
       ]
     end
 
     def suggest_treatment_options(condition)
       {
         conservative: "Conservative management approaches for #{condition}",
-        medical: "Medical treatment options",
-        surgical: "Surgical interventions if applicable",
-        supportive: "Supportive care measures"
+        medical: 'Medical treatment options',
+        surgical: 'Surgical interventions if applicable',
+        supportive: 'Supportive care measures'
       }
     end
 
@@ -248,12 +248,12 @@ module Assistants
       "Prognosis varies based on severity, patient factors, and treatment response for #{condition}"
     end
 
-    def prevention_measures(condition)
+    def prevention_measures(_condition)
       [
-        "Primary prevention strategies",
-        "Risk factor modification",
-        "Screening recommendations",
-        "Lifestyle modifications"
+        'Primary prevention strategies',
+        'Risk factor modification',
+        'Screening recommendations',
+        'Lifestyle modifications'
       ]
     end
 
@@ -261,7 +261,7 @@ module Assistants
       categorized = categorize_symptoms(symptoms.split(/[,;]/))
       severity = assess_symptom_severity(symptoms)
       duration = assess_symptom_duration(symptoms)
-      
+
       {
         categories: categorized,
         severity: severity,
@@ -272,23 +272,23 @@ module Assistants
 
     def categorize_symptoms(symptom_list)
       categorized = {}
-      
+
       SYMPTOM_CATEGORIES.each do |category, symptoms|
         matches = symptom_list.select do |symptom|
           symptoms.any? { |s| symptom.downcase.include?(s.tr('_', ' ')) }
         end
         categorized[category] = matches unless matches.empty?
       end
-      
+
       categorized
     end
 
     def assess_urgency(symptoms)
       high_urgency_indicators = [
-        'chest pain', 'severe headache', 'difficulty breathing', 
+        'chest pain', 'severe headache', 'difficulty breathing',
         'severe bleeding', 'loss of consciousness', 'severe pain'
       ]
-      
+
       symptoms_lower = symptoms.downcase
       if high_urgency_indicators.any? { |indicator| symptoms_lower.include?(indicator) }
         :high
@@ -299,28 +299,28 @@ module Assistants
       end
     end
 
-    def generate_recommendations(symptoms, urgency)
+    def generate_recommendations(_symptoms, urgency)
       case urgency
       when :high
         [
-          "Seek immediate medical attention",
-          "Call emergency services if severe",
-          "Do not delay treatment",
-          "Monitor vital signs closely"
+          'Seek immediate medical attention',
+          'Call emergency services if severe',
+          'Do not delay treatment',
+          'Monitor vital signs closely'
         ]
       when :moderate
         [
-          "Schedule appointment with healthcare provider",
-          "Monitor symptoms closely",
-          "Seek care if symptoms worsen",
-          "Consider urgent care if needed"
+          'Schedule appointment with healthcare provider',
+          'Monitor symptoms closely',
+          'Seek care if symptoms worsen',
+          'Consider urgent care if needed'
         ]
       else
         [
-          "Monitor symptoms",
-          "Consider self-care measures",
-          "Schedule routine appointment if persistent",
-          "Maintain symptom diary"
+          'Monitor symptoms',
+          'Consider self-care measures',
+          'Schedule routine appointment if persistent',
+          'Maintain symptom diary'
         ]
       end
     end
@@ -328,11 +328,11 @@ module Assistants
     def determine_next_steps(urgency)
       case urgency
       when :high
-        "Immediate medical evaluation required"
+        'Immediate medical evaluation required'
       when :moderate
-        "Medical evaluation within 24-48 hours"
+        'Medical evaluation within 24-48 hours'
       else
-        "Monitor and reassess in 1-2 weeks"
+        'Monitor and reassess in 1-2 weeks'
       end
     end
 
@@ -344,37 +344,37 @@ module Assistants
         'breathing difficulties',
         'chest pain'
       ]
-      
+
       symptoms_lower = symptoms.downcase
       red_flags.select { |flag| symptoms_lower.include?(flag.split.last) }
     end
 
     def match_symptoms_to_conditions(categorized_symptoms)
       conditions = []
-      
-      categorized_symptoms.each do |category, symptoms|
+
+      categorized_symptoms.each do |category, _symptoms|
         case category
         when :cardiovascular
           conditions += ['Angina', 'Heart failure', 'Arrhythmia']
         when :respiratory
-          conditions += ['Asthma', 'COPD', 'Pneumonia']
+          conditions += %w[Asthma COPD Pneumonia]
         when :gastrointestinal
           conditions += ['Gastritis', 'IBS', 'Food poisoning']
         when :neurological
           conditions += ['Migraine', 'Tension headache', 'Neuropathy']
         end
       end
-      
+
       conditions.uniq
     end
 
     def assess_symptom_risk(symptoms)
       # Simple risk assessment based on symptom content
-      high_risk_terms = ['severe', 'acute', 'sudden', 'intense']
-      moderate_risk_terms = ['persistent', 'worsening', 'recurring']
-      
+      high_risk_terms = %w[severe acute sudden intense]
+      moderate_risk_terms = %w[persistent worsening recurring]
+
       symptoms_lower = symptoms.join(' ').downcase
-      
+
       if high_risk_terms.any? { |term| symptoms_lower.include?(term) }
         :high
       elsif moderate_risk_terms.any? { |term| symptoms_lower.include?(term) }
@@ -387,32 +387,33 @@ module Assistants
     def generate_symptom_recommendations(risk_level)
       case risk_level
       when :high
-        "Immediate medical evaluation recommended"
+        'Immediate medical evaluation recommended'
       when :moderate
-        "Medical consultation advised within 1-2 days"
+        'Medical consultation advised within 1-2 days'
       else
-        "Monitor symptoms and seek care if worsening"
+        'Monitor symptoms and seek care if worsening'
       end
     end
 
     def analyze_drug_interactions(medications)
       # Simplified drug interaction analysis
       common_interactions = {
-        'warfarin' => ['aspirin', 'antibiotics'],
+        'warfarin' => %w[aspirin antibiotics],
         'metformin' => ['contrast agents'],
         'digoxin' => ['diuretics', 'ACE inhibitors']
       }
-      
+
       interactions = []
       medications.each do |med1|
         medications.each do |med2|
           next if med1 == med2
+
           if common_interactions[med1.downcase]&.include?(med2.downcase)
             interactions << { drug1: med1, drug2: med2, type: 'potential_interaction' }
           end
         end
       end
-      
+
       interactions
     end
 
@@ -424,7 +425,7 @@ module Assistants
 
     def drug_interaction_recommendations(interactions)
       if interactions.empty?
-        "No significant interactions detected"
+        'No significant interactions detected'
       else
         "Review medications with healthcare provider - #{interactions.length} potential interactions found"
       end
@@ -438,12 +439,12 @@ module Assistants
         "**Treatment Options:** #{info[:treatment_options].values.join('; ')}\n" \
         "**Prognosis:** #{info[:prognosis]}\n" \
         "**Prevention:** #{info[:prevention].join(', ')}\n\n" \
-        "*⚠️ This information is for educational purposes only. Consult healthcare provider for medical advice.*"
+        '*⚠️ This information is for educational purposes only. Consult healthcare provider for medical advice.*'
     end
 
     def format_medical_advice(advice)
       urgency_emoji = { high: '🚨', moderate: '⚠️', low: 'ℹ️' }
-      
+
       "#{urgency_emoji[advice[:urgency]]} **Medical Assessment**\n\n" \
         "**Symptoms Analyzed:** #{advice[:symptoms]}\n" \
         "**Urgency Level:** #{advice[:urgency].to_s.upcase}\n" \
@@ -451,28 +452,84 @@ module Assistants
         "**Recommendations:**\n#{advice[:recommendations].map { |r| "• #{r}" }.join("\n")}\n" \
         "**Next Steps:** #{advice[:next_steps]}\n" \
         "**Red Flags:** #{advice[:red_flags].join(', ') if advice[:red_flags].any?}\n\n" \
-        "*⚠️ This assessment is not a substitute for professional medical diagnosis.*"
+        '*⚠️ This assessment is not a substitute for professional medical diagnosis.*'
     end
 
     # Additional helper methods for comprehensive functionality
-    def assess_symptom_severity(symptoms); :moderate; end
-    def assess_symptom_duration(symptoms); 'acute'; end
-    def detect_symptom_pattern(symptoms); 'intermittent'; end
-    def identify_risk_factors(history); ['family_history', 'lifestyle_factors']; end
-    def detect_health_patterns(history); ['chronic_condition_pattern']; end
-    def suggest_preventive_care(risks); ['regular_screening', 'lifestyle_modification']; end
-    def summarize_history(history); "Patient history summary"; end
-    def create_patient_overview(data); "Patient overview based on provided data"; end
-    def comprehensive_risk_assessment(data); { cardiovascular: :moderate, diabetes: :low }; end
-    def analyze_health_metrics(data); { bp: 'normal', cholesterol: 'borderline' }; end
-    def personalized_recommendations(data); ['diet_modification', 'exercise_program']; end
-    def create_follow_up_plan(data); "Follow-up in 3 months"; end
-    def generate_lifestyle_advice(data); ['healthy_diet', 'regular_exercise', 'stress_management']; end
-    def determine_triage_level(symptoms, vitals); :moderate; end
-    def determine_immediate_actions(level); ['monitor_vitals', 'pain_management']; end
-    def calculate_urgency_score(symptoms, vitals); 6; end
-    def estimate_wait_time(level); level == :high ? '0-15 min' : '30-60 min'; end
-    def monitoring_requirements(symptoms); ['vital_signs', 'pain_assessment']; end
-    def format_health_report(report); "Comprehensive health report generated"; end
+    def assess_symptom_severity(_symptoms)
+      :moderate
+    end
+
+    def assess_symptom_duration(_symptoms)
+      'acute'
+    end
+
+    def detect_symptom_pattern(_symptoms)
+      'intermittent'
+    end
+
+    def identify_risk_factors(_history)
+      %w[family_history lifestyle_factors]
+    end
+
+    def detect_health_patterns(_history)
+      ['chronic_condition_pattern']
+    end
+
+    def suggest_preventive_care(_risks)
+      %w[regular_screening lifestyle_modification]
+    end
+
+    def summarize_history(_history)
+      'Patient history summary'
+    end
+
+    def create_patient_overview(_data)
+      'Patient overview based on provided data'
+    end
+
+    def comprehensive_risk_assessment(_data)
+      { cardiovascular: :moderate, diabetes: :low }
+    end
+
+    def analyze_health_metrics(_data)
+      { bp: 'normal', cholesterol: 'borderline' }
+    end
+
+    def personalized_recommendations(_data)
+      %w[diet_modification exercise_program]
+    end
+
+    def create_follow_up_plan(_data)
+      'Follow-up in 3 months'
+    end
+
+    def generate_lifestyle_advice(_data)
+      %w[healthy_diet regular_exercise stress_management]
+    end
+
+    def determine_triage_level(_symptoms, _vitals)
+      :moderate
+    end
+
+    def determine_immediate_actions(_level)
+      %w[monitor_vitals pain_management]
+    end
+
+    def calculate_urgency_score(_symptoms, _vitals)
+      6
+    end
+
+    def estimate_wait_time(level)
+      level == :high ? '0-15 min' : '30-60 min'
+    end
+
+    def monitoring_requirements(_symptoms)
+      %w[vital_signs pain_assessment]
+    end
+
+    def format_health_report(_report)
+      'Comprehensive health report generated'
+    end
   end
 end

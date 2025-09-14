@@ -14,25 +14,25 @@ module AI3
         scheme: config[:scheme] || 'http',
         timeout: config[:timeout] || 30
       }
-      
+
       @schema = config[:schema] || default_schema
       @client = nil
       @connected = false
-      
+
       initialize_client if config[:auto_connect] != false
     end
 
     # Connection management
     def connect
       return true if @connected
-      
+
       begin
         # Initialize Weaviate client (stub implementation)
         @client = MockWeaviateClient.new(@config)
         @connected = true
         puts "Connected to Weaviate at #{@config[:scheme]}://#{@config[:host]}:#{@config[:port]}"
         true
-      rescue => e
+      rescue StandardError => e
         puts "Failed to connect to Weaviate: #{e.message}"
         false
       end
@@ -41,7 +41,7 @@ module AI3
     def disconnect
       @client = nil
       @connected = false
-      puts "Disconnected from Weaviate"
+      puts 'Disconnected from Weaviate'
     end
 
     def connected?
@@ -51,19 +51,19 @@ module AI3
     # Data operations
     def check_if_indexed(url)
       return false unless connected?
-      
+
       begin
         query = {
           where: {
-            path: ["url"],
-            operator: "Equal",
+            path: ['url'],
+            operator: 'Equal',
             valueString: url
           }
         }
-        
+
         results = @client.query(query)
         !results.empty?
-      rescue => e
+      rescue StandardError => e
         puts "Error checking if #{url} is indexed: #{e.message}"
         false
       end
@@ -71,17 +71,17 @@ module AI3
 
     def add_data_to_weaviate(url:, content:, metadata: {})
       return false unless connected?
-      
+
       begin
         # Prepare document for indexing
         document = prepare_document(url, content, metadata)
-        
+
         # Add to Weaviate
         result = @client.create_object(document)
-        
+
         puts "Successfully indexed #{url}" if result
         result
-      rescue => e
+      rescue StandardError => e
         puts "Error adding data for #{url}: #{e.message}"
         false
       end
@@ -89,17 +89,17 @@ module AI3
 
     def search(query, options = {})
       return [] unless connected?
-      
+
       begin
         search_params = {
           query: query,
           limit: options[:limit] || 10,
           certainty: options[:certainty] || 0.7
         }
-        
+
         results = @client.search(search_params)
         format_search_results(results)
-      rescue => e
+      rescue StandardError => e
         puts "Error searching: #{e.message}"
         []
       end
@@ -107,20 +107,20 @@ module AI3
 
     def delete_by_url(url)
       return false unless connected?
-      
+
       begin
         query = {
           where: {
-            path: ["url"],
-            operator: "Equal",
+            path: ['url'],
+            operator: 'Equal',
             valueString: url
           }
         }
-        
+
         @client.delete_objects(query)
         puts "Deleted objects for URL: #{url}"
         true
-      rescue => e
+      rescue StandardError => e
         puts "Error deleting objects for #{url}: #{e.message}"
         false
       end
@@ -129,12 +129,12 @@ module AI3
     # Schema management
     def create_schema
       return false unless connected?
-      
+
       begin
         @client.create_schema(@schema)
-        puts "Schema created successfully"
+        puts 'Schema created successfully'
         true
-      rescue => e
+      rescue StandardError => e
         puts "Error creating schema: #{e.message}"
         false
       end
@@ -142,12 +142,12 @@ module AI3
 
     def delete_schema
       return false unless connected?
-      
+
       begin
         @client.delete_schema
-        puts "Schema deleted successfully"
+        puts 'Schema deleted successfully'
         true
-      rescue => e
+      rescue StandardError => e
         puts "Error deleting schema: #{e.message}"
         false
       end
@@ -156,18 +156,18 @@ module AI3
     # Batch operations
     def batch_add(documents)
       return false unless connected?
-      
+
       begin
         prepared_docs = documents.map do |doc|
           prepare_document(doc[:url], doc[:content], doc[:metadata] || {})
         end
-        
+
         results = @client.batch_create(prepared_docs)
         successful = results.count { |r| r[:success] }
-        
+
         puts "Batch add completed: #{successful}/#{documents.length} successful"
         results
-      rescue => e
+      rescue StandardError => e
         puts "Error in batch add: #{e.message}"
         []
       end
@@ -176,10 +176,10 @@ module AI3
     # Statistics and health
     def get_stats
       return {} unless connected?
-      
+
       begin
         @client.get_meta
-      rescue => e
+      rescue StandardError => e
         puts "Error getting stats: #{e.message}"
         {}
       end
@@ -187,10 +187,10 @@ module AI3
 
     def health_check
       return false unless connected?
-      
+
       begin
         @client.is_ready
-      rescue => e
+      rescue StandardError => e
         puts "Health check failed: #{e.message}"
         false
       end
@@ -204,48 +204,48 @@ module AI3
 
     def default_schema
       {
-        class: "Document",
-        description: "AI³ Assistant knowledge documents",
+        class: 'Document',
+        description: 'AI³ Assistant knowledge documents',
         properties: [
           {
-            name: "url",
-            dataType: ["string"],
-            description: "Source URL of the document"
+            name: 'url',
+            dataType: ['string'],
+            description: 'Source URL of the document'
           },
           {
-            name: "title", 
-            dataType: ["string"],
-            description: "Title of the document"
+            name: 'title',
+            dataType: ['string'],
+            description: 'Title of the document'
           },
           {
-            name: "content",
-            dataType: ["text"],
-            description: "Main content of the document"
+            name: 'content',
+            dataType: ['text'],
+            description: 'Main content of the document'
           },
           {
-            name: "summary",
-            dataType: ["text"],
-            description: "Summary of the document"
+            name: 'summary',
+            dataType: ['text'],
+            description: 'Summary of the document'
           },
           {
-            name: "keywords",
-            dataType: ["string[]"],
-            description: "Keywords extracted from the document"
+            name: 'keywords',
+            dataType: ['string[]'],
+            description: 'Keywords extracted from the document'
           },
           {
-            name: "category",
-            dataType: ["string"],
-            description: "Category or type of document"
+            name: 'category',
+            dataType: ['string'],
+            description: 'Category or type of document'
           },
           {
-            name: "timestamp",
-            dataType: ["date"],
-            description: "When the document was indexed"
+            name: 'timestamp',
+            dataType: ['date'],
+            description: 'When the document was indexed'
           },
           {
-            name: "assistant_type",
-            dataType: ["string"],
-            description: "Which assistant this content is relevant for"
+            name: 'assistant_type',
+            dataType: ['string'],
+            description: 'Which assistant this content is relevant for'
           }
         ]
       }
@@ -258,39 +258,39 @@ module AI3
         content: content,
         summary: metadata[:summary] || generate_summary(content),
         keywords: metadata[:keywords] || extract_keywords(content),
-        category: metadata[:category] || "general",
+        category: metadata[:category] || 'general',
         timestamp: Time.now.iso8601,
-        assistant_type: metadata[:assistant_type] || "general"
+        assistant_type: metadata[:assistant_type] || 'general'
       }
     end
 
     def extract_title(content)
       # Simple title extraction
       lines = content.split("\n").reject(&:empty?)
-      return "Untitled" if lines.empty?
-      
+      return 'Untitled' if lines.empty?
+
       # Try to find a title-like line
       title_candidate = lines.first.strip
-      title_candidate.length > 100 ? title_candidate[0..100] + "..." : title_candidate
+      title_candidate.length > 100 ? title_candidate[0..100] + '...' : title_candidate
     end
 
     def generate_summary(content)
       # Simple summary generation
       sentences = content.split(/[.!?]+/).reject(&:empty?)
       return content if sentences.length <= 2
-      
+
       # Take first 2-3 sentences as summary
       summary_sentences = sentences[0..2].join('. ')
-      summary_sentences.length > 500 ? summary_sentences[0..500] + "..." : summary_sentences
+      summary_sentences.length > 500 ? summary_sentences[0..500] + '...' : summary_sentences
     end
 
     def extract_keywords(content)
       # Simple keyword extraction
       words = content.downcase.split(/\W+/).reject { |w| w.length < 4 }
       word_freq = words.tally
-      
+
       # Get top 10 most frequent words
-      word_freq.sort_by { |word, freq| -freq }.first(10).map(&:first)
+      word_freq.sort_by { |_word, freq| -freq }.first(10).map(&:first)
     end
 
     def format_search_results(results)
@@ -335,13 +335,13 @@ module AI3
         # Mock search implementation
         query = params[:query].downcase
         limit = params[:limit] || 10
-        
+
         results = @objects.select do |obj|
           obj[:content]&.downcase&.include?(query) ||
-          obj[:title]&.downcase&.include?(query) ||
-          obj[:summary]&.downcase&.include?(query)
+            obj[:title]&.downcase&.include?(query) ||
+            obj[:summary]&.downcase&.include?(query)
         end
-        
+
         results.first(limit)
       end
 

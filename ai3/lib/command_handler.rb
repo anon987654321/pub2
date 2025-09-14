@@ -1,10 +1,9 @@
-# encoding: utf-8
 # Command handler for parsing and executing user commands.
 
-require "langchain"
-require_relative "filesystem_tool"
-require_relative "prompt_manager"
-require_relative "memory_manager"
+require 'langchain'
+require_relative 'filesystem_tool'
+require_relative 'prompt_manager'
+require_relative 'memory_manager'
 
 class CommandHandler
   def initialize(langchain_client)
@@ -15,19 +14,19 @@ class CommandHandler
   end
 
   def handle_input(input)
-    command, params = input.split(" ", 2)
+    command, params = input.split(' ', 2)
     case command
-    when "read"
+    when 'read'
       @filesystem_tool.read_file(params)
-    when "write"
+    when 'write'
       content = get_user_content
       @filesystem_tool.write_file(params, content)
-    when "delete"
+    when 'delete'
       @filesystem_tool.delete_file(params)
-    when "prompt"
+    when 'prompt'
       handle_prompt_command(params)
     else
-      "Command not recognized."
+      'Command not recognized.'
     end
   end
 
@@ -39,7 +38,7 @@ class CommandHandler
       vars = collect_prompt_variables(prompt_key)
       @prompt_manager.format_prompt(prompt_key, vars)
     else
-      "Prompt not found."
+      'Prompt not found.'
     end
   end
 

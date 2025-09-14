@@ -1,4 +1,3 @@
-# encoding: utf-8
 # Enhanced model architecture based on recent research
 
 class EnhancedModelArchitecture
@@ -16,8 +15,7 @@ class EnhancedModelArchitecture
 
   def evaluate(test_data, test_labels)
     predictions = @model.predict(test_data)
-    accuracy = calculate_accuracy(predictions, test_labels)
-    accuracy
+    calculate_accuracy(predictions, test_labels)
   end
 
   private
