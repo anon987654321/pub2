@@ -8,7 +8,7 @@
     />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="color-scheme" content="dark" />
-    <title>Radio Bergen</title>
+    <title>Play Bergen</title>
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
@@ -24,6 +24,9 @@
         --safe-right: env(safe-area-inset-right, 0px);
         --safe-bottom: env(safe-area-inset-bottom, 0px);
         --safe-left: env(safe-area-inset-left, 0px);
+        /* Title sizing via CSS variable so container height stays in sync (prevents clipping) */
+        --title-size: clamp(32px, 4.6vw, 54px);
+        --title-line: 1.18; /* line-height multiplier */
       }
       html, body {
         margin: 0;
@@ -41,21 +44,23 @@
         display: block;
         background: #000;
         touch-action: none;
+        image-rendering: pixelated; /* crisp, retro-friendly when upscaled */
       }
       @keyframes start-ack { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
       canvas.start-ack { animation: start-ack 240ms ease-out; }
 
-      /* H1 carousel — bigger, still lightweight */
+      /* H1 carousel — refined: slightly smaller and never clipped */
       h1.city-carousel {
         position: fixed;
         top: calc(12px + var(--safe-top));
         left: calc(12px + var(--safe-left));
         width: min(96vw, 720px);
-        height: 60px;
+        /* Height follows font size × line-height to avoid clipping */
+        height: calc(var(--title-size) * var(--title-line));
         z-index: 95;
         pointer-events: none;
         user-select: none;
-        overflow: hidden;
+        overflow: hidden; /* intentional to slide entries in/out cleanly */
         margin: 0;
       }
       .carousel-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
@@ -65,10 +70,11 @@
         align-items: center;
         justify-content: flex-start;
         font-weight: 700;
-        font-size: clamp(36px, 5.4vw, 60px);
+        font-size: var(--title-size);
+        line-height: var(--title-line);
         color: #dcdcdc;
         letter-spacing: 0.02em;
-        transition: transform 0.3s ease, opacity 0.3s ease;
+        transition: transform 0.24s ease, opacity 0.24s ease;
         position: absolute;
         top: 0; left: 0; width: 100%;
         opacity: 0; transform: translateY(100%);
@@ -85,15 +91,15 @@
         opacity: 0.55; transition: opacity 200ms linear;
       }
 
-      /* STREAMING … — smaller, more letter spacing, minimal padding */
+      /* STREAMING … — smaller, more spacing, ultra-minimal */
       .ui {
         position: fixed;
         right: calc(16px + var(--safe-right));
         bottom: calc(10px + var(--safe-bottom));
         color: #dcdcdc;
-        font: 10px/1.1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font: 9px/1.1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         text-transform: uppercase;
-        letter-spacing: 0.22em;          /* more spacing */
+        letter-spacing: 0.28em;           /* more space between letters */
         white-space: nowrap;
         pointer-events: none;
         user-select: none;
@@ -102,11 +108,10 @@
         overflow: hidden;
         text-overflow: ellipsis;
         z-index: 100;
-        opacity: 0.82;                   /* quieter */
-        background: #000;                /* keep, but ultra-minimal */
-        padding: 0 1px;                  /* near-zero padding */
+        opacity: 0.78;                    /* understated */
+        background: #000;
+        padding: 0 1px;                   /* near-zero padding */
         border-radius: 0;
-        will-change: opacity, transform;
       }
       .ui .label { margin-right: 4px; font-weight: 400; }
       .ui .dots  { display: inline-block; min-width: 3ch; text-align: left; }
@@ -124,7 +129,7 @@
       .overlay h2 { margin: 0 0 20px 0; font-size: 36px; font-weight: 300; color: #dcdcdc; transition: transform 180ms ease; }
       .overlay h2.clicked { transform: scale(1.06); }
 
-      /* Settings panel stays hidden unless toggled (S) — not visible by default */
+      /* Settings panel exists but is hidden unless S is pressed (keeps UI minimal) */
       .settings-panel {
         position: fixed; right: calc(10px + var(--safe-right)); top: calc(60px + var(--safe-top));
         width: min(92vw, 360px); max-height: min(72vh, 560px); overflow: auto; background: rgba(0,0,0,0.72);
@@ -133,7 +138,7 @@
       .settings-panel.show { display: block; }
       .settings-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin: 10px 0; }
 
-      /* Tap ripple micro-animation (subtle) */
+      /* Tap ripple micro-animation (very subtle) */
       .tap-ripple {
         position: fixed; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%;
         pointer-events: none; transform: translate(-50%, -50%) scale(0.4); opacity: 0.8;
@@ -150,14 +155,14 @@
       *, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }
       @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
       @media (max-width: 768px) {
-        h1.city-carousel { width: min(96vw, 700px); height: 58px; }
-        .carousel-slide { font-size: clamp(30px, 6.2vw, 54px); }
+        :root { --title-size: clamp(28px, 6.0vw, 48px); --title-line: 1.16; }
+        h1.city-carousel { width: min(96vw, 700px); height: calc(var(--title-size) * var(--title-line)); }
       }
     </style>
   </head>
   <body>
     <noscript>
-      <div style="position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#dcdcdc;">Radio Bergen requires JavaScript enabled.</div>
+      <div style="position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#dcdcdc;">Play Bergen requires JavaScript enabled.</div>
     </noscript>
 
     <!-- City carousel (radio → play) -->
@@ -572,8 +577,9 @@
       let tunnelRenderer = null;
       window.tunnelRenderer = null;
 
+      function applyInternalScaleBase(){ INTERNAL_SCALE = (isLowEnd ? 0.75 : 1) * Math.min(2, DPR); }
       function sizeCanvas(){
-        applyInternalScale();
+        applyInternalScaleBase();
         w = Math.floor(window.innerWidth*INTERNAL_SCALE);
         h = Math.floor(window.innerHeight*INTERNAL_SCALE);
         canvas.width=w; canvas.height=h;
@@ -646,7 +652,7 @@
         }catch{}
       }
 
-      // Minimal extra controls
+      // Minimal controls
       addEventListener("keydown",(e)=>{
         if (e.key && e.key.toLowerCase()==="m"){ e.preventDefault(); if(audio.started) audio.toggleMute(); return; }
         if (e.code==="ArrowRight"){ e.preventDefault(); if(audio.started) audio.next(); return; }
@@ -672,7 +678,7 @@
         if (tunnelRenderer) tunnelRenderer.frame(a);
         try{
           const avg=a.average||0, beat=a.beat||0;
-          if (uiEl){ const base=0.80, amp=0.04; uiEl.style.opacity = String(Math.max(0.7, Math.min(0.9, base + amp*avg))); }
+          if (uiEl){ const base=0.76, amp=0.04; uiEl.style.opacity = String(Math.max(0.68, Math.min(0.9, base + amp*avg))); }
           if (vignetteLayer){ const vBase=0.50, vAmp=0.10; vignetteLayer.style.opacity = String(Math.max(0.3, Math.min(0.8, vBase + vAmp*beat))); }
         }catch{}
         requestAnimationFrame(animate);
