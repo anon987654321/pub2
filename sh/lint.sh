@@ -10,7 +10,8 @@ echo "Running linting tools..."
 # Ruby linting
 if command -v rubocop >/dev/null 2>&1; then
     echo "Running RuboCop..."
-    cd ai3 && rubocop . || true
+    cd ai3
+    rubocop . || true
     cd ..
 fi
 
