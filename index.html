@@ -1,814 +1,276 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="color-scheme" content="dark" />
-    <title>Radio Bergen</title>
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Classic warp tunnel with multiple views. Tilt device for parallax." />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>"
-    />
-    <style>
-      :root {
-        --safe-top: env(safe-area-inset-top, 0px);
-        --safe-right: env(safe-area-inset-right, 0px);
-        --safe-bottom: env(safe-area-inset-bottom, 0px);
-        --safe-left: env(safe-area-inset-left, 0px);
-      }
-      html, body {
-        margin: 0;
-        height: 100%;
-        background: #000;
-        color: #9aa;
-        font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-        overflow: hidden;
-      }
-      canvas {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        display: block;
-        background: #000;
-        touch-action: none;
-        image-rendering: pixelated; /* crisp ImageData upscaling */
-      }
-      @keyframes start-ack { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
-      canvas.start-ack { animation: start-ack 240ms ease-out; }
-
-      /* H1 carousel (v17 sizing) */
-      h1.city-carousel {
-        position: fixed; top: calc(12px + var(--safe-top)); left: calc(12px + var(--safe-left));
-        width: min(92vw, 560px); height: 40px; z-index: 95; pointer-events: none; user-select: none; overflow: hidden; margin: 0;
-      }
-      .carousel-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
-      .carousel-slide {
-        height: 100%; display: flex; align-items: center; justify-content: flex-start;
-        font-weight: 700; font-size: clamp(24px, 3.2vw, 36px); color: #dcdcdc; letter-spacing: 0.02em;
-        transition: transform 0.3s ease, opacity 0.3s ease; position: absolute; top: 0; left: 0; width: 100%;
-        opacity: 0; transform: translateY(100%); white-space: nowrap;
-      }
-      .carousel-slide.active { opacity: 1; transform: translateY(0%); }
-
-      /* Bottom status (STREAMING stays still; only dots animate) */
-      .ui {
-        position: fixed;
-        right: calc(12px + var(--safe-right));
-        bottom: calc(10px + var(--safe-bottom));
-        color: #dcdcdc;
-        font: 9px/1.1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        text-transform: uppercase;
-        letter-spacing: 0.28em;
-        white-space: nowrap;
-        pointer-events: none;
-        user-select: none;
-        text-align: right;
-        max-width: min(72vw, 800px);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        z-index: 100;
-        opacity: 0.78;
-        background: #000;
-        padding: 0 1px;
-      }
-      .ui .label { margin-right: 4px; font-weight: 400; }
-      .ui .dots  { display: inline-block; width: 3ch; text-align: left; } /* fixed width to prevent label wiggle */
-      .ui-inverted { color: #dcdcdc !important; }
-
-      /* Darker overlay */
-      .overlay {
-        position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.86);
-        color: #9aa; cursor: pointer; user-select: none; z-index: 1000; text-align: center; padding: 16px;
-        opacity: 1; transition: opacity 180ms ease;
-      }
-      .overlay.ack { opacity: 0; }
-      .overlay[hidden] { display: none; }
-      .overlay h2 { margin: 0 0 20px 0; font-size: 36px; font-weight: 300; color: #dcdcdc; transition: transform 180ms ease; }
-      .overlay h2.clicked { transform: scale(1.06); }
-
-      .swipe-hint {
-        position: fixed; bottom: calc(50px + var(--safe-bottom)); left: 50%; transform: translateX(-50%);
-        color: #9aa; font-size: 16px; opacity: 0; transition: opacity 0.5s ease; z-index: 99;
-      }
-      .swipe-hint.show { opacity: 1; }
-
-      .settings-panel {
-        position: fixed; right: calc(10px + var(--safe-right)); top: calc(60px + var(--safe-top));
-        width: min(92vw, 340px); max-height: min(70vh, 520px); overflow: auto; background: rgba(0,0,0,0.72);
-        border: 1px solid rgba(220,220,220,0.12); backdrop-filter: blur(6px); color: #dcdcdc; border-radius: 10px; padding: 12px; z-index: 130; display: none;
-      }
-      .settings-panel.show { display: block; }
-      .settings-panel h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; }
-      .settings-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin: 10px 0; }
-      .settings-row input[type="range"] { width: 100%; }
-      .settings-row .value { min-width: 48px; text-align: right; color: #9bb; }
-      .settings-row select, .settings-row input[type="checkbox"] { justify-self: start; }
-
-      @media (pointer: coarse) {
-        .settings-row label { min-height: 44px; display: flex; align-items: center; }
-        .settings-row input[type="checkbox"] { width: 28px; height: 28px; }
-        .settings-row input[type="range"] { height: 44px; }
-      }
-      :focus-visible { outline: 2px solid #dcdcdc; outline-offset: 2px; }
-      *, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }
-
-      @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-      @media (max-width: 768px) {
-        h1.city-carousel { width: min(94vw, 520px); }
-        .carousel-slide { font-size: clamp(18px, 4vw, 28px); }
-      }
-
-      /* Tap ripple (subtle) */
-      .tap-ripple {
-        position: fixed; left: 0; top: 0;
-        width: 10px; height: 10px; border-radius: 50%;
-        pointer-events: none;
-        transform: translate(-50%, -50%) scale(0.4); opacity: 0.85;
-        background: radial-gradient(circle, rgba(220,220,220,0.35) 0%, rgba(220,220,220,0.18) 40%, rgba(220,220,220,0) 70%);
-        mix-blend-mode: screen; filter: blur(0.3px);
-        animation: ripple 680ms ease-out forwards;
-        z-index: 999;
-      }
-      @keyframes ripple {
-        0% { transform: translate(var(--x), var(--y)) scale(0.4); opacity: 0.85; }
-        60% { opacity: 0.3; }
-        100% { transform: translate(var(--x), var(--y)) scale(12); opacity: 0; }
-      }
-    </style>
-  </head>
-  <body>
-    <noscript>
-      <div style="position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#dcdcdc;">Radio Bergen requires JavaScript enabled.</div>
-    </noscript>
-
-    <h1 class="city-carousel" id="cityCarousel" aria-live="polite">
-      <div class="carousel-container">
-        <span class="carousel-slide active">brgen.no</span>
-        <span class="carousel-slide">oshlo.no</span>
-        <span class="carousel-slide">trndheim.no</span>
-        <span class="carousel-slide">stvanger.no</span>
-        <span class="carousel-slide">trmso.no</span>
-        <span class="carousel-slide">longyearbyn.no</span>
-        <span class="carousel-slide">reykjavk.is</span>
-        <span class="carousel-slide">kobenhvn.dk</span>
-        <span class="carousel-slide">stholm.se</span>
-        <span class="carousel-slide">gtebrg.se</span>
-        <span class="carousel-slide">mlmoe.se</span>
-        <span class="carousel-slide">hlsinki.fi</span>
-        <span class="carousel-slide">lndon.uk</span>
-        <span class="carousel-slide">cardff.uk</span>
-        <span class="carousel-slide">mnchester.uk</span>
-        <span class="carousel-slide">brmingham.uk</span>
-        <span class="carousel-slide">lverpool.uk</span>
-        <span class="carousel-slide">edinbrgh.uk</span>
-        <span class="carousel-slide">glasgw.uk</span>
-        <span class="carousel-slide">amstrdam.nl</span>
-        <span class="carousel-slide">rottrdam.nl</span>
-        <span class="carousel-slide">utrcht.nl</span>
-        <span class="carousel-slide">brssels.be</span>
-        <span class="carousel-slide">zrich.ch</span>
-        <span class="carousel-slide">lchtenstein.li</span>
-        <span class="carousel-slide">frankfrt.de</span>
-        <span class="carousel-slide">wrsawa.pl</span>
-        <span class="carousel-slide">gdnsk.pl</span>
-        <span class="carousel-slide">brdeaux.fr</span>
-        <span class="carousel-slide">mrseille.fr</span>
-        <span class="carousel-slide">mlan.it</span>
-        <span class="carousel-slide">lsbon.pt</span>
-        <span class="carousel-slide">lsangeles.com</span>
-        <span class="carousel-slide">newyrk.us</span>
-        <span class="carousel-slide">chcago.us</span>
-        <span class="carousel-slide">houstn.us</span>
-        <span class="carousel-slide">dllas.us</span>
-        <span class="carousel-slide">austn.us</span>
-        <span class="carousel-slide">prtland.com</span>
-        <span class="carousel-slide">mnneapolis.com</span>
-      </div>
-    </h1>
-
-    <canvas id="canvas" aria-label="Classic warp tunnel visualizer" tabindex="0"></canvas>
-
-    <!-- Overlay (instructions carousel removed) -->
-    <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" aria-modal="true" tabindex="0">
-      <div>
-        <h2 id="start-title">Tap to start</h2>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="color-scheme" content="dark" />
+  <title>Radio Bergen</title>
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="Classic warp tunnel with multiple views. Tilt device for parallax." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>" />
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUmFkaW8gQmVyZ2VuIiwic2hvcnRfbmFtZSI6IlJhZGlvIEJlcmdlbiIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMDAwMDAwIiwidGhlbWVfY29sb3IiOiIjMDAwMDAwIiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCIsInR5cGUiOiJpbWFnZS9zdmcrMztLCJzaXplcyI6IjE5MngxOTIifV19" />
+  <style>
+    :root { --safe-top: env(safe-area-inset-top, 0px); --safe-right: env(safe-area-inset-right, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); --safe-left: env(safe-area-inset-left, 0px); }
+    html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
+    canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #000; touch-action: none; image-rendering: pixelated; }
+    @keyframes start-ack { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
+    canvas.start-ack { animation: start-ack 240ms ease-out; }
+    h1.city-carousel { position: fixed; top: calc(12px + var(--safe-top)); left: calc(12px + var(--safe-left)); width: min(92vw, 560px); height: 40px; z-index: 95; pointer-events: none; user-select: none; overflow: hidden; margin: 0; }
+    .carousel-container { width: 100%; height: 100%; position: relative; overflow: hidden; }
+    .carousel-slide { height: 100%; display: flex; align-items: center; justify-content: flex-start; font-weight: 700; font-size: clamp(24px, 3.2vw, 36px); color: #dcdcdc; letter-spacing: 0.02em; transition: transform 0.3s ease, opacity 0.3s ease; position: absolute; top: 0; left: 0; width: 100%; opacity: 0; transform: translateY(100%); white-space: nowrap; }
+    .carousel-slide.active { opacity: 1; transform: translateY(0%); }
+    .ui { position: fixed; right: calc(12px + var(--safe-right)); bottom: calc(10px + var(--safe-bottom)); color: #dcdcdc; font: 9px/1.1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; text-transform: uppercase; letter-spacing: 0.28em; white-space: nowrap; pointer-events: none; user-select: none; text-align: right; max-width: min(72vw, 800px); overflow: hidden; text-overflow: ellipsis; z-index: 100; opacity: 0.78; background: #000; padding: 0 1px; }
+    .ui .label { margin-right: 4px; font-weight: 400; }
+    .ui .dots { display: inline-block; width: 3ch; text-align: left; }
+    .ui-inverted { color: #dcdcdc !important; }
+    .overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.86); color: #9aa; cursor: pointer; user-select: none; z-index: 1000; text-align: center; padding: 16px; opacity: 1; transition: opacity 180ms ease; }
+    .overlay.ack { opacity: 0; }
+    .overlay[hidden] { display: none; }
+    .overlay h2 { margin: 0 0 20px 0; font-size: 36px; font-weight: 300; color: #dcdcdc; transition: transform 180ms ease; }
+    .overlay h2.clicked { transform: scale(1.06); }
+    .swipe-hint { position: fixed; bottom: calc(50px + var(--safe-bottom)); left: 50%; transform: translateX(-50%); color: #9aa; font-size: 16px; opacity: 0; transition: opacity 0.5s ease; z-index: 99; }
+    .swipe-hint.show { opacity: 1; }
+    .settings-panel { position: fixed; right: calc(10px + var(--safe-right)); top: calc(60px + var(--safe-top)); width: min(92vw, 340px); max-height: min(70vh, 520px); overflow: auto; background: rgba(0,0,0,0.72); border: 1px solid rgba(220,220,220,0.12); backdrop-filter: blur(6px); color: #dcdcdc; border-radius: 10px; padding: 12px; z-index: 130; display: none; }
+    .settings-panel.show { display: block; }
+    .settings-panel h3 { margin: 0 0 8px 0; font-size: 16px; font-weight: 600; }
+    .settings-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin: 10px 0; }
+    .settings-row input[type="range"] { width: 100%; }
+    .settings-row .value { min-width: 48px; text-align: right; color: #9bb; }
+    .settings-row select, .settings-row input[type="checkbox"] { justify-self: start; }
+    @media (pointer: coarse) { .settings-row label { min-height: 44px; display: flex; align-items: center; } .settings-row input[type="checkbox"] { width: 28px; height: 28px; } .settings-row input[type="range"] { height: 44px; } }
+    :focus-visible { outline: 2px solid #dcdcdc; outline-offset: 2px; }
+    *, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+    @media (max-width: 768px) { h1.city-carousel { width: min(94vw, 520px); } .carousel-slide { font-size: clamp(18px, 4vw, 28px); } }
+    .tap-ripple { position: fixed; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%) scale(0.4); opacity: 0.85; background: radial-gradient(circle, rgba(220,220,220,0.35) 0%, rgba(220,220,220,0.18) 40%, rgba(220,220,220,0) 70%); mix-blend-mode: screen; filter: blur(0.3px); animation: ripple 680ms ease-out forwards; z-index: 999; }
+    @keyframes ripple { 0% { transform: translate(var(--x), var(--y)) scale(0.4); opacity: 0.85; } 60% { opacity: 0.3; } 100% { transform: translate(var(--x), var(--y)) scale(12); opacity: 0; } }
+  </style>
+</head>
+<body>
+  <noscript><div style="position:fixed;inset:0;display:grid;place-items:center;background:#000;color:#dcdcdc;">Radio Bergen requires JavaScript enabled.</div></noscript>
+  <h1 class="city-carousel" id="cityCarousel" aria-live="polite">
+    <div class="carousel-container">
+      <span class="carousel-slide active">playlist.brgen.no</span>
+      <span class="carousel-slide">playlist.oshlo.no</span>
+      <span class="carousel-slide">playlist.trndheim.no</span>
+      <span class="carousel-slide">playlist.stvanger.no</span>
+      <span class="carousel-slide">playlist.trmso.no</span>
+      <span class="carousel-slide">playlist.longyearbyn.no</span>
+      <span class="carousel-slide">playlist.reykjavk.is</span>
+      <span class="carousel-slide">playlist.kobenhvn.dk</span>
+      <span class="carousel-slide">playlist.stholm.se</span>
+      <span class="carousel-slide">playlist.gtebrg.se</span>
+      <span class="carousel-slide">playlist.mlmoe.se</span>
+      <span class="carousel-slide">playlist.hlsinki.fi</span>
+      <span class="carousel-slide">playlist.lndon.uk</span>
+      <span class="carousel-slide">playlist.cardff.uk</span>
+      <span class="carousel-slide">playlist.mnchester.uk</span>
+      <span class="carousel-slide">playlist.brmingham.uk</span>
+      <span class="carousel-slide">playlist.lverpool.uk</span>
+      <span class="carousel-slide">playlist.edinbrgh.uk</span>
+      <span class="carousel-slide">playlist.glasgw.uk</span>
+      <span class="carousel-slide">playlist.amstrdam.nl</span>
+      <span class="carousel-slide">playlist.rottrdam.nl</span>
+      <span class="carousel-slide">playlist.utrcht.nl</span>
+      <span class="carousel-slide">playlist.brssels.be</span>
+      <span class="carousel-slide">playlist.zrich.ch</span>
+      <span class="carousel-slide">playlist.lchtenstein.li</span>
+      <span class="carousel-slide">playlist.frankfrt.de</span>
+      <span class="carousel-slide">playlist.wrsawa.pl</span>
+      <span class="carousel-slide">playlist.gdnsk.pl</span>
+      <span class="carousel-slide">playlist.brdeaux.fr</span>
+      <span class="carousel-slide">playlist.mrseille.fr</span>
+      <span class="carousel-slide">playlist.mlan.it</span>
+      <span class="carousel-slide">playlist.lsbon.pt</span>
+      <span class="carousel-slide">playlist.lsangeles.com</span>
+      <span class="carousel-slide">playlist.newyrk.us</span>
+      <span class="carousel-slide">playlist.chcago.us</span>
+      <span class="carousel-slide">playlist.houstn.us</span>
+      <span class="carousel-slide">playlist.dllas.us</span>
+      <span class="carousel-slide">playlist.austn.us</span>
+      <span class="carousel-slide">playlist.prtland.com</span>
+      <span class="carousel-slide">playlist.mnneapolis.com</span>
     </div>
-
-    <!-- Bottom status (STREAMING fixed) -->
-    <div class="ui" id="ui" role="status" aria-live="off" aria-atomic="true">
-      <span class="label">Streaming</span><span class="dots" id="uiDots" aria-hidden="true"></span>
-    </div>
-
-    <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
-
-    <!-- YouTube IFrame API target (hidden, for audio only) -->
-    <div id="yt-player" aria-hidden="true" role="none" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></div>
-    <!-- Fallback iframe (if API blocked) -->
-    <iframe
-      id="player-fallback"
-      src="about:blank"
-      title="YouTube audio player (hidden)"
-      aria-hidden="true"
-      tabindex="-1"
-      frameborder="0"
-      allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen"
-      allowfullscreen
-      style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"
-    ></iframe>
-
-    <script src="https://www.youtube.com/iframe_api"></script>
-
-    <script>
-      "use strict";
-
-      const DEBUG = false;
-      const warn = (...args) => { if (DEBUG) { try { console.warn(...args); } catch {} } };
-
-      const DPR = Math.min(2, window.devicePixelRatio || 1);
-      const isLowEnd =
-        (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) ||
-        (navigator.deviceMemory && navigator.deviceMemory <= 2);
-
-      // STREAMING dots animation (only dots move)
-      (function dots(){
-        const el = document.getElementById("uiDots"); if(!el) return;
-        const seq = [0,1,2,3,1,2,3]; let i=0;
-        function tick(){ el.textContent = ".".repeat(seq[i]); i=(i+1)%seq.length; }
-        tick(); try{ clearInterval(window.__RB_DOTS_IV); }catch{} window.__RB_DOTS_IV = setInterval(tick, 600);
-      })();
-
-      const DEFAULTS = { reducedMotion: false };
-
-      function loadSettings() {
-        try {
-          const raw = localStorage.getItem("rb_settings");
-          if (!raw) return { ...DEFAULTS };
-          const parsed = JSON.parse(raw);
-          return { ...DEFAULTS, ...parsed };
-        } catch { return { ...DEFAULTS }; }
+  </h1>
+  <canvas id="canvas" aria-label="Classic warp tunnel visualizer" tabindex="0"></canvas>
+  <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" aria-modal="true" tabindex="0"><div><h2 id="start-title">Tap to start</h2></div></div>
+  <div class="ui" id="ui" role="status" aria-live="off" aria-atomic="true"><span class="label">Streaming</span><span class="dots" id="uiDots" aria-hidden="true"></span></div>
+  <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
+  <div id="yt-player" aria-hidden="true" role="none" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></div>
+  <iframe id="player-fallback" src="about:blank" title="YouTube audio player (hidden)" aria-hidden="true" tabindex="-1" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></iframe>
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    "use strict";
+    const DEBUG = false, warn = (...args) => { if (DEBUG) { try { console.warn(...args); } catch {} } };
+    const DPR = Math.min(2, window.devicePixelRatio || 1), isLowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) || (navigator.deviceMemory && navigator.deviceMemory <= 2);
+    (function dots(){ const el = document.getElementById("uiDots"); if(!el) return; const seq = [0,1,2,3,1,2,3]; let i=0; function tick(){ el.textContent = ".".repeat(seq[i]); i=(i+1)%seq.length; } tick(); try{ clearInterval(window.__RB_DOTS_IV); }catch{} window.__RB_DOTS_IV = setInterval(tick, 600); })();
+    const DEFAULTS = { reducedMotion: false };
+    function loadSettings() { try { const raw = localStorage.getItem("rb_settings"); if (!raw) return { ...DEFAULTS }; const parsed = JSON.parse(raw); return { ...DEFAULTS, ...parsed }; } catch { return { ...DEFAULTS }; } }
+    function saveSettings(s) { try { localStorage.setItem("rb_settings", JSON.stringify(s)); } catch {} }
+    let settings = loadSettings();
+    function motionScale() { const prefersReduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches; return (settings.reducedMotion || prefersReduced) ? 0.35 : 1; }
+    const settingsPanel = document.createElement("div");
+    settingsPanel.id = "settingsPanel"; settingsPanel.className = "settings-panel"; settingsPanel.setAttribute("role", "dialog"); settingsPanel.setAttribute("aria-modal", "false"); settingsPanel.setAttribute("aria-label", "Settings");
+    settingsPanel.innerHTML = `<h3>Settings</h3><div class="settings-row"><label for="reducedMotion">Reduced motion</label><input id="reducedMotion" type="checkbox" /></div>`;
+    document.body.appendChild(settingsPanel);
+    const reducedMotionEl = settingsPanel.querySelector("#reducedMotion");
+    function applySettingsToUI() { reducedMotionEl.checked = settings.reducedMotion; }
+    applySettingsToUI();
+    function broadcastSettings() { saveSettings(settings); if (rendererWorker) { rendererWorker.postMessage({ type: "settings", settings }); } else if (window.tunnelRenderer && window.tunnelRenderer.applySettings) { window.tunnelRenderer.applySettings(settings); } }
+    reducedMotionEl.addEventListener("change", () => { settings.reducedMotion = !!reducedMotionEl.checked; broadcastSettings(); });
+    class SimpleCarousel { constructor(element, interval = 2800) { this.slides = Array.from(element.querySelectorAll(".carousel-slide")); this.i = 0; this.n = this.slides.length; if (this.n > 1) this.t = setInterval(() => this.next(), interval); } next() { this.slides[this.i].classList.remove("active"); this.i = (this.i + 1) % this.n; this.slides[this.i].classList.add("active"); } }
+    new SimpleCarousel(document.getElementById("cityCarousel"));
+    const YOUTUBE_TRACKS = [
+      { artist: "J Dilla", title: "Microphone Master", id: "9EGHwkDix78" },
+      { artist: "J Dilla", title: "In Space", id: "vO2nWXCVt6o" },
+      { artist: "J Dilla", title: "Timeless", id: "dbbfo9_7D8g" },
+      { artist: "Pachanga Boys", title: "Time", id: "2e21NOp69hM" },
+      { artist: "FLYamSAM", title: "The Offbeat", id: "5SdMIa5vd4A" },
+      { artist: "AFTA-1", title: "Due Time", id: "WC09qDzU9y4" },
+      { artist: "Flying Lotus", title: "Massage Situation", id: "6oUx6wGCekM" },
+      { artist: "Röyksopp", title: "Only This Moment", id: "vLE5XCc0XO8" },
+      { artist: "Jneiro Jarel", title: "Chinubian", id: "hV47jHNwOv0" },
+      { artist: "Pete Rock", title: "A Little Soul", id: "JrIhZPAAcjI" },
+      { artist: "Slum Village", title: "Players", id: "KsULjOCYdnY" },
+      { artist: "Jay Electronica", title: "Exhibit A", id: "H3UIHZshNQ0" },
+      { artist: "Slum Village", title: "La La (Instrumental)", id: "EYJxxHQ7sX0" },
+      { artist: "Slum Village", title: "Get It Together", id: "t6T-Q6HMbEo" },
+      { artist: "Slum Village", title: "Fantastic", id: "a3ISYWWYgz8" },
+      { artist: "J Dilla", title: "Secrets Of The Sand", id: "ED7iQI26ymw" },
+      { artist: "OJ Da Juiceman", title: "No Hook", id: "qEn0dBVW18I" },
+      { artist: "Flying Lotus", title: "me Yesterday//Corded", id: "8DgAhgmpXNA" },
+      { artist: "Flying Lotus", title: "Camel", id: "fU9YRGLPDQ8" },
+      { artist: "Slum Village", title: "Worlds Full of Sadness", id: "MU3nfxsz2XA" },
+      { artist: "Bob Marley", title: "Forever Loving Jah", id: "sRsefcInwdg" }
+    ];
+    const YT_ORIGIN = "https://www.youtube.com";
+    class AudioEngine {
+      constructor() { this.apiReady = false; this.player = null; this.fallbackIframe = document.getElementById("player-fallback"); this.started = false; this.muted = true; this.trackIndex = 0; this.tracks = YOUTUBE_TRACKS.sort(() => Math.random() - 0.5); this._advanceTimer = null; this._loadTimeout = null; this.beatPhase = 0; this.energyLevel = 0.5; }
+      initAPI() { try { this.player = new YT.Player("yt-player", { width: "1", height: "1", playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0, playsinline: 1, origin: location.origin }, events: { onReady: () => this.onReady(), onStateChange: (e) => this.onStateChange(e), onError: () => this.onError() } }); this.apiReady = true; } catch { this.apiReady = false; } }
+      onReady() { try { this.player.unMute(); this.muted = false; } catch {}; if (this.started) this.loadAndPlay(this.tracks[this.trackIndex]); }
+      onStateChange(e) { const S = YT.PlayerState; if (e.data === S.ENDED) this.next(); else if (e.data === S.PLAYING) { clearTimeout(this._loadTimeout); } }
+      onError() { clearTimeout(this._loadTimeout); try { navigator.vibrate?.([8, 40, 8]); } catch {} this.next(); }
+      start() { this.started = true; this.loadAndPlay(this.tracks[this.trackIndex]); }
+      loadAndPlay(track) {
+        const id = track.id; clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout);
+        if (this.apiReady && this.player && this.player.loadVideoById) { try { this.player.loadVideoById({ videoId: id, startSeconds: 0, suggestedQuality: "small" }); try { this.player.unMute(); this.muted = false; } catch {} this.afterStart(); this._loadTimeout = setTimeout(() => { this.next(); }, 7000); return; } catch {} }
+        const src = "https://www.youtube.com/embed/" + id + "?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=" + (this.muted ? 1 : 0) + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+        this.fallbackIframe.src = src;
+        this.fallbackIframe.onload = () => { clearTimeout(this._loadTimeout); this.afterStart(); setTimeout(() => { try { this.fallbackIframe.contentWindow.postMessage({ event: "command", func: "unMute", args: [] }, YT_ORIGIN); this.muted = false; } catch {} }, 800); };
+        this._loadTimeout = setTimeout(() => { this.next(); }, 7000);
       }
-      function saveSettings(s) { try { localStorage.setItem("rb_settings", JSON.stringify(s)); } catch {} }
-
-      let settings = loadSettings();
-
-      function motionScale() {
-        const prefersReduced =
-          typeof window.matchMedia === "function" &&
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        return (settings.reducedMotion || prefersReduced) ? 0.35 : 1;
+      afterStart() { clearTimeout(this._advanceTimer); this._advanceTimer = setTimeout(() => this.next(), 180000); }
+      next() { clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout); this.trackIndex = (this.trackIndex + 1) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); try { navigator.vibrate?.(10); } catch {} }
+      prev() { clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout); this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); try { navigator.vibrate?.(10); } catch {} }
+      toggleMute() { this.muted = !this.muted; try { if (this.apiReady && this.player) { if (this.muted) this.player.mute(); else this.player.unMute(); } else { const cmd = this.muted ? "mute" : "unMute"; this.fallbackIframe.contentWindow.postMessage({ event: "command", func: cmd, args: [] }, YT_ORIGIN); } } catch {} try { navigator.vibrate?.(6); } catch {} }
+      trackLabel() { const t = this.tracks[this.trackIndex]; return t.artist + " — " + t.title; }
+      data() {
+        const ms = motionScale(); this.beatPhase += 0.08 * ms; this.energyLevel = this.energyLevel*0.999 + Math.random()*0.001;
+        const bass = 0.5 + 0.4 * Math.sin(this.beatPhase * 0.8), mid = 0.45 + 0.35 * Math.sin(this.beatPhase * 1.2 + 0.7), high = 0.35 + 0.35 * Math.sin(this.beatPhase * 1.8 + 1.2), avg = (bass + mid + high) / 3;
+        const beatRaw = Math.sin(this.beatPhase) > 0.8 ? 1 : 0; this._beatEnv = (this._beatEnv || 0) + (beatRaw - (this._beatEnv || 0)) * (beatRaw ? 0.4 : 0.06);
+        return { bass, mid, high, average: avg, beat: this._beatEnv, energy: this.energyLevel };
       }
-
-      // Settings panel (minimal; original v17 behavior)
-      const settingsPanel = document.createElement("div");
-      settingsPanel.id = "settingsPanel";
-      settingsPanel.className = "settings-panel";
-      settingsPanel.setAttribute("role", "dialog");
-      settingsPanel.setAttribute("aria-modal", "false");
-      settingsPanel.setAttribute("aria-label", "Settings");
-      settingsPanel.innerHTML = `
-        <h3>Settings</h3>
-        <div class="settings-row">
-          <label for="reducedMotion">Reduced motion</label>
-          <input id="reducedMotion" type="checkbox" />
-        </div>
-      `;
-      document.body.appendChild(settingsPanel);
-      const reducedMotionEl = settingsPanel.querySelector("#reducedMotion");
-      function applySettingsToUI() { reducedMotionEl.checked = settings.reducedMotion; }
-      applySettingsToUI();
-      function broadcastSettings() {
-        saveSettings(settings);
-        if (rendererWorker) {
-          rendererWorker.postMessage({ type: "settings", settings });
-        } else if (window.tunnelRenderer && window.tunnelRenderer.applySettings) {
-          window.tunnelRenderer.applySettings(settings);
+    }
+    let audio = new AudioEngine();
+    window.onYouTubeIframeAPIReady = function () { audio.initAPI(); };
+    const canvas = document.getElementById("canvas"), canOffscreen = !!HTMLCanvasElement.prototype.transferControlToOffscreen && typeof Worker !== "undefined";
+    let rendererWorker = null, workerInitialized = false, INTERNAL_SCALE = 1, w = 0, h = 0;
+    function applyInternalScale(baseQuality = (isLowEnd ? 0.75 : 1)) { INTERNAL_SCALE = baseQuality * Math.min(2, DPR); }
+    (function setupFallbackRenderer() {
+      class PixelTunnel {
+        constructor(ctx) { this.ctx = ctx; this.w = 0; this.h = 0; this.s = 1; this.imageData = null; this.data = null; this.fov = 250; this.speed = 0.75; this.segments = 64; this.baseRadius = 75; this.zStep = 4; this.particles = []; this.centers = []; this.time = 0; this.mouse = { x: 0, y: 0, down: false, active: false }; this.ori = { active: false, beta: 0, gamma: 0 }; this.invertValue = 0; }
+        resize(w, h, s) { this.w = w; this.h = h; this.s = s; this.ctx.fillStyle = "#000"; this.ctx.fillRect(0, 0, w, h); this.imageData = this.ctx.getImageData(0, 0, w, h); this.data = this.imageData.data; this.init(); }
+        applySettings(s) {}
+        clearImageData() { const d = this.data; for (let i = 0, l = d.length; i < l; i += 4) { d[i]=0; d[i+1]=0; d[i+2]=0; d[i+3]=255; } }
+        setPixel(x, y, r, g, b, a) { if (x <= 0 || x >= this.w || y <= 0 || y >= this.h) return; const i = (x + y * this.imageData.width) * 4; this.data[i]=r; this.data[i+1]=g; this.data[i+2]=b; this.data[i+3]=a; }
+        drawLine(x1, y1, x2, y2, r, g, b, a) {
+          let dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1), sx = (x1 < x2) ? 1 : -1, sy = (y1 < y2) ? 1 : -1, err = dx - dy, lx = x1, ly = y1;
+          for (;;) { if (lx > 0 && lx < this.w && ly > 0 && ly < this.h) this.setPixel(lx, ly, r, g, b, a); if (lx === x2 && ly === y2) break; const e2 = 2 * err; if (e2 > -dy) { err -= dy; lx += sx; } if (e2 < dx) { err += dx; ly += sy; } }
         }
-      }
-      reducedMotionEl.addEventListener("change", () => { settings.reducedMotion = !!reducedMotionEl.checked; broadcastSettings(); });
-
-      class SimpleCarousel {
-        constructor(element, interval = 2800) {
-          this.slides = Array.from(element.querySelectorAll(".carousel-slide"));
-          this.i = 0; this.n = this.slides.length;
-          if (this.n > 1) this.t = setInterval(() => this.next(), interval);
-        }
-        next() { this.slides[this.i].classList.remove("active"); this.i = (this.i + 1) % this.n; this.slides[this.i].classList.add("active"); }
-      }
-      new SimpleCarousel(document.getElementById("cityCarousel"));
-
-      // PLAYLIST_START (curated)
-      const YOUTUBE_TRACKS = [
-        { artist: "J Dilla", title: "Microphone Master", id: "9EGHwkDix78" },
-        { artist: "J Dilla", title: "In Space", id: "vO2nWXCVt6o" },
-        { artist: "J Dilla", title: "Timeless", id: "dbbfo9_7D8g" },
-        { artist: "Pachanga Boys", title: "Time", id: "2e21NOp69hM" },
-        { artist: "FLYamSAM", title: "The Offbeat", id: "5SdMIa5vd4A" },
-        { artist: "AFTA-1", title: "Due Time", id: "WC09qDzU9y4" },
-        { artist: "Flying Lotus", title: "Message Situation", id: "9fzGGbiJags" },
-        { artist: "Röyksopp", title: "Only This Moment", id: "vLE5XCc0XO8" },
-        { artist: "Jneiro Jarel", title: "Chinubian", id: "9OPypHXlJUQ" },
-        { artist: "Pete Rock", title: "A Little Soul", id: "4tY89H5TWPY" },
-        { artist: "Slum Village", title: "Players", id: "EZXXqfUBbLM" },
-        { artist: "Jay Electronica", title: "Exhibit A", id: "pEOGlkQpOTs" },
-        { artist: "Slum Village", title: "La La (Instrumental)", id: "EYJxxHQ7sX0" },
-        { artist: "Slum Village", title: "Get It Together", id: "t6T-Q6HMbEo" },
-        { artist: "Slum Village", title: "Fantastic", id: "j0z_-7TfPeM" },
-        { artist: "J Dilla", title: "Secrets Of The Sand", id: "ED7iQI26ymw" },
-        { artist: "OJ Da Juiceman", title: "No Hook", id: "FWoy6s_7gKs" },
-        { artist: "Flying Lotus", title: "me Yesterday//Corded", id: "8DgAhgmpXNA" },
-        { artist: "Flying Lotus", title: "Camel", id: "t6SXXx1Fu_4" },
-        { artist: "Slum Village", title: "Worlds Full of Sadness", id: "MU3nfxsz2XA" },
-        { artist: "Bob Marley", title: "Forever Loving Jah", id: "WFCh0Ycjd4Q" }
-      ];
-      // PLAYLIST_END
-
-      const YT_ORIGIN = "https://www.youtube.com";
-      class AudioEngine {
-        constructor() {
-          this.apiReady = false; this.player = null; this.fallbackIframe = document.getElementById("player-fallback");
-          this.started = false; this.muted = true; this.trackIndex = 0; this.tracks = [...YOUTUBE_TRACKS];
-          this._advanceTimer = null; this._loadTimeout = null; this.beatPhase = 0; this.energyLevel = 0.5;
-        }
-        initAPI() {
-          try {
-            this.player = new YT.Player("yt-player", {
-              width: "1", height: "1",
-              playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0, playsinline: 1, origin: location.origin },
-              events: { onReady: () => this.onReady(), onStateChange: (e) => this.onStateChange(e), onError: () => this.onError() }
-            }); this.apiReady = true;
-          } catch { this.apiReady = false; }
-        }
-        onReady() { try { this.player.unMute(); this.muted = false; } catch {}; if (this.started) this.loadAndPlay(this.tracks[this.trackIndex]); }
-        onStateChange(e) {
-          const S = YT.PlayerState;
-          if (e.data === S.ENDED) this.next();
-          else if (e.data === S.PLAYING) { clearTimeout(this._loadTimeout); }
-        }
-        onError() {
-          clearTimeout(this._loadTimeout);
-          try { navigator.vibrate?.([8, 40, 8]); } catch {}
-          this.next();
-        }
-        start() { this.started = true; this.loadAndPlay(this.tracks[this.trackIndex]); }
-        loadAndPlay(track) {
-          const id = track.id; clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout);
-          if (this.apiReady && this.player && this.player.loadVideoById) {
-            try {
-              this.player.loadVideoById({ videoId: id, startSeconds: 0, suggestedQuality: "small" });
-              try { this.player.unMute(); this.muted = false; } catch {}
-              this.afterStart();
-              this._loadTimeout = setTimeout(() => { this.next(); }, 7000);
-              return;
-            } catch {}
+        getCirclePos(cx, cy, radius, index, segments) { const angle = index * ((Math.PI * 2) / segments) + this.time; return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius }; }
+        addParticle(x, y, z, audioIndex) { return { x, y, z, x2d: 0, y2d: 0, radius: this.baseRadius, radiusAudio: this.baseRadius, index: 0, segments: this.segments, centerX: 0, centerY: 0, audioIndex }; }
+        init() {
+          this.particles = []; this.centers = []; const w1 = Math.random() * (this.w / 1), h1 = Math.random() * (this.h / 1); let c = 0;
+          for (let z = -this.fov; z < this.fov; z += this.zStep) {
+            const coords = []; for (let i = 0; i < this.segments; i++) { const p = this.getCirclePos(0, 0, this.baseRadius, i, this.segments); coords.push({ x: p.x, y: p.y, index: i, radius: this.baseRadius, segments: this.segments, centerX: 0, centerY: 0 }); }
+            const center = { x: ((this.w / 2) - w1) * (c / 15) + this.w / 2, y: ((this.h / 2) - h1) * (c / 15) + this.h / 2 }; c++; this.centers.push(center); const row = []; let audioIndex = 8 + Math.floor(Math.random() * 1024);
+            for (let i = 0; i < coords.length; i++) { const co = coords[i], p = this.addParticle(co.x, co.y, z, audioIndex); p.index = co.index; p.radius = co.radius; p.radiusAudio = p.radius; p.segments = co.segments; p.centerX = co.centerX; p.centerY = co.centerY; row.push(p); if (i < coords.length / 2) audioIndex++; else audioIndex--; if (audioIndex > 1024) audioIndex = 8; if (audioIndex < 8) audioIndex = 1024; }
+            this.particles.push(row);
           }
-          const src = "https://www.youtube.com/embed/" + id + "?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=" + (this.muted ? 1 : 0) + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
-          this.fallbackIframe.src = src;
-          this.fallbackIframe.onload = () => {
-            clearTimeout(this._loadTimeout); this.afterStart();
-            setTimeout(() => {
-              try {
-                this.fallbackIframe.contentWindow.postMessage({ event: "command", func: "unMute", args: [] }, YT_ORIGIN);
-                this.muted = false;
-              } catch {}
-            }, 800);
-          };
-          this._loadTimeout = setTimeout(() => { this.next(); }, 7000);
         }
-        afterStart() { clearTimeout(this._advanceTimer); this._advanceTimer = setTimeout(() => this.next(), 180000); }
-        next() { clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout); this.trackIndex = (this.trackIndex + 1) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); try { navigator.vibrate?.(10); } catch {} }
-        prev() { clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout); this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); try { navigator.vibrate?.(10); } catch {} }
-        toggleMute() {
-          this.muted = !this.muted;
-          try {
-            if (this.apiReady && this.player) { if (this.muted) this.player.mute(); else this.player.unMute(); }
-            else {
-              const cmd = this.muted ? "mute" : "unMute";
-              this.fallbackIframe.contentWindow.postMessage({ event: "command", func: cmd, args: [] }, YT_ORIGIN);
+        softInvert(value) { const d = this.data; for (let j = 0, n = d.length; j < n; j += 4) { d[j] = Math.abs(value - d[j]); d[j+1] = Math.abs(value - d[j+1]); d[j+2] = Math.abs(value - d[j+2]); d[j+3] = 255; } }
+        frame(audioData) {
+          const ms = motionScale(); this.clearImageData(); const l = this.particles.length; let sortArray = false;
+          for (let i = 0; i < l; i++) {
+            const row = this.particles[i], rowBack = i > 0 ? this.particles[i - 1] : null, center = this.centers[i];
+            if (this.mouse.active) { center.x = ((this.w / 2) - (this.mouse.x / this.s)) * ((row[0].z - this.fov) / 500) + this.w / 2; center.y = ((this.h / 2) - (this.mouse.y / this.s)) * ((row[0].z - this.fov) / 500) + this.h / 2; }
+            else if (this.ori.active) { const mx = -this.ori.gamma * (this.w / 180), my = -this.ori.beta * (this.h / 180); center.x = (this.w / 2) + mx * ((row[0].z - this.fov) / 500); center.y = (this.h / 2) + my * ((row[0].z - this.fov) / 500); }
+            else { center.x += ((this.w / 2) - center.x) * 0.015; center.y += ((this.h / 2) - center.y) * 0.015; }
+            for (let j = 0, k = row.length; j < k; j++) {
+              const p = row[j], scale = this.fov / (this.fov + p.z); p.x2d = (p.x * scale) + center.x; p.y2d = (p.y * scale) + center.y;
+              const freqAdd = ((audioData?.average || 0) * 64) + ((audioData?.beat ? 1 : 0) * 8); p.radiusAudio = p.radius + freqAdd;
+              if (this.mouse.down) { p.z += this.speed * ms; if (p.z > this.fov) { p.z -= (this.fov * 2); sortArray = true; } } else { p.z -= this.speed * ms; if (p.z < -this.fov) { p.z += (this.fov * 2); sortArray = true; } }
+              const curPos = this.getCirclePos(p.centerX, p.centerY, p.radiusAudio, p.index, p.segments); p.x = curPos.x; p.y = curPos.y;
             }
-          } catch {}
-          try { navigator.vibrate?.(6); } catch {}
-        }
-        trackLabel() { const t = this.tracks[this.trackIndex]; return t.artist + " — " + t.title; }
-        data() {
-          const ms = motionScale();
-          this.beatPhase += 0.08 * ms;
-          this.energyLevel = this.energyLevel*0.999 + Math.random()*0.001;
-          const bass = 0.5 + 0.4 * Math.sin(this.beatPhase * 0.8);
-          const mid  = 0.45 + 0.35 * Math.sin(this.beatPhase * 1.2 + 0.7);
-          const high = 0.35 + 0.35 * Math.sin(this.beatPhase * 1.8 + 1.2);
-          const avg = (bass + mid + high) / 3;
-          const beatRaw = Math.sin(this.beatPhase) > 0.8 ? 1 : 0;
-          this._beatEnv = (this._beatEnv || 0) + (beatRaw - (this._beatEnv || 0)) * (beatRaw ? 0.4 : 0.06);
-          const beat = this._beatEnv;
-          return { bass, mid, high, average: avg, beat, energy: this.energyLevel };
+            const r = Math.round(255 * (audioData?.high || 0.35)), g = Math.round(100 * (audioData?.average || 0.45) + (i/l * 50)), b = Math.round(200 * (audioData?.bass || 0.5));
+            for (let j = 1; j < row.length; j++) { const p = row[j], prev = row[j - 1]; this.drawLine(p.x2d | 0, p.y2d | 0, prev.x2d | 0, prev.y2d | 0, r, g, b, 255); }
+            if (row.length > 2) { const first = row[0], last = row[row.length - 1]; this.drawLine(last.x2d | 0, last.y2d | 0, first.x2d | 0, first.y2d | 0, r, g, b, 255); }
+            if (i > 0 && i < l - 1 && rowBack) { for (let j = 0; j < row.length; j++) { const p = row[j], pB = (j === 0) ? rowBack[rowBack.length - 1] : rowBack[j - 1]; this.drawLine(p.x2d | 0, p.y2d | 0, pB.x2d | 0, pB.y2d | 0, r, g, b, 255); } }
+          }
+          if (sortArray) { this.particles = this.particles.sort((a, b) => (b[0].z - a[0].z)); }
+          this.time += (this.mouse.down ? -0.005 : 0.005) * ms;
+          if (this.mouse.down) { this.invertValue = Math.min(255, this.invertValue + 5); this.softInvert(this.invertValue); } else { this.invertValue = Math.max(0, this.invertValue - 5); if (this.invertValue > 0) this.softInvert(this.invertValue); }
+          this.ctx.putImageData(this.imageData, 0, 0);
         }
       }
-      let audio = new AudioEngine();
-      window.onYouTubeIframeAPIReady = function () { audio.initAPI(); };
-
-      // Renderer: Original v17 geometry (centers array), worker-first with main-thread fallback
-      const canvas = document.getElementById("canvas");
-      const canOffscreen = !!HTMLCanvasElement.prototype.transferControlToOffscreen && typeof Worker !== "undefined";
-      let rendererWorker = null, workerInitialized = false;
-      let INTERNAL_SCALE = 1, w = 0, h = 0;
-
-      function applyInternalScale(baseQuality = (isLowEnd ? 0.75 : 1)) { INTERNAL_SCALE = baseQuality * Math.min(2, DPR); }
-
-      // Main-thread fallback (original)
-      (function setupFallbackRenderer() {
-        class PixelTunnel {
-          constructor(ctx) {
-            this.ctx = ctx;
-            this.w = 0; this.h = 0; this.s = 1;
-            this.imageData = null; this.data = null;
-            this.fov = 250;
-            this.speed = 0.75;
-            this.segments = 64;
-            this.baseRadius = 75;
-            this.zStep = 4;
-            this.particles = [];
-            this.centers = [];
-            this.time = 0;
-            this.mouse = { x: 0, y: 0, down: false, active: false };
-            this.ori = { active: false, beta: 0, gamma: 0 };
-            this.invertValue = 0;
-          }
-          resize(w, h, s) {
-            this.w = w; this.h = h; this.s = s;
-            this.ctx.fillStyle = "#000"; this.ctx.fillRect(0, 0, w, h);
-            this.imageData = this.ctx.getImageData(0, 0, w, h);
-            this.data = this.imageData.data;
-            this.init();
-          }
-          applySettings(s) { /* original geometry fixed */ }
-          clearImageData() {
-            const d = this.data;
-            for (let i = 0, l = d.length; i < l; i += 4) { d[i]=0; d[i+1]=0; d[i+2]=0; d[i+3]=255; }
-          }
-          setPixel(x, y, r, g, b, a) {
-            if (x <= 0 || x >= this.w || y <= 0 || y >= this.h) return;
-            const i = (x + y * this.imageData.width) * 4;
-            this.data[i]=r; this.data[i+1]=g; this.data[i+2]=b; this.data[i+3]=a;
-          }
-          drawLine(x1, y1, x2, y2, r, g, b, a) {
-            let dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
-            let sx = (x1 < x2) ? 1 : -1, sy = (y1 < y2) ? 1 : -1;
-            let err = dx - dy, lx = x1, ly = y1;
-            for (;;) {
-              if (lx > 0 && lx < this.w && ly > 0 && ly < this.h) this.setPixel(lx, ly, r, g, b, a);
-              if (lx === x2 && ly === y2) break;
-              const e2 = 2 * err;
-              if (e2 > -dy) { err -= dy; lx += sx; }
-              if (e2 < dx)  { err += dx; ly += sy; }
-            }
-          }
-          getCirclePos(cx, cy, radius, index, segments) {
-            const angle = index * ((Math.PI * 2) / segments) + this.time;
-            return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius };
-          }
-          addParticle(x, y, z, audioIndex) {
-            return { x, y, z, x2d: 0, y2d: 0, radius: this.baseRadius, radiusAudio: this.baseRadius, index: 0, segments: this.segments, centerX: 0, centerY: 0, audioIndex };
-          }
-          init() {
-            this.particles = []; this.centers = [];
-            const w1 = Math.random() * (this.w / 1);
-            const h1 = Math.random() * (this.h / 1);
-            let c = 0;
-            for (let z = -this.fov; z < this.fov; z += this.zStep) {
-              const coords = [];
-              for (let i = 0; i < this.segments; i++) {
-                const p = this.getCirclePos(0, 0, this.baseRadius, i, this.segments);
-                coords.push({ x: p.x, y: p.y, index: i, radius: this.baseRadius, segments: this.segments, centerX: 0, centerY: 0 });
-              }
-              const center = { x: ((this.w / 2) - w1) * (c / 15) + this.w / 2, y: ((this.h / 2) - h1) * (c / 15) + this.h / 2 };
-              c++;
-              this.centers.push(center);
-              const row = [];
-              let audioIndex = 8 + Math.floor(Math.random() * 1024);
-              for (let i = 0; i < coords.length; i++) {
-                const co = coords[i];
-                const p = this.addParticle(co.x, co.y, z, audioIndex);
-                p.index = co.index; p.radius = co.radius; p.radiusAudio = p.radius; p.segments = co.segments; p.centerX = co.centerX; p.centerY = co.centerY;
-                row.push(p);
-                if (i < coords.length / 2) audioIndex++; else audioIndex--;
-                if (audioIndex > 1024) audioIndex = 8; if (audioIndex < 8) audioIndex = 1024;
-              }
-              this.particles.push(row);
-            }
-          }
-          softInvert(value) {
-            const d = this.data;
-            for (let j = 0, n = d.length; j < n; j += 4) {
-              d[j] = Math.abs(value - d[j]);
-              d[j+1] = Math.abs(value - d[j+1]);
-              d[j+2] = Math.abs(value - d[j+2]);
-              d[j+3] = 255;
-            }
-          }
-          frame(audioData) {
-            const ms = motionScale();
-            this.clearImageData();
-
-            const l = this.particles.length;
-            let sortArray = false;
-
-            for (let i = 0; i < l; i++) {
-              const row = this.particles[i];
-              const rowBack = i > 0 ? this.particles[i - 1] : null;
-              const center = this.centers[i];
-
-              if (this.mouse.active) {
-                center.x = ((this.w / 2) - (this.mouse.x / this.s)) * ((row[0].z - this.fov) / 500) + this.w / 2;
-                center.y = ((this.h / 2) - (this.mouse.y / this.s)) * ((row[0].z - this.fov) / 500) + this.h / 2;
-              } else if (this.ori.active) {
-                const mx = -this.ori.gamma * (this.w / 180);
-                const my = -this.ori.beta * (this.h / 180);
-                center.x = (this.w / 2) + mx * ((row[0].z - this.fov) / 500);
-                center.y = (this.h / 2) + my * ((row[0].z - this.fov) / 500);
-              } else {
-                center.x += ((this.w / 2) - center.x) * 0.015;
-                center.y += ((this.h / 2) - center.y) * 0.015;
-              }
-
-              // project + update geometry
-              for (let j = 0, k = row.length; j < k; j++) {
-                const p = row[j];
-                const scale = this.fov / (this.fov + p.z);
-                p.x2d = (p.x * scale) + center.x;
-                p.y2d = (p.y * scale) + center.y;
-
-                const freqAdd = ((audioData?.average || 0) * 64) + ((audioData?.beat ? 1 : 0) * 8);
-                p.radiusAudio = p.radius + freqAdd;
-
-                if (this.mouse.down) {
-                  p.z += this.speed * ms;
-                  if (p.z > this.fov) { p.z -= (this.fov * 2); sortArray = true; }
-                } else {
-                  p.z -= this.speed * ms;
-                  if (p.z < -this.fov) { p.z += (this.fov * 2); sortArray = true; }
-                }
-
-                const curPos = this.getCirclePos(p.centerX, p.centerY, p.radiusAudio, p.index, p.segments);
-                p.x = curPos.x; p.y = curPos.y;
-              }
-
-              // Draw ring (original color mapping)
-              for (let j = 1; j < row.length; j++) {
-                const p = row[j], prev = row[j - 1];
-                this.drawLine(p.x2d | 0, p.y2d | 0, prev.x2d | 0, prev.y2d | 0, 0, Math.round(i/l*100), Math.round(i/l*200), 255);
-              }
-              if (row.length > 2) {
-                const first = row[0], last = row[row.length - 1];
-                this.drawLine(last.x2d | 0, last.y2d | 0, first.x2d | 0, first.y2d | 0, 0, Math.round(i/l*100), Math.round(i/l*200), 255);
-              }
-
-              // Ties (original)
-              if (i > 0 && i < l - 1 && rowBack) {
-                for (let j = 0; j < row.length; j++) {
-                  const p = row[j];
-                  const pB = (j === 0) ? rowBack[rowBack.length - 1] : rowBack[j - 1];
-                  this.drawLine(p.x2d | 0, p.y2d | 0, pB.x2d | 0, pB.y2d | 0, 0, Math.round(i/l*100), Math.round(i/l*200), 255);
-                }
-              }
-            }
-
-            if (sortArray) {
-              this.particles = this.particles.sort((a, b) => (b[0].z - a[0].z));
-            }
-
-            this.time += (this.mouse.down ? -0.005 : 0.005) * ms;
-
-            if (this.mouse.down) {
-              this.invertValue = Math.min(255, this.invertValue + 5);
-              this.softInvert(this.invertValue);
-            } else {
-              this.invertValue = Math.max(0, this.invertValue - 5);
-              if (this.invertValue > 0) this.softInvert(this.invertValue);
-            }
-
-            this.ctx.putImageData(this.imageData, 0, 0);
-          }
-        }
-        const ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true }) || canvas.getContext("2d");
-        window.tunnelRenderer = new PixelTunnel(ctx);
-      })();
-
-      function sizeCanvas() {
-        applyInternalScale();
-        w = Math.floor(window.innerWidth * INTERNAL_SCALE);
-        h = Math.floor(window.innerHeight * INTERNAL_SCALE);
-        canvas.width = w; canvas.height = h;
-        canvas.style.width = window.innerWidth + "px";
-        canvas.style.height = window.innerHeight + "px";
-        if (rendererWorker && workerInitialized) {
-          rendererWorker.postMessage({ type: "resize", width: w, height: h, internalScale: INTERNAL_SCALE });
-        }
-        if (window.tunnelRenderer && window.tunnelRenderer.resize) {
-          window.tunnelRenderer.resize(w, h, INTERNAL_SCALE);
-        }
-      }
-
-      // Worker: Original algorithm (centers array), color and ties identical to v17
-      function bootWorkerInline() {
-        try {
-          let workerCode =
-            '"use strict";\\n' +
-            '(function(){\\n' +
-            'let canvas, ctx, imageData, data, w=0, h=0, SCALE=1;\\n' +
-            'const fov=250, baseRadius=75, segments=64, zStep=4; let speed=0.75;\\n' +
-            'let particles=[], centers=[], time=0;\\n' +
-            'let mouse={x:0,y:0,down:false,active:false}; let ori={active:false,beta:0,gamma:0};\\n' +
-            'let MOTION=1.0; function clearImageData(){ for(let i=0,l=data.length;i<l;i+=4){ data[i]=0; data[i+1]=0; data[i+2]=0; data[i+3]=255; } }\\n' +
-            'function setPixel(x,y,r,g,b,a){ if(x<=0||x>=w||y<=0||y>=h) return; const i=(x + y*imageData.width)*4; data[i]=r; data[i+1]=g; data[i+2]=b; data[i+3]=a; }\\n' +
-            'function drawLine(x1,y1,x2,y2,r,g,b,a){ let dx=Math.abs(x2-x1), dy=Math.abs(y2-y1); let sx=(x1<x2)?1:-1, sy=(y1<y2)?1:-1; let err=dx-dy, lx=x1, ly=y1; for(;;){ if(lx>0&&lx<w&&ly>0&&ly<h) setPixel(lx,ly,r,g,b,a); if(lx===x2 && ly===y2) break; const e2=2*err; if(e2>-dx){ err-=dy; lx+=sx; } if(e2<dx){ err+=dx; ly+=sy; } } }\\n' +
-            'function getCirclePos(cx,cy,radius,index,seg){ const angle=index*((Math.PI*2)/seg)+time; return {x: cx + Math.cos(angle)*radius, y: cy + Math.sin(angle)*radius}; }\\n' +
-            'function init(){ particles=[]; centers=[]; const w1=Math.random()*(w/1); const h1=Math.random()*(h/1); let c=0; for(let z=-fov; z<fov; z+=zStep){ const coords=[]; for(let i=0;i<segments;i++){ const p=getCirclePos(0,0,baseRadius,i,segments); coords.push({x:p.x,y:p.y,index:i,radius:baseRadius,segments:segments,centerX:0,centerY:0}); } const center={ x:(((w/2)-w1)*(c/15))+w/2, y:(((h/2)-h1)*(c/15))+h/2 }; c++; centers.push(center); const row=[]; let audioIndex=8+Math.floor(Math.random()*1024); for(let i=0;i<coords.length;i++){ const co=coords[i]; const p={ x:co.x, y:co.y, z, x2d:0, y2d:0, audioIndex, index:co.index, radius:co.radius, radiusAudio:co.radius, segments:co.segments, centerX:co.centerX, centerY:co.centerY }; row.push(p); if(i<coords.length/2) audioIndex++; else audioIndex--; if(audioIndex>1024) audioIndex=8; if(audioIndex<8) audioIndex=1024; } particles.push(row); } }\\n' +
-            'function frame(audio){ clearImageData(); const l=particles.length; let sortArray=false; for(let i=0;i<l;i++){ const row=particles[i]; const rowBack = (i>0)?particles[i-1]:null; const center=centers[i]; if(mouse.active){ center.x = (((w/2)-(mouse.x/SCALE))*((row[0].z - fov)/500)) + w/2; center.y = (((h/2)-(mouse.y/SCALE))*((row[0].z - fov)/500)) + h/2; } else if(ori.active){ const mx = -ori.gamma*(w/180); const my = -ori.beta*(h/180); center.x = (w/2) + mx*((row[0].z - fov)/500); center.y = (h/2) + my*((row[0].z - fov)/500); } else { center.x += ((w/2)-center.x)*0.015; center.y += ((h/2)-center.y)*0.015; } for(let j=0,k=row.length;j<k;j++){ const p=row[j]; const scale=fov/(fov+p.z); p.x2d = (p.x*scale) + center.x; p.y2d = (p.y*scale) + center.y; const freqAdd = ((audio?.average||0)*64)+((audio?.beat?1:0)*8); p.radiusAudio = p.radius + freqAdd; if(mouse.down){ p.z += speed*MOTION; if(p.z>fov){ p.z -= (fov*2); sortArray=true; } } else { p.z -= speed*MOTION; if(p.z<-fov){ p.z += (fov*2); sortArray=true; } } const curPos = getCirclePos(p.centerX, p.centerY, p.radiusAudio, p.index, p.segments); p.x=curPos.x; p.y=curPos.y; } for(let j=1;j<row.length;j++){ const p=row[j], prev=row[j-1]; drawLine(p.x2d|0, p.y2d|0, prev.x2d|0, prev.y2d|0, 0, Math.round(i/l*100), Math.round(i/l*200), 255); } if(row.length>2){ const first=row[0], last=row[row.length-1]; drawLine(last.x2d|0, last.y2d|0, first.x2d|0, first.y2d|0, 0, Math.round(i/l*100), Math.round(i/l*200), 255); } if(i>0 && i<l-1 && rowBack){ for(let j=0;j<row.length;j++){ const p=row[j]; const pB=(j===0)?rowBack[rowBack.length-1]:rowBack[j-1]; drawLine(p.x2d|0, p.y2d|0, pB.x2d|0, pB.y2d|0, 0, Math.round(i/l*100), Math.round(i/l*200), 255); } } } if(sortArray){ particles = particles.sort((a,b)=> (b[0].z - a[0].z)); } time += (mouse.down ? -0.005 : 0.005)*MOTION; ctx.putImageData(imageData,0,0); }\\n' +
-            'self.onmessage=(e)=>{ const msg=e.data||{}; if(msg.type==="init"){ canvas=msg.canvas; w=msg.width|0; h=msg.height|0; SCALE=msg.internalScale||1; ctx=canvas.getContext("2d",{alpha:false,desynchronized:true,willReadFrequently:true}); ctx.fillStyle="#000"; ctx.fillRect(0,0,w,h); imageData=ctx.getImageData(0,0,w,h); data=imageData.data; const s=msg.settings||{}; MOTION = (s.reducedMotion?0.35:1.0); init(); } else if(msg.type==="resize"){ w=msg.width|0; h=msg.height|0; SCALE=msg.internalScale||1; canvas.width=w; canvas.height=h; ctx.fillStyle="#000"; ctx.fillRect(0,0,w,h); imageData=ctx.getImageData(0,0,w,h); data=imageData.data; init(); } else if(msg.type==="settings"){ const s=msg.settings||{}; MOTION=(s.reducedMotion?0.35:1.0); } else if(msg.type==="input"){ const m=msg.mouse||{}; mouse.x=m.x|0; mouse.y=m.y|0; mouse.down=!!m.down; mouse.active=!!m.active; const o=msg.orientation||{}; ori.active=!!o.active; ori.beta=o.beta||0; ori.gamma=o.gamma||0; } else if(msg.type==="frame"){ frame(msg.audio||{average:0,beat:0}); } };\\n' +
-            '})();\\n';
-          const blob = new Blob([workerCode], { type: "application/javascript" });
-          const url = URL.createObjectURL(blob);
-          rendererWorker = new Worker(url);
-          rendererWorker.onmessage = () => {};
-          rendererWorker.onerror = () => {
-            try { rendererWorker.terminate(); } catch {};
-            rendererWorker = null;
-            warn("Worker failed; falling back to main-thread renderer.");
-          };
-
-          const off = canvas.transferControlToOffscreen();
-          applyInternalScale();
-          w = Math.floor(window.innerWidth * INTERNAL_SCALE);
-          h = Math.floor(window.innerHeight * INTERNAL_SCALE);
-          canvas.style.width = window.innerWidth + "px";
-          canvas.style.height = window.innerHeight + "px";
-          rendererWorker.postMessage({ type: "init", canvas: off, width: w, height: h, internalScale: INTERNAL_SCALE, settings }, [off]);
-          setTimeout(() => { try { URL.revokeObjectURL(url); } catch {} }, 1500);
-
-          workerInitialized = true;
-          return true;
-        } catch (e) {
-          warn("bootWorkerInline error:", e);
-          rendererWorker = null;
-          workerInitialized = false;
-          return false;
-        }
-      }
-
-      // No-op HUD (legacy placeholders)
-      function updateHud() {}
-
-      function doResize() { sizeCanvas(); }
-      window.addEventListener("resize", () => { clearTimeout(window.__rzT); window.__rzT = setTimeout(doResize, 80); });
-
-      // Inputs/Sensors
-      let mouseDown = false, mouseActive = false, mousePos = { x: 0, y: 0 };
-      let orientationActive = false, beta = 0, gamma = 0;
-
-      function sendInput() {
-        const payload = { type: "input",
-          mouse: { x: mousePos.x, y: mousePos.y, down: mouseDown, active: mouseActive },
-          orientation: { active: orientationActive, beta, gamma }
-        };
-        if (rendererWorker) rendererWorker.postMessage(payload);
-        else if (window.tunnelRenderer) {
-          window.tunnelRenderer.mouse = { ...payload.mouse };
-          window.tunnelRenderer.ori = { ...payload.orientation };
-        }
-      }
-
-      // Tap ripple helper
-      function spawnRipple(x, y) {
-        try {
-          const r = document.createElement("div");
-          r.className = "tap-ripple";
-          r.style.setProperty("--x", x + "px");
-          r.style.setProperty("--y", y + "px");
-          document.body.appendChild(r);
-          r.addEventListener("animationend", () => r.remove(), { once: true });
-        } catch {}
-      }
-      function rippleAtEvent(e) {
-        try {
-          let x=0, y=0;
-          if ("touches" in e && e.touches.length) { x = e.touches[0].clientX; y = e.touches[0].clientY; }
-          else if ("changedTouches" in e && e.changedTouches?.length) { x = e.changedTouches[0].clientX; y = e.changedTouches[0].clientY; }
-          else { x = e.clientX; y = e.clientY; }
-          spawnRipple(x, y);
-        } catch {}
-      }
-
-      const overlayEl = document.getElementById("overlay");
-      const startTitle = document.getElementById("start-title");
-      const swipeHint = document.getElementById("swipeHint");
-      const uiEl = document.getElementById("ui");
-
-      function setInversion(active) { if (active) uiEl.classList.add("ui-inverted"); else uiEl.classList.remove("ui-inverted"); }
-      function startApp(ev) {
-        if (audio.started) return;
-        try { navigator.vibrate?.(12); } catch {}
-        if (ev) rippleAtEvent(ev);
-        overlayEl.style.pointerEvents = "none"; overlayEl.classList.add("ack"); startTitle.classList.add("clicked"); canvas.classList.add("start-ack");
-        setupSensors(); audio.start();
-        setTimeout(() => { overlayEl.hidden = true; overlayEl.classList.remove("ack"); startTitle.classList.remove("clicked"); canvas.classList.remove("start-ack"); canvas.focus?.(); }, 220);
-      }
-      overlayEl.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(e); });
-      overlayEl.addEventListener("pointerdown", (e) => { rippleAtEvent(e); try { navigator.vibrate?.(8); } catch {} }, { passive: true });
-      overlayEl.addEventListener("keydown", (e) => {
-        if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); return; }
-        if (e.code === "Tab") { e.preventDefault(); overlayEl.focus(); return; }
-      });
-
-      canvas.addEventListener("mousedown", (e) => { mouseDown = true; setInversion(true); sendInput(); rippleAtEvent(e); }, false);
-      canvas.addEventListener("mouseup",   (e) => { mouseDown = false; setInversion(false); sendInput(); rippleAtEvent(e); }, false);
-      canvas.addEventListener("mousemove", (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const xCSS = e.clientX - rect.left, yCSS = e.clientY - rect.top;
-        mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; mouseActive = true; sendInput();
-      }, false);
-      canvas.addEventListener("mouseleave", () => { mouseActive = false; mouseDown = false; setInversion(false); sendInput(); }, false);
-
-      let touchStartX = 0, touchStartY = 0, lastTapTime = 0;
-      const swipeThreshold = 70, doubleTapMs = 300;
-      canvas.addEventListener("touchstart", (e) => {
-        e.preventDefault(); const t = e.touches[0]; const rect = canvas.getBoundingClientRect();
-        const xCSS = t.clientX - rect.left, yCSS = t.clientY - rect.top;
-        touchStartX = xCSS; touchStartY = yCSS;
-        mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE;
-        mouseDown = true; setInversion(true); sendInput(); rippleAtEvent(e);
-        const now = performance.now();
-        if (now - lastTapTime < doubleTapMs && audio.started) { audio.next(); try { navigator.vibrate?.(8); } catch {} }
-        lastTapTime = now;
-      }, { passive: false });
-      canvas.addEventListener("touchmove", (e) => {
-        e.preventDefault(); const t = e.touches[0]; const rect = canvas.getBoundingClientRect();
-        const xCSS = t.clientX - rect.left, yCSS = t.clientY - rect.top;
-        mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; sendInput();
-      }, { passive: false });
-      canvas.addEventListener("touchend", (e) => {
-        e.preventDefault(); mouseDown = false; setInversion(false); sendInput(); rippleAtEvent(e);
-        if (audio.started) {
-          const t = e.changedTouches[0]; const rect = canvas.getBoundingClientRect();
-          const endXCSS = t.clientX - rect.left, endYCSS = t.clientY - rect.top;
-          const dx = endXCSS - touchStartX, dy = endYCSS - touchStartY;
-          if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
-            if (Math.abs(dx) > Math.abs(dy)) {
-              if (dx > 0) { audio.prev(); }
-              else { audio.next(); }
-            } else {
-              swipeHint.textContent = "Warp Tunnel"; swipeHint.classList.add("show"); setTimeout(() => swipeHint.classList.remove("show"), 1400);
-            }
-            try { navigator.vibrate?.(10); } catch {}
-          }
-        }
-      }, { passive: false });
-
-      function setupSensors() {
-        try {
-          if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
-            DeviceOrientationEvent.requestPermission().then((state) => {
-              if (state === "granted") window.addEventListener("deviceorientation", (e) => {
-                beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true; sendInput();
-              }, { passive: true });
-            }).catch(() => {});
-          } else if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", (e) => {
-              beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true; sendInput();
-            }, { passive: true });
-          }
-        } catch {}
-      }
-
-      addEventListener("keydown", (e) => {
-        if (e.key && e.key.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; }
-        if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); } return; }
-        if (e.code === "ArrowLeft")  { e.preventDefault(); if (audio.started) { audio.prev(); } return; }
-        if (e.code === "KeyS") { e.preventDefault(); settingsPanel.classList.toggle("show"); return; }
-        if (e.code === "KeyR") { e.preventDefault(); settings = { ...DEFAULTS }; applySettingsToUI(); broadcastSettings(); return; }
-      });
-
-      let pageHidden = document.hidden; document.addEventListener("visibilitychange", () => { pageHidden = document.hidden; });
-
-      function animate() {
-        if (pageHidden) { requestAnimationFrame(animate); return; }
-        const audioData = audio.started ? audio.data() : { average: 0, beat: 0 };
-        if (rendererWorker) rendererWorker.postMessage({ type: "frame", audio: audioData });
-        else if (window.tunnelRenderer) window.tunnelRenderer.frame(audioData);
-        requestAnimationFrame(animate);
-      }
-
-      function boot() {
-        if (canOffscreen) bootWorkerInline();
-        sizeCanvas();
-        document.getElementById("overlay").focus();
-        requestAnimationFrame(animate);
-      }
-      if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
-    </script>
-  </body>
+      const ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true }) || canvas.getContext("2d");
+      window.tunnelRenderer = new PixelTunnel(ctx);
+    })();
+    function sizeCanvas() { applyInternalScale(); w = Math.floor(window.innerWidth * INTERNAL_SCALE); h = Math.floor(window.innerHeight * INTERNAL_SCALE); canvas.width = w; canvas.height = h; canvas.style.width = window.innerWidth + "px"; canvas.style.height = window.innerHeight + "px"; if (rendererWorker && workerInitialized) { rendererWorker.postMessage({ type: "resize", width: w, height: h, internalScale: INTERNAL_SCALE }); } if (window.tunnelRenderer && window.tunnelRenderer.resize) { window.tunnelRenderer.resize(w, h, INTERNAL_SCALE); } }
+    function bootWorkerInline() {
+      try {
+        let workerCode = '"use strict";\\n(function(){\\nlet canvas,ctx,imageData,data,w=0,h=0,SCALE=1;\\nconst fov=250,baseRadius=75,segments=64,zStep=4;let speed=0.75;\\nlet particles=[],centers=[],time=0;\\nlet mouse={x:0,y:0,down:false,active:false};let ori={active:false,beta:0,gamma:0};\\nlet MOTION=1.0;function clearImageData(){for(let i=0,l=data.length;i<l;i+=4){data[i]=0;data[i+1]=0;data[i+2]=0;data[i+3]=255;}}\\nfunction setPixel(x,y,r,g,b,a){if(x<=0||x>=w||y<=0||y>=h)return;const i=(x+y*imageData.width)*4;data[i]=r;data[i+1]=g;data[i+2]=b;data[i+3]=a;}\\nfunction drawLine(x1,y1,x2,y2,r,g,b,a){let dx=Math.abs(x2-x1),dy=Math.abs(y2-y1);let sx=(x1<x2)?1:-1,sy=(y1<y2)?1:-1;let err=dx-dy,lx=x1,ly=y1;for(;;){if(lx>0&&lx<w&&ly>0&&ly<h)setPixel(lx,ly,r,g,b,a);if(lx===x2&&ly===y2)break;const e2=2*err;if(e2>-dx){err-=dy;lx+=sx;}if(e2<dx){err+=dx;ly+=sy;}}}\\nfunction getCirclePos(cx,cy,radius,index,seg){const angle=index*((Math.PI*2)/seg)+time;return{x:cx+Math.cos(angle)*radius,y:cy+Math.sin(angle)*radius};}\\nfunction init(){particles=[];centers=[];const w1=Math.random()*(w/1);const h1=Math.random()*(h/1);let c=0;for(let z=-fov;z<fov;z+=zStep){const coords=[];for(let i=0;i<segments;i++){const p=getCirclePos(0,0,baseRadius,i,segments);coords.push({x:p.x,y:p.y,index:i,radius:baseRadius,segments:segments,centerX:0,centerY:0});}const center={x:(((w/2)-w1)*(c/15))+w/2,y:(((h/2)-h1)*(c/15))+h/2};c++;centers.push(center);const row=[];let audioIndex=8+Math.floor(Math.random()*1024);for(let i=0;i<coords.length;i++){const co=coords[i];const p={x:co.x,y:co.y,z,x2d:0,y2d:0,audioIndex,index:co.index,radius:co.radius,radiusAudio:co.radius,segments:co.segments,centerX:co.centerX,centerY:co.centerY};row.push(p);if(i<coords.length/2)audioIndex++;else audioIndex--;if(audioIndex>1024)audioIndex=8;if(audioIndex<8)audioIndex=1024;}particles.push(row);}}\\nfunction frame(audio){clearImageData();const l=particles.length;let sortArray=false;for(let i=0;i<l;i++){const row=particles[i];const rowBack=(i>0)?particles[i-1]:null;const center=centers[i];if(mouse.active){center.x=(((w/2)-(mouse.x/SCALE))*((row[0].z-fov)/500))+w/2;center.y=(((h/2)-(mouse.y/SCALE))*((row[0].z-fov)/500))+h/2;}else if(ori.active){const mx=-ori.gamma*(w/180);const my=-ori.beta*(h/180);center.x=(w/2)+mx*((row[0].z-fov)/500);center.y=(h/2)+my*((row[0].z-fov)/500);}else{center.x+=((w/2)-center.x)*0.015;center.y+=((h/2)-center.y)*0.015;}for(let j=0,k=row.length;j<k;j++){const p=row[j];const scale=fov/(fov+p.z);p.x2d=(p.x*scale)+center.x;p.y2d=(p.y*scale)+center.y;const freqAdd=((audio?.average||0)*64)+((audio?.beat?1:0)*8);p.radiusAudio=p.radius+freqAdd;if(mouse.down){p.z+=speed*MOTION;if(p.z>fov){p.z-=(fov*2);sortArray=true;}}else{p.z-=speed*MOTION;if(p.z<-fov){p.z+=(fov*2);sortArray=true;}}const curPos=getCirclePos(p.centerX,p.centerY,p.radiusAudio,p.index,p.segments);p.x=curPos.x;p.y=curPos.y;}const r=Math.round(255*(audio?.high||0.35));const g=Math.round(100*(audio?.average||0.45)+(i/l*50));const b=Math.round(200*(audio?.bass||0.5));for(let j=1;j<row.length;j++){const p=row[j],prev=row[j-1];drawLine(p.x2d|0,p.y2d|0,prev.x2d|0,prev.y2d|0,r,g,b,255);}if(row.length>2){const first=row[0],last=row[row.length-1];drawLine(last.x2d|0,last.y2d|0,first.x2d|0,first.y2d|0,r,g,b,255);}if(i>0&&i<l-1&&rowBack){for(let j=0;j<row.length;j++){const p=row[j];const pB=(j===0)?rowBack[rowBack.length-1]:rowBack[j-1];drawLine(p.x2d|0,p.y2d|0,pB.x2d|0,pB.y2d|0,r,g,b,255);}}}if(sortArray){particles=particles.sort((a,b)=>(b[0].z-a[0].z));}time+=(mouse.down?-0.005:0.005)*MOTION;ctx.putImageData(imageData,0,0);}\\nself.onmessage=(e)=>{const msg=e.data||{};if(msg.type==="init"){canvas=msg.canvas;w=msg.width|0;h=msg.height|0;SCALE=msg.internalScale||1;ctx=canvas.getContext("2d",{alpha:false,desynchronized:true,willReadFrequently:true});ctx.fillStyle="#000";ctx.fillRect(0,0,w,h);imageData=ctx.getImageData(0,0,w,h);data=imageData.data;const s=msg.settings||{};MOTION=(s.reducedMotion?0.35:1.0);init();}else if(msg.type==="resize"){w=msg.width|0;h=msg.height|0;SCALE=msg.internalScale||1;canvas.width=w;canvas.height=h;ctx.fillStyle="#000";ctx.fillRect(0,0,w,h);imageData=ctx.getImageData(0,0,w,h);data=imageData.data;init();}else if(msg.type==="settings"){const s=msg.settings||{};MOTION=(s.reducedMotion?0.35:1.0);}else if(msg.type==="input"){const m=msg.mouse||{};mouse.x=m.x|0;mouse.y=m.y|0;mouse.down=!!m.down;mouse.active=!!m.active;const o=msg.orientation||{};ori.active=!!o.active;ori.beta=o.beta||0;ori.gamma=o.gamma||0;}else if(msg.type==="frame"){frame(msg.audio||{average:0,beat:0,bass:0.5,mid:0.45,high:0.35});}};\\n})();\\n';
+        const blob = new Blob([workerCode], { type: "application/javascript" }), url = URL.createObjectURL(blob);
+        rendererWorker = new Worker(url);
+        rendererWorker.onmessage = () => {};
+        rendererWorker.onerror = () => { try { rendererWorker.terminate(); } catch {}; rendererWorker = null; warn("Worker failed; falling back to main-thread renderer."); };
+        const off = canvas.transferControlToOffscreen();
+        applyInternalScale(); w = Math.floor(window.innerWidth * INTERNAL_SCALE); h = Math.floor(window.innerHeight * INTERNAL_SCALE);
+        canvas.style.width = window.innerWidth + "px"; canvas.style.height = window.innerHeight + "px";
+        rendererWorker.postMessage({ type: "init", canvas: off, width: w, height: h, internalScale: INTERNAL_SCALE, settings }, [off]);
+        setTimeout(() => { try { URL.revokeObjectURL(url); } catch {} }, 1500);
+        workerInitialized = true; return true;
+      } catch (e) { warn("bootWorkerInline error:", e); rendererWorker = null; workerInitialized = false; return false; }
+    }
+    function updateHud() {}
+    function doResize() { sizeCanvas(); }
+    window.addEventListener("resize", () => { clearTimeout(window.__rzT); window.__rzT = setTimeout(doResize, 80); });
+    let mouseDown = false, mouseActive = false, mousePos = { x: 0, y: 0 }, orientationActive = false, beta = 0, gamma = 0;
+    function sendInput() { const payload = { type: "input", mouse: { x: mousePos.x, y: mousePos.y, down: mouseDown, active: mouseActive }, orientation: { active: orientationActive, beta, gamma } }; if (rendererWorker) rendererWorker.postMessage(payload); else if (window.tunnelRenderer) { window.tunnelRenderer.mouse = { ...payload.mouse }; window.tunnelRenderer.ori = { ...payload.orientation }; } }
+    function spawnRipple(x, y) { try { const r = document.createElement("div"); r.className = "tap-ripple"; r.style.setProperty("--x", x + "px"); r.style.setProperty("--y", y + "px"); document.body.appendChild(r); r.addEventListener("animationend", () => r.remove(), { once: true }); } catch {} }
+    function rippleAtEvent(e) { try { let x=0, y=0; if ("touches" in e && e.touches.length) { x = e.touches[0].clientX; y = e.touches[0].clientY; } else if ("changedTouches" in e && e.changedTouches?.length) { x = e.changedTouches[0].clientX; y = e.changedTouches[0].clientY; } else { x = e.clientX; y = e.clientY; } spawnRipple(x, y); } catch {} }
+    const overlayEl = document.getElementById("overlay"), startTitle = document.getElementById("start-title"), swipeHint = document.getElementById("swipeHint"), uiEl = document.getElementById("ui");
+    function setInversion(active) { if (active) uiEl.classList.add("ui-inverted"); else uiEl.classList.remove("ui-inverted"); }
+    function startApp(ev) { if (audio.started) return; try { navigator.vibrate?.(12); } catch {} if (ev) rippleAtEvent(ev); overlayEl.style.pointerEvents = "none"; overlayEl.classList.add("ack"); startTitle.classList.add("clicked"); canvas.classList.add("start-ack"); setupSensors(); audio.start(); setTimeout(() => { overlayEl.hidden = true; overlayEl.classList.remove("ack"); startTitle.classList.remove("clicked"); canvas.classList.remove("start-ack"); canvas.focus?.(); }, 220); }
+    overlayEl.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(e); });
+    overlayEl.addEventListener("pointerdown", (e) => { rippleAtEvent(e); try { navigator.vibrate?.(8); } catch {} }, { passive: true });
+    overlayEl.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); return; } if (e.code === "Tab") { e.preventDefault(); overlayEl.focus(); return; } });
+    canvas.addEventListener("mousedown", (e) => { mouseDown = true; setInversion(true); sendInput(); rippleAtEvent(e); }, false);
+    canvas.addEventListener("mouseup", (e) => { mouseDown = false; setInversion(false); sendInput(); rippleAtEvent(e); }, false);
+    canvas.addEventListener("mousemove", (e) => { const rect = canvas.getBoundingClientRect(), xCSS = e.clientX - rect.left, yCSS = e.clientY - rect.top; mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; mouseActive = true; sendInput(); }, false);
+    canvas.addEventListener("mouseleave", () => { mouseActive = false; mouseDown = false; setInversion(false); sendInput(); }, false);
+    let touchStartX = 0, touchStartY = 0, lastTapTime = 0; const swipeThreshold = 70, doubleTapMs = 300;
+    canvas.addEventListener("touchstart", (e) => { e.preventDefault(); const t = e.touches[0], rect = canvas.getBoundingClientRect(), xCSS = t.clientX - rect.left, yCSS = t.clientY - rect.top; touchStartX = xCSS; touchStartY = yCSS; mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; mouseDown = true; setInversion(true); sendInput(); rippleAtEvent(e); const now = performance.now(); if (now - lastTapTime < doubleTapMs && audio.started) { mouseDown = !mouseDown; setInversion(mouseDown); sendInput(); try { navigator.vibrate?.(8); } catch {} } lastTapTime = now; }, { passive: false });
+    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); const t = e.touches[0], rect = canvas.getBoundingClientRect(), xCSS = t.clientX - rect.left, yCSS = t.clientY - rect.top; mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; sendInput(); }, { passive: false });
+    canvas.addEventListener("touchend", (e) => { e.preventDefault(); mouseDown = false; setInversion(false); sendInput(); rippleAtEvent(e); if (audio.started) { const t = e.changedTouches[0], rect = canvas.getBoundingClientRect(), endXCSS = t.clientX - rect.left, endYCSS = t.clientY - rect.top, dx = endXCSS - touchStartX, dy = endYCSS - touchStartY; if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) { if (Math.abs(dx) > Math.abs(dy)) { if (dx > 0) { audio.prev(); } else { audio.next(); } } else { swipeHint.textContent = "Warp Tunnel"; swipeHint.classList.add("show"); setTimeout(() => swipeHint.classList.remove("show"), 1400); } try { navigator.vibrate?.(10); } catch {} } } }, { passive: false });
+    function setupSensors() { try { if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") { DeviceOrientationEvent.requestPermission().then((state) => { if (state === "granted") window.addEventListener("deviceorientation", (e) => { beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true; sendInput(); }, { passive: true }); }).catch(() => {}); } else if (window.DeviceOrientationEvent) { window.addEventListener("deviceorientation", (e) => { beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true; sendInput(); }, { passive: true }); } } catch {} }
+    addEventListener("keydown", (e) => { if (e.key && e.key.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; } if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); } return; } if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); } return; } if (e.code === "KeyS") { e.preventDefault(); settingsPanel.classList.toggle("show"); return; } if (e.code === "KeyR") { e.preventDefault(); settings = { ...DEFAULTS }; applySettingsToUI(); broadcastSettings(); return; } });
+    let pageHidden = document.hidden; document.addEventListener("visibilitychange", () => { pageHidden = document.hidden; });
+    function animate() { if (pageHidden) { requestAnimationFrame(animate); return; } const audioData = audio.started ? audio.data() : { average: 0, beat: 0, bass: 0.5, mid: 0.45, high: 0.35 }; if (rendererWorker) rendererWorker.postMessage({ type: "frame", audio: audioData }); else if (window.tunnelRenderer) window.tunnelRenderer.frame(audioData); requestAnimationFrame(animate); }
+    if ("serviceWorker" in navigator) { const swCode = `self.addEventListener('install',e=>e.waitUntil(caches.open('rb-cache').then(c=>c.add('/'))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`; const swBlob = new Blob([swCode], { type: "application/javascript" }), swUrl = URL.createObjectURL(swBlob); navigator.serviceWorker.register(swUrl).then(reg => console.log("SW registered")).catch(err => console.warn("SW failed", err)); }
+    function boot() { if (canOffscreen) bootWorkerInline(); sizeCanvas(); document.getElementById("overlay").focus(); requestAnimationFrame(animate); }
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
+  </script>
+</body>
 </html>
