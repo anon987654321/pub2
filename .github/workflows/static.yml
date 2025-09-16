@@ -2,9 +2,8 @@
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
+  # Runs on pushes targeting any branch, but filtered to default branch in job
   push:
-    branches: ["main"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -31,13 +30,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
+      - name: Check if on default branch
+        id: check-branch
+        run: |
+          DEFAULT_BRANCH=$(gh api repos/${{ github.repository }} --jq '.default_branch')
+          CURRENT_BRANCH=${GITHUB_REF#refs/heads/}
+          echo "default_branch=$DEFAULT_BRANCH" >> $GITHUB_OUTPUT
+          echo "current_branch=$CURRENT_BRANCH" >> $GITHUB_OUTPUT
+          echo "is_default=$([[ "$CURRENT_BRANCH" == "$DEFAULT_BRANCH" ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
       - name: Setup Pages
+        if: steps.check-branch.outputs.is_default == 'true'
         uses: actions/configure-pages@v5
       - name: Upload artifact
+        if: steps.check-branch.outputs.is_default == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
           path: '.'
       - name: Deploy to GitHub Pages
+        if: steps.check-branch.outputs.is_default == 'true'
         id: deployment
         uses: actions/deploy-pages@v4

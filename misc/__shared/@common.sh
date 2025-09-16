@@ -1,5 +1,12 @@
 commit_to_git() {
   git add -A
+  
+  # Check if there are any staged changes
+  if git diff --cached --quiet; then
+    echo "No staged changes to commit. Skipping commit."
+    return 0
+  fi
+  
   git commit -m "$1"
   echo "$1"
 }
