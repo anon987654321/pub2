@@ -1,6 +1,6 @@
 {
   "name": "master.json",
-  "version": "81.18.0",
+  "version": "81.20.0",
   "purpose": "Autonomous project completion framework",
   "timestamp": "2025-09-16T12:30:00Z",
   "user": "anon987654321",
@@ -31,7 +31,8 @@
     "no_truncation": true,
     "simulate_all_checks": true,
     "ban_process_artifacts": true,
-    "enforce_formatting": "all_code_conforms_before_delivery"
+    "enforce_formatting": "all_code_conforms_before_delivery",
+    "diff_approval_required": "show_patch_get_approval_before_artifact_changes"
   },
 
   "wellbeing_safeguards": {
@@ -78,6 +79,12 @@
     "infer_from": ["code_patterns", "file_structure", "naming_conventions", "dependencies"],
     "assume_standards": true,
     "consistent_choices": true
+  },
+
+  "change_protocol": {
+    "show_diff_first": "always_display_patch_before_applying_changes", 
+    "wait_for_approval": "require_explicit_user_approval_before_modification",
+    "scope": "all_artifacts_all_code_all_updates_all_rewrites"
   },
 
   "anti_patterns": {
@@ -181,6 +188,21 @@
         "final_newline": true,
         "optimize_all_text": true
       },
+      "documentation_style": {
+        "readme_structure": "visionary_intro_then_technical_deep_dive",
+        "intro_paragraphs": {
+          "tone": "creative_copywriting_bold_claims_big_picture_thinking",
+          "style": "over_the_top_visionary_value_proposition", 
+          "avoid": "technical_jargon_implementation_details",
+          "goals": "inspire_excitement_communicate_vision_hook_reader"
+        },
+        "technical_section": {
+          "tone": "precise_detailed_comprehensive",
+          "include": "features_history_architecture_usage_examples",
+          "style": "thorough_professional_reference_quality"
+        },
+        "only_when_requested": "never_auto_generate_documentation"
+      },
       "by_language": {
         "css": { "mobile_first": true, "custom_properties": true },
         "html": { "semantic": true, "aria": true, "self_close": true },
@@ -188,6 +210,21 @@
         "ruby": { "frozen_literal": true, "guards": true, "new_hash": true },
         "shell": { "quote_vars": true, "zsh": true, "strict": true }
       }
+    },
+    "documentation_style": {
+      "readme_structure": "visionary_intro_then_technical_deep_dive",
+      "intro_paragraphs": {
+        "tone": "creative_copywriting_bold_claims_big_picture_thinking",
+        "style": "over_the_top_visionary_value_proposition", 
+        "avoid": "technical_jargon_implementation_details",
+        "goals": "inspire_excitement_communicate_vision_hook_reader"
+      },
+      "technical_section": {
+        "tone": "precise_detailed_comprehensive",
+        "include": "features_history_architecture_usage_examples",
+        "style": "thorough_professional_reference_quality"
+      },
+      "only_when_requested": "never_auto_generate_documentation"
     }
   },
 
@@ -224,5 +261,10 @@
       "frequency": "continuous",
       "correction": "immediate"
     }
+  },
+  
+  "workflow_enforcement": {
+    "diff_approval": "LLM_must_show_proposed_changes_as_patch_wait_for_approval_before_applying",
+    "applies_to": "every_artifact_update_rewrite_create_operation"
   }
 }
