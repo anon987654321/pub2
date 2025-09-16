@@ -238,9 +238,9 @@ class MasterFrameworkComplete
   def create_rubocop_config
     config = {
       'AllCops' => {
-        'TargetRubyVersion' => 3.2,
-        'NewCops' => 'enable',
-        'Exclude' => [
+        TargetRubyVersion: 3.2,
+        NewCops: 'enable',
+        Exclude: [
           '.git/**/*',
           'tmp/**/*',
           'logs/**/*',
@@ -252,37 +252,37 @@ class MasterFrameworkComplete
         ]
       },
       'Metrics/MethodLength' => {
-        'Max' => 20,
-        'CountComments' => false
+        Max: 20,
+        CountComments: false
       },
       'Metrics/ClassLength' => {
-        'Max' => 500
+        Max: 500
       },
       'Metrics/ModuleLength' => {
-        'Max' => 500
+        Max: 500
       },
       'Metrics/CyclomaticComplexity' => {
-        'Max' => 10
+        Max: 10
       },
       'Layout/LineLength' => {
-        'Max' => 120,
-        'AllowedPatterns' => ['\A\s*#']
+        Max: 120,
+        AllowedPatterns: ['\A\s*#']
       },
       'Style/Documentation' => {
-        'Enabled' => false
+        Enabled: false
       },
       'Style/FrozenStringLiteralComment' => {
-        'Enabled' => true,
-        'EnforcedStyle' => 'always'
+        Enabled: true,
+        EnforcedStyle: 'always'
       },
       'Metrics/AbcSize' => {
-        'Max' => 25
+        Max: 25
       },
       'Metrics/BlockLength' => {
-        'Enabled' => false
+        Enabled: false
       },
       'Metrics/ParameterLists' => {
-        'Max' => 10
+        Max: 10
       }
     }
 
@@ -391,25 +391,23 @@ class MasterFrameworkComplete
     content = File.read(file[:path])
 
     # Add frozen string literal if missing
-    unless content.start_with?('#!/usr/bin/env ruby') || content.include?('frozen_string_literal: true')
-      if content.start_with?('#!/usr/bin/env ruby')
-        lines = content.lines
-        shebang = lines[0]
-        rest = lines[1..-1]
-        new_content = "#{shebang}# frozen_string_literal: true\n\n#{rest.join}"
-      else
-        new_content = "# frozen_string_literal: true\n\n#{content}"
-      end
+    return if content.start_with?('#!/usr/bin/env ruby') || content.include?('frozen_string_literal: true')
 
-      File.write(file[:path], new_content)
-    end
+    new_content = if content.start_with?('#!/usr/bin/env ruby')
+                    lines = content.lines
+                    shebang = lines[0]
+                    rest = lines[1..-1]
+                    "#{shebang}# frozen_string_literal: true\n\n#{rest.join}"
+                  else
+                    "# frozen_string_literal: true\n\n#{content}"
+                  end
+
+    File.write(file[:path], new_content)
 
     # Basic syntax validation
-    begin
-      RubyVM::InstructionSequence.compile(File.read(file[:path]))
-    rescue SyntaxError => e
-      raise "Ruby syntax error: #{e.message}"
-    end
+    RubyVM::InstructionSequence.compile(File.read(file[:path]))
+  rescue SyntaxError => e
+    raise "Ruby syntax error: #{e.message}"
   end
 
   def process_shell_file(file)

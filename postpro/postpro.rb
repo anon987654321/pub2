@@ -667,29 +667,12 @@ def process_file(file, variations, recipe, apply_random, effect_count, mode)
       end
 
       # Polish steps with randomization
-      if mode == "professional"
-        polish_intensity = random_intensity(mode)
-        processed_image = film_stock_emulation(processed_image, polish_intensity, "kodak_portra", mode)
-        $logger.debug "Post-stock emulation avg: #{processed_image.avg}"
-      end
-      polish_intensity = random_intensity(mode)
-      processed_image = film_grain(processed_image, polish_intensity, mode)
-      $logger.debug "Post-grain avg: #{processed_image.avg}"
-      polish_intensity = random_intensity(mode)
-      processed_image = film_scratches(processed_image, polish_intensity, mode)
-      $logger.debug "Post-scratches avg: #{processed_image.avg}"
+      processed_image = apply_professional_polish(processed_image, mode) if mode == "professional"
+
+      processed_image = apply_final_polish(processed_image, original_avg, mode)
       processed_image = processed_image.extract_band(0, n: 3) if processed_image.bands > 3
 
-      final_avg = processed_image.avg
-      change = (final_avg - original_avg).round(2)
-      if change.abs < 10.0
-        $logger.warn "Variation #{i + 1} has minimal change (#{change}), effects may be subtle"
-      end
-
-      timestamp = Time.now.strftime("%Y%m%d%H%M%S")
-      output_file = file.sub(File.extname(file), "_processed_v#{i + 1}_#{timestamp}#{File.extname(file)}")
-      processed_image.write_to_file(output_file)
-      $cli_logger.info "Saved variation #{i + 1} as #{output_file}, avg: #{final_avg}, change: #{change}"
+      save_processed_variation(processed_image, file, i, original_avg)
       processed_count += 1
     rescue StandardError => e
       retry_count += 1
@@ -705,6 +688,36 @@ def process_file(file, variations, recipe, apply_random, effect_count, mode)
 rescue StandardError => e
   $logger.error "Processing #{file} failed: #{e.message}\n#{e.backtrace.join("\n")}"
   processed_count || 0
+end
+
+def apply_professional_polish(processed_image, mode)
+  polish_intensity = random_intensity(mode)
+  processed_image = film_stock_emulation(processed_image, polish_intensity, "kodak_portra", mode)
+  $logger.debug "Post-stock emulation avg: #{processed_image.avg}"
+  processed_image
+end
+
+def apply_final_polish(processed_image, original_avg, mode)
+  polish_intensity = random_intensity(mode)
+  processed_image = film_grain(processed_image, polish_intensity, mode)
+  $logger.debug "Post-grain avg: #{processed_image.avg}"
+  
+  polish_intensity = random_intensity(mode)
+  processed_image = film_scratches(processed_image, polish_intensity, mode)
+  $logger.debug "Post-scratches avg: #{processed_image.avg}"
+  processed_image
+end
+
+def save_processed_variation(processed_image, file, variation_index, original_avg)
+  final_avg = processed_image.avg
+  change = (final_avg - original_avg).round(2)
+  
+  $logger.warn "Variation #{variation_index + 1} has minimal change (#{change}), effects may be subtle" if change.abs < 10.0
+
+  timestamp = Time.now.strftime("%Y%m%d%H%M%S")
+  output_file = file.sub(File.extname(file), "_processed_v#{variation_index + 1}_#{timestamp}#{File.extname(file)}")
+  processed_image.write_to_file(output_file)
+  $cli_logger.info "Saved variation #{variation_index + 1} as #{output_file}, avg: #{final_avg}, change: #{change}"
 end
 
 # --- Enhanced Input Collection with Complete UI ---
