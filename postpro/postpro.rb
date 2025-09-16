@@ -1,787 +1,457 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-#
-# Postpro.rb - Analog and Cinematic Post-Processing
-# Version: 13.3.14
-# Updated: 2025-04-04
-# Requires: ruby-vips (>= 2.1.0), tty-prompt
-# Compatible with: libvips 8.14.3 via ruby-vips
-# Description: Transforms digital images with true random variations.
+# Postpro.rb - Professional Cinematic Post-Processing
+# Version: 14.2.0 - Master.json Optimized
 
-require "vips"
-require "logger"
-require "tty-prompt"
-require "json"
-require "time"
+require 'vips'
+require 'logger'
+require 'tty-prompt'
+require 'json'
+require 'time'
 
-# Logging setup with rotation and proper levels
-File.write("postpro.log", "") if File.exist?("postpro.log")
-$logger = Logger.new("postpro.log", "daily", level: Logger::DEBUG)
-$logger = Logger.new(STDERR) if $logger.nil?
+$logger = Logger.new('postpro.log', 'daily', level: Logger::DEBUG)
 $cli_logger = Logger.new(STDOUT, level: Logger::INFO)
 PROMPT = TTY::Prompt.new
 
-# Complete effects mapping - 27 effects total
-EFFECTS = {
-  "film_grain" => :film_grain,
-  "light_leaks" => :light_leaks,
-  "lens_distortion" => :lens_distortion,
-  "sepia" => :sepia,
-  "bleach_bypass" => :bleach_bypass,
-  "lomo" => :lomo,
-  "golden_hour_glow" => :golden_hour_glow,
-  "cross_process" => :cross_process,
-  "bloom_effect" => :bloom_effect,
-  "film_halation" => :film_halation,
-  "teal_and_orange" => :teal_and_orange,
-  "day_for_night" => :day_for_night,
-  "anamorphic_simulation" => :anamorphic_simulation,
-  "chromatic_aberration" => :chromatic_aberration,
-  "vhs_degrade" => :vhs_degrade,
-  "color_fade" => :color_fade,
-  "soft_focus" => :soft_focus,
-  "double_exposure" => :double_exposure,
-  "polaroid_frame" => :polaroid_frame,
-  "tape_degradation" => :tape_degradation,
-  "frame_distortion" => :frame_distortion,
-  "super8_flicker" => :super8_flicker,
-  "cinemascope_bars" => :cinemascope_bars,
-  "halftone_print" => :halftone_print,
-  "film_scratches" => :film_scratches,
-  "film_stock_emulation" => :film_stock_emulation,
-  "sprocket_holes" => :sprocket_holes,
-  "lens_flare" => :lens_flare,
-  "glitch" => :glitch
+REPLIGEN_PRESENT = File.exist?('repligen.rb')
+
+STOCKS = {
+  kodak_portra: { grain: 15, gamma: 0.65, rolloff: 0.88, lift: 0.05, matrix: [1.05, -0.02, -0.03, 0.02, 0.98, 0.00, 0.01, -0.05, 1.04] },
+  kodak_vision3: { grain: 20, gamma: 0.65, rolloff: 0.85, lift: 0.08, matrix: [1.08, -0.05, -0.03, 0.03, 0.95, 0.02, 0.02, -0.08, 1.06] },
+  fuji_velvia: { grain: 8, gamma: 0.75, rolloff: 0.92, lift: 0.03, matrix: [1.12, -0.08, -0.04, 0.05, 1.05, -0.02, 0.01, -0.12, 1.11] },
+  tri_x: { grain: 25, gamma: 0.70, rolloff: 0.80, lift: 0.12, matrix: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0] }
 }.freeze
 
-# Effects that are more experimental/bold
-EXPERIMENTAL_EFFECTS = %w[vhs_degrade tape_degradation super8_flicker lens_flare glitch chromatic_aberration].freeze
-
-# Parameter ranges for effects with special parameters
-PARAM_RANGES = {
-  "double_exposure" => { "blend_mode" => %w[over add multiply] },
-  "polaroid_frame" => { "border_style" => %w[classic worn] },
-  "cinemascope_bars" => { "aspect_ratio" => %w[2.35:1 1.85:1] },
-  "film_stock_emulation" => { "stock_type" => %w[kodak_portra fuji_velvia] }
+PRESETS = {
+  portrait: { fx: %w[skin_protect film_curve highlight_roll micro_contrast grain color_temp base_tint], stock: :kodak_portra, temp: 5200, intensity: 0.8 },
+  landscape: { fx: %w[film_curve color_separate highlight_roll micro_contrast grain vintage_lens], stock: :fuji_velvia, temp: 5800, intensity: 0.9 },
+  street: { fx: %w[film_curve shadow_lift micro_contrast vintage_lens grain], stock: :tri_x, temp: 5600, intensity: 1.0 },
+  blockbuster: { fx: %w[teal_orange grain bloom_pro highlight_roll micro_contrast], stock: :kodak_vision3, temp: 4800, intensity: 1.2 }
 }.freeze
 
-# True randomization with proper mode support
-def random_effects(count, mode)
-  available = EFFECTS.keys.shuffle # Shuffle for true randomness
-  if mode == "experimental"
-    bold = (available & EXPERIMENTAL_EFFECTS).sample(count / 2 + rand(2)) # Bias towards experimental effects
-    subtle = (available - EXPERIMENTAL_EFFECTS).sample(count - bold.size)
-    (bold + subtle).shuffle.take(count).map(&:to_sym)
-  else
-    available.take(count).map(&:to_sym)
-  end
-end
-
-# Professional vs Experimental intensity ranges
-def random_intensity(mode)
-  if mode == "experimental"
-    rand(0.5..2.0) # Wider range for crazy effects
-  else
-    rand(0.2..0.8) # Subtle range for professional
-  end
-end
-
-# Robust image loading with band management
-def load_image(file)
-  $logger.debug "Loading #{file}"
-  raise "File '#{file}' not found or unreadable" unless File.exist?(file) && File.readable?(file)
-  image = Vips::Image.new_from_file(file)
-  $logger.debug "Loaded #{file}: #{image.width}x#{image.height}, #{image.bands} bands, avg: #{image.avg}"
-  
-  # Proper band management
-  if image.bands < 3
-    $logger.debug "Converting to sRGB (#{image.bands} bands to 3)"
-    image = image.colourspace("srgb")
-  elsif image.bands > 3
-    $logger.debug "Image has alpha channel (#{image.bands} bands), reducing to 3 bands"
-    image = image.extract_band(0, n: 3)
-  end
-  image
+def safe_cast(image, format = 'uchar')
+  image.cast(format)
 rescue StandardError => e
-  $logger.error "Failed to load #{file}: #{e.message}\n#{e.backtrace.join("\n")}"
+  $logger.error "Cast failed: #{e.message}"
+  image
+end
+
+def rgb_bands(image, bands = 3)
+  return image if image.bands == bands
+  image.bands < bands ? image.bandjoin([image] * (bands - image.bands)) : image.extract_band(0, n: bands)
+end
+
+def load_image(file)
+  return nil unless File.exist?(file) && File.readable?(file)
+  image = Vips::Image.new_from_file(file, access: :sequential)
+  image = image.colourspace('srgb') if image.bands < 3
+  rgb_bands(image)
+rescue StandardError => e
+  $logger.error "Load failed #{file}: #{e.message}"
   nil
 end
 
-# Enhanced effects application with statistical tracking
-def apply_effects(image, effects_array, mode)
-  $logger.debug "Starting effects on image with avg: #{image.avg}, bands: #{image.bands}"
-  original_avg = image.avg
-  effects_array.each do |effect|
-    next unless EFFECTS.key?(effect)
-    intensity = random_intensity(mode)
-    $cli_logger.info "Applying #{effect} (intensity: #{intensity.round(2)})"
-    $logger.debug "Pre-#{effect} avg: #{image.avg}, bands: #{image.bands}"
-    image = send(effect, image, intensity, mode)
-    image = image.extract_band(0, n: 3) if image.bands > 3
-    change = (image.avg - original_avg).round(2)
-    $logger.debug "Post-#{effect} avg: #{image.avg}, bands: #{image.bands}, change from original: #{change}"
-    $logger.warn "#{effect} had no impact (change: #{change})" if change.abs < 1.0
-  end
-  final_change = (image.avg - original_avg).round(2)
-  $logger.debug "Effects complete, final avg: #{image.avg}, total change: #{final_change}"
-  image
-rescue StandardError => e
-  $logger.error "Failed to apply effects: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+# Professional Color Science
+def color_temp(image, kelvin, intensity = 1.0)
+  factor = kelvin / 5500.0
+  r_mult, g_mult, b_mult = if factor < 1.0
+                             [1.0, factor**0.5, factor**2]
+                           else
+                             [factor**-0.3, 1.0, 1.0 + (factor - 1.0) * 0.5]
+                           end
+  
+  safe_cast(image.linear([
+    1.0 + (r_mult - 1.0) * intensity,
+    1.0 + (g_mult - 1.0) * intensity,
+    1.0 + (b_mult - 1.0) * intensity
+  ], [0, 0, 0]))
 end
 
-# Enhanced recipe support with parameter validation
-def apply_effects_from_recipe(image, recipe, mode)
-  $logger.debug "Starting recipe on image with avg: #{image.avg}, bands: #{image.bands}"
-  original_avg = image.avg
-  recipe.each do |effect, params|
-    next unless EFFECTS.key?(effect.to_s)
-    intensity = params.is_a?(Hash) ? params["intensity"].to_f : params.to_f
-    $cli_logger.info "Applying recipe #{effect} (intensity: #{intensity.round(2)})"
-    $logger.debug "Pre-#{effect} avg: #{image.avg}, bands: #{image.bands}"
-    
-    # Handle special parameter effects
-    image = if effect == "double_exposure"
-              blend_mode = params.is_a?(Hash) ? params["blend_mode"] || "over" : "over"
-              second_image_path = params.is_a?(Hash) ? params["second_image_path"] : nil
-              if second_image_path.nil? || second_image_path.strip.empty?
-                raise ArgumentError, "double_exposure effect requires a 'second_image_path' parameter in the recipe"
-              end
-              send(:double_exposure, image, second_image_path, blend_mode, mode)
-            elsif effect == "polaroid_frame"
-              border_style = params.is_a?(Hash) ? params["border_style"] || "classic" : "classic"
-              send(:polaroid_frame, image, intensity, border_style, mode)
-            elsif effect == "cinemascope_bars"
-              aspect_ratio = params.is_a?(Hash) ? params["aspect_ratio"] || "2.35:1" : "2.35:1"
-              send(:cinemascope_bars, image, intensity, aspect_ratio, mode)
-            elsif effect == "film_stock_emulation"
-              stock_type = params.is_a?(Hash) ? params["stock_type"] || "kodak_portra" : "kodak_portra"
-              send(:film_stock_emulation, image, intensity, stock_type, mode)
-            else
-              send(effect, image, intensity, mode)
-            end
-    image = image.extract_band(0, n: 3) if image.bands > 3
-    change = (image.avg - original_avg).round(2)
-    $logger.debug "Post-#{effect} avg: #{image.avg}, bands: #{image.bands}, change from original: #{change}"
-    $logger.warn "#{effect} had no impact (change: #{change})" if change.abs < 1.0
-  end
-  final_change = (image.avg - original_avg).round(2)
-  $logger.debug "Recipe complete, final avg: #{image.avg}, total change: #{final_change}"
-  image
-rescue StandardError => e
-  $logger.error "Failed to apply recipe: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+def skin_protect(image, intensity = 1.0)
+  hsv = image.colourspace('hsv')
+  h, s, v = hsv.bandsplit
+  
+  hue_mask = (h > 25.5) & (h < 63.75)
+  sat_mask = (s > 51) & (s < 153)
+  skin_mask = hue_mask & sat_mask
+  
+  protection = skin_mask.cast('float') / 255.0 * (1.0 - intensity * 0.7)
+  protection_rgb = protection.bandjoin([protection, protection])
+  
+  safe_cast(image * (1.0 - protection_rgb) + image * protection_rgb)
 end
 
-# --- Enhanced Effects with Professional/Experimental Modes ---
+def film_curve(image, stock = :kodak_portra, intensity = 1.0)
+  data = STOCKS[stock] || STOCKS[:kodak_portra]
+  
+  shadows = image.linear([1.0], [data[:lift] * 255 * intensity])
+  gamma_corrected = shadows.pow(data[:gamma])
+  highlights = gamma_corrected.pow(data[:rolloff])
+  
+  safe_cast(image * (1 - intensity) + highlights * intensity)
+end
 
-def film_grain(image, intensity, mode)
-  sigma = mode == "professional" ? 20 * intensity : 40 * intensity
-  $logger.debug "Generating noise with sigma: #{sigma}"
+def highlight_roll(image, threshold = 200, intensity = 1.0)
+  mask = image > threshold
+  over_exposed = image - threshold
+  rolled_off = threshold + (over_exposed * 0.3).pow(0.7)
+  result = mask.ifthenelse(rolled_off, image)
+  safe_cast(image * (1 - intensity) + result * intensity)
+end
+
+def shadow_lift(image, lift = 0.15, preserve_blacks = true)
+  gray = image.colourspace('grey16').cast('float') / 255.0
+  shadow_mask = preserve_blacks ? ((1.0 - gray).pow(2.0)) * 0.8 : (1.0 - gray) * lift
+  lift_rgb = shadow_mask.bandjoin([shadow_mask, shadow_mask])
+  safe_cast(image.linear([1.0, 1.0, 1.0], [lift_rgb * 255 * lift]))
+end
+
+def micro_contrast(image, radius = 5, intensity = 0.3)
+  blurred = image.gaussblur(radius)
+  high_pass = image - blurred
+  safe_cast(image + high_pass * intensity)
+end
+
+def color_separate(image, intensity = 0.6)
+  r, g, b = image.bandsplit
+  
+  r_clean = (r - (g * 0.08 * intensity) - (b * 0.05 * intensity)).max(0)
+  g_clean = (g - (r * 0.06 * intensity) - (b * 0.10 * intensity)).max(0)
+  b_clean = (b - (r * 0.04 * intensity) - (g * 0.07 * intensity)).max(0)
+  
+  separated = Vips::Image.bandjoin([r_clean, g_clean, b_clean])
+  safe_cast(image * (1 - intensity) + separated * intensity)
+end
+
+def grain(image, iso = 400, stock = :kodak_portra, intensity = 0.4)
+  data = STOCKS[stock]
+  sigma = data[:grain] * Math.sqrt(iso / 100.0) * intensity
+  
   noise = Vips::Image.gaussnoise(image.width, image.height, sigma: sigma)
-  noise = noise * (rand(0.5..1.0)) # Randomize grain density
-  $logger.debug "Noise generated: bands=#{noise.bands}, avg=#{noise.avg}"
-  noise = noise.bandjoin([noise] * (image.bands - 1)) if noise.bands < image.bands
-  result = (image + noise * 0.2).cast("uchar")
-  $logger.debug "film_grain applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in film_grain: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+  brightness = image.colourspace('grey16').cast('float') / 255.0
+  strength = (1.2 - brightness).max(0.3) * intensity
+  
+  grain_rgb = rgb_bands(noise * strength.bandjoin([strength, strength]))
+  safe_cast(image + grain_rgb * 0.25)
 end
 
-def light_leaks(image, intensity, mode)
-  overlay = Vips::Image.black(image.width, image.height, bands: image.bands)
-  count = mode == "professional" ? 2 : rand(4..8)
-  $logger.debug "Adding #{count} light leaks"
-  count.times do
+def base_tint(image, color = [252, 248, 240], intensity = 0.08)
+  overlay = Vips::Image.black(image.width, image.height, bands: 3) + color
+  overlay_norm = overlay.cast('float') / 255.0
+  image_norm = image.cast('float') / 255.0
+  
+  result = image_norm.ifthenelse(
+    overlay_norm < 0.5,
+    2 * image_norm * overlay_norm,
+    1 - 2 * (1 - image_norm) * (1 - overlay_norm)
+  )
+  
+  blended = result * 255
+  safe_cast(image * (1 - intensity) + blended * intensity)
+end
+
+def vintage_lens(image, type = 'zeiss', intensity = 0.7)
+  case type
+  when 'zeiss' then micro_contrast(image, 3, 0.4 * intensity)
+  when 'leica'
+    glow = image.gaussblur(20).linear([0.3 * intensity], [0])
+    safe_cast(image + glow)
+  when 'helios'
+    sharp = image.sharpen(mask: [[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+    safe_cast(image * (1 - intensity * 0.3) + sharp * (intensity * 0.3))
+  else
+    image
+  end
+end
+
+def teal_orange(image, intensity = 1.0)
+  protected = skin_protect(image, 0.8)
+  r, g, b = protected.bandsplit
+  
+  r_enhanced = r.linear([1 + 0.25 * intensity], [8 * intensity])
+  g_balanced = g.linear([1 - 0.08 * intensity], [0])
+  b_enhanced = b.linear([1 + 0.35 * intensity], [0])
+  
+  safe_cast(Vips::Image.bandjoin([r_enhanced, g_balanced, b_enhanced]))
+end
+
+def bloom_pro(image, intensity = 1.0)
+  bright = image.linear([2.0 * intensity], [0])
+  bloom_1 = bright.gaussblur(8 * intensity)
+  bloom_2 = bright.gaussblur(16 * intensity)
+  combined = (bloom_1 + bloom_2 * 0.5) * 0.2
+  safe_cast(image + combined)
+end
+
+# Preset Application
+def preset(image, name)
+  p = PRESETS[name.to_sym] || return image
+  result = image
+  
+  p[:fx].each do |fx|
+    result = case fx
+             when 'skin_protect' then skin_protect(result, p[:intensity])
+             when 'film_curve' then film_curve(result, p[:stock], p[:intensity])
+             when 'highlight_roll' then highlight_roll(result, 200, p[:intensity] * 0.7)
+             when 'shadow_lift' then shadow_lift(result, 0.2, false)
+             when 'micro_contrast' then micro_contrast(result, 6, p[:intensity] * 0.4)
+             when 'grain' then grain(result, 400, p[:stock], p[:intensity] * 0.4)
+             when 'color_temp' then color_temp(result, p[:temp], p[:intensity] * 0.6)
+             when 'base_tint' then base_tint(result, [255, 250, 245], 0.08)
+             when 'color_separate' then color_separate(result, p[:intensity] * 0.6)
+             when 'vintage_lens' then vintage_lens(result, 'zeiss', p[:intensity] * 0.8)
+             when 'teal_orange' then teal_orange(result, p[:intensity])
+             when 'bloom_pro' then bloom_pro(result, p[:intensity])
+             else result
+             end
+  end
+  
+  result
+end
+
+# Random Effects
+def random_fx(image, effects, mode)
+  result = image
+  effects.each do |fx|
+    intensity = mode == 'experimental' ? rand(0.5..1.5) : rand(0.3..0.8)
+    result = case fx
+             when 'grain' then grain_basic(result, intensity)
+             when 'leaks' then leaks_basic(result, intensity)
+             when 'sepia' then sepia_basic(result, intensity)
+             when 'bloom' then bloom_basic(result, intensity)
+             when 'teal_orange' then teal_orange(result, intensity)
+             when 'cross' then cross_basic(result, intensity)
+             when 'vhs' then vhs_basic(result, intensity)
+             when 'chroma' then chroma_basic(result, intensity)
+             when 'glitch' then glitch_basic(result, intensity)
+             when 'flare' then flare_basic(result, intensity)
+             else result
+             end
+  end
+  result
+end
+
+def grain_basic(image, intensity)
+  noise = Vips::Image.gaussnoise(image.width, image.height, sigma: 25 * intensity)
+  safe_cast(image + rgb_bands(noise) * 0.2)
+end
+
+def leaks_basic(image, intensity)
+  overlay = Vips::Image.black(image.width, image.height, bands: 3)
+  rand(2..5).times do
     x, y = rand(image.width), rand(image.height)
-    radius = image.width / (rand(1..3))
-    color = mode == "professional" ? [200 * intensity, 100 * intensity, 50 * intensity] : [255 * intensity, rand(150..200) * intensity, rand(50..100) * intensity]
+    radius = image.width / rand(2..4)
+    color = [255 * intensity, 180 * intensity, 80 * intensity]
     overlay = overlay.draw_circle(color, x, y, radius, fill: true)
   end
-  overlay = overlay.gaussblur(mode == "professional" ? 10 * intensity : rand(15..25) * intensity)
-  result = (image + overlay * 0.3).cast("uchar")
-  $logger.debug "light_leaks applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in light_leaks: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+  safe_cast(image + overlay.gaussblur(15 * intensity) * 0.3)
 end
 
-def lens_distortion(image, intensity, mode)
-  identity = Vips::Image.identity.uint8(image.width, image.height)
-  factor = mode == "professional" ? 0.1 * intensity : rand(0.3..0.7) * intensity
-  $logger.debug "Applying lens distortion with factor: #{factor}"
-  dx = identity.linear(factor, -intensity * rand(2..5)).cast("float")
-  dy = identity.linear(factor, -intensity * rand(2..5)).cast("float")
-  result = image.mapim(dx.bandjoin(dy))
-  $logger.debug "lens_distortion applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in lens_distortion: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+def sepia_basic(image, intensity)
+  matrix = [0.9, 0.7, 0.2, 0.3, 0.8, 0.1, 0.2, 0.6, 0.1]
+  safe_cast(image.recomb(matrix))
 end
 
-def sepia(image, intensity, mode)
-  shift = mode == "professional" ? 0.1 * intensity : 0.2 * intensity
-  $logger.debug "Applying sepia with shift: #{shift}"
-  matrix = [0.9 + shift, 0.7 - shift / 2, 0.2, 0.3, 0.8 + shift / 2, 0.15 - shift / 2, 0.25 - shift / 2, 0.6, 0.1 + shift]
-  result = image.recomb(matrix).cast("uchar")
-  $logger.debug "sepia applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in sepia: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+def bloom_basic(image, intensity)
+  bright = image.linear([1.8 * intensity], [0]).gaussblur(12 * intensity)
+  safe_cast(image + bright * 0.3)
 end
 
-def bleach_bypass(image, intensity, mode)
-  gray = image.colourspace("grey16").cast("uchar")
-  blend_factor = mode == "professional" ? 0.4 : rand(0.6..0.9)
-  $logger.debug "Applying bleach bypass with blend_factor: #{blend_factor}"
-  blend = image * (1 - blend_factor * intensity) + gray * (blend_factor * intensity)
-  result = blend.linear([1.2], [15 * intensity]).cast("uchar")
-  $logger.debug "bleach_bypass applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in bleach_bypass: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def lomo(image, intensity, mode)
-  sat_factor = mode == "professional" ? 0.2 * intensity : rand(0.4..0.7) * intensity
-  $logger.debug "Applying lomo with sat_factor: #{sat_factor}"
-  saturated = image.linear([1.0 + sat_factor], [0])
-  vignette = Vips::Image.black(image.width, image.height, bands: image.bands)
-  vignette = vignette.draw_circle([rand(150..200) * intensity] * image.bands, image.width / 2, image.height / 2, image.width / rand(1..2), fill: true)
-  result = (saturated + vignette * 0.3).cast("uchar")
-  $logger.debug "lomo applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in lomo: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def golden_hour_glow(image, intensity, mode)
-  overlay = Vips::Image.black(image.width, image.height, bands: image.bands)
-  color = mode == "professional" ? [200 * intensity, 160 * intensity, 120 * intensity] : [255 * intensity, rand(180..220) * intensity, rand(150..180) * intensity]
-  $logger.debug "Applying golden hour glow with color: #{color}"
-  overlay = overlay.draw_circle(color, image.width / 2, image.height / 2, image.width / rand(1..3), fill: true)
-  overlay = overlay.gaussblur(mode == "professional" ? 8 * intensity : rand(10..20) * intensity)
-  result = (image + overlay * 0.3).cast("uchar")
-  $logger.debug "golden_hour_glow applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in golden_hour_glow: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def cross_process(image, intensity, mode)
+def cross_basic(image, intensity)
   r, g, b = image.bandsplit
-  r_shift = mode == "professional" ? 0.15 * intensity : rand(0.3..0.6) * intensity
-  g_shift = mode == "professional" ? 0.1 * intensity : rand(0.2..0.4) * intensity
-  b_shift = mode == "professional" ? 0.2 * intensity : rand(0.4..0.7) * intensity
-  $logger.debug "Applying cross process with shifts: r=#{r_shift}, g=#{g_shift}, b=#{b_shift}"
-  r = r.linear([1 + r_shift], [rand(10..20) * intensity])
-  g = g.linear([1 - g_shift], [0])
-  b = b.linear([1 + b_shift], [-rand(5..10) * intensity])
-  result = Vips::Image.bandjoin([r, g, b]).cast("uchar")
-  $logger.debug "cross_process applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in cross_process: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+  r = r.linear([1 + 0.2 * intensity], [10 * intensity])
+  g = g.linear([1 - 0.1 * intensity], [0])
+  b = b.linear([1 + 0.3 * intensity], [-5 * intensity])
+  safe_cast(Vips::Image.bandjoin([r, g, b]))
 end
 
-def bloom_effect(image, intensity, mode)
-  boost = mode == "professional" ? 1.5 * intensity : rand(2.0..3.0) * intensity
-  $logger.debug "Applying bloom with boost: #{boost}"
-  bright = image.linear([boost], [0]).gaussblur(rand(8..15) * intensity)
-  result = (image + bright * 0.3).cast("uchar")
-  $logger.debug "bloom_effect applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in bloom_effect: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+def vhs_basic(image, intensity)
+  noise = rgb_bands(Vips::Image.gaussnoise(image.width, image.height, sigma: 40 * intensity))
+  lines = rgb_bands(Vips::Image.sines(image.width, image.height).linear(0.3 * intensity, 150))
+  safe_cast(image + noise * 0.4 + lines * 0.3)
 end
 
-def film_halation(image, intensity, mode)
-  highlights = image > rand(180..220)
-  blur = mode == "professional" ? 6 * intensity : rand(10..15) * intensity
-  $logger.debug "Applying film halation with blur: #{blur}"
-  halo = highlights.gaussblur(blur).linear(0.1 * intensity, 0)
-  halo = halo.bandjoin([halo] * (image.bands - 1)) if halo.bands < image.bands
-  result = (image + halo * 0.3).cast("uchar")
-  $logger.debug "film_halation applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in film_halation: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def teal_and_orange(image, intensity, mode)
+def chroma_basic(image, intensity)
+  shift = 3 * intensity
   r, g, b = image.bandsplit
-  r_shift = mode == "professional" ? 0.15 * intensity : rand(0.3..0.5) * intensity
-  g_shift = mode == "professional" ? 0.1 * intensity : rand(0.15..0.3) * intensity
-  b_shift = mode == "professional" ? 0.2 * intensity : rand(0.4..0.6) * intensity
-  $logger.debug "Applying teal and orange with shifts: r=#{r_shift}, g=#{g_shift}, b=#{b_shift}"
-  r = r.linear([1 + r_shift], [rand(5..10) * intensity])
-  g = g.linear([1 - g_shift], [0])
-  b = b.linear([1 + b_shift], [0])
-  result = Vips::Image.bandjoin([r, g, b]).cast("uchar")
-  $logger.debug "teal_and_orange applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in teal_and_orange: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+  r = r.embed(shift, 0, image.width, image.height)
+  b = b.embed(-shift, 0, image.width, image.height)
+  safe_cast(Vips::Image.bandjoin([r, g, b]))
 end
 
-def day_for_night(image, intensity, mode)
-  dark_factor = mode == "professional" ? 0.3 * intensity : rand(0.5..0.8) * intensity
-  $logger.debug "Applying day for night with dark_factor: #{dark_factor}"
-  darkened = image.linear([1 - dark_factor], [-rand(15..25) * intensity])
-  r, g, b = darkened.bandsplit
-  b_boost = mode == "professional" ? 0.1 * intensity : rand(0.2..0.4) * intensity
-  b = b.linear([1 + b_boost], [rand(8..12) * intensity])
-  result = Vips::Image.bandjoin([r, g, b]).cast("uchar")
-  $logger.debug "day_for_night applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in day_for_night: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def anamorphic_simulation(image, intensity, mode)
-  stretch = mode == "professional" ? 0.1 * intensity : rand(0.2..0.4) * intensity
-  $logger.debug "Applying anamorphic simulation with stretch: #{stretch}"
-  result = image.resize(1.0 + stretch, vscale: rand(0.9..1.1))
-  $logger.debug "anamorphic_simulation applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in anamorphic_simulation: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def chromatic_aberration(image, intensity, mode)
-  shift = mode == "professional" ? 1.0 * intensity : rand(3.0..6.0) * intensity
-  $logger.debug "Applying chromatic aberration with shift: #{shift}"
+def glitch_basic(image, intensity)
   r, g, b = image.bandsplit
-  r = r.roll(shift, rand(-shift..shift))
-  # Deterministic offsets based on input parameters
-  r_offset = deterministic_offset(intensity, mode, image.width, image.height, "r", shift)
-  b_offset = deterministic_offset(intensity, mode, image.width, image.height, "b", shift)
-  r = r.roll(shift, r_offset)
-  b = b.roll(-shift, b_offset)
-  result = Vips::Image.bandjoin([r, g, b]).cast("uchar")
-  $logger.debug "chromatic_aberration applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in chromatic_aberration: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+  shift = 15 * intensity
+  r = r.embed(rand(-shift..shift), rand(-shift..shift), image.width, image.height)
+  g = g.embed(rand(-shift..shift), rand(-shift..shift), image.width, image.height)
+  b = b.embed(rand(-shift..shift), rand(-shift..shift), image.width, image.height)
+  noise = rgb_bands(Vips::Image.gaussnoise(image.width, image.height, sigma: 20 * intensity))
+  safe_cast(Vips::Image.bandjoin([r, g, b]) + noise * 0.4)
 end
 
-def vhs_degrade(image, intensity, mode)
-  sigma = mode == "professional" ? 15 * intensity : rand(30..60) * intensity
-  $logger.debug "Applying VHS degrade with sigma: #{sigma}"
-  noise = Vips::Image.gaussnoise(image.width, image.height, sigma: sigma)
-  lines = Vips::Image.sines(image.width, image.height).linear(rand(0.2..0.5) * intensity, rand(100..200))
-  noise = noise.bandjoin([noise] * (image.bands - 1)) if noise.bands < image.bands
-  image_plus_lines = (image + lines * 0.4).cast("uchar")
-  result = (image_plus_lines + noise * 0.4).cast("uchar")
-  $logger.debug "vhs_degrade applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in vhs_degrade: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def color_fade(image, intensity, mode)
-  fade_factor = mode == "professional" ? 0.3 * intensity : rand(0.5..0.8) * intensity
-  $logger.debug "Applying color fade with fade_factor: #{fade_factor}"
-  result = image.linear([1 - fade_factor], [rand(30..50) * intensity]).cast("uchar")
-  $logger.debug "color_fade applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in color_fade: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-# --- Missing Effects Implementations ---
-
-def soft_focus(image, intensity, mode)
-  blur = mode == "professional" ? 3 * intensity : rand(5..8) * intensity
-  $logger.debug "Applying soft focus with blur: #{blur}"
-  blurred = image.gaussblur(blur)
-  blend_factor = mode == "professional" ? 0.4 : rand(0.6..0.8)
-  result = (image * (1 - blend_factor) + blurred * blend_factor).cast("uchar")
-  $logger.debug "soft_focus applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in soft_focus: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def double_exposure(image, second_image_path, blend_mode = "over", mode = "professional")
-  $logger.debug "double_exposure: Blend mode #{blend_mode}"
-  second = second_image_path ? load_image(second_image_path) : image
-  unless second&.bands == image.bands
-    $logger.warn "double_exposure: Band mismatch or no second image (image: #{image.bands}, second: #{second&.bands})"
-    return image
-  end
-  second = second.resize(image.width.to_f / second.width) if second.width != image.width
-def double_exposure(image, intensity, second_image_path = nil, blend_mode = "over", mode = "professional")
-  $logger.debug "double_exposure: Blend mode #{blend_mode}, intensity: #{intensity}"
-  second = second_image_path ? load_image(second_image_path) : image
-  unless second&.bands == image.bands
-    $logger.warn "double_exposure: Band mismatch or no second image (image: #{image.bands}, second: #{second&.bands})"
-    return image
-  end
-  second = second.resize(image.width.to_f / second.width) if second.width != image.width
-  # Use intensity to control blend factor, clamp between 0.0 and 1.0
-  blend_factor = [[intensity, 0.0].max, 1.0].min
-  result = (image * (1 - blend_factor) + second * blend_factor).cast("uchar")
-  $logger.debug "double_exposure applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in double_exposure: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def polaroid_frame(image, intensity, border_style = "classic", mode = "professional")
-  border = mode == "professional" ? 20 * intensity : rand(30..50) * intensity
-  $logger.debug "Applying polaroid frame with border: #{border}, style: #{border_style}"
-  frame_width = image.width + border * 2
-  frame_height = image.height + border * 2 + border * 0.5
-  frame = Vips::Image.black(frame_width, frame_height, bands: image.bands)
-  frame_color = mode == "professional" ? [245, 245, 225] : [rand(240..255), rand(240..255), rand(220..240)]
-  frame = frame.draw_rect(frame_color, 0, 0, frame_width, frame_height, fill: true)
-  worn_color = mode == "professional" ? [210, 190, 170] : [rand(180..210), rand(160..190), rand(140..170)]
-  frame = frame.draw_rect(worn_color, border / 2, border / 2, frame_width - border, frame_height - border * 1.5, fill: true) if border_style == "worn"
-  result = frame.composite2(image, "over", x: border, y: border)
-  $logger.debug "polaroid_frame applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in polaroid_frame: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def tape_degradation(image, intensity, mode)
-  sigma = mode == "professional" ? 15 * intensity : rand(30..50) * intensity
-  $logger.debug "Applying tape degradation with sigma: #{sigma}"
-  noise = Vips::Image.gaussnoise(image.width, image.height, sigma: sigma)
-  warp_factor = mode == "professional" ? 0.2 * intensity : rand(0.4..0.8) * intensity
-  warped = image.resize(1 + warp_factor, vscale: rand(0.9..1.1)).rotate(rand(-5..5) * intensity)
-  noise = noise.bandjoin([noise] * (image.bands - 1)) if noise.bands < image.bands
-  intermediate = (image + noise * 0.3).cast("uchar")
-  result = (intermediate + warped * 0.4).cast("uchar")
-  $logger.debug "tape_degradation applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in tape_degradation: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def frame_distortion(image, intensity, mode)
-  angle_range = mode == "professional" ? (-5..5) : (-15..15)
-  angle = rand(angle_range) * intensity
-  $logger.debug "Applying frame distortion with angle: #{angle}"
-  rotated = image.rotate(angle)
-  offset = (image.width * Math.sin(angle.abs * Math::PI / 180) / 2).to_i
-  result = rotated.crop(offset, offset, image.width, image.height)
-  $logger.debug "frame_distortion applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in frame_distortion: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def super8_flicker(image, intensity, mode)
-  flicker = Vips::Image.black(image.width, image.height, bands: image.bands)
-  count = mode == "professional" ? 4 : rand(8..12)
-  $logger.debug "Applying super8 flicker with #{count} flickers"
-  count.times do
-    flicker = flicker.draw_rect([rand(80..120) * intensity] * image.bands, rand(image.width), rand(image.height), rand(25..60), rand(25..60), fill: true)
-  end
-  flicker = flicker.gaussblur(mode == "professional" ? 4 * intensity : rand(6..10) * intensity)
-  result = (image + flicker * 0.3).cast("uchar")
-  $logger.debug "super8_flicker applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in super8_flicker: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def cinemascope_bars(image, intensity, aspect_ratio = "2.35:1", mode = "professional")
-  ratio = aspect_ratio == "2.35:1" ? 2.35 : 1.85
-  height_factor = mode == "professional" ? 0.4 : rand(0.6..0.9)
-  $logger.debug "Applying cinemascope bars with ratio: #{ratio}, height_factor: #{height_factor}"
-  bar_height = ((image.height - (image.width / ratio)) / 2).to_i * intensity * height_factor
-  bars = Vips::Image.black(image.width, image.height, bands: image.bands)
-  bars = bars.draw_rect([0] * image.bands, 0, 0, image.width, bar_height, fill: true)
-  bars = bars.draw_rect([0] * image.bands, 0, image.height - bar_height, image.width, bar_height, fill: true)
-  result = bars.composite2(image, "over")
-  $logger.debug "cinemascope_bars applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in cinemascope_bars: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def halftone_print(image, intensity, mode)
-  grey = image.colourspace("grey16").cast("uchar")
-  rank_size = mode == "professional" ? 8 : rand(12..18)
-  $logger.debug "Applying halftone print with rank_size: #{rank_size}"
-  dots = grey.rank(rank_size, rank_size, rand(3..5)).linear([1.2 * intensity], [0])
-  result = (image + dots * 0.3).cast("uchar")
-  $logger.debug "halftone_print applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in halftone_print: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def film_scratches(image, intensity, mode)
-  scratches = Vips::Image.black(image.width, image.height, bands: image.bands)
-  count = mode == "professional" ? 4 : rand(8..12)
-  $logger.debug "Applying #{count} film scratches"
-  count.times do
-    x = rand(image.width)
-    width = rand(2..5) * intensity
-    scratches = scratches.draw_rect([rand(200..255) * intensity] * image.bands, x, 0, width, image.height, fill: true)
-  end
-  scratches = scratches.gaussblur(mode == "professional" ? 2 * intensity : rand(3..5) * intensity)
-  opacity = mode == "professional" ? 0.4 : rand(0.6..0.9)
-  $logger.debug "Applying scratches with opacity: #{opacity}"
-  result = (image + scratches * opacity * 0.3).cast("uchar")
-  $logger.debug "film_scratches applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in film_scratches: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def film_stock_emulation(image, intensity, stock_type = "kodak_portra", mode = "professional")
-  r, g, b = image.bandsplit
-  if stock_type == "kodak_portra"
-    $logger.debug "Applying Kodak Portra emulation"
-    r = r.linear([1 + 0.1 * intensity], [10 * intensity])
-    g = g.linear([1 - 0.05 * intensity], [0])
-    b = b.linear([1 - 0.07 * intensity], [-5 * intensity])
-  else # fuji_velvia
-    $logger.debug "Applying Fuji Velvia emulation"
-    r = r.linear([1 + 0.15 * intensity], [15 * intensity])
-    g = g.linear([1 + 0.1 * intensity], [0])
-    b = b.linear([1 + 0.05 * intensity], [0])
-  end
-  boost = mode == "professional" ? 0.1 : rand(0.2..0.3)
-  result = Vips::Image.bandjoin([r, g, b]).linear([1 + boost], [0]).cast("uchar")
-  $logger.debug "film_stock_emulation applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in film_stock_emulation: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def sprocket_holes(image, intensity, mode)
-  hole_size = mode == "professional" ? 8 * intensity : rand(12..20) * intensity
-  spacing = mode == "professional" ? 25 * intensity : rand(20..30) * intensity
-  $logger.debug "Applying sprocket holes with size: #{hole_size}, spacing: #{spacing}"
-  frame = Vips::Image.black(image.width + hole_size * 2, image.height, bands: image.bands)
-  frame = frame.draw_rect([rand(220..240)] * image.bands, 0, 0, frame.width, frame.height, fill: true)
-  (0...(image.height / spacing).to_i).each do |i|
-    y = i * spacing + hole_size / 2
-    frame = frame.draw_rect([0] * image.bands, 0, y, hole_size, hole_size, fill: true)
-    frame = frame.draw_rect([0] * image.bands, frame.width - hole_size, y, hole_size, hole_size, fill: true)
-  end
-  result = frame.composite2(image, "over", x: hole_size, y: 0)
-  $logger.debug "sprocket_holes applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in sprocket_holes: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
-end
-
-def lens_flare(image, intensity, mode)
-  flare = Vips::Image.black(image.width, image.height, bands: image.bands)
-  count = mode == "professional" ? 3 : rand(5..8)
-  $logger.debug "Applying #{count} lens flares"
-  count.times do
+def flare_basic(image, intensity)
+  flare = Vips::Image.black(image.width, image.height, bands: 3)
+  rand(3..6).times do
     x, y = rand(image.width), rand(image.height)
-    length = mode == "professional" ? 80 * intensity : rand(150..300) * intensity
-    flare = flare.draw_line([255, rand(200..255), rand(180..255)], x, y, x + length, y)
+    length = 200 * intensity
+    flare = flare.draw_line([255, 220, 180], x, y, x + length, y)
   end
-  flare = flare.gaussblur(mode == "professional" ? 5 * intensity : rand(8..12) * intensity)
-  result = (image + flare * 0.3).cast("uchar")
-  $logger.debug "lens_flare applied, avg: #{result.avg}, bands: #{result.bands}"
-  result
-rescue StandardError => e
-  $logger.error "Failed in lens_flare: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
+  safe_cast(image + flare.gaussblur(8 * intensity) * 0.3)
 end
 
-def glitch(image, intensity, mode)
-  r, g, b = image.bandsplit
-  shift = mode == "professional" ? 10 * intensity : rand(20..40) * intensity
-  $logger.debug "Applying glitch with shift: #{shift}"
-  r = r.roll(rand(-shift..shift), rand(-shift..shift))
-  g = g.roll(rand(-shift..shift), rand(-shift..shift))
-  b = b.roll(rand(-shift..shift), rand(-shift..shift))
-  noise = Vips::Image.gaussnoise(image.width, image.height, sigma: rand(10..20) * intensity)
-  noise = noise.bandjoin([noise] * (image.bands - 1)) if noise.bands < image.bands
-  result = Vips::Image.bandjoin([r, g, b]) + (noise * 0.4).cast("uchar")
-  $logger.debug "glitch applied, avg: #{result.avg}, bands: #{result.bands}"
+def recipe(image, recipe_data)
+  result = image
+  recipe_data.each do |fx, params|
+    intensity = params.is_a?(Hash) ? params['intensity'].to_f : params.to_f
+    method = fx.gsub('_professional', '')
+    result = respond_to?(method) ? send(method, result, intensity) : result
+  end
   result
-rescue StandardError => e
-  $logger.error "Failed in glitch: #{e.message}\n#{e.backtrace.join("\n")}"
-  raise
 end
 
-# --- File Processing with Polish Steps and Retry Logic ---
+# Repligen Integration
+def check_repligen
+  return unless REPLIGEN_PRESENT
+  
+  $cli_logger.info 'Repligen detected! Auto-processing generated images...'
+  
+  recent_files = Dir.glob('*_generated_*.{jpg,jpeg,png,webp}')
+                    .select { |f| File.mtime(f) > (Time.now - 300) }
+  
+  if recent_files.any?
+    $cli_logger.info "Found #{recent_files.count} recent Repligen outputs"
+    preset_name = PROMPT.select('Choose preset for Repligen outputs:', PRESETS.keys)
+    recent_files.each { |file| process_file(file, 2, preset_name) }
+  end
+end
 
-def process_file(file, variations, recipe, apply_random, effect_count, mode)
-  $logger.debug "Processing #{file}: #{variations} variations, #{effect_count} effects, #{mode} mode"
+def process_file(file, variations, preset_name = nil, recipe_data = nil, random_effects = nil, mode = 'professional')
   image = load_image(file)
   return 0 unless image
-  original_avg = image.avg
-
+  
   processed_count = 0
   variations.times do |i|
-    retry_count = 0
     begin
-      $logger.debug "Variation #{i + 1} for #{file}"
-      processed_image = if recipe
-                          apply_effects_from_recipe(image, recipe, mode)
-                        elsif apply_random
-                          variation_effects = random_effects(effect_count, mode)
-                          $logger.debug "Selected effects for variation #{i + 1}: #{variation_effects}"
-                          apply_effects(image, variation_effects, mode)
-                        else
-                          $cli_logger.warn "No effects selected, skipping variation #{i + 1}"
-                          next
-                        end
-
-      unless processed_image
-        $logger.error "Variation #{i + 1} failed: nil image"
-        next
-      end
-
-      # Polish steps with randomization
-      if mode == "professional"
-        polish_intensity = random_intensity(mode)
-        processed_image = film_stock_emulation(processed_image, polish_intensity, "kodak_portra", mode)
-        $logger.debug "Post-stock emulation avg: #{processed_image.avg}"
-      end
-      polish_intensity = random_intensity(mode)
-      processed_image = film_grain(processed_image, polish_intensity, mode)
-      $logger.debug "Post-grain avg: #{processed_image.avg}"
-      polish_intensity = random_intensity(mode)
-      processed_image = film_scratches(processed_image, polish_intensity, mode)
-      $logger.debug "Post-scratches avg: #{processed_image.avg}"
-      processed_image = processed_image.extract_band(0, n: 3) if processed_image.bands > 3
-
-      final_avg = processed_image.avg
-      change = (final_avg - original_avg).round(2)
-      if change.abs < 10.0
-        $logger.warn "Variation #{i + 1} has minimal change (#{change}), effects may be subtle"
-      end
-
-      timestamp = Time.now.strftime("%Y%m%d%H%M%S")
-      output_file = file.sub(File.extname(file), "_processed_v#{i + 1}_#{timestamp}#{File.extname(file)}")
-      processed_image.write_to_file(output_file)
-      $cli_logger.info "Saved variation #{i + 1} as #{output_file}, avg: #{final_avg}, change: #{change}"
+      processed = if preset_name
+                     preset(image, preset_name)
+                   elsif recipe_data
+                     recipe(image, recipe_data)
+                   elsif random_effects
+                     random_fx(image, random_effects, mode)
+                   else
+                     next
+                   end
+      
+      next unless processed
+      
+      processed = rgb_bands(processed)
+      timestamp = Time.now.strftime('%Y%m%d%H%M%S')
+      suffix = preset_name || 'processed'
+      output = file.sub(File.extname(file), "_#{suffix}_v#{i + 1}_#{timestamp}#{File.extname(file)}")
+      
+      processed.write_to_file(output, Q: 95)
+      $cli_logger.info "Saved masterpiece #{i + 1}: #{File.basename(output)}"
       processed_count += 1
+      
     rescue StandardError => e
-      retry_count += 1
-      if retry_count <= 2
-        $logger.warn "Retry #{retry_count} for variation #{i + 1}: #{e.message}"
-        retry
-      else
-        $logger.error "Failed variation #{i + 1} after 2 retries: #{e.message}\n#{e.backtrace.join("\n")}"
-      end
+      $logger.error "Variation #{i + 1} failed: #{e.message}"
     end
   end
+  
   processed_count
-rescue StandardError => e
-  $logger.error "Processing #{file} failed: #{e.message}\n#{e.backtrace.join("\n")}"
-  processed_count || 0
 end
 
-# --- Enhanced Input Collection with Complete UI ---
-
+# Main Workflow
 def get_input
-  $logger.debug "Starting input collection"
-  $cli_logger.info "Postpro.rb v13.3.14 - Transform your images with analog and cinematic flair!"
-  mode = PROMPT.yes?("Professional mode? (Yes for subtle, No for bold experimental)", default: true) ? "professional" : "experimental"
-  apply_random = PROMPT.yes?("Apply random effects? (No for custom recipe)", default: true)
-  recipe_file = PROMPT.ask("Custom JSON recipe file (or press Enter for none):", default: "").strip
-  patterns = PROMPT.ask("File patterns (default: **/*.{jpg,jpeg,png,webp}):", default: "**/*.{jpg,jpeg,png,webp}").strip
-  file_patterns = patterns.split(",").map(&:strip)
-  variations = PROMPT.ask("Number of variations per image (1-5):", convert: :int, default: 3) { |q| q.in("1-5") }
-  effect_count = apply_random ? PROMPT.ask("Effects per variation (1-5):", convert: :int, default: 3) { |q| q.in("1-5") } : 0
-
-  recipe = nil
-  unless recipe_file.empty?
-    if File.exist?(recipe_file)
-      begin
-        recipe = JSON.parse(File.read(recipe_file))
-        $cli_logger.info "Loaded recipe from '#{recipe_file}'"
-      rescue JSON::ParserError => e
-        $cli_logger.warn "Recipe file '#{recipe_file}' has invalid JSON: #{e.message}, proceeding without recipe"
-      end
-    else
-      $cli_logger.warn "Recipe file '#{recipe_file}' not found, proceeding without recipe"
-    end
+  $cli_logger.info 'Postpro.rb v14.2.0 Professional Edition'
+  $cli_logger.info 'Advanced Color Science & Cinematic Workflows' + (REPLIGEN_PRESENT ? ' | Repligen Active' : '')
+  
+  check_repligen if REPLIGEN_PRESENT
+  
+  workflow = PROMPT.select('Choose workflow:', [
+    'Masterpiece Presets (Recommended)',
+    'Random Effects (Experimental)', 
+    'Custom JSON Recipe'
+  ])
+  
+  patterns = PROMPT.ask('File patterns:', default: '**/*.{jpg,jpeg,png,webp}').strip.split(',').map(&:strip)
+  variations = PROMPT.ask('Variations per image:', convert: :int, default: 2) { |q| q.in('1-5') }
+  
+  case workflow
+  when 'Masterpiece Presets (Recommended)'
+    preset_name = PROMPT.select('Choose preset:', PRESETS.keys)
+    [patterns, variations, { type: :preset, preset: preset_name }]
+    
+  when 'Random Effects (Experimental)'
+    mode = PROMPT.select('Mode:', ['Professional', 'Experimental'])
+    fx_count = PROMPT.ask('Effects per variation:', convert: :int, default: 4) { |q| q.in('2-8') }
+    [patterns, variations, { type: :random, mode: mode.downcase, fx: fx_count }]
+    
+  when 'Custom JSON Recipe'
+    file = PROMPT.ask('Recipe file path:').strip
+    recipe_data = File.exist?(file) ? JSON.parse(File.read(file)) : {}
+    [patterns, variations, { type: :recipe, recipe: recipe_data }]
   end
-
-  [file_patterns, variations, recipe, apply_random, effect_count, mode]
-rescue StandardError => e
-  $logger.error "Input failed: #{e.message}\n#{e.backtrace.join("\n")}"
-  nil
 end
-
-# --- Main Workflow with Statistical Tracking ---
 
 def main
   input = get_input
   return unless input
-
-  file_patterns, variations, recipe, apply_random, effect_count, mode = input
   
-  $cli_logger.info "Processing in #{mode} mode..."
-  files = file_patterns.flat_map { |pattern| Dir.glob(pattern.strip) }
-  files = files.reject { |file| File.basename(file).include?("processed") }
+  patterns, variations, config = input
+  
+  files = patterns.flat_map { |pattern| Dir.glob(pattern) }
+                  .reject { |f| File.basename(f).match?(/processed|masterpiece/) }
   
   if files.empty?
-    $cli_logger.error "No files matched the pattern!"
+    $cli_logger.error 'No files matched patterns!'
     return
   end
-
-  $cli_logger.info "Processing #{files.length} file(s)..."
+  
+  $cli_logger.info "Processing #{files.count} files..."
   total_processed = 0
   total_variations = 0
   start_time = Time.now
-
-  files.each_with_index do |file, index|
+  
+  files.each_with_index do |file, i|
     begin
-      $cli_logger.info "Processing file #{index + 1}/#{files.length}: #{file}"
-      variations_created = process_file(file, variations, recipe, apply_random, effect_count, mode)
-      total_processed += 1 if variations_created > 0
-      total_variations += variations_created
+      $cli_logger.info "#{i + 1}/#{files.count}: #{File.basename(file)}"
+      
+      count = case config[:type]
+              when :preset
+                process_file(file, variations, config[:preset])
+              when :random
+                fx = %w[grain leaks sepia bloom teal_orange cross vhs chroma glitch flare]
+                selected = config[:mode] == 'experimental' ? fx : fx.first(6)
+                random_effects = selected.shuffle.take(config[:fx])
+                process_file(file, variations, nil, nil, random_effects, config[:mode])
+              when :recipe
+                process_file(file, variations, nil, config[:recipe])
+              else
+                0
+              end
+      
+      total_processed += 1 if count > 0
+      total_variations += count
+      GC.start if (i % 10).zero?
+      
     rescue StandardError => e
-      $logger.error "Fatal error processing #{file}: #{e.message}\n#{e.backtrace.join("\n")}"
-      $cli_logger.error "Error processing #{file}: #{e.message}"
+      $logger.error "Failed #{file}: #{e.message}"
+      $cli_logger.error "Error: #{File.basename(file)}"
     end
   end
-
-  end_time = Time.now
-  duration = (end_time - start_time).round(2)
   
-  $cli_logger.info "Completed: #{total_processed} file(s) processed, #{total_variations} variation(s) created in #{duration}s"
-  $logger.info "Processing statistics: #{total_processed}/#{files.length} files successful, #{total_variations} total variations, #{duration}s duration"
-rescue StandardError => e
-  $logger.error "Main workflow failed: #{e.message}\n#{e.backtrace.join("\n")}"
-  $cli_logger.error "Fatal error: #{e.message}"
+  duration = (Time.now - start_time).round(2)
+  $cli_logger.info "Complete! #{total_processed} files → #{total_variations} masterpieces (#{duration}s)"
+  
+  if REPLIGEN_PRESENT && total_variations > 0
+    $cli_logger.info "Tip: Run 'ruby repligen.rb' to generate more content!"
+  end
 end
 
-main if __FILE__ == $0
+def auto_launch
+  ARGV.include?('--from-repligen') && REPLIGEN_PRESENT ? check_repligen : main
+end
+
+auto_launch if __FILE__ == $0
