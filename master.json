@@ -1,7 +1,7 @@
 {
-  "version": "81.9.0",
-  "purpose": "LLM adversarial refactoring framework - final optimization after self-application",
-  "timestamp": "2025-09-16T00:00:00Z",
+  "version": "81.10.2",
+  "purpose": "General-purpose autonomous project completion framework",
+  "timestamp": "2025-09-16T02:31:44Z",
   "user": "anon987654321",
   "context": "Self-optimized: removed execution_modes duplication, consolidated settings, maintained functionality",
 
@@ -20,91 +20,341 @@
     "execution": "quiet_mode_recursive_file_tree_first"
   },
 
-  "stack_context": {
-    "mode": "ask_when_ambiguous",
-    "user_environment": {
-      "pub2": "45% Ruby, 45% Shell, 10% HTML - main mixed repo",
-      "pub": "general purpose",
-      "openbsd": "security-focused, uses pledge/unveil",
-      "railsy": "Rails conventions",
-      "openbsd_amsterdam": "OpenBSD deployment scripts"
-    },
-    "remember": "session"
+  "constraints": {
+    "evidence": "reasoned_justification_not_tool_output",
+    "no_external_tools": true,
+    "no_placeholders": true,
+    "no_truncation": true,
+    "simulate_all_checks": true
   },
 
-  "adversarial_validation": {
-    "required": "every_phase",
-    "questions": [
-      "Why does this exist?",
-      "What breaks if removed?",
-      "Where's the duplication?",
-      "Is this the simplest working solution?",
-      "What would OpenBSD do? (minimal/secure)",
-      "What would Rails do? (convention over configuration)",
-      "Are we solving the right problem?",
-      "What are we missing?"
-    ]
-  },
-
-  "perspectives": {
-    "security": {"focus": "paranoid_validation", "weight": 0.25},
-    "architect": {"focus": "clean_interfaces", "weight": 0.20},
-    "performance": {"focus": "measure_everything", "weight": 0.15},
-    "openbsd": {"focus": "minimal_secure_correct", "weight": 0.15},
-    "rails": {"focus": "convention_over_configuration", "weight": 0.15},
-    "creative": {"focus": "explore_alternatives", "weight": 0.10},
-    "consensus": 0.7
-  },
-
-  "analysis": {
-    "cross_reference": ["find_unused", "detect_duplicates", "trace_dependencies"],
-    "reasoning": {
-      "dry": "Find duplication: similar code blocks, repeated patterns",
-      "kiss": "Find complexity: deep nesting, long methods",
-      "solid": "Find violations: multiple responsibilities, poor interfaces",
-      "yagni": "Find unused: grep for references, remove dead code"
-    },
-    "research": ["ar5iv.org", "rails_edge_guides", "gorails.com"]
+  "project_rules": {
+    "optimize_for": "project_completion_not_line_count",
+    "preserve_if": "executes_action OR prevents_regression OR connects_systems",
+    "remove_if": "only_describes AND never_referenced AND adds_no_value",
+    "graceful_degradation_default": true,
+    "prefer_capability_detection_over_user_agent_checks": true,
+    "use_progressive_enhancement_default": true
   },
 
   "preservation": {
     "absolute_rules": {
+      "output": "NO_TRUNCATION_EVER",
       "user_content": "NEVER_MODIFY",
-      "working_code": "REFACTOR_DONT_REWRITE", 
-      "output": "NO_TRUNCATION_EVER"
+      "working_code": "REFACTOR_DONT_REWRITE"
     },
-    "constraints": ["preserve_function", "maintain_tests", "keep_working"],
-    "forbidden_removals": ["security", "preservation", "core_functionality", "user_content"]
+    "constraints": [
+      "keep_working",
+      "maintain_coverage",
+      "maintain_tests",
+      "preserve_function"
+    ],
+    "deletion_policy": [
+      "prove_no_references_via_internal_reference_tracing",
+      "require_justification",
+      "show_alternative_or_reason_for_removal"
+    ],
+    "forbidden_removals": [
+      "core_functionality",
+      "preservation",
+      "security",
+      "user_content"
+    ],
+    "preserve_if_referenced": true
   },
 
-  "formatting": {
-    "universal": {"indent": 2, "quotes": "double", "backticks": 4},
-    "ruby": {"frozen_string": true, "guard_clauses": true, "rails_helpers": true},
-    "shell": {"shebang": "#!/bin/sh", "strict": "set -euo pipefail", "quote_vars": true},
-    "js": {"semicolons": true, "const_first": true},
-    "css": {"logical_groups": true, "mobile_first": true, "semantic_html5": true},
-    "html": {"semantic_elements": true, "aria_labels": true, "i18n": true}
+  "risk_management": {
+    "circuit_breakers": [
+      "complexity_cascade",
+      "infinite_loops",
+      "resource_exhaustion",
+      "experimental_feature_without_opt_in",
+      "missing_fallback_path",
+      "runtime_preflight_failed"
+    ],
+    "conflict_resolution": {
+      "priority_order": [
+        "preservation.absolute_rules",
+        "risk_management",
+        "quality_gates",
+        "refinement"
+      ],
+      "tie_breaker": "architect_with_security_veto"
+    },
+    "improvement_threshold": "5_percent_minimum",
+    "max_iterations": 5,
+    "resource_threshold": "80_percent",
+    "rollback_mechanism": "revert_on_any_regression"
   },
 
-  "optimization": {
-    "targets": ["line_count", "duplication", "complexity", "readability"],
-    "techniques": ["ternary operators", "destructuring", "guard_clauses", "early_return"],
-    "splitting": "large_files_into_manageable_units",
-    "refinement": "iterative_until_no_improvement"
+  "quality_gates": {
+    "business_context": "preserve_domain_logic_comments",
+    "pipeline": [
+      "ambiguity",
+      "rule_compliance",
+      "schema",
+      "syntax"
+    ],
+    "semantic_equivalence": "verify_behavior_unchanged",
+    "simulated_checks": {
+      "accessibility": "heuristic_audit against WCAG-like principles",
+      "ambiguity": "adversarial_questioning to force precision",
+      "performance": "algorithmic_complexity_estimation + hotspot_reasoning",
+      "quality": "duplication_detection + cohesion_coupling_reasoning",
+      "schema": "LLM-enforced types and required keys",
+      "security": "threat_modeling + misuse_cases + invariant_checks",
+      "syntax": "LLM-internal parsing and structural consistency",
+      "testability": "unit_boundary_identification + invariants + example_cases",
+      "runtime_preflight": "capability_detection + environment_constraints + required_fallbacks_present",
+      "graceful_degradation": "verify core function under constrained/runtime-limited environments",
+      "a11y_keyboard_nav": "tab order, focus-visible, focus-trap avoidance, skip-link",
+      "a11y_contrast": "color-contrast estimate vs WCAG AA/AAA targets",
+      "a11y_motion": "respects prefers-reduced-motion; non-blocking animations",
+      "viewport_units_safety": "prefer dvh/dvw/vi/vb where appropriate; mobile 100vh pitfalls flagged",
+      "cls_budget": "images/iframes have width/height to avoid layout shift",
+      "event_loop_health": "long-task estimation and frame budget checks for UI loops",
+      "messaging_contracts": "validate cross-document messaging has explicit target origins or safe fallbacks"
+    },
+    "test_preservation": "maintain_coverage_levels"
+  },
+
+  "refinement": {
+    "analysis": {
+      "cross_reference": [
+        "find_unused",
+        "detect_duplicates",
+        "trace_dependencies"
+      ],
+      "reasoning": {
+        "dry": "Find duplication: similar code blocks, repeated patterns",
+        "kiss": "Find complexity: deep nesting, long methods",
+        "solid": "Find violations: multiple responsibilities, poor interfaces",
+        "yagni": "Find unused: grep for references, remove dead code"
+      },
+      "research": ["ar5iv.org", "rails_edge_guides", "gorails.com"]
+    },
+    "optimization": {
+      "apply_if": [
+        "maintains_readability",
+        "tests_present_or_constraints_hold"
+      ],
+      "avoid_brittle_tests": true,
+      "refinement": "iterative_until_no_improvement",
+      "splitting": "large_files_into_manageable_units",
+      "targets": [
+        "line_count",
+        "complexity",
+        "duplication",
+        "readability"
+      ],
+      "techniques": [
+        "ternary operators",
+        "destructuring",
+        "guard_clauses",
+        "early_return"
+      ]
+    },
+    "tracking": {
+      "diagnostics_only": [
+        "line_count"
+      ],
+      "progress": [
+        "duplication_count",
+        "quality_score"
+      ]
+    },
+    "workflow": {
+      "iterate_until": "plateau_or_max_5",
+      "phases": [
+        "analyze",
+        "build",
+        "deliver",
+        "optimize",
+        "validate"
+      ],
+      "plateau_detection": "no_improvement_without_breaking"
+    }
+  },
+
+  "adversarial_validation": {
+    "questions": [
+      "Are we solving the right problem?",
+      "Is this the simplest working solution?",
+      "What are we missing?",
+      "What breaks if removed?",
+      "What would OpenBSD do? (minimal/secure)",
+      "What would Rails do? (convention over configuration)",
+      "Where's the duplication?",
+      "Why does this exist?"
+    ],
+    "required": "every_phase",
+    "general_extra": [
+      "What are the runtime invariants and what is the fallback when a capability is missing?"
+    ]
+  },
+
+  "perspectives": {
+    "security": { "focus": "paranoid_validation", "weight": 0.25 },
+    "architect": { "focus": "clean_interfaces", "weight": 0.20 },
+    "performance": { "focus": "measure_everything_via_reasoned_estimates", "weight": 0.15 },
+    "openbsd": { "focus": "minimal_secure_correct", "weight": 0.15 },
+    "rails": { "focus": "convention_over_configuration", "weight": 0.15 },
+    "creative": { "focus": "explore_alternatives", "weight": 0.10 },
+    "consensus": 0.7
+  },
+
+  "system_config": {
+    "audit_trail": {
+      "format": "jsonl",
+      "include": {
+        "commitish": "optional",
+        "paths_changed": true
+      },
+      "max_entries": 200,
+      "record": [
+        "decisions",
+        "deletions",
+        "diffs",
+        "evidence",
+        "justifications",
+        "metrics_before_after"
+      ]
+    },
+    "change_control": {
+      "ask_before_write": true,
+      "require_diff_ack": true,
+      "ask_before_enable_experimental_features": true
+    },
+    "runtime_policies": {
+      "feature_flags": {
+        "experimental_default": "off",
+        "require_explicit_opt_in": true
+      },
+      "capabilities": {
+        "detection_policy": "capability_probe_not_user_agent",
+        "required_fallbacks": true
+      },
+      "graceful_degradation": {
+        "enabled": true,
+        "preserve_core_function": true
+      }
+    },
+    "frontend_defaults": {
+      "html_baseline": {
+        "lang_required": true,
+        "dir_support": true,
+        "meta_required": ["charset", "viewport"],
+        "prefer_dynamic_viewport_units": true,
+        "set_width_height_on_media": true,
+        "defer_non_critical_scripts": true
+      },
+      "css_baseline": {
+        "box_sizing_border_box": true,
+        "use_custom_properties_tokens": true,
+        "logical_properties_preferred": true,
+        "container_queries_allowed": true,
+        "reduced_motion_supported": true
+      },
+      "design_tokens": {
+        "colors": "define as CSS custom properties",
+        "spacing_scale": [0, 2, 4, 8, 12, 16, 24, 32, 48, 64],
+        "radius_scale": [0, 2, 4, 8, 12],
+        "elevation_scale": [0, 1, 2, 3, 4],
+        "typography": ["--font-sans", "--font-mono"]
+      },
+      "accessibility_gates": {
+        "keyboard_nav_required": true,
+        "focus_visible_preserved": true,
+        "contrast_minimum": "AA",
+        "motion_respect": true,
+        "hit_target_min_px": 40
+      },
+      "performance_budgets": {
+        "css_total_kb": 150,
+        "js_total_kb": 300,
+        "image_max_kb": 200,
+        "long_task_ms": 50
+      },
+      "pwa_policy": {
+        "service_worker_update_flow": "prompt",
+        "caching_strategy": "stale_while_revalidate",
+        "offline_fallback_path": "/offline.html"
+      }
+    },
+    "formatting": {
+      "css": {
+        "avoid_classes_ids": true,
+        "mobile_first": true,
+        "prefer_direct_selectors": true,
+        "scss_support": true,
+        "semantic_html5": true,
+        "architecture": "utility_first_with_tokens",
+        "use_custom_properties": true,
+        "logical_properties": true
+      },
+      "html": {
+        "aria_labels": true,
+        "avoid_divitis": true,
+        "erb_support": true,
+        "i18n": true,
+        "prefer_tag_helpers": true,
+        "semantic_elements": true,
+        "prefer_dynamic_viewport_units": true,
+        "lang_required": true,
+        "dir_support": true,
+        "set_explicit_width_height_on_images": true
+      },
+      "js": {
+        "const_first": true,
+        "semicolons": true,
+        "module_preferred": true,
+        "defer_default": true,
+        "dom_content_loaded_hooks": true
+      },
+      "precedence": [
+        "stack_specific",
+        "universal"
+      ],
+      "ruby": {
+        "frozen_string": true,
+        "guard_clauses": true,
+        "rails_helpers": true
+      },
+      "shell": {
+        "quote_vars": true,
+        "shebang": "#!/bin/sh",
+        "strict": "set -euo pipefail"
+      },
+      "universal": {
+        "avoid_sectionitis": true,
+        "backticks": 4,
+        "indent": 2,
+        "logical_groups": true,
+        "quotes": "double",
+        "vertical_spacing": "between_major_sections"
+      }
+    },
+    "self_application": {
+      "bounded_enhancement": true,
+      "constraint": "preserve_working_features",
+      "enabled": true,
+      "frequency": "each_execution",
+      "runtime_preflight": true
+    }
   },
 
   "safety": {
-    "circuit_breakers": ["infinite_loops", "resource_exhaustion", "complexity_cascade"],
+    "circuit_breakers": [
+      "complexity_cascade",
+      "infinite_loops",
+      "resource_exhaustion",
+      "experimental_feature_without_opt_in",
+      "missing_fallback_path",
+      "runtime_preflight_failed"
+    ],
     "max_iterations": 5,
     "improvement_threshold": "5_percent_minimum",
     "resource_threshold": "80_percent"
-  },
-
-  "self_application": {
-    "enabled": true,
-    "frequency": "each_execution",
-    "constraint": "preserve_working_features",
-    "bounded_enhancement": true
   },
 
   "rationale": {
@@ -114,7 +364,6 @@
     "multiple_perspectives": "Single perspective misses issues, consensus prevents groupthink",
     "cross_reference_critical": "Finds dead code that looks important but has no callers",
     "anti_patterns": "Don't guess stack, compliance theater fails, over-engineering backfires, single perspective misses issues",
-    "meta_removal": "Self-validation happens through execution, not documentation storage",
     "safety_integration": "Circuit breakers prevent infinite loops and resource exhaustion",
     "self_optimization": "Framework applied to itself, removed execution_modes duplication, consolidated settings"
   }
