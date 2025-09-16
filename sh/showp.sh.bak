@@ -1,12 +1,11 @@
-#!/bin/sh
-set -euo pipefail
-
+#!/bin/bash
 
 #!/usr/bin/env zsh
 # Creates a Markdown list of text files and their contents.
 # Usage: ./showp.sh
 
 set -e
+setopt extendedglob
 
 root=$(basename "$PWD")
 date=$(date +"%Y-%m-%d_%H%M%S")

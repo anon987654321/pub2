@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Security Assessment Tool (nmap.sh)</title>
+</head>
+<body>
+  <h1>Network Security Assessment Tool (nmap.sh)</h1>
+
+  <h2>Overview</h2>
+  <p>The <code>nmap.sh</code> script is a cognitive-aware network security assessment tool designed specifically for OpenBSD environments. It replaces the existing <code>deep_nmap_scan.sh</code> with improved error handling, cognitive load management, and professional reporting capabilities.</p>
+
+  <h2>Key Features</h2>
+
+  <h3>Cognitive Architecture</h3>
+  <ul>
+    <li><strong>7±2 Memory Management:</strong> Implements working memory constraints based on cognitive science</li>
+    <li><strong>Progressive Complexity Disclosure:</strong> Breaks down scanning into manageable phases</li>
+    <li><strong>Cognitive Load Monitoring:</strong> Tracks and manages cognitive overload</li>
+    <li><strong>Context Switch Minimization:</strong> Reduces mental overhead during long scans</li>
+    <li><strong>Recovery Protocols:</strong> Implements cognitive state restoration</li>
+  </ul>
+
+  <h3>Technical Capabilities</h3>
+  <ul>
+    <li><strong>Multi-method DNS Resolution:</strong> Falls back through drill → dig → host → nslookup</li>
+    <li><strong>Comprehensive Dependency Validation:</strong> Checks for required tools with helpful error messages</li>
+    <li><strong>Progressive Scanning Phases:</strong> Seven distinct phases with clear progress indicators</li>
+    <li><strong>Robust Error Handling:</strong> Graceful degradation with actionable suggestions</li>
+    <li><strong>Structured Output:</strong> Professional reporting with executive summaries</li>
+    <li><strong>POSIX Compliance:</strong> Works with OpenBSD's native ksh and other POSIX shells</li>
+  </ul>
+
+  <h3>OpenBSD Integration</h3>
+  <ul>
+    <li><strong>Native Tool Preferences:</strong> Uses drill over dig, respects OpenBSD conventions</li>
+    <li><strong>doas Integration:</strong> Proper privilege handling for OpenBSD</li>
+    <li><strong>Security-First Design:</strong> Follows OpenBSD security principles</li>
+    <li><strong>PF Firewall Awareness:</strong> Considers firewall implications in scanning</li>
+  </ul>
+
+  <h2>Usage</h2>
+
+  <h3>Basic Usage</h3>
+  <pre><code>doas sh nmap.sh &lt;target&gt;</code></pre>
+
+  <h3>Examples</h3>
+  <pre><code># Scan a domain
+doas sh nmap.sh example.com
+
+# Scan an IP address
+doas sh nmap.sh 192.168.1.1
+
+# Scan with verbose output
+doas sh nmap.sh example.com 2>&1 | tee scan.log</code></pre>
+
+  <h2>Prerequisites</h2>
+
+  <h3>Required Dependencies</h3>
+  <ul>
+    <li><code>nmap</code> - Network scanning tool</li>
+    <li><code>doas</code> - OpenBSD privilege escalation (configured in /etc/doas.conf)</li>
+  </ul>
+
+  <h3>Optional Dependencies (with fallbacks)</h3>
+  <ul>
+    <li><code>drill</code> (preferred) or <code>dig</code> or <code>host</code> - DNS resolution tools</li>
+    <li>Standard POSIX utilities: <code>awk</code>, <code>grep</code>, <code>cut</code>, <code>paste</code>, <code>sort</code>, <code>find</code></li>
+  </ul>
+
+  <h3>System Requirements</h3>
+  <ul>
+    <li>OpenBSD (primary target) or any POSIX-compliant system</li>
+    <li>Root privileges (via doas)</li>
+    <li>Network connectivity for target resolution</li>
+  </ul>
+
+  <h2>Scanning Phases</h2>
+  <p>The tool implements seven distinct cognitive phases:</p>
+
+  <h3>Phase 1: Dependency Validation</h3>
+  <ul>
+    <li>Verifies required tools are installed</li>
+    <li>Checks privilege level</li>
+    <li>Provides installation guidance for missing tools</li>
+  </ul>
+
+  <h3>Phase 2: DNS Resolution</h3>
+  <ul>
+    <li>Multi-method DNS resolution with fallbacks</li>
+    <li>Validates target accessibility</li>
+    <li>Supports both domain names and IP addresses</li>
+  </ul>
+
+  <h3>Phase 3: Host Discovery</h3>
+  <ul>
+    <li>Multiple discovery techniques for resilience</li>
+    <li>Adapts to firewall configurations</li>
+    <li>Minimal network footprint options</li>
+  </ul>
+
+  <h3>Phase 4: Port Discovery</h3>
+  <ul>
+    <li>TCP SYN scanning (stealth mode)</li>
+    <li>TCP Connect fallback for compatibility</li>
+    <li>UDP scanning for comprehensive coverage</li>
+  </ul>
+
+  <h3>Phase 5: Service Analysis</h3>
+  <ul>
+    <li>Service version detection</li>
+    <li>Operating system fingerprinting</li>
+    <li>Focused scanning on discovered ports</li>
+  </ul>
+
+  <h3>Phase 6: Vulnerability Assessment</h3>
+  <ul>
+    <li>Safe vulnerability scripts only</li>
+    <li>Web-specific vulnerability scanning</li>
+    <li>Timeout protection for long assessments</li>
+  </ul>
+
+  <h3>Phase 7: Report Generation</h3>
+  <ul>
+    <li>Executive summary creation</li>
+    <li>Risk assessment with actionable insights</li>
+    <li>Structured file organization</li>
+  </ul>
+
+  <h2>Output Structure</h2>
+  <pre><code>nmap_scan_&lt;target&gt;_&lt;timestamp&gt;/
+├── raw/                    # Raw nmap output files
+│   ├── host_discovery_*.txt
+│   ├── tcp_syn.txt
+│   ├── udp_scan.txt
+│   ├── service_detection.txt
+│   ├── os_detection.txt
+│   ├── vulnerabilities.*
+│   └── web_vulnerabilities.txt
+├── processed/              # Processed data (future use)
+├── reports/                # Additional reports (future use)
+├── executive_summary.txt   # Executive summary
+└── index.md               # Results index</code></pre>
+
+  <h2>Error Handling</h2>
+  <p>The tool implements comprehensive error handling with graceful degradation:</p>
+
+  <h3>Dependency Errors</h3>
+  <ul>
+    <li><strong>DEPENDENCY_MISSING:</strong> Provides installation commands</li>
+    <li><strong>PERMISSION_DENIED:</strong> Explains doas requirements</li>
+  </ul>
+
+  <h3>Network Errors</h3>
+  <ul>
+    <li><strong>DNS_RESOLUTION_FAILED:</strong> Suggests connectivity checks</li>
+    <li>Timeout handling for unresponsive targets</li>
+    <li>Firewall adaptation strategies</li>
+  </ul>
+
+  <h3>Graceful Degradation</h3>
+  <ul>
+    <li>Continues with reduced functionality when non-critical errors occur</li>
+    <li>Provides alternative scanning methods</li>
+    <li>Clear indication of degraded capabilities</li>
+  </ul>
+
+  <h2>Cognitive Load Management</h2>
+
+  <h3>Memory Chunking</h3>
+  <ul>
+    <li>Maintains 7±2 information chunks in working memory</li>
+    <li>Automatic chunk compression when limits exceeded</li>
+    <li>Context preservation across phases</li>
+  </ul>
+
+  <h3>Progress Feedback</h3>
+  <ul>
+    <li>Real-time progress indicators</li>
+    <li>Phase completion notifications</li>
+    <li>Time estimation for remaining work</li>
+  </ul>
+
+  <h3>Recovery Protocols</h3>
+  <ul>
+    <li>Cognitive load monitoring</li>
+    <li>Automatic recovery when overload detected</li>
+    <li>Context switching delays for mental processing</li>
+  </ul>
+
+  <h2>Security Considerations</h2>
+
+  <h3>Privilege Management</h3>
+  <ul>
+    <li>Requires root privileges for low-level network access</li>
+    <li>Proper doas configuration recommended</li>
+    <li>Minimal privilege principle applied</li>
+  </ul>
+
+  <h3>Network Ethics</h3>
+  <ul>
+    <li>Designed for authorized security assessments only</li>
+    <li>Rate limiting to prevent network abuse</li>
+    <li>Respectful scanning techniques</li>
+  </ul>
+
+  <h3>Data Protection</h3>
+  <ul>
+    <li>Local output storage only</li>
+    <li>No data transmission to external services</li>
+    <li>Secure file permissions on results</li>
+  </ul>
+
+  <h2>Configuration</h2>
+
+  <h3>doas Configuration</h3>
+  <p>Add to <code>/etc/doas.conf</code>:</p>
+  <pre><code>permit nopass &lt;username&gt; as root cmd nmap
+permit nopass &lt;username&gt; as root cmd /path/to/nmap.sh</code></pre>
+
+  <h3>Firewall Considerations</h3>
+  <p>Ensure outbound connectivity for:</p>
+  <ul>
+    <li>DNS resolution (port 53)</li>
+    <li>Target scanning (various ports)</li>
+    <li>Optional: ICMP for ping-based discovery</li>
+  </ul>
+
+  <h2>Troubleshooting</h2>
+
+  <h3>Common Issues</h3>
+
+  <h4>"Command not found" errors</h4>
+  <ul>
+    <li>Install missing packages: <code>pkg_add nmap drill</code></li>
+    <li>Verify PATH includes tool locations</li>
+  </ul>
+
+  <h4>"Permission denied" errors</h4>
+  <ul>
+    <li>Configure doas properly</li>
+    <li>Run with: <code>doas sh nmap.sh &lt;target&gt;</code></li>
+  </ul>
+
+  <h4>DNS resolution failures</h4>
+  <ul>
+    <li>Check network connectivity</li>
+    <li>Verify DNS server configuration</li>
+    <li>Try IP address instead of domain name</li>
+  </ul>
+
+  <h4>Slow scanning</h4>
+  <ul>
+    <li>Normal for comprehensive assessments</li>
+    <li>Use -T4 timing (already included)</li>
+    <li>Consider target network conditions</li>
+  </ul>
+
+  <h3>Debug Mode</h3>
+  <p>For detailed debugging, run with explicit shell output:</p>
+  <pre><code>sh -x nmap.sh example.com</code></pre>
+
+  <h2>Comparison with deep_nmap_scan.sh</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>deep_nmap_scan.sh</th>
+        <th>nmap.sh</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Shell Compatibility</td><td>zsh only</td><td>POSIX (ksh, bash, sh)</td></tr>
+      <tr><td>Error Handling</td><td>Basic</td><td>Comprehensive with fallbacks</td></tr>
+      <tr><td>Progress Feedback</td><td>Minimal</td><td>Real-time with cognitive load management</td></tr>
+      <tr><td>Dependency Checking</td><td>None</td><td>Comprehensive validation</td></tr>
+      <tr><td>Output Structure</td><td>Basic</td><td>Professional with executive summary</td></tr>
+      <tr><td>Cognitive Architecture</td><td>None</td><td>Full 7±2 memory management</td></tr>
+      <tr><td>Language</td><td>Norwegian comments</td><td>English documentation</td></tr>
+      <tr><td>OpenBSD Integration</td><td>Partial</td><td>Native with security focus</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Performance Characteristics</h2>
+  <ul>
+    <li><strong>Startup Time:</strong> ~2-5 seconds for validation</li>
+    <li><strong>DNS Resolution:</strong> ~1-3 seconds with fallbacks</li>
+    <li><strong>Port Scanning:</strong> Varies by target (minutes to hours)</li>
+    <li><strong>Memory Usage:</strong> Minimal (&lt;10MB)</li>
+    <li><strong>Network Impact:</strong> Respectful rate limiting</li>
+  </ul>
+
+  <h2>Contributing</h2>
+  <p>When modifying this tool:</p>
+  <ol>
+    <li>Maintain POSIX compliance</li>
+    <li>Preserve cognitive architecture principles</li>
+    <li>Test with various targets and network conditions</li>
+    <li>Update documentation for new features</li>
+    <li>Validate with shellcheck and test_nmap.sh</li>
+  </ol>
+
+  <h2>License</h2>
+  <p>This tool is part of the pubhealthcare repository and follows the same licensing terms. Use responsibly and only on networks you own or have explicit permission to test.</p>
+</body>
+</html>

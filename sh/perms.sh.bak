@@ -1,12 +1,11 @@
-#!/bin/sh
-set -euo pipefail
-
+#!/bin/bash
 
 #!/usr/bin/env zsh
 # Changes file ownership and permissions.
 # Usage: ./perms.sh <owner> <group> <file_perms> <folder_perms>
 
 set -e
+setopt extended_glob null_glob
 
 if (( $# < 4 )); then
   echo "Usage: $0 <owner> <group> <file_perms> <folder_perms>"

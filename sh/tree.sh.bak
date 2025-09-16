@@ -1,6 +1,4 @@
-#!/bin/sh
-set -euo pipefail
-
+#!/usr/bin/env zsh
 #
 # TREE-LIKE LISTING FOR FILES AND FOLDERS
 #

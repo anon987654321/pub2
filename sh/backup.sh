@@ -1,13 +1,10 @@
-#!/bin/bash
+#!/bin/sh
+set -euo pipefail
 
-#!/usr/bin/env zsh
 # Archives folders to dated .tgz files, skips unchanged ones.
 # Usage: ./backup.sh [directory]
 
-set -e
-setopt extended_glob null_glob
-
-log_error() { echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1" >> "$HOME/script_errors.log"; }
+log_error() { printf "[%s] %s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "$1" >> "$HOME/script_errors.log"; }
 
 dir="${1:-.}"
 checksum_file="$dir/.backup_checksums"
