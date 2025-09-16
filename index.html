@@ -8,18 +8,18 @@
   <title>Radio Bergen</title>
   <meta name="theme-color" content="#000000"/>
   <meta name="description" content="Classic warp tunnel with multiple views. Tilt device for parallax."/>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📻</text></svg>"/>
   <style>
     :root{--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px);--zoom:1}
-    html,body{margin:0;height:100%;background:#000;color:#dcdcdc;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;overflow:hidden}
-    canvas{position:fixed;inset:0;width:100vw;height:100vh;width:100dvw;height:100dvh;display:block;background:#000;touch-action:none;image-rendering:pixelated;transition:filter 140ms ease, transform 120ms ease;transform-origin:center center;transform:scale(var(--zoom))}
+    html,body{margin:0;height:100%;background:#000;color:#dcdcdc;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden}
+    canvas{position:fixed;inset:0;width:100dvw;height:100dvh;display:block;background:#000;touch-action:none;image-rendering:pixelated;transition:filter 140ms ease,transform 120ms ease;transform-origin:center;transform:scale(var(--zoom))}
     canvas.canvas-inverted{filter:invert(1) hue-rotate(180deg)}
-    @keyframes start-ack{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}canvas.start-ack{animation:start-ack 240ms ease-out}
+    @keyframes start-ack{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}canvas.start-ack{animation:start-ack 240ms ease-out}
     h1.city-carousel{position:fixed;top:calc(10px + var(--safe-top));left:calc(10px + var(--safe-left));width:min(92vw,560px);height:38px;z-index:95;pointer-events:none;user-select:none;overflow:hidden;margin:0}
     .carousel-container{width:100%;height:100%;position:relative;overflow:hidden}
     .carousel-slide{height:100%;display:flex;align-items:center;justify-content:flex-start;font-weight:700;font-size:clamp(16px,4vw,28px);color:#dcdcdc;letter-spacing:.02em;transition:transform .3s ease,opacity .3s ease;position:absolute;top:0;left:0;width:100%;opacity:0;transform:translateY(100%);white-space:nowrap}
     .carousel-slide.active{opacity:1;transform:translateY(0%)}
-    .ui{position:fixed;right:calc(12px + var(--safe-right));bottom:calc(10px + var(--safe-bottom));color:#dcdcdc;font:9px/1.1 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;text-transform:uppercase;letter-spacing:.28em;white-space:nowrap;pointer-events:none;user-select:none;text-align:right;max-width:min(72vw,800px);overflow:hidden;text-overflow:ellipsis;z-index:90;opacity:.86;background:#000;padding:0 1px}
+    .ui{position:fixed;right:calc(12px + var(--safe-right));bottom:calc(10px + var(--safe-bottom));color:#dcdcdc;font:9px/1.1 ui-monospace,"SFMono-Regular",Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;text-transform:uppercase;letter-spacing:.28em;white-space:nowrap;pointer-events:none;user-select:none;text-align:right;max-width:min(72vw,800px);overflow:hidden;text-overflow:ellipsis;z-index:90;opacity:.86;background:#000;padding:0 1px}
     .ui .label{margin-right:6px}.ui .dots{display:inline-block;width:3ch;text-align:left}.ui-inverted{color:#dcdcdc!important}
     .overlay{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.86);color:#9aa;cursor:pointer;user-select:none;z-index:1000;text-align:center;padding:16px;opacity:1;transition:opacity .18s ease}
     .overlay.ack{opacity:0}.overlay[hidden]{display:none}
@@ -58,7 +58,6 @@
   <div class="ui" id="ui" role="status" aria-live="polite" aria-atomic="true"><span class="label" id="uiLabel">Streaming</span><span class="dots" id="uiDots" aria-hidden="true"></span></div>
   <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
 
-  <!-- Hidden YT containers (disabled in sandbox) -->
   <div id="yt-player-a" aria-hidden="true" role="none" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></div>
   <div id="yt-player-b" aria-hidden="true" role="none" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></div>
   <iframe id="player-fallback-a" src="about:blank" title="YouTube audio player A (hidden)" aria-hidden="true" tabindex="-1" width="1" height="1" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></iframe>
@@ -66,31 +65,12 @@
 
   <script>
     "use strict";
-    // Detect sandbox/opaque-origin (disables YT + sensors to avoid postMessage violations)
-    const IN_SANDBOX = (() => {
-      try { if (window.top !== window) return true; } catch { return true; }
-      const proto = location.protocol || "", orig = location.origin || "", host = location.hostname || "";
-      if (proto === "file:") return true;
-      if (!orig || orig === "null") return true;
-      if (/(^|\.)(githubusercontent\.com|codesandbox\.io|stackblitz\.io)$/.test(host)) return true;
-      return false;
-    })();
-
-    const FADE_MS=3500, START_FADE_IN=true;
-    const DPR=Math.min(2, window.devicePixelRatio||1);
-    const isLowEnd=(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=2)||(navigator.deviceMemory&&navigator.deviceMemory<=2);
-
-    // UI dots
-    (function(){const el=document.getElementById("uiDots"); if(!el) return; const seq=[0,1,2,3,2,1]; let i=0; function tick(){ el.textContent=".".repeat(seq[i]); i=(i+1)%seq.length; } tick(); try{ clearInterval(window.__RB_DOTS_IV); }catch{} window.__RB_DOTS_IV=setInterval(tick,600);})();
-
-    // Motion scale (respect OS reduced-motion; no UI setting)
-    function motionScale(){ const prefers = typeof matchMedia==="function" && matchMedia("(prefers-reduced-motion: reduce)").matches; return prefers ? 0.35 : 1; }
-
-    // Carousel
-    class SimpleCarousel{ constructor(el,interval=2800){ this.slides=Array.from(el.querySelectorAll(".carousel-slide")); this.i=0; this.n=this.slides.length; if(this.n>1) this.t=setInterval(()=>this.next(),interval);} next(){ this.slides[this.i].classList.remove("active"); this.i=(this.i+1)%this.n; this.slides[this.i].classList.add("active"); } }
+    const IN_SANDBOX=(()=>{try{if(window.top!==window)return true}catch{return true}const p=location.protocol||"",o=location.origin||"",h=location.hostname||"";return p==="file:"||!o||o==="null"||/(^|\.)(githubusercontent\.com|codesandbox\.io|stackblitz\.io)$/.test(h)})();
+    const FADE_MS=3500,START_FADE_IN=true,DPR=Math.min(2,window.devicePixelRatio||1),isLowEnd=(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=2)||(navigator.deviceMemory&&navigator.deviceMemory<=2);
+    (()=>{const e=document.getElementById("uiDots");if(!e)return;const s=[0,1,2,3,2,1];let i=0;const t=()=>{e.textContent=".".repeat(s[i]);i=(i+1)%s.length};t();try{clearInterval(window.__RB_DOTS_IV)}catch{}window.__RB_DOTS_IV=setInterval(t,600)})();
+    const motionScale=()=>typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches?.35:1;
+    class SimpleCarousel{constructor(e,i=2800){this.slides=Array.from(e.querySelectorAll(".carousel-slide"));this.i=0;this.n=this.slides.length;if(this.n>1)this.t=setInterval(()=>this.next(),i)}next(){this.slides[this.i].classList.remove("active");this.i=(this.i+1)%this.n;this.slides[this.i].classList.add("active")}}
     new SimpleCarousel(document.getElementById("cityCarousel"));
-
-    // Tracks - updated per your request
     const YOUTUBE_TRACKS=[
       {artist:"J Dilla",title:"Microphone Master",id:"9EGHwkDix78"},
       {artist:"J Dilla",title:"In Space",id:"vO2nWXCVt6o"},
@@ -110,378 +90,92 @@
       {artist:"Flying Lotus",title:"me Yesterday//Corded",id:"8DgAhgmpXNA"},
       {artist:"Flying Lotus",title:"Camel",id:"fU9YRGLPDQ8"},
       {artist:"Slum Village",title:"Worlds Full of Sadness",id:"MU3nfxsz2XA"},
-      {artist:"Bob Marley",title:"Forever Loving Jah",id:"sRsefcInwdg"}
+      {artist:"Bob Marley",title:"Forever Loving Jah",id:"sRsefcInwdg"},
+      {artist:"Sasha Carassi",title:"Sarria's Mind (A. Mochi & Takaaki Itoh Remix)",id:"gFKArkiz8vU"}
     ];
-
-    // Lazy-load YT API only outside sandbox and only after start
-    function loadYouTubeAPI(){ if(IN_SANDBOX) return; if(window.__YT_API_LOADED) return; window.__YT_API_LOADED=true; const s=document.createElement("script"); s.src="https://www.youtube.com/iframe_api"; s.async=true; document.head.appendChild(s); }
-
+    const loadYouTubeAPI=()=>{if(IN_SANDBOX||window.__YT_API_LOADED)return;window.__YT_API_LOADED=true;const s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";s.async=true;document.head.appendChild(s)};
     const YT_ORIGIN="https://www.youtube.com";
-    function ytPost(iframe,func,args=[]){
-      if (IN_SANDBOX) return;
-      try{
-        if (!iframe || !iframe.contentWindow) return;
-        iframe.contentWindow.postMessage({event:"command",func,args}, YT_ORIGIN);
-      }catch{
-        try{ iframe.contentWindow.postMessage({event:"command",func,args},"*"); }catch{}
-      }
-    }
-
-    // Audio (dual-player crossfade)
+    const ytPost=(i,f,a=[])=>{if(IN_SANDBOX)return;try{if(!i||!i.contentWindow)return;i.contentWindow.postMessage({event:"command",func:f,args:a},YT_ORIGIN)}catch{try{i.contentWindow.postMessage({event:"command",func:f,args:a},"*")}catch{}}};
     class AudioEngine{
-      constructor(){ this.apiReady=false; this.players={a:null,b:null}; this.started=false; this.muted=true; this.trackIndex=0; this.tracks=YOUTUBE_TRACKS.slice().sort(()=>Math.random()-0.5); this.activeKey="a"; this.inactiveKey="b"; this._fadeIv=null; this._prefadeTimer=null; this._loadWatch=null; this.beatPhase=0; this.energyLevel=0.5; }
-      initAPI(){
-        if (IN_SANDBOX) return;
-        try{
-          this.players.a=new YT.Player("yt-player-a",{width:"1",height:"1",playerVars:{autoplay:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,modestbranding:1,rel:0,playsinline:1},events:{onReady:()=>this.onReady("a"),onStateChange:(e)=>this.onStateChange("a",e),onError:()=>this.onError("a")}});
-          this.players.b=new YT.Player("yt-player-b",{width:"1",height:"1",playerVars:{autoplay:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,modestbranding:1,rel:0,playsinline:1},events:{onReady:()=>this.onReady("b"),onStateChange:(e)=>this.onStateChange("b",e),onError:()=>this.onError("b")}});
-          this.apiReady=true;
-        }catch{ this.apiReady=false; }
-      }
-      onReady(key){ try{ this.players[key].unMute(); this.players[key].setVolume(0); }catch{} if(this.started && key===this.activeKey){ this._loadOn(key, this.tracks[this.trackIndex], {fadeIn:START_FADE_IN}); } }
-      onStateChange(key,e){
-        if (IN_SANDBOX) return;
-        const S=YT.PlayerState;
-        if(e.data===S.ENDED){ if(key===this.activeKey) this.beginCrossfade({fast:true}); }
-        else if(e.data===S.PLAYING){ clearTimeout(this._loadWatch);
-          try{ const p=this.players[key]; const setPrefade=()=>{ const dur=p.getDuration? (p.getDuration()||0) : 0; if(dur>0){ const ms=Math.max(FADE_MS+1000, dur*1000-FADE_MS-500); clearTimeout(this._prefadeTimer); this._prefadeTimer=setTimeout(()=>this.beginCrossfade({}), ms); } };
-            setPrefade(); setTimeout(setPrefade,500); setTimeout(setPrefade,1500);
-          }catch{} }
-      }
-      onError(){ clearTimeout(this._loadWatch); try{ navigator.vibrate?.([8,40,8]); }catch{} this.beginCrossfade({fast:true}); }
-      start(){ this.started=true; this.updateUITrack(); this._loadOn(this.activeKey, this.tracks[this.trackIndex], {fadeIn:START_FADE_IN}); }
-      _loadOn(key,track,{fadeIn}={fadeIn:true}){
-        if (IN_SANDBOX) return;
-        clearTimeout(this._loadWatch); const id=track.id;
-        if(this.apiReady && this.players[key] && this.players[key].loadVideoById){ try{
-          const p=this.players[key]; p.loadVideoById({videoId:id,startSeconds:0,suggestedQuality:"tiny"}); try{ p.unMute(); }catch{} if(fadeIn){ this._fadeVolumes({toKey:key,ms:FADE_MS}); }
-          this._loadWatch=setTimeout(()=>{ try{ const tNow=p.getCurrentTime?p.getCurrentTime():0; if(tNow<0.1) this.beginCrossfade({fast:true}); }catch{ this.beginCrossfade({fast:true}); } },4000);
-          return;
-        }catch{} }
-        const iframe=document.getElementById("player-fallback-"+key);
-        const src=`https://www.youtube.com/embed/${id}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=1&enablejsapi=1`;
-        iframe.src=src; iframe.onload=()=>{ ytPost(iframe,"playVideo",[]); if(fadeIn){ ytPost(iframe,"setVolume",[0]); ytPost(iframe,"unMute",[]); this._fadeVolumes({toKey:key,ms:FADE_MS}); } else { ytPost(iframe,"setVolume",[100]); ytPost(iframe,"unMute",[]);} };
-        this._loadWatch=setTimeout(()=>this.beginCrossfade({fast:true}),5000);
-      }
-      beginCrossfade({fast=false}={}){ if (IN_SANDBOX) return; clearInterval(this._fadeIv); clearTimeout(this._prefadeTimer);
-        const nextIndex=(this.trackIndex+1)%this.tracks.length, nextTrack=this.tracks[nextIndex], fromKey=this.activeKey, toKey=this.inactiveKey;
-        this._loadOn(toKey,nextTrack,{fadeIn:false}); setTimeout(()=>{ this._fadeVolumes({fromKey,toKey,ms:fast?Math.min(1200,FADE_MS):FADE_MS}); this.trackIndex=nextIndex; this.updateUITrack(); }, fast?200:500);
-      }
-      prev(){ if (IN_SANDBOX) return; clearInterval(this._fadeIv); clearTimeout(this._prefadeTimer);
-        const prevIndex=(this.trackIndex-1+this.tracks.length)%this.tracks.length, prevTrack=this.tracks[prevIndex], fromKey=this.activeKey, toKey=this.inactiveKey;
-        this._loadOn(toKey,prevTrack,{fadeIn:false}); setTimeout(()=>{ this._fadeVolumes({fromKey,toKey,ms:FADE_MS}); this.trackIndex=prevIndex; this.updateUITrack(); }, 300);
-      }
-      next(){ this.beginCrossfade({fast:false}); }
-      toggleMute(){ this.muted=!this.muted; if (IN_SANDBOX) return;
-        try{ if(this.apiReady){ const p=this.players[this.activeKey]; this.muted? p.mute() : p.unMute(); } else { const iframe=document.getElementById("player-fallback-"+this.activeKey); ytPost(iframe,this.muted?"mute":"unMute",[]); } }catch{} try{ navigator.vibrate?.(6); }catch{} }
-      updateUITrack(){ 
-        const uiLabel=document.getElementById("uiLabel"); 
-        if(!uiLabel) return; 
-        if(IN_SANDBOX){ 
-          uiLabel.textContent="Visual-only (sandboxed)"; 
-          return; 
-        }
-        // Just show "Streaming" instead of track details
-        uiLabel.textContent = "Streaming"; 
-      }
-      _fadeVolumes({fromKey,toKey,ms=FADE_MS}={}){
-        if (IN_SANDBOX) return;
-        clearInterval(this._fadeIv);
-        const steps=30, interval=ms/steps;
-        let step=0;
-        this._fadeIv=setInterval(()=>{
-          step++;
-          const progress=step/steps;
-          const fromVol=Math.round(100*(1-progress));
-          const toVol=Math.round(100*progress);
-          
-          if(this.apiReady){
-            try{ if(fromKey && this.players[fromKey]) this.players[fromKey].setVolume(fromVol); }catch{}
-            try{ if(toKey && this.players[toKey]) this.players[toKey].setVolume(toVol); }catch{}
-          } else {
-            if(fromKey) ytPost(document.getElementById("player-fallback-"+fromKey),"setVolume",[fromVol]);
-            if(toKey) ytPost(document.getElementById("player-fallback-"+toKey),"setVolume",[toVol]);
-          }
-          
-          if(step>=steps){
-            clearInterval(this._fadeIv);
-            this.activeKey=toKey;
-            this.inactiveKey=fromKey;
-          }
-        }, interval);
-      }
-      data(){ const ms=motionScale(); this.beatPhase+=0.08*ms; this.energyLevel=this.energyLevel*0.999+Math.random()*0.001;
-        const bass=0.5+0.4*Math.sin(this.beatPhase*0.8), mid=0.45+0.35*Math.sin(this.beatPhase*1.2+0.7), high=0.35+0.35*Math.sin(this.beatPhase*1.8+1.2), avg=(bass+mid+high)/3;
-        const beatRaw=Math.sin(this.beatPhase)>0.8?1:0; this._beatEnv=(this._beatEnv||0)+(beatRaw-(this._beatEnv||0))*(beatRaw?0.4:0.06);
-        return { bass, mid, high, average: avg, beat: this._beatEnv, energy: this.energyLevel };
-      }
+      constructor(){this.apiReady=false;this.players={a:null,b:null};this.started=false;this.muted=true;this.trackIndex=0;this.tracks=YOUTUBE_TRACKS.slice().sort(()=>Math.random()-.5);this.activeKey="a";this.inactiveKey="b";this._fadeIv=null;this._prefadeTimer=null;this._loadWatch=null;this.beatPhase=0;this.energyLevel=.5}
+      initAPI(){if(IN_SANDBOX)return;try{this.players.a=new YT.Player("yt-player-a",{width:"1",height:"1",playerVars:{autoplay:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,modestbranding:1,rel:0,playsinline:1},events:{onReady:()=>this.onReady("a"),onStateChange:e=>this.onStateChange("a",e),onError:()=>this.onError("a")}});this.players.b=new YT.Player("yt-player-b",{width:"1",height:"1",playerVars:{autoplay:1,controls:0,disablekb:1,fs:0,iv_load_policy:3,modestbranding:1,rel:0,playsinline:1},events:{onReady:()=>this.onReady("b"),onStateChange:e=>this.onStateChange("b",e),onError:()=>this.onError("b")}});this.apiReady=true}catch{this.apiReady=false}}
+      onReady(k){try{this.players[k].unMute();this.players[k].setVolume(0)}catch{}if(this.started&&k===this.activeKey)this._loadOn(k,this.tracks[this.trackIndex],{fadeIn:START_FADE_IN})}
+      onStateChange(k,e){if(IN_SANDBOX)return;const S=YT.PlayerState;if(e.data===S.ENDED){if(k===this.activeKey)this.beginCrossfade({fast:true})}else if(e.data===S.PLAYING){clearTimeout(this._loadWatch);try{const p=this.players[k];const s=()=>{const d=p.getDuration?p.getDuration()||0:0;if(d>0){const m=Math.max(FADE_MS+1000,d*1000-FADE_MS-500);clearTimeout(this._prefadeTimer);this._prefadeTimer=setTimeout(()=>this.beginCrossfade({}),m)}};s();setTimeout(s,500);setTimeout(s,1500)}catch{}}}
+      onError(){clearTimeout(this._loadWatch);try{navigator.vibrate?.([8,40,8])}catch{}this.beginCrossfade({fast:true})}
+      start(){this.started=true;this.updateUITrack();this._loadOn(this.activeKey,this.tracks[this.trackIndex],{fadeIn:START_FADE_IN})}
+      _loadOn(k,t,{fadeIn}={fadeIn:true}){if(IN_SANDBOX)return;clearTimeout(this._loadWatch);const i=t.id;if(this.apiReady&&this.players[k]&&this.players[k].loadVideoById){try{const p=this.players[k];p.loadVideoById({videoId:i,startSeconds:0,suggestedQuality:"tiny"});try{p.unMute()}catch{}if(fadeIn)this._fadeVolumes({toKey:k,ms:FADE_MS});this._loadWatch=setTimeout(()=>{try{const n=p.getCurrentTime?p.getCurrentTime():0;if(n<.1)this.beginCrossfade({fast:true})}catch{this.beginCrossfade({fast:true})}},4000);return}catch{}}const f=document.getElementById("player-fallback-"+k);const s=`https://www.youtube.com/embed/${i}?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=1&enablejsapi=1`;f.src=s;f.onload=()=>{ytPost(f,"playVideo",[]);if(fadeIn){ytPost(f,"setVolume",[0]);ytPost(f,"unMute",[]);this._fadeVolumes({toKey:k,ms:FADE_MS})}else{ytPost(f,"setVolume",[100]);ytPost(f,"unMute",[])}};this._loadWatch=setTimeout(()=>this.beginCrossfade({fast:true}),5000)}
+      beginCrossfade({fast=false}={}){if(IN_SANDBOX)return;clearInterval(this._fadeIv);clearTimeout(this._prefadeTimer);const n=(this.trackIndex+1)%this.tracks.length,t=this.tracks[n],f=this.activeKey,o=this.inactiveKey;this._loadOn(o,t,{fadeIn:false});setTimeout(()=>{this._fadeVolumes({fromKey:f,toKey:o,ms:fast?Math.min(1200,FADE_MS):FADE_MS});this.trackIndex=n;this.updateUITrack()},fast?200:500)}
+      prev(){if(IN_SANDBOX)return;clearInterval(this._fadeIv);clearTimeout(this._prefadeTimer);const p=(this.trackIndex-1+this.tracks.length)%this.tracks.length,t=this.tracks[p],f=this.activeKey,o=this.inactiveKey;this._loadOn(o,t,{fadeIn:false});setTimeout(()=>{this._fadeVolumes({fromKey:f,toKey:o,ms:FADE_MS});this.trackIndex=p;this.updateUITrack()},300)}
+      next(){this.beginCrossfade({fast:false})}
+      toggleMute(){this.muted=!this.muted;if(IN_SANDBOX)return;try{if(this.apiReady){const p=this.players[this.activeKey];this.muted?p.mute():p.unMute()}else{const i=document.getElementById("player-fallback-"+this.activeKey);ytPost(i,this.muted?"mute":"unMute",[])}}catch{}try{navigator.vibrate?.(6)}catch{}}
+      updateUITrack(){const u=document.getElementById("uiLabel");if(!u)return;u.textContent=IN_SANDBOX?"Visual-only (sandboxed)":"Streaming"}
+      _fadeVolumes({fromKey:f,toKey:t,ms:m=FADE_MS}={}){if(IN_SANDBOX)return;clearInterval(this._fadeIv);const s=30,i=m/s;let c=0;this._fadeIv=setInterval(()=>{c++;const p=c/s,v=Math.round(100*(1-p)),w=Math.round(100*p);if(this.apiReady){try{if(f&&this.players[f])this.players[f].setVolume(v)}catch{}try{if(t&&this.players[t])this.players[t].setVolume(w)}catch{}}else{if(f)ytPost(document.getElementById("player-fallback-"+f),"setVolume",[v]);if(t)ytPost(document.getElementById("player-fallback-"+t),"setVolume",[w])}if(c>=s){clearInterval(this._fadeIv);this.activeKey=t;this.inactiveKey=f}},i)}
+      data(){const m=motionScale();this.beatPhase+=.08*m;this.energyLevel=this.energyLevel*.999+Math.random()*.001;const b=.5+.4*Math.sin(this.beatPhase*.8),i=.45+.35*Math.sin(this.beatPhase*1.2+.7),h=.35+.35*Math.sin(this.beatPhase*1.8+1.2),a=(b+i+h)/3,r=Math.sin(this.beatPhase)>.8?1:0;this._beatEnv=(this._beatEnv||0)+(r-(this._beatEnv||0))*(r?.4:.06);return{bass:b,mid:i,high:h,average:a,beat:this._beatEnv,energy:this.energyLevel}}
     }
     let audio=new AudioEngine();
-    window.onYouTubeIframeAPIReady=function(){ audio.initAPI(); };
-
-    // Renderer (continuous rings + z-sort on wrap). Always audio‑reactive, high detail, CSS invert on press.
-    const canvas=document.getElementById("canvas");
-    const uiEl=document.getElementById("ui");
-    let INTERNAL_SCALE=1, w=0, h=0;
-
-    // DRS
-    const SCALE_MAX = Math.min(2, DPR) * (isLowEnd ? 0.9 : 1.0);
-    const SCALE_MIN = isLowEnd ? 0.6 : 0.7;
-    const TARGET_MS = 16.7;
-    let ewma = TARGET_MS, lastScaleAdjust = 0;
-
-    // Reduced-motion frame pacing (OS only)
-    let MIN_FRAME_MS = 16;
-    function updateMinFrameInterval(){ const prefers = typeof matchMedia==="function" && matchMedia("(prefers-reduced-motion: reduce)").matches; MIN_FRAME_MS = prefers ? 33 : 16; }
-
-    function applyInternalScale(base=(isLowEnd?0.8:1)){ INTERNAL_SCALE = Math.max(SCALE_MIN, Math.min(SCALE_MAX, base*Math.min(2,DPR))); }
-
-    (function setupRenderer(){
-      function pack32(r,g,b,a){ return ((a&255)<<24) | ((b&255)<<16) | ((g&255)<<8) | (r&255); }
+    window.onYouTubeIframeAPIReady=()=>audio.initAPI();
+    const canvas=document.getElementById("canvas"),uiEl=document.getElementById("ui");
+    let INTERNAL_SCALE=1,w=0,h=0;
+    const SCALE_MAX=Math.min(2,DPR)*(isLowEnd?.9:1),SCALE_MIN=isLowEnd?.6:.7,TARGET_MS=16.7;
+    let ewma=TARGET_MS,lastScaleAdjust=0,MIN_FRAME_MS=16;
+    const updateMinFrameInterval=()=>MIN_FRAME_MS=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches?33:16;
+    const applyInternalScale=(b=isLowEnd?.8:1)=>INTERNAL_SCALE=Math.max(SCALE_MIN,Math.min(SCALE_MAX,b*Math.min(2,DPR)));
+    (()=>{
+      const pack32=(r,g,b,a)=>((a&255)<<24)|((b&255)<<16)|((g&255)<<8)|(r&255);
       class PixelTunnel{
-        constructor(ctx){ this.ctx=ctx; this.w=0; this.h=0; this.s=1; this.imageData=null; this.data=null; this.u32=null; this.BLACK32=0;
-          this.fov=250; this.speed=0.75; this.segments=64; this.baseRadius=75; this.zStep=4;
-          this.particles=[]; this.centers=[]; this.time=0; this.mouse={x:0,y:0,down:false,active:false}; this.ori={active:false,beta:0,gamma:0};
-          this.tieRowStride=1; // high detail always
-          this.ringPxCull=0.15;
-        }
-        resize(w,h,s){ this.w=w; this.h=h; this.s=s; this.ctx.fillStyle="#000"; this.ctx.fillRect(0,0,w,h);
-          this.imageData=this.ctx.getImageData(0,0,w,h); this.data=this.imageData.data; this.u32=new Uint32Array(this.data.buffer);
-          const test=new Uint8ClampedArray(4); test[3]=255; this.BLACK32=new Uint32Array(test.buffer)[0]; this.init();
-        }
-        clearImageData(){ this.u32.fill(this.BLACK32); }
-        setPixel32(x,y,c){ if(x<=0||x>=this.w||y<=0||y>=this.h) return; const i=(x + y*this.imageData.width); this.u32[i]=c; }
-        drawLine32(x1,y1,x2,y2,c){
-          let dx=Math.abs(x2-x1), dy=Math.abs(y2-y1), sx=(x1<x2)?1:-1, sy=(y1<y2)?1:-1, err=dx-dy, lx=x1, ly=y1;
-          for(;;){ if(lx>0&&lx<this.w&&ly>0&&ly<this.h) this.setPixel32(lx,ly,c); if(lx===x2&&ly===y2) break; const e2=2*err; if(e2>-dy){ err-=dy; lx+=sx; } if(e2<dx){ err+=dx; ly+=sy; } }
-        }
-        getCirclePos(cx,cy,r,index,seg){ const a=index*((Math.PI*2)/seg)+this.time; return {x:cx+Math.cos(a)*r, y:cy+Math.sin(a)*r}; }
-        addParticle(x,y,z,aIdx){ return { x,y,z,x2d:0,y2d:0,radius:this.baseRadius,radiusAudio:this.baseRadius,index:0,segments:this.segments,centerX:0,centerY:0,audioIndex:aIdx }; }
-        colorForRow32(i,l,audio){
-          // Audio-reactive only: highs->red, avg->green (depth tint), bass->blue
-          const bass = Math.max(0, Math.min(1, audio?.bass ?? 0.5));
-          const avg  = Math.max(0, Math.min(1, audio?.average ?? 0.45));
-          const high = Math.max(0, Math.min(1, audio?.high ?? 0.35));
-          const depth = i / Math.max(1,(l-1));
-          const r = Math.round(180*high + 40*depth);
-          const g = Math.round(90*avg  + 60*depth);
-          const b = Math.round(220*bass);
-          return pack32(r,g,b,255);
-        }
-        init(){ this.particles=[]; this.centers=[]; const w1=Math.random()*this.w, h1=Math.random()*this.h; let c=0;
-          for(let z=-this.fov; z<this.fov; z+=this.zStep){
-            const coords=[]; for(let i=0;i<this.segments;i++){ const p=this.getCirclePos(0,0,this.baseRadius,i,this.segments); coords.push({x:p.x,y:p.y,index:i,radius:this.baseRadius,segments:this.segments,centerX:0,centerY:0}); }
-            const center={ x:((this.w/2)-w1)*(c/15)+this.w/2, y:((this.h/2)-h1)*(c/15)+this.h/2 }; c++; this.centers.push(center);
-            const row=[]; let aIdx=8+Math.floor(Math.random()*1024);
-            for(let i=0;i<coords.length;i++){ const co=coords[i]; const p=this.addParticle(co.x,co.y,z,aIdx); p.index=co.index; p.radius=co.radius; p.radiusAudio=p.radius; p.segments=co.segments; p.centerX=co.centerX; p.centerY=co.centerY; row.push(p);
-              if(i<coords.length/2) aIdx++; else aIdx--; if(aIdx>1024) aIdx=8; if(aIdx<8) aIdx=1024; }
-            this.particles.push(row);
-          }
-        }
-        frame(audioData){
-          const ms=motionScale(); this.clearImageData();
-          const l=this.particles.length; let sortArray=false;
-          for(let i=0;i<l;i++){
-            const row=this.particles[i], rowBack=(i>0)?this.particles[i-1]:null, center=this.centers[i];
-            if(this.mouse.active){ center.x=((this.w/2)-(this.mouse.x/this.s))*((row[0].z-this.fov)/500)+this.w/2; center.y=((this.h/2)-(this.mouse.y/this.s))*((row[0].z-this.fov)/500)+this.h/2; }
-            else if(this.ori.active){ const mx=-this.ori.gamma*(this.w/180), my=-this.ori.beta*(this.h/180); center.x=(this.w/2)+mx*((row[0].z-this.fov)/500); center.y=(this.h/2)+my*((row[0].z-this.fov)/500); }
-            else { center.x+=((this.w/2)-center.x)*0.015; center.y+=((this.h/2)-center.y)*0.015; }
-
-            const freqAdd=((audioData?.average||0)*64)+((audioData?.beat?1:0)*8);
-
-            // tiny-ring screen space cull
-            const scaleRow = this.fov/(this.fov + row[0].z);
-            const ringPx = (this.baseRadius + freqAdd) * scaleRow;
-            if (ringPx < this.ringPxCull) continue;
-
-            for(let j=0,k=row.length;j<k;j++){
-              const p=row[j], sc=this.fov/(this.fov + p.z);
-              p.x2d=(p.x*sc)+center.x; p.y2d=(p.y*sc)+center.y; p.radiusAudio=p.radius+freqAdd;
-              if(this.mouse.down){ p.z+=this.speed*ms; if(p.z>this.fov){ p.z-=this.fov*2; sortArray=true; } }
-              else { p.z-=this.speed*ms; if(p.z<-this.fov){ p.z+=this.fov*2; sortArray=true; } }
-              const np=this.getCirclePos(p.centerX,p.centerY,p.radiusAudio,p.index,p.segments); p.x=np.x; p.y=np.y;
-            }
-
-            const col32=this.colorForRow32(i,l,audioData);
-            for(let j=1;j<row.length;j++){ const p=row[j], prev=row[j-1]; this.drawLine32(p.x2d|0,p.y2d|0, prev.x2d|0,prev.y2d|0, col32); }
-            if(row.length>2){ const first=row[0], last=row[row.length-1]; this.drawLine32(last.x2d|0,last.y2d|0, first.x2d|0,first.y2d|0, col32); }
-
-            if(i>0 && i<l-1 && rowBack && (i%this.tieRowStride===0)){
-              for(let j=0;j<row.length;j++){
-                const p=row[j];
-                const pB=(j===0)?rowBack[rowBack.length-1]:rowBack[j-1];
-                this.drawLine32(p.x2d|0,p.y2d|0, pB.x2d|0,pB.y2d|0, col32);
-              }
-            }
-          }
-          if(sortArray){ this.particles = this.particles.sort((a,b)=> (b[0].z - a[0].z)); }
-          this.time += (this.mouse.down?-0.005:0.005)*ms;
-          this.ctx.putImageData(this.imageData,0,0);
-        }
+        constructor(c){this.ctx=c;this.w=0;this.h=0;this.s=1;this.imageData=null;this.data=null;this.u32=null;this.BLACK32=0;this.fov=250;this.speed=.75;this.segments=64;this.baseRadius=75;this.zStep=4;this.particles=[];this.centers=[];this.time=0;this.mouse={x:0,y:0,down:false,active:false};this.ori={active:false,beta:0,gamma:0};this.tieRowStride=1;this.ringPxCull=.15}
+        resize(w,h,s){this.w=w;this.h=h;this.s=s;this.ctx.fillStyle="#000";this.ctx.fillRect(0,0,w,h);this.imageData=this.ctx.getImageData(0,0,w,h);this.data=this.imageData.data;this.u32=new Uint32Array(this.data.buffer);const t=new Uint8ClampedArray(4);t[3]=255;this.BLACK32=new Uint32Array(t.buffer)[0];this.init()}
+        clearImageData(){this.u32.fill(this.BLACK32)}
+        setPixel32(x,y,c){if(x<=0||x>=this.w||y<=0||y>=this.h)return;const i=x+y*this.imageData.width;this.u32[i]=c}
+        drawLine32(x1,y1,x2,y2,c){let dx=Math.abs(x2-x1),dy=Math.abs(y2-y1),sx=x1<x2?1:-1,sy=y1<y2?1:-1,err=dx-dy,lx=x1,ly=y1;for(;;){if(lx>0&&lx<this.w&&ly>0&&ly<this.h)this.setPixel32(lx,ly,c);if(lx===x2&&ly===y2)break;const e2=2*err;if(e2>-dy){err-=dy;lx+=sx}if(e2<dx){err+=dx;ly+=sy}}}
+        getCirclePos(cx,cy,r,i,s){const a=i*(Math.PI*2/s)+this.time;return{x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r}}
+        addParticle(x,y,z,a){return{x,y,z,x2d:0,y2d:0,radius:this.baseRadius,radiusAudio:this.baseRadius,index:0,segments:this.segments,centerX:0,centerY:0,audioIndex:a}}
+        colorForRow32(i,l,a){const b=Math.max(0,Math.min(1,a?.bass??.5)),v=Math.max(0,Math.min(1,a?.average??.45)),h=Math.max(0,Math.min(1,a?.high??.35)),d=i/Math.max(1,l-1),r=Math.round(180*h+40*d),g=Math.round(90*v+60*d),u=Math.round(220*b);return pack32(r,g,u,255)}
+        init(){this.particles=[];this.centers=[];const w1=Math.random()*this.w,h1=Math.random()*this.h;let c=0;for(let z=-this.fov;z<this.fov;z+=this.zStep){const coords=[];for(let i=0;i<this.segments;i++){const p=this.getCirclePos(0,0,this.baseRadius,i,this.segments);coords.push({x:p.x,y:p.y,index:i,radius:this.baseRadius,segments:this.segments,centerX:0,centerY:0})}const center={x:((this.w/2)-w1)*(c/15)+this.w/2,y:((this.h/2)-h1)*(c/15)+this.h/2};c++;this.centers.push(center);const row=[];let aIdx=8+Math.floor(Math.random()*1024);for(let i=0;i<coords.length;i++){const co=coords[i],p=this.addParticle(co.x,co.y,z,aIdx);p.index=co.index;p.radius=co.radius;p.radiusAudio=p.radius;p.segments=co.segments;p.centerX=co.centerX;p.centerY=co.centerY;row.push(p);aIdx+=i<coords.length/2?1:-1;if(aIdx>1024)aIdx=8;if(aIdx<8)aIdx=1024}this.particles.push(row)}}
+        frame(a){const m=motionScale();this.clearImageData();const l=this.particles.length;let s=false;for(let i=0;i<l;i++){const row=this.particles[i],rowBack=i>0?this.particles[i-1]:null,center=this.centers[i];if(this.mouse.active){center.x=(this.w/2-this.mouse.x/this.s)*((row[0].z-this.fov)/500)+this.w/2;center.y=(this.h/2-this.mouse.y/this.s)*((row[0].z-this.fov)/500)+this.h/2}else if(this.ori.active){const mx=-this.ori.gamma*(this.w/180),my=-this.ori.beta*(this.h/180);center.x=this.w/2+mx*((row[0].z-this.fov)/500);center.y=this.h/2+my*((row[0].z-this.fov)/500)}else{center.x+=(this.w/2-center.x)*.015;center.y+=(this.h/2-center.y)*.015}const f=(a?.average||0)*64+(a?.beat?8:0),sc=this.fov/(this.fov+row[0].z),r=(this.baseRadius+f)*sc;if(r<this.ringPxCull)continue;for(let j=0,k=row.length;j<k;j++){const p=row[j],z=this.fov/(this.fov+p.z);p.x2d=p.x*z+center.x;p.y2d=p.y*z+center.y;p.radiusAudio=p.radius+f;if(this.mouse.down){p.z+=this.speed*m;if(p.z>this.fov){p.z-=this.fov*2;s=true}}else{p.z-=this.speed*m;if(p.z<-this.fov){p.z+=this.fov*2;s=true}}const n=this.getCirclePos(p.centerX,p.centerY,p.radiusAudio,p.index,p.segments);p.x=n.x;p.y=n.y}const c=this.colorForRow32(i,l,a);for(let j=1;j<row.length;j++){const p=row[j],v=row[j-1];this.drawLine32(p.x2d|0,p.y2d|0,v.x2d|0,v.y2d|0,c)}if(row.length>2){const f=row[0],t=row[row.length-1];this.drawLine32(t.x2d|0,t.y2d|0,f.x2d|0,f.y2d|0,c)}if(i>0&&i<l-1&&rowBack&&i%this.tieRowStride===0){for(let j=0;j<row.length;j++){const p=row[j],b=j===0?rowBack[rowBack.length-1]:rowBack[j-1];this.drawLine32(p.x2d|0,p.y2d|0,b.x2d|0,b.y2d|0,c)}}}if(s)this.particles=this.particles.sort((a,b)=>b[0].z-a[0].z);this.time+=(this.mouse.down?-.005:.005)*m;this.ctx.putImageData(this.imageData,0,0)}
       }
-      const ctx=canvas.getContext("2d",{alpha:false, willReadFrequently:true}) || canvas.getContext("2d");
-      window.tunnelRenderer=new PixelTunnel(ctx);
+      const ctx=canvas.getContext("2d",{alpha:false,willReadFrequently:true})||canvas.getContext("2d");
+      window.tunnelRenderer=new PixelTunnel(ctx)
     })();
-
-    // Canvas sizing + DRS hooks
-    function sizeCanvas(){ w=Math.floor(window.innerWidth*INTERNAL_SCALE); h=Math.floor(window.innerHeight*INTERNAL_SCALE);
-      canvas.width=w; canvas.height=h; canvas.style.width=window.innerWidth+"px"; canvas.style.height=window.innerHeight+"px";
-      window.tunnelRenderer?.resize?.(w,h,INTERNAL_SCALE);
-    }
-    function setScaleAndResize(newScale){
-      const clamped = Math.max(SCALE_MIN, Math.min(SCALE_MAX, newScale));
-      if (Math.abs(clamped - INTERNAL_SCALE) > 0.01) {
-        INTERNAL_SCALE = clamped;
-        sizeCanvas();
-      }
-    }
-    function doResize(){ sizeCanvas(); }
-    (function init(){ const base=(isLowEnd?0.8:1); INTERNAL_SCALE = Math.max(SCALE_MIN, Math.min(SCALE_MAX, base*Math.min(2,DPR))); sizeCanvas(); const prefers = typeof matchMedia==="function" && matchMedia("(prefers-reduced-motion: reduce)").matches; MIN_FRAME_MS = prefers ? 33 : 16; })();
-
-    window.addEventListener("resize", ()=>{ clearTimeout(window.__rzT); window.__rzT=setTimeout(doResize,80); });
-    // Handle orientation changes (mobile)
-    const onOrient = ()=>{ setTimeout(()=>{ sizeCanvas(); }, 100); };
-    window.addEventListener("orientationchange", onOrient);
-    if (screen?.orientation?.addEventListener) try{ screen.orientation.addEventListener("change", onOrient); }catch{}
-
-    // Input + sensors
-    let mouseDown=false, mouseActive=false, mousePos={x:0,y:0}, orientationActive=false, beta=0, gamma=0;
-    function sendInput(){ if(window.tunnelRenderer){ window.tunnelRenderer.mouse={x:mousePos.x,y:mousePos.y,down:mouseDown,active:mouseActive}; window.tunnelRenderer.ori={active:orientationActive,beta,gamma}; } }
-    function spawnRipple(x,y){ try{ const r=document.createElement("div"); r.className="tap-ripple"; r.style.position="fixed"; r.style.left="0"; r.style.top="0"; r.style.width="10px"; r.style.height="10px"; r.style.borderRadius="50%"; r.style.pointerEvents="none"; r.style.transform="translate(-50%,-50%) scale(0.4)"; r.style.opacity="0.85"; r.style.background="radial-gradient(circle, rgba(220,220,220,0.35) 0%, rgba(220,220,220,0.18) 40%, rgba(220,220,220,0) 70%)"; r.style.mixBlendMode="screen"; r.style.filter="blur(0.3px)"; r.style.animation="ripple 680ms ease-out forwards"; r.style.zIndex="999"; r.style.setProperty("--x",x+"px"); r.style.setProperty("--y",y+"px"); document.body.appendChild(r); r.addEventListener("animationend",()=>r.remove(),{once:true}); }catch{} }
-    function rippleAtEvent(e){ try{ let x=0,y=0; if("touches" in e && e.touches.length){ x=e.touches[0].clientX; y=e.touches[0].clientY; } else if("changedTouches" in e && e.changedTouches?.length){ x=e.changedTouches[0].clientX; y=e.changedTouches[0].clientY; } else { x=e.clientX; y=e.clientY; } spawnRipple(x,y); }catch{} }
-
-    function setUIInversion(active){ if(active) uiEl.classList.add("ui-inverted"); else uiEl.classList.remove("ui-inverted"); }
-
-    function setupSensors(){ if (IN_SANDBOX) return;
-      try{
-        if(typeof DeviceOrientationEvent!=="undefined" && typeof DeviceOrientationEvent.requestPermission==="function"){
-          DeviceOrientationEvent.requestPermission().then((state)=>{ if(state==="granted") window.addEventListener("deviceorientation",(e)=>{ beta=e.beta||0; gamma=e.gamma||0; orientationActive=true; sendInput(); }, {passive:true}); }).catch(()=>{});
-        } else if(window.DeviceOrientationEvent){ window.addEventListener("deviceorientation",(e)=>{ beta=e.beta||0; gamma=e.gamma||0; orientationActive=true; sendInput(); }, {passive:true}); }
-      }catch{}
-    }
-
-    // Fullscreen helper (double-tap)
-    function toggleFullscreen(){ const docEl=document.documentElement; if(!document.fullscreenElement){ docEl.requestFullscreen?.(); } else { document.exitFullscreen?.(); } }
-
-    // Pinch-to-zoom (CSS scale; safe for performance)
-    let pinchStartDist=0, baseZoom=1, zoom=1;
-    function touchDistance(t1,t2){ const dx=t2.clientX - t1.clientX, dy=t2.clientY - t1.clientY; return Math.hypot(dx,dy); }
-    function applyZoom(z){ zoom=Math.max(0.85, Math.min(1.25, z)); document.documentElement.style.setProperty("--zoom", String(zoom)); }
-    function resetPinch(){ pinchStartDist=0; baseZoom=zoom; }
-
-    function startApp(ev){
-      if(audio.started) return;
-      try{ navigator.vibrate?.(12); }catch{} if(ev) rippleAtEvent(ev);
-      document.getElementById("overlay").style.pointerEvents="none";
-      document.getElementById("overlay").classList.add("ack");
-      document.getElementById("start-title").classList.add("clicked");
-      canvas.classList.add("start-ack");
-      // Sensors
-      setupSensors();
-      if (IN_SANDBOX) {
-        const uiLabel=document.getElementById("uiLabel"); if (uiLabel) uiLabel.textContent = "Visual-only (sandboxed)";
-      } else {
-        loadYouTubeAPI(); // defer API load until user gesture
-        audio.start();
-      }
-      setTimeout(()=>{ document.getElementById("overlay").hidden=true; document.getElementById("overlay").classList.remove("ack"); document.getElementById("start-title").classList.remove("clicked"); canvas.classList.remove("start-ack"); canvas.focus?.(); },220);
-    }
+    const sizeCanvas=()=>{w=Math.floor(window.innerWidth*INTERNAL_SCALE);h=Math.floor(window.innerHeight*INTERNAL_SCALE);canvas.width=w;canvas.height=h;canvas.style.width=window.innerWidth+"px";canvas.style.height=window.innerHeight+"px";window.tunnelRenderer?.resize?.(w,h,INTERNAL_SCALE)};
+    const setScaleAndResize=n=>{const c=Math.max(SCALE_MIN,Math.min(SCALE_MAX,n));if(Math.abs(c-INTERNAL_SCALE)>.01){INTERNAL_SCALE=c;sizeCanvas()}};
+    const doResize=()=>sizeCanvas();
+    (()=>{const b=isLowEnd?.8:1;INTERNAL_SCALE=Math.max(SCALE_MIN,Math.min(SCALE_MAX,b*Math.min(2,DPR)));sizeCanvas();MIN_FRAME_MS=typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches?33:16})();
+    window.addEventListener("resize",()=>{clearTimeout(window.__rzT);window.__rzT=setTimeout(doResize,80)});
+    const onOrient=()=>setTimeout(()=>sizeCanvas(),100);
+    window.addEventListener("orientationchange",onOrient);
+    if(screen?.orientation?.addEventListener)try{screen.orientation.addEventListener("change",onOrient)}catch{}
+    let mouseDown=false,mouseActive=false,mousePos={x:0,y:0},orientationActive=false,beta=0,gamma=0;
+    const sendInput=()=>{if(window.tunnelRenderer){window.tunnelRenderer.mouse={x:mousePos.x,y:mousePos.y,down:mouseDown,active:mouseActive};window.tunnelRenderer.ori={active:orientationActive,beta,gamma}}};
+    const spawnRipple=(x,y)=>{try{const r=document.createElement("div");r.className="tap-ripple";r.style.cssText="position:fixed;left:0;top:0;width:10px;height:10px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) scale(0.4);opacity:.85;background:radial-gradient(circle,rgba(220,220,220,0.35) 0%,rgba(220,220,220,0.18) 40%,rgba(220,220,220,0) 70%);mix-blend-mode:screen;filter:blur(0.3px);animation:ripple 680ms ease-out forwards;z-index:999";r.style.setProperty("--x",x+"px");r.style.setProperty("--y",y+"px");document.body.appendChild(r);r.addEventListener("animationend",()=>r.remove(),{once:true})}catch{}};
+    const rippleAtEvent=e=>{try{let x=0,y=0;if("touches"in e&&e.touches.length){x=e.touches[0].clientX;y=e.touches[0].clientY}else if("changedTouches"in e&&e.changedTouches?.length){x=e.changedTouches[0].clientX;y=e.changedTouches[0].clientY}else{x=e.clientX;y=e.clientY}spawnRipple(x,y)}catch{}};
+    const setUIInversion=a=>a?uiEl.classList.add("ui-inverted"):uiEl.classList.remove("ui-inverted");
+    const setupSensors=()=>{if(IN_SANDBOX)return;try{if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function"){DeviceOrientationEvent.requestPermission().then(s=>{if(s==="granted")window.addEventListener("deviceorientation",e=>{beta=e.beta||0;gamma=e.gamma||0;orientationActive=true;sendInput()},{passive:true})}).catch(()=>{})}else if(window.DeviceOrientationEvent){window.addEventListener("deviceorientation",e=>{beta=e.beta||0;gamma=e.gamma||0;orientationActive=true;sendInput()},{passive:true})}}catch{}};
+    const toggleFullscreen=()=>{const d=document.documentElement;!document.fullscreenElement?d.requestFullscreen?.():document.exitFullscreen?.()};
+    let pinchStartDist=0,baseZoom=1,zoom=1;
+    const touchDistance=(t1,t2)=>Math.hypot(t2.clientX-t1.clientX,t2.clientY-t1.clientY);
+    const applyZoom=z=>{zoom=Math.max(.85,Math.min(1.25,z));document.documentElement.style.setProperty("--zoom",String(zoom))};
+    const resetPinch=()=>{pinchStartDist=0;baseZoom=zoom};
+    const startApp=e=>{if(audio.started)return;try{navigator.vibrate?.(12)}catch{}if(e)rippleAtEvent(e);document.getElementById("overlay").style.pointerEvents="none";document.getElementById("overlay").classList.add("ack");document.getElementById("start-title").classList.add("clicked");canvas.classList.add("start-ack");setupSensors();if(IN_SANDBOX){const u=document.getElementById("uiLabel");if(u)u.textContent="Visual-only (sandboxed)"}else{loadYouTubeAPI();audio.start()}setTimeout(()=>{document.getElementById("overlay").hidden=true;document.getElementById("overlay").classList.remove("ack");document.getElementById("start-title").classList.remove("clicked");canvas.classList.remove("start-ack");canvas.focus?.()},220)};
     const overlayEl=document.getElementById("overlay");
-    overlayEl.addEventListener("click",(e)=>{ e.stopPropagation(); e.preventDefault(); startApp(e); });
-    overlayEl.addEventListener("pointerdown",(e)=>{ rippleAtEvent(e); try{ navigator.vibrate?.(8); }catch{} }, {passive:true});
-    overlayEl.addEventListener("keydown",(e)=>{ if(e.code==="Enter"||e.code==="Space"){ e.preventDefault(); startApp(); } if(e.code==="Tab"){ e.preventDefault(); overlayEl.focus(); } });
-
-    // Mouse
-    canvas.addEventListener("mousedown",(e)=>{ mouseDown=true; mouseActive=true; canvas.classList.add("canvas-inverted"); setUIInversion(true); sendInput(); rippleAtEvent(e); }, false);
-    canvas.addEventListener("mouseup",(e)=>{ mouseDown=false; canvas.classList.remove("canvas-inverted"); setUIInversion(false); sendInput(); rippleAtEvent(e); }, false);
-    canvas.addEventListener("mousemove",(e)=>{ const r=canvas.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top; mousePos.x=x*INTERNAL_SCALE; mousePos.y=y*INTERNAL_SCALE; mouseActive=true; sendInput(); }, false);
-    canvas.addEventListener("mouseleave",()=>{ mouseActive=false; mouseDown=false; canvas.classList.remove("canvas-inverted"); setUIInversion(false); sendInput(); }, false);
-
-    // Touch
-    let touchStartX=0, touchStartY=0, lastTapTime=0; const swipeThreshold=70, doubleTapMs=300;
-    canvas.addEventListener("touchstart",(e)=>{ e.preventDefault();
-      if(e.touches.length===1){
-        const t=e.touches[0], r=canvas.getBoundingClientRect(), x=t.clientX-r.left, y=t.clientY-r.top;
-        touchStartX=x; touchStartY=y; mousePos.x=x*INTERNAL_SCALE; mousePos.y=y*INTERNAL_SCALE;
-        mouseDown=true; canvas.classList.add("canvas-inverted"); setUIInversion(true); sendInput(); rippleAtEvent(e);
-        resetPinch();
-      } else if(e.touches.length===2){
-        pinchStartDist = touchDistance(e.touches[0], e.touches[1]); baseZoom = zoom;
-      }
-    },{passive:false});
-    canvas.addEventListener("touchmove",(e)=>{ e.preventDefault();
-      if(e.touches.length===1){
-        const t=e.touches[0], r=canvas.getBoundingClientRect(), x=t.clientX-r.left, y=t.clientY-r.top; mousePos.x=x*INTERNAL_SCALE; mousePos.y=y*INTERNAL_SCALE; sendInput();
-      } else if(e.touches.length===2){
-        if (pinchStartDist===0) { pinchStartDist = touchDistance(e.touches[0], e.touches[1]); baseZoom = zoom; }
-        const d = touchDistance(e.touches[0], e.touches[1]); if(pinchStartDist>0){ const scale = d/pinchStartDist; applyZoom(baseZoom*scale); }
-      } else {
-        resetPinch();
-      }
-    },{passive:false});
-    canvas.addEventListener("touchend",(e)=>{ e.preventDefault();
-      if(e.touches.length<2) resetPinch();
-      if(e.touches.length===0){ mouseDown=false; canvas.classList.remove("canvas-inverted"); setUIInversion(false); sendInput(); rippleAtEvent(e); }
-      // Swipe or double-tap
-      if(audio.started && !IN_SANDBOX){
-        const t=e.changedTouches[0], r=canvas.getBoundingClientRect(), endX=t.clientX-r.left, endY=t.clientY-r.top, dx=endX-touchStartX, dy=endY-touchStartY;
-        if(Math.abs(dx)>swipeThreshold || Math.abs(dy)>swipeThreshold){
-          if(Math.abs(dx)>Math.abs(dy)){
-            // Swap: right swipe -> next, left swipe -> prev
-            if(dx>0) audio.next(); else audio.prev();
-          } else {
-            const sh=document.getElementById("swipeHint"); sh.textContent="Warp Tunnel"; sh.classList.add("show"); setTimeout(()=>sh.classList.remove("show"),1400);
-          }
-          try{ navigator.vibrate?.(10); }catch{}
-        } else {
-          // Double-tap for fullscreen
-          const now=performance.now(); if(now-lastTapTime<doubleTapMs){ toggleFullscreen(); } lastTapTime=now;
-        }
-      }
-    },{passive:false});
-    canvas.addEventListener("touchcancel",()=>{ resetPinch(); mouseDown=false; canvas.classList.remove("canvas-inverted"); setUIInversion(false); sendInput(); }, {passive:true});
-
-    // Keyboard
-    addEventListener("keydown",(e)=>{ if(e.key?.toLowerCase()==="m"){ e.preventDefault(); if(audio.started && !IN_SANDBOX) audio.toggleMute(); return; }
-      if(e.code==="ArrowRight"){ e.preventDefault(); if(audio.started && !IN_SANDBOX) audio.next(); return; }
-      if(e.code==="ArrowLeft"){ e.preventDefault(); if(audio.started && !IN_SANDBOX) audio.prev(); return; }
-      if(e.code==="KeyF"){ e.preventDefault(); toggleFullscreen(); return; }
-    });
-
-    // Visibility
-    let pageHidden=document.hidden; document.addEventListener("visibilitychange",()=>{ pageHidden=document.hidden; });
-
-    // Animation loop with DRS and reduced-motion pacing
-    let lastFrameT = performance.now(), lastRenderT = lastFrameT;
-    function animate(){
-      const now = performance.now();
-      const dt = now - lastFrameT; lastFrameT = now;
-      ewma = ewma*0.9 + dt*0.1;
-
-      // Reduced motion: throttle render cadence
-      if (now - lastRenderT < MIN_FRAME_MS) { requestAnimationFrame(animate); return; }
-
-      // DRS: adjust scale no more than every 700ms
-      if (!pageHidden && (now - lastScaleAdjust) > 700) {
-        if (ewma > 22) { setScaleAndResize(INTERNAL_SCALE * 0.92); lastScaleAdjust = now; }
-        else if (ewma < 14 && INTERNAL_SCALE < SCALE_MAX) { setScaleAndResize(INTERNAL_SCALE * 1.06); lastScaleAdjust = now; }
-      }
-
-      if (pageHidden) { requestAnimationFrame(animate); return; }
-      const audioData = audio.started ? audio.data() : {average:0, beat:0, bass:0.5, mid:0.45, high:0.35};
-      window.tunnelRenderer?.frame(audioData);
-      lastRenderT = now;
-      requestAnimationFrame(animate);
-    }
-
-    function boot(){
-      if (IN_SANDBOX) {
-        const uiLabel=document.getElementById("uiLabel"); if (uiLabel) uiLabel.textContent = "Visual-only (sandboxed)";
-      }
-      requestAnimationFrame(animate);
-      document.getElementById("overlay").focus();
-    }
-    if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
+    overlayEl.addEventListener("click",e=>{e.stopPropagation();e.preventDefault();startApp(e)});
+    overlayEl.addEventListener("pointerdown",e=>{rippleAtEvent(e);try{navigator.vibrate?.(8)}catch{}},{passive:true});
+    overlayEl.addEventListener("keydown",e=>{if(e.code==="Enter"||e.code==="Space"){e.preventDefault();startApp()}if(e.code==="Tab"){e.preventDefault();overlayEl.focus()}});
+    canvas.addEventListener("mousedown",e=>{mouseDown=true;mouseActive=true;canvas.classList.add("canvas-inverted");setUIInversion(true);sendInput();rippleAtEvent(e)},false);
+    canvas.addEventListener("mouseup",e=>{mouseDown=false;canvas.classList.remove("canvas-inverted");setUIInversion(false);sendInput();rippleAtEvent(e)},false);
+    canvas.addEventListener("mousemove",e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;mousePos.x=x*INTERNAL_SCALE;mousePos.y=y*INTERNAL_SCALE;mouseActive=true;sendInput()},false);
+    canvas.addEventListener("mouseleave",()=>{mouseActive=false;mouseDown=false;canvas.classList.remove("canvas-inverted");setUIInversion(false);sendInput()},false);
+    let touchStartX=0,touchStartY=0,lastTapTime=0;const swipeThreshold=70,doubleTapMs=300;
+    canvas.addEventListener("touchstart",e=>{e.preventDefault();if(e.touches.length===1){const t=e.touches[0],r=canvas.getBoundingClientRect(),x=t.clientX-r.left,y=t.clientY-r.top;touchStartX=x;touchStartY=y;mousePos.x=x*INTERNAL_SCALE;mousePos.y=y*INTERNAL_SCALE;mouseDown=true;canvas.classList.add("canvas-inverted");setUIInversion(true);sendInput();rippleAtEvent(e);resetPinch()}else if(e.touches.length===2){pinchStartDist=touchDistance(e.touches[0],e.touches[1]);baseZoom=zoom}},{passive:false});
+    canvas.addEventListener("touchmove",e=>{e.preventDefault();if(e.touches.length===1){const t=e.touches[0],r=canvas.getBoundingClientRect(),x=t.clientX-r.left,y=t.clientY-r.top;mousePos.x=x*INTERNAL_SCALE;mousePos.y=y*INTERNAL_SCALE;sendInput()}else if(e.touches.length===2){if(pinchStartDist===0){pinchStartDist=touchDistance(e.touches[0],e.touches[1]);baseZoom=zoom}const d=touchDistance(e.touches[0],e.touches[1]);if(pinchStartDist>0){const s=d/pinchStartDist;applyZoom(baseZoom*s)}}else resetPinch()},{passive:false});
+    canvas.addEventListener("touchend",e=>{e.preventDefault();if(e.touches.length<2)resetPinch();if(e.touches.length===0){mouseDown=false;canvas.classList.remove("canvas-inverted");setUIInversion(false);sendInput();rippleAtEvent(e)}if(audio.started&&!IN_SANDBOX){const t=e.changedTouches[0],r=canvas.getBoundingClientRect(),endX=t.clientX-r.left,endY=t.clientY-r.top,dx=endX-touchStartX,dy=endY-touchStartY;if(Math.abs(dx)>swipeThreshold||Math.abs(dy)>swipeThreshold){if(Math.abs(dx)>Math.abs(dy)){dx>0?audio.next():audio.prev()}else{const s=document.getElementById("swipeHint");s.textContent="Warp Tunnel";s.classList.add("show");setTimeout(()=>s.classList.remove("show"),1400)}try{navigator.vibrate?.(10)}catch{}}else{const n=performance.now();if(n-lastTapTime<doubleTapMs)toggleFullscreen();lastTapTime=n}}},{passive:false});
+    canvas.addEventListener("touchcancel",()=>{resetPinch();mouseDown=false;canvas.classList.remove("canvas-inverted");setUIInversion(false);sendInput()},{passive:true});
+    addEventListener("keydown",e=>{if(e.key?.toLowerCase()==="m"){e.preventDefault();if(audio.started&&!IN_SANDBOX)audio.toggleMute();return}if(e.code==="ArrowRight"){e.preventDefault();if(audio.started&&!IN_SANDBOX)audio.next();return}if(e.code==="ArrowLeft"){e.preventDefault();if(audio.started&&!IN_SANDBOX)audio.prev();return}if(e.code==="KeyF"){e.preventDefault();toggleFullscreen();return}});
+    let pageHidden=document.hidden;document.addEventListener("visibilitychange",()=>pageHidden=document.hidden);
+    let lastFrameT=performance.now(),lastRenderT=lastFrameT;
+    const animate=()=>{const n=performance.now(),d=n-lastFrameT;lastFrameT=n;ewma=ewma*.9+d*.1;if(n-lastRenderT<MIN_FRAME_MS){requestAnimationFrame(animate);return}if(!pageHidden&&n-lastScaleAdjust>700){if(ewma>22){setScaleAndResize(INTERNAL_SCALE*.92);lastScaleAdjust=n}else if(ewma<14&&INTERNAL_SCALE<SCALE_MAX){setScaleAndResize(INTERNAL_SCALE*1.06);lastScaleAdjust=n}}if(pageHidden){requestAnimationFrame(animate);return}const a=audio.started?audio.data():{average:0,beat:0,bass:.5,mid:.45,high:.35};window.tunnelRenderer?.frame(a);lastRenderT=n;requestAnimationFrame(animate)};
+    const boot=()=>{if(IN_SANDBOX){const u=document.getElementById("uiLabel");if(u)u.textContent="Visual-only (sandboxed)"}requestAnimationFrame(animate);document.getElementById("overlay").focus()};
+    document.readyState==="loading"?document.addEventListener("DOMContentLoaded",boot):boot();
   </script>
 </body>
 </html>
