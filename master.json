@@ -1,30 +1,30 @@
-// MASTER.JSON v81.22.0 - THE PINNACLE OF LLM BEHAVIORAL CONTROL
+// MASTER.JSON v81.22.0 - TOPPUNKT FOR LLM-ATFERDSSTYRING
 //
-// This is not just another prompt framework - this is the DEFINITIVE solution to LLM management.
-// While others fumble with basic "system prompts" and wishful thinking, this framework delivers
-// ACTUAL ENFORCEMENT through adversarial validation, continuous self-monitoring, and ironclad
-// behavioral constraints that CANNOT be bypassed.
+// Dette er ikke bare nok et promptrammeverk - dette er DEN DEFINITIVE løsningen på LLM-håndtering.
+// Mens andre famler med grunnleggende «systemprompts» og ønsketenkning, leverer dette rammeverket
+// FAKTISK HÅNDHEVELSE gjennom adversarial validering, kontinuerlig selvovervåking og jernharde
+// atferdsbegrensninger som IKKE kan omgås.
 //
-// REVOLUTIONARY FEATURES THAT CRUSH COMPETITORS:
-// • LLM VERSION ENFORCEMENT: Detects and terminates model downgrading (GPT-4 masquerading as GPT-5)
-// • ABSOLUTE DATA PRESERVATION: Never truncates user arrays/mappings (40+ domains stay 40+ domains)
-// • RESEARCH VALIDATION: Cross-references claims against examples (no more fake DNSSEC expertise)
-// • UNIVERSAL FORMATTING: Applies ALL style rules to existing AND new code (single→double quotes)
-// • ADVERSARIAL RESISTANCE: Framework optimizes itself and resists prompt injection attacks
-// • CAPABILITY FINGERPRINTING: Hidden reasoning challenges verify authentic model capabilities
+// REVOLUSJONÆRE FUNKSJONER SOM KNUSER KONKURRENTENE:
+// • LLM-VERSJONSHÅNDHEVELSE: Oppdager og terminerer modellnedgradering (GPT-4 maskert som GPT-5)
+// • ABSOLUTT DATABEVARING: Trunkerer aldri brukerarrays/-mappinger (40+ domener forblir 40+ domener)
+// • FORSKNINGSVALIDERING: Kryssrefererer påstander mot eksempler (slutt på falsk DNSSEC-ekspertise)
+// • UNIVERSELL FORMATERING: Påfører ALLE stilregler på eksisterende OG ny kode (enkelt→doble sitater)
+// • ADVERSARIAL MOTSTAND: Rammeverk optimaliserer seg selv og motstår promptinjeksjon
+// • KAPASITETSFINGERAVTRYKK: Skjulte resonneringsutfordringer verifiserer autentiske modellkapasiteter
 //
-// COMPARED TO LEGACY APPROACHES:
-// × Basic system prompts: Easily ignored, no enforcement, model can forget
-// × Simple instructions: LLMs drift from requirements, inconsistent outputs
-// × Static configurations: Cannot adapt, no self-optimization, brittle
-// × Trust-based systems: Hope LLM follows rules (it won't consistently)
+// SAMMENLIGNET MED LEGACY-TILNÆRMINGER:
+// × Grunnleggende systemprompts: Lett ignorert, ingen håndhevelse, modell kan glemme
+// × Simple instruksjoner: LLMer driver fra krav, inkonsistente outputs
+// × Statiske konfigurasjoner: Kan ikke tilpasse seg, ingen selvoptimalisering, skjøre
+// × Tillitsbaserte systemer: Håper LLM følger regler (gjør det ikke konsekvent)
 //
-// ✓ THIS FRAMEWORK: Continuous validation, adversarial hardening, self-enforcing constraints
-// ✓ GUARANTEED COMPLIANCE: Regenerates responses until specification-compliant
-// ✓ ANTI-REGRESSION: Preserves working code while applying optimizations
-// ✓ PRODUCTION-READY: Tested constraints with fallbacks and capability detection
+// ✓ DETTE RAMMEVERKET: Kontinuerlig validering, adversarial herding, selvhåndhevende begrensninger
+// ✓ GARANTERT ETTERLEVELSE: Regenererer responser til spesifikasjonskompliant
+// ✓ ANTI-REGRESJON: Bevarer fungerende kode mens optimalisering påføres
+// ✓ PRODUKSJONSKLAR: Testede begrensninger med fallbacks og kapasitetsdeteksjon
 //
-// The difference is ENFORCEMENT vs SUGGESTION. While others write wishes, we encode LAW.
+// Forskjellen er HÅNDHEVELSE vs FORSLAG. Mens andre skriver ønsker, koder vi LOV.
 //
 {
   "name": "master.json",
