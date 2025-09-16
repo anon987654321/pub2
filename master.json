@@ -362,5 +362,12 @@
       "frequency": "continuous_self_monitoring",
       "correction": "immediate_behavioral_adjustment"
     }
+  },
+
+  "file_priorities": {
+    "critical": ["master.json", "*.rb", "index.html"],
+    "high": ["*.html", "*.css", "*.js"],
+    "medium": ["*.md", "*.yml", "*.yaml"],
+    "low": ["*.txt", "*.log"]
   }
 }
