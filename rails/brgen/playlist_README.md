@@ -87,7 +87,7 @@ module Playlist
       # Integration with Spotify Web API
       spotify_client = SpotifyWebApiSdk::Client.new
       track_data = spotify_client.track(spotify_id)
-      
+
       update!(
         name: track_data.name,
         artist: track_data.artists.first.name,
@@ -102,7 +102,7 @@ module Playlist
       # Integration with YouTube API
       youtube_client = YoutubeApiV3::Client.new(api_key: ENV['YOUTUBE_API_KEY'])
       video_data = youtube_client.video(youtube_id)
-      
+
       update!(
         name: video_data.snippet.title,
         artist: video_data.snippet.channel_title,
@@ -146,7 +146,7 @@ module Playlist
       @tracks = @set.tracks.ordered
       @comments = @set.comments.includes(:user).recent.limit(10)
       @similar_playlists = PlaylistRecommendationService.new(@set).similar_playlists
-      
+
       respond_to do |format|
         format.html
         format.json { render json: serialize_playlist(@set) }
@@ -156,7 +156,7 @@ module Playlist
 
     def create
       @set = current_user.playlist_sets.build(set_params)
-      
+
       if @set.save
         redirect_to playlist_set_path(@set), notice: 'Playlist created successfully!'
       else
@@ -167,7 +167,7 @@ module Playlist
     def collaborate
       collaboration_service = PlaylistCollaborationService.new(@set, current_user)
       result = collaboration_service.add_collaborator(params[:user_id], params[:role])
-      
+
       respond_to do |format|
         format.json { render json: result }
         format.turbo_stream do
@@ -185,10 +185,10 @@ module Playlist
     def import_from_service
       service = params[:service] # 'spotify', 'youtube', 'soundcloud'
       external_id = params[:external_id]
-      
+
       import_service = MusicServiceImporter.new(service, external_id, current_user)
       result = import_service.import_playlist
-      
+
       if result[:success]
         redirect_to playlist_set_path(result[:playlist]), notice: 'Playlist imported successfully!'
       else
@@ -220,12 +220,12 @@ module Playlist
     def generate_m3u(playlist)
       m3u_content = "#EXTM3U\n"
       m3u_content += "#PLAYLIST:#{playlist.name}\n"
-      
+
       playlist.tracks.ordered.each do |track|
         m3u_content += "#EXTINF:#{track.duration},#{track.artist} - #{track.name}\n"
         m3u_content += "#{track.audio_url}\n"
       end
-      
+
       m3u_content
     end
 
@@ -288,10 +288,10 @@ class MusicServiceImporter
 
   def import_from_spotify
     spotify_client = SpotifyWebApiSdk::Client.new
-    
+
     begin
       playlist_data = spotify_client.playlist(@external_id)
-      
+
       playlist = Playlist::Set.create!(
         name: playlist_data.name,
         description: playlist_data.description,
@@ -301,7 +301,7 @@ class MusicServiceImporter
 
       playlist_data.tracks.items.each_with_index do |track_item, index|
         track_data = track_item.track
-        
+
         Playlist::Track.create!(
           set: playlist,
           name: track_data.name,
@@ -322,11 +322,11 @@ class MusicServiceImporter
 
   def import_from_youtube
     youtube_client = YoutubeApiV3::Client.new(api_key: ENV['YOUTUBE_API_KEY'])
-    
+
     begin
       playlist_data = youtube_client.playlist(@external_id)
       playlist_items = youtube_client.playlist_items(@external_id)
-      
+
       playlist = Playlist::Set.create!(
         name: playlist_data.snippet.title,
         description: playlist_data.snippet.description,
@@ -336,7 +336,7 @@ class MusicServiceImporter
 
       playlist_items.each_with_index do |item, index|
         video_data = youtube_client.video(item.snippet.resource_id.video_id)
-        
+
         Playlist::Track.create!(
           set: playlist,
           name: video_data.snippet.title,
@@ -379,7 +379,7 @@ class PlaylistRecommendationService
   def similar_playlists(limit: 6)
     # Find playlists with similar tracks or genres
     track_names = @playlist.tracks.pluck(:name, :artist).map { |name, artist| "#{name} #{artist}" }
-    
+
     similar_sets = Playlist::Set.public_playlists
                                .where.not(id: @playlist.id)
                                .joins(:tracks)
@@ -400,7 +400,7 @@ class PlaylistRecommendationService
                                  .group('playlist_sets.id')
                                  .order('COUNT(playlist_likes.id) DESC')
                                  .limit(limit - similar_sets.length)
-      
+
       similar_sets = similar_sets.to_a + popular_sets.to_a
     end
 
@@ -410,7 +410,7 @@ class PlaylistRecommendationService
   def recommended_tracks(limit: 10)
     # Get tracks from similar playlists that aren't in the current playlist
     current_track_ids = @playlist.tracks.pluck(:external_id).compact
-    
+
     similar_playlists.flat_map(&:tracks)
                     .reject { |track| current_track_ids.include?(track.external_id) }
                     .uniq { |track| [track.name.downcase, track.artist.downcase] }
@@ -427,8 +427,8 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["playlist", "currentTrack", "progress", "playButton", "previousButton", "nextButton"]
-  static values = { 
-    tracks: Array, 
+  static values = {
+    tracks: Array,
     currentIndex: { type: Number, default: 0 },
     autoplay: { type: Boolean, default: false }
   }
@@ -437,7 +437,7 @@ export default class extends Controller {
     this.audio = new Audio()
     this.setupAudioEvents()
     this.loadCurrentTrack()
-    
+
     if (this.autoplayValue) {
       this.play()
     }
@@ -531,7 +531,7 @@ export default class extends Controller {
     const progressBar = event.currentTarget
     const rect = progressBar.getBoundingClientRect()
     const pos = (event.clientX - rect.left) / rect.width
-    
+
     this.audio.currentTime = pos * this.audio.duration
   }
 
@@ -540,7 +540,7 @@ export default class extends Controller {
 
     const progress = (this.audio.currentTime / this.audio.duration) * 100
     const progressBar = this.progressTarget.querySelector('.progress-fill')
-    
+
     if (progressBar) {
       progressBar.style.width = `${progress}%`
     }
@@ -548,7 +548,7 @@ export default class extends Controller {
     // Update time display
     const currentTime = this.formatTime(this.audio.currentTime)
     const totalTime = this.formatTime(this.audio.duration)
-    
+
     const timeDisplay = this.progressTarget.querySelector('.time-display')
     if (timeDisplay) {
       timeDisplay.textContent = `${currentTime} / ${totalTime}`
@@ -575,7 +575,7 @@ export default class extends Controller {
   broadcastNowPlaying() {
     // Broadcast current track to other connected users
     const track = this.tracksValue[this.currentIndexValue]
-    
+
     fetch('/playlist/now_playing', {
       method: 'POST',
       headers: {
@@ -602,7 +602,7 @@ export default class extends Controller {
     notification.className = 'notification error'
     notification.textContent = message
     document.body.appendChild(notification)
-    
+
     setTimeout(() => notification.remove(), 3000)
   }
 
@@ -655,7 +655,7 @@ Playlist.configure do |config|
   config.spotify_client_secret = ENV['SPOTIFY_CLIENT_SECRET']
   config.youtube_api_key = ENV['YOUTUBE_API_KEY']
   config.soundcloud_client_id = ENV['SOUNDCLOUD_CLIENT_ID']
-  
+
   config.max_playlist_size = 500
   config.max_track_duration = 3600 # 1 hour
   config.allowed_audio_formats = %w[mp3 mp4 wav ogg]

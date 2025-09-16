@@ -35,7 +35,7 @@ typeset -A new_checksums
 
 for subdir in */(N); do
   folder="${subdir%/}"
-  
+
   # Creates a unique hash from all files in folder.
   checksum=$(find "$folder" -type f -exec md5 -q {} + | sort | md5 -q)
   new_checksums["$folder"]="$checksum"
@@ -44,7 +44,7 @@ for subdir in */(N); do
   if [[ -z "${old_checksums[$folder]}" || "${old_checksums[$folder]}" != "$checksum" ]]; then
     echo "Backing up: $folder -> $backup_file"
     tar cvzf "$backup_file" "$folder" 2>/dev/null
-    
+
     if [[ $? -ne 0 ]]; then
       log_error "tar failed for $backup_file"
       echo "Failed: $backup_file"
@@ -82,13 +82,13 @@ fi
 
 for file in "$dir"/**/*(.N); do
   if file -b "$file" | grep -q "text"; then
-  
+
     tmp=$(mktemp)
     if [[ $? -ne 0 ]]; then
       echo "Error: mktemp failed"
       exit 1
     fi
-    
+
     # Removes CRLF, trims trailing whitespaces, reduces blank lines.
     tr -d '\r' < "$file" | awk '{sub(/[ \t]+$/, "");} NF{print; if(p)print ""} {p=NF}' > "$tmp" 2>/dev/null
     if [[ $? -eq 0 ]]; then
@@ -123,7 +123,7 @@ typeset -a files_to_open
 for file in **/*(.N); do
   is_text=$(file -b "$file" | grep -q "text"; echo $?)
   if [[ $is_text -eq 0 ]]; then
-  
+
     if [[ -z "$pattern" ]]; then
       files_to_open+=("$file")
     elif grep -q "$pattern" "$file" 2>/dev/null; then
@@ -135,7 +135,7 @@ done
 if (( ${#files_to_open} > 0 )); then
   echo "Files found:"
   printf "  %s\n" "${files_to_open[@]}"
-  
+
   echo "Open in Vim? (Y/n)"
   read -r response
   if [[ "${response:-Y}" =~ ^[Yy]$ ]]; then
@@ -169,14 +169,14 @@ check_tool() {
 lint_ruby() {
   local file="$1"
   echo "Linting: $file"
-  
+
   if ! reek "$file" >/dev/null 2>&1; then
     echo "Reek flagged: $file"
   fi
   if ! rubocop --autocorrect "$file" >/dev/null 2>&1; then
     echo "Rubocop failed: $file"
   fi
-  
+
   echo "Done: $file"
 }
 
@@ -229,17 +229,17 @@ if [[ "$confirm" =~ ^[Yy]$ ]]; then
   if [[ $? -ne 0 ]]; then
     echo "Some chown failed; see $HOME/script_errors.log"
   fi
-  
+
   chmod -R "$file_perms" ./**/*(.) 2>>"$HOME/script_errors.log"
   if [[ $? -ne 0 ]]; then
     echo "Some file perms failed"
   fi
-  
+
   chmod -R "$folder_perms" ./**/*(/) 2>>"$HOME/script_errors.log"
   if [[ $? -ne 0 ]]; then
     echo "Some folder perms failed"
   fi
-  
+
   echo "Done."
 else
   echo "Cancelled."
@@ -301,7 +301,7 @@ for file in "$folder"/**/*(.N); do
         if "$backup"; then
           cp "$file" "$file.bak" 2>/dev/null || echo "Backup failed: $file"
         fi
-        
+
         sed "s|$old_str|$new_str|g" "$file" > "$file.tmp" 2>/dev/null
         if [[ $? -eq 0 ]]; then
           mv "$file.tmp" "$file"
@@ -336,7 +336,7 @@ output="$HOME/OUTPUT_${root}_${date}.md"
     if [[ "$file" == "$output" ]]; then
       continue
     fi
-    
+
     if file -b "$file" | grep -q "text"; then
       echo "## \`${file#./}\`"
       echo '```'
@@ -419,7 +419,7 @@ print_tree() {
     if [[ ! -e "$entry" ]]; then
       continue
     fi
-    
+
     if [[ -d "$entry" ]]; then
       echo "${indent}+-- ${entry:t}/"
       print_tree "$entry" "${indent}|   "

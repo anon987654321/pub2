@@ -17,14 +17,14 @@ check_tool() {
 lint_ruby() {
   local file="$1"
   echo "Linting: $file"
-  
+
   if ! reek "$file" >/dev/null 2>&1; then
     echo "Reek flagged: $file"
   fi
   if ! rubocop --autocorrect "$file" >/dev/null 2>&1; then
     echo "Rubocop failed: $file"
   fi
-  
+
   echo "Done: $file"
 }
 

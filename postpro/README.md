@@ -1,8 +1,8 @@
 # Postpro.rb – Analog and Cinematic Post-Processing
 
-**Version:** 12.9.0  
-**Last Modified:** 2025-02-03T00:00:00Z  
-**Author:** PubHealthcare  
+**Version:** 12.9.0
+**Last Modified:** 2025-02-03T00:00:00Z
+**Author:** PubHealthcare
 
 ---
 
@@ -17,25 +17,25 @@ and more—for a fully customized look.
 
 ## Key Features
 
-1. **Analog & Retro**  
-   - **Film Grain & Vignetting**: Classic film texture  
-   - **VHS Degrade & Light Leaks**: 80s/90s analog feel  
+1. **Analog & Retro**
+   - **Film Grain & Vignetting**: Classic film texture
+   - **VHS Degrade & Light Leaks**: 80s/90s analog feel
 
-2. **Cinematic Looks**  
-   - **Bloom & Halation**: Dreamy highlight glows  
-   - **Teal-and-Orange & Day-for-Night**: Hollywood-grade color grading  
-   - **Anamorphic Simulation**: Widescreen lens flares  
+2. **Cinematic Looks**
+   - **Bloom & Halation**: Dreamy highlight glows
+   - **Teal-and-Orange & Day-for-Night**: Hollywood-grade color grading
+   - **Anamorphic Simulation**: Widescreen lens flares
 
-3. **Layered Processing**  
-   - Combine multiple effects (grain, hue shifts, color fade, etc.) in one pass  
-   - Fine-tune each effect’s intensity  
+3. **Layered Processing**
+   - Combine multiple effects (grain, hue shifts, color fade, etc.) in one pass
+   - Fine-tune each effect’s intensity
 
-4. **Interactive CLI**  
-   - Choose random or custom JSON recipes  
-   - Specify file patterns (e.g., `**/*.jpg`) to batch-process recursively  
+4. **Interactive CLI**
+   - Choose random or custom JSON recipes
+   - Specify file patterns (e.g., `**/*.jpg`) to batch-process recursively
 
-5. **High Speed & Low Memory**  
-   - Built on libvips, known for its efficient, fast performance  
+5. **High Speed & Low Memory**
+   - Built on libvips, known for its efficient, fast performance
 
 ---
 
@@ -59,20 +59,20 @@ Saved variation 4 as images/pic1_processed_v4_20250203151145.jpg
 Processing completed.
 ```
 
-- **Random Effects** or **Load a JSON recipe**  
-- **Recursive** matching: `images/**/*.{jpg,png}`  
-- **Multiple Variations**: e.g., 4 unique outputs per file  
+- **Random Effects** or **Load a JSON recipe**
+- **Recursive** matching: `images/**/*.{jpg,png}`
+- **Multiple Variations**: e.g., 4 unique outputs per file
 
 ---
 
 ## Installation
 
-1. **Install libvips**  
-   - **OpenBSD**: `pkg_add vips`  
-   - **Ubuntu/Debian**: `apt-get install libvips`  
+1. **Install libvips**
+   - **OpenBSD**: `pkg_add vips`
+   - **Ubuntu/Debian**: `apt-get install libvips`
    - **macOS**: `brew install vips`
 
-2. **Install Ruby Gems**  
+2. **Install Ruby Gems**
    ```bash
    gem install --user-install ruby-vips tty-prompt
    ```
@@ -106,7 +106,6 @@ Then, when prompted, enter the filename to **apply that exact recipe**.
 
 ## Advanced Notes
 
-- **Multiple Effects**: Stack **grain, hue shift, vhs_degrade, halation** in one pass for unique combos.  
-- **Performance**: libvips processes large images quickly with minimal memory.  
+- **Multiple Effects**: Stack **grain, hue shift, vhs_degrade, halation** in one pass for unique combos.
+- **Performance**: libvips processes large images quickly with minimal memory.
 - **Cinematic Controls**: Adjust intensities to preserve skin tones or push stylized extremes.
-

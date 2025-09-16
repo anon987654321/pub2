@@ -62,7 +62,7 @@ module Playlist
       hours = total_seconds / 3600
       minutes = (total_seconds % 3600) / 60
       seconds = total_seconds % 60
-      
+
       if hours > 0
         format('%d:%02d:%02d', hours, minutes, seconds)
       else
@@ -146,7 +146,7 @@ module Playlist
     def index
       @sets = Playlist::Set.public_playlists.includes(:user, :tracks, :likes)
       @sets = @sets.where("name ILIKE ?", "%#{params[:search]}%") if params[:search].present?
-      
+
       case params[:sort]
       when 'popular'
         @sets = @sets.popular
@@ -155,7 +155,7 @@ module Playlist
       else
         @sets = @sets.order(:name)
       end
-      
+
       @pagy, @sets = pagy(@sets) unless @stimulus_reflex
     end
 
@@ -163,7 +163,7 @@ module Playlist
       @tracks = @set.tracks.ordered
       @comments = @set.comments.includes(:user).order(created_at: :desc).limit(10)
       @new_comment = Comment.new
-      
+
       respond_to do |format|
         format.html
         format.json { render json: serialize_playlist(@set) }
@@ -176,7 +176,7 @@ module Playlist
 
     def create
       @set = current_user.playlist_sets.build(set_params)
-      
+
       if @set.save
         redirect_to playlist_set_path(@set), notice: 'Playlist created successfully!'
       else
@@ -202,7 +202,7 @@ module Playlist
 
     def like
       like = @set.likes.find_or_initialize_by(user: current_user)
-      
+
       if like.persisted?
         like.destroy
         liked = false
@@ -210,7 +210,7 @@ module Playlist
         like.save!
         liked = true
       end
-      
+
       respond_to do |format|
         format.turbo_stream do
           render turbo_stream: turbo_stream.replace(
@@ -226,10 +226,10 @@ module Playlist
     def collaborate
       collaboration_params = params.require(:collaboration).permit(:user_id, :role)
       user = User.find(collaboration_params[:user_id])
-      
+
       collaboration = @set.collaborations.find_or_initialize_by(user: user)
       collaboration.role = collaboration_params[:role]
-      
+
       if collaboration.save
         render json: { success: true, message: 'Collaborator added successfully!' }
       else

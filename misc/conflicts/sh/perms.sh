@@ -24,7 +24,7 @@ if [ "$choice" = "y" ] || [ "$choice" = "Y" ]; then
     printf "Error: Missing required parameters\n" >&2
     exit 1
   fi
-  
+
   # Use find for POSIX compatibility instead of zsh globbing
   find . -type f -exec chown "$owner_group" {} \;
   find . -type f -exec chmod "$file_perms" {} \;

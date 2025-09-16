@@ -19,7 +19,7 @@ apps_domains=(
 
 for app in ${(k)apps_domains}; do
   port=${apps_domains[$app]}
-  
+
   config_content=$(cat <<EOF
 #!/usr/bin/env falcon-host
 # Falcon for Rails with ActionCable support

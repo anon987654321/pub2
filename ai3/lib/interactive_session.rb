@@ -56,9 +56,9 @@ class InteractiveSession
     combined_input = "#{input}\nContext: #{context}"
     raw_response = @rag_system.generate_answer(combined_input)
     response = @langchain_client.generate_answer("#{combined_input}. Please elaborate more.")
-    
+
     parsed_response = @langchain_client.parse(response)
-    
+
     @query_cache.store(input, parsed_response)
     parsed_response
   end

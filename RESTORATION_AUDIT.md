@@ -1,9 +1,9 @@
 # __OLD_BACKUPS Restoration Audit Trail
 
-**Date:** $(date)  
-**Operation:** Restore unique items from anon987654321/pub/__OLD_BACKUPS  
-**Target Repository:** anon987654321/pub2  
-**Master.json Version:** 81.10.2 (unchanged)  
+**Date:** $(date)
+**Operation:** Restore unique items from anon987654321/pub/__OLD_BACKUPS
+**Target Repository:** anon987654321/pub2
+**Master.json Version:** 81.10.2 (unchanged)
 
 ## Files Restored
 
@@ -37,7 +37,7 @@
 
 Files moved to `misc/conflicts/` due to existing different content:
 - `sh/replace.sh`
-- `sh/backup.sh` 
+- `sh/backup.sh`
 - `sh/lint.sh`
 - `sh/clean.sh`
 - `sh/perms.sh`
@@ -66,7 +66,7 @@ Files moved to `misc/conflicts/` due to existing different content:
 ## Summary Statistics
 
 - **Files Restored:** 929
-- **Conflicts Resolved:** 8  
+- **Conflicts Resolved:** 8
 - **Files Skipped (Duplicates):** 0
 - **New Directories Created:** `bplans/syre/`
 - **Files Removed:** 1 (`prompts.json`)

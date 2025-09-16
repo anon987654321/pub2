@@ -93,7 +93,7 @@ def load_image(file)
   raise "File '#{file}' not found or unreadable" unless File.exist?(file) && File.readable?(file)
   image = Vips::Image.new_from_file(file)
   $logger.debug "Loaded #{file}: #{image.width}x#{image.height}, #{image.bands} bands, avg: #{image.avg}"
-  
+
   # Proper band management
   if image.bands < 3
     $logger.debug "Converting to sRGB (#{image.bands} bands to 3)"
@@ -140,7 +140,7 @@ def apply_effects_from_recipe(image, recipe, mode)
     intensity = params.is_a?(Hash) ? params["intensity"].to_f : params.to_f
     $cli_logger.info "Applying recipe #{effect} (intensity: #{intensity.round(2)})"
     $logger.debug "Pre-#{effect} avg: #{image.avg}, bands: #{image.bands}"
-    
+
     # Handle special parameter effects
     image = if effect == "double_exposure"
               blend_mode = params.is_a?(Hash) ? params["blend_mode"] || "over" : "over"
@@ -747,11 +747,11 @@ def main
   return unless input
 
   file_patterns, variations, recipe, apply_random, effect_count, mode = input
-  
+
   $cli_logger.info "Processing in #{mode} mode..."
   files = file_patterns.flat_map { |pattern| Dir.glob(pattern.strip) }
   files = files.reject { |file| File.basename(file).include?("processed") }
-  
+
   if files.empty?
     $cli_logger.error "No files matched the pattern!"
     return
@@ -776,7 +776,7 @@ def main
 
   end_time = Time.now
   duration = (end_time - start_time).round(2)
-  
+
   $cli_logger.info "Completed: #{total_processed} file(s) processed, #{total_variations} variation(s) created in #{duration}s"
   $logger.info "Processing statistics: #{total_processed}/#{files.length} files successful, #{total_variations} total variations, #{duration}s duration"
 rescue StandardError => e

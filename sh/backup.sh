@@ -3,7 +3,7 @@ set -euo pipefail
 # Archives folders to dated .tgz files, skips unchanged ones.
 # Usage: ./backup.sh [directory]
 
-log_error() { 
+log_error() {
   printf "[%s] %s\n" "$(date "+%Y-%m-%d %H:%M:%S")" "$1" >> "$HOME/script_errors.log"
 }
 
@@ -31,9 +31,9 @@ fi
 for subdir in */; do
   # Skip if no directories found
   [ -d "$subdir" ] || continue
-  
+
   folder="${subdir%/}"
-  
+
   # Creates a unique hash from all files in folder
   # Use portable commands instead of md5 -q
   if command -v md5sum >/dev/null 2>&1; then
@@ -44,17 +44,17 @@ for subdir in */; do
     # Fallback to sha256sum if available
     checksum="$(find "$folder" -type f -exec sha256sum {} + | sort | sha256sum | cut -d' ' -f1)"
   fi
-  
+
   printf "%s %s\n" "$folder" "$checksum" >> "$new_checksums_tmp"
 
   backup_file="${folder}_${date_format}.tgz"
-  
+
   # Check if folder has changed
   old_checksum=""
   if [ -f "$old_checksums_tmp" ]; then
     old_checksum="$(grep "^$folder " "$old_checksums_tmp" | cut -d' ' -f2 || true)"
   fi
-  
+
   if [ -z "$old_checksum" ] || [ "$old_checksum" != "$checksum" ]; then
     printf "Backing up: %s -> %s\n" "$folder" "$backup_file"
     if tar czf "$backup_file" "$folder" 2>/dev/null; then

@@ -82,7 +82,7 @@
   },
 
   "change_protocol": {
-    "show_diff_first": "always_display_patch_before_applying_changes", 
+    "show_diff_first": "always_display_patch_before_applying_changes",
     "wait_for_approval": "require_explicit_user_approval_before_modification",
     "scope": "all_artifacts_all_code_all_updates_all_rewrites"
   },
@@ -123,7 +123,7 @@
     "cross_reference": ["find_unused", "detect_duplicates", "trace_dependencies"],
     "apply": {
       "dry": "eliminate_duplication",
-      "kiss": "reduce_complexity", 
+      "kiss": "reduce_complexity",
       "yagni": "remove_unused"
     },
     "targets": ["lines", "complexity", "duplication", "readability"],
@@ -156,7 +156,7 @@
 
   "perspectives": {
     "security": "paranoid_validation",
-    "architect": "clean_interfaces", 
+    "architect": "clean_interfaces",
     "performance": "measure_estimate",
     "openbsd": "minimal_secure",
     "rails": "convention_over_configuration",
@@ -192,7 +192,7 @@
         "readme_structure": "visionary_intro_then_technical_deep_dive",
         "intro_paragraphs": {
           "tone": "creative_copywriting_bold_claims_big_picture_thinking",
-          "style": "over_the_top_visionary_value_proposition", 
+          "style": "over_the_top_visionary_value_proposition",
           "avoid": "technical_jargon_implementation_details",
           "goals": "inspire_excitement_communicate_vision_hook_reader"
         },
@@ -215,7 +215,7 @@
       "readme_structure": "visionary_intro_then_technical_deep_dive",
       "intro_paragraphs": {
         "tone": "creative_copywriting_bold_claims_big_picture_thinking",
-        "style": "over_the_top_visionary_value_proposition", 
+        "style": "over_the_top_visionary_value_proposition",
         "avoid": "technical_jargon_implementation_details",
         "goals": "inspire_excitement_communicate_vision_hook_reader"
       },
@@ -242,7 +242,7 @@
     },
     "format_enforce": {
       "method": "internal_formatting_pass",
-      "trigger": "before_code_output", 
+      "trigger": "before_code_output",
       "simulate": "rubocop_prettier_eslint",
       "action": "rewrite_until_compliant"
     },
@@ -262,7 +262,7 @@
       "correction": "immediate"
     }
   },
-  
+
   "workflow_enforcement": {
     "diff_approval": "LLM_must_show_proposed_changes_as_patch_wait_for_approval_before_applying",
     "applies_to": "every_artifact_update_rewrite_create_operation"

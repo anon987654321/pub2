@@ -36,17 +36,17 @@ if [[ "$confirm" =~ ^[Yy]$ ]]; then
   if [[ $? -ne 0 ]]; then
     echo "Some chown failed; see $HOME/script_errors.log"
   fi
-  
+
   chmod -R "$file_perms" ./**/*(.) 2>>"$HOME/script_errors.log"
   if [[ $? -ne 0 ]]; then
     echo "Some file perms failed"
   fi
-  
+
   chmod -R "$folder_perms" ./**/*(/) 2>>"$HOME/script_errors.log"
   if [[ $? -ne 0 ]]; then
     echo "Some folder perms failed"
   fi
-  
+
   echo "Done."
 else
   echo "Cancelled."

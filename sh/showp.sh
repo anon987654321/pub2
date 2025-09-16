@@ -16,7 +16,7 @@ output="$HOME/OUTPUT_${root}_${date}.md"
     if [[ "$file" == "$output" ]]; then
       continue
     fi
-    
+
     if file -b "$file" | grep -q "text"; then
       echo "## \`${file#./}\`"
       echo '```'

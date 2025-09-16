@@ -8,15 +8,15 @@
 # Formål: Finne alle detaljer om et domene – porter, tjenester, svakheter – for lovlig bruk som politiarbeid.
 
 # Sjekker om skriptet kjøres med doas – vi trenger full tilgang!
-[[ "$EUID" -ne 0 ]] && { 
+[[ "$EUID" -ne 0 ]] && {
     print -P "%BFeil:%b Bruk doas! Slik: doas zsh $0 <domenenavn>" >&2
-    exit 1 
+    exit 1
 }
 
 # Sjekker om du har gitt et domene å skanne.
-[[ $# -ne 1 ]] && { 
+[[ $# -ne 1 ]] && {
     print -P "%BFeil:%b Jeg trenger et domenenavn! Slik: doas zsh $0 <domenenavn>" >&2
-    exit 1 
+    exit 1
 }
 
 # Setter opp grunnleggende variabler.
@@ -27,10 +27,10 @@ utdatamappe="nmap_output_${target}_${timestamp}"  # Mappe for detaljerte filer
 mkdir -p $utdatamappe  # Lager mappen om den ikke finnes
 
 # Finner IP-adressene til domenet.
-ips=($(drill $target A | awk '/^[^;]/ && $3 == "A" {print $5}')) || { 
+ips=($(drill $target A | awk '/^[^;]/ && $3 == "A" {print $5}')) || {
     # Hvis ingen IP-adresser finnes, stopper vi
     print -P "%BFeil:%b Ingen IP-adresser funnet for $target!" >&2
-    exit 1 
+    exit 1
 }
 
 # Starter skanningen og logger det.

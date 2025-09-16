@@ -18,7 +18,7 @@ find "$dir" -type f | while read -r file; do
       printf "Error: mktemp failed\n" >&2
       exit 1
     fi
-    
+
     # Removes CRLF, trims trailing whitespaces, reduces blank lines
     if tr -d '\r' < "$file" | awk '{sub(/[ \t]+$/, "");} NF{print; if(p)print ""} {p=NF}' > "$tmp" 2>/dev/null; then
       mv "$tmp" "$file"

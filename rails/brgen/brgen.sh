@@ -126,8 +126,8 @@ class ApplicationController < ActionController::Base
   end
 
   def guest_user_allowed?
-    controller_name == "home" || 
-    (controller_name == "posts" && action_name.in?(["index", "show", "create"])) || 
+    controller_name == "home" ||
+    (controller_name == "posts" && action_name.in?(["index", "show", "create"])) ||
     (controller_name == "listings" && action_name.in?(["index", "show"]))
   end
 end

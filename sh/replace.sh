@@ -52,7 +52,7 @@ find "$folder" -type f | while read -r file; do
         if $backup; then
           cp "$file" "$file.bak" 2>/dev/null || printf "Backup failed: %s\n" "$file"
         fi
-        
+
         if sed "s|$old_str|$new_str|g" "$file" > "$file.tmp" 2>/dev/null; then
           mv "$file.tmp" "$file"
           printf "Updated: %s\n" "$file"

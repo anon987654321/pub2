@@ -62,4 +62,4 @@ and Rails apps with Falcon server. Logs go to `/var/log/messages`. Applies CSS m
    - TLSA: `dig TLSA _443._tcp.brgen.no`.
    - Firewall: `doas pfctl -s rules` to confirm DNS and other rules.
    - Email: Check `/var/vmail/pub.attorney/bergen/new` as `gfuser` with `mutt`.
-   - Logs: `tail -f /var/log/messages` for Rails app activity.
+   - Logs: `tail -f /var/log/messages` for Rails app activity.

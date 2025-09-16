@@ -83,11 +83,11 @@ class LawyerAssistant
     ]
     @specializations = LEGAL_SPECIALIZATIONS.keys
     @cognitive_monitor = cognitive_monitor
-    
+
     # Initialize components
     initialize_lovdata_scraper
     initialize_rag_engine
-    
+
     # Load configuration
     load_config
   end
@@ -96,18 +96,18 @@ class LawyerAssistant
   def respond(query, context: {})
     # Detect Norwegian legal specialization from query
     specialization = detect_specialization(query)
-    
+
     puts I18n.t('ai3.legal.norwegian.specialization_selected', area: specialization[:name])
-    
+
     # Search Lovdata for relevant legal information
     lovdata_results = search_lovdata(query, specialization)
-    
+
     # Search existing legal knowledge base
     rag_results = @rag_engine.search(query, collection: 'norwegian_legal')
-    
+
     # Find relevant precedents
     precedents = find_precedents(query, specialization)
-    
+
     # Generate comprehensive legal response
     generate_legal_response(query, specialization, lovdata_results, rag_results, precedents)
   end
@@ -115,16 +115,16 @@ class LawyerAssistant
   # Norwegian legal document analysis
   def analyze_document(document_text, document_type = :unknown)
     puts I18n.t('ai3.legal.norwegian.document_analyzed')
-    
+
     # Detect legal areas covered in document
     relevant_areas = detect_legal_areas(document_text)
-    
+
     # Extract key legal concepts
     legal_concepts = extract_legal_concepts(document_text)
-    
+
     # Check compliance with Norwegian law
     compliance_status = check_compliance(document_text, relevant_areas)
-    
+
     {
       legal_areas: relevant_areas,
       legal_concepts: legal_concepts,
@@ -145,13 +145,13 @@ class LawyerAssistant
              else
                ['Tingrett', 'Lagmannsrett', 'Høyesterett']
              end
-    
+
     results = []
     courts.each do |court|
       court_results = search_court_decisions(query, court)
       results.concat(court_results)
     end
-    
+
     puts I18n.t('ai3.legal.norwegian.precedent_found', count: results.size)
     results
   end
@@ -165,16 +165,16 @@ class LawyerAssistant
       :data_protection,
       :industry_specific_regulations
     ]
-    
+
     compliance_results = {}
-    
+
     compliance_areas.each do |area|
       compliance_results[area] = assess_compliance_area(business_data, area)
     end
-    
+
     overall_status = calculate_overall_compliance(compliance_results)
     puts I18n.t('ai3.legal.norwegian.compliance_check', status: overall_status)
-    
+
     {
       overall_status: overall_status,
       area_results: compliance_results,
@@ -185,20 +185,20 @@ class LawyerAssistant
   # Multi-agent legal research coordination
   def coordinate_legal_research(complex_query)
     return unless @cognitive_monitor
-    
+
     # Assess complexity and cognitive load
     complexity = @cognitive_monitor.assess_complexity(complex_query)
-    
+
     if complexity > 6
       # Break down into smaller research tasks
       subtasks = decompose_legal_query(complex_query)
-      
+
       results = []
       subtasks.each do |subtask|
         result = respond(subtask[:query], context: subtask[:context])
         results << { subtask: subtask, result: result }
       end
-      
+
       # Synthesize results
       synthesize_legal_research(results)
     else
@@ -233,10 +233,10 @@ class LawyerAssistant
   def detect_specialization(query)
     # Analyze query to determine most relevant legal specialization
     query_downcase = query.downcase
-    
+
     best_match = nil
     best_score = 0
-    
+
     LEGAL_SPECIALIZATIONS.each do |key, spec|
       score = spec[:keywords].count { |keyword| query_downcase.include?(keyword) }
       if score > best_score
@@ -244,27 +244,27 @@ class LawyerAssistant
         best_match = spec
       end
     end
-    
+
     best_match || LEGAL_SPECIALIZATIONS[:sivilrett] # Default to civil law
   end
 
   def search_lovdata(query, specialization)
     return [] unless lovdata_enabled?
-    
+
     puts I18n.t('ai3.legal.norwegian.searching_lovdata')
-    
+
     # Construct Lovdata search URLs for relevant legal sections
     search_results = []
-    
+
     specialization[:lovdata_sections].each do |section|
       search_url = construct_lovdata_url(query, section)
-      
+
       begin
         result = @lovdata_scraper.scrape(search_url)
         if result[:success]
           processed_result = process_lovdata_content(result, section)
           search_results << processed_result
-          
+
           # Add to RAG for future searches
           add_to_legal_knowledge_base(processed_result)
         end
@@ -272,7 +272,7 @@ class LawyerAssistant
         puts "Error scraping Lovdata for #{section}: #{e.message}"
       end
     end
-    
+
     search_results
   end
 
@@ -306,12 +306,12 @@ class LawyerAssistant
 
   def detect_legal_areas(document_text)
     detected_areas = []
-    
+
     LEGAL_SPECIALIZATIONS.each do |key, spec|
       keyword_matches = spec[:keywords].count { |keyword| document_text.downcase.include?(keyword) }
       detected_areas << key if keyword_matches > 0
     end
-    
+
     detected_areas
   end
 
@@ -319,23 +319,23 @@ class LawyerAssistant
     # Extract key legal terms, references to laws, etc.
     # This would use NLP in practice
     concepts = []
-    
+
     # Look for law references (simplified)
     law_references = document_text.scan(/(?:§\s*\d+|lov|forskrift|rundskriv)/i)
     concepts.concat(law_references)
-    
+
     concepts.uniq
   end
 
   def check_compliance(document_text, relevant_areas)
     # Check document against Norwegian legal requirements
     compliance_issues = []
-    
+
     relevant_areas.each do |area|
       area_issues = check_area_compliance(document_text, area)
       compliance_issues.concat(area_issues)
     end
-    
+
     {
       status: compliance_issues.empty? ? :compliant : :issues_found,
       issues: compliance_issues
@@ -350,7 +350,7 @@ class LawyerAssistant
 
   def generate_compliance_recommendations(compliance_status)
     return [] if compliance_status[:status] == :compliant
-    
+
     compliance_status[:issues].map do |issue|
       "Consider addressing: #{issue}"
     end
@@ -367,7 +367,7 @@ class LawyerAssistant
 
   def calculate_overall_compliance(area_results)
     risk_levels = area_results.values.map { |result| result[:risk_level] }
-    
+
     if risk_levels.include?(:high)
       :high_risk
     elsif risk_levels.include?(:medium)
@@ -379,13 +379,13 @@ class LawyerAssistant
 
   def generate_business_recommendations(compliance_results)
     recommendations = []
-    
+
     compliance_results.each do |area, result|
       if result[:risk_level] != :low
         recommendations << "Review #{area} compliance requirements"
       end
     end
-    
+
     recommendations
   end
 
@@ -400,15 +400,15 @@ class LawyerAssistant
   def synthesize_legal_research(results)
     # Combine multiple research results into coherent response
     combined_content = results.map { |r| r[:result] }.join("\n\n")
-    
+
     "Comprehensive Legal Analysis:\n\n#{combined_content}"
   end
 
   def generate_legal_response(query, specialization, lovdata_results, rag_results, precedents)
     response = "Norwegian Legal Analysis - #{specialization[:name]}\n\n"
-    
+
     response += "Query: #{query}\n\n"
-    
+
     unless lovdata_results.empty?
       response += "Lovdata.no Results:\n"
       lovdata_results.each do |result|
@@ -416,7 +416,7 @@ class LawyerAssistant
       end
       response += "\n"
     end
-    
+
     unless rag_results.empty?
       response += "Knowledge Base Results:\n"
       rag_results.each do |result|
@@ -424,7 +424,7 @@ class LawyerAssistant
       end
       response += "\n"
     end
-    
+
     unless precedents.empty?
       response += "Relevant Precedents:\n"
       precedents.each do |precedent|
@@ -432,10 +432,10 @@ class LawyerAssistant
       end
       response += "\n"
     end
-    
+
     response += "Legal Recommendation:\n"
     response += generate_legal_recommendation(query, specialization)
-    
+
     response
   end
 
@@ -451,7 +451,7 @@ class LawyerAssistant
       source: content[:source],
       timestamp: content[:timestamp]
     }
-    
+
     @rag_engine.add_document(document, collection: 'norwegian_legal')
   end
 

@@ -59,7 +59,7 @@ module Assistants
         disruptive: 'Interrupts or causes disturbance in interactions.'
       }
     }
-    
+
     def initialize(openai_api_key)
       @langchain_openai = Langchain::LLM::OpenAI.new(api_key: openai_api_key)
       @weaviate = WeaviateIntegration.new
@@ -77,7 +77,7 @@ module Assistants
       response = @langchain_openai.generate_answer(prompt)
       extract_user_info(response)
     end
-    
+
     def extract_user_info(response)
       {
         likes: response['likes'],
@@ -86,7 +86,7 @@ module Assistants
         country: response['country']
       }
     end
-    
+
     def fetch_user_preferences(user_id, profile_url)
       response = fetch_user_info(user_id, profile_url)
       return { likes: [], dislikes: [], age: nil, country: nil } unless response
@@ -101,7 +101,7 @@ module Assistants
       sentiment = analyze_sentiment(user_preferences[:likes].join(', '))
       determine_personality(user_preferences, age_group, country, sentiment)
     end
-    
+
     def determine_personality(user_preferences, age_group, country, sentiment)
       trait_type = [:positive, :negative].sample
       trait = PERSONALITY_TRAITS[trait_type].keys.sample
@@ -114,7 +114,7 @@ module Assistants
         sentiment: sentiment
       }
     end
-    
+
     def determine_age_group(age)
       return :unknown unless age
       case age
@@ -167,24 +167,24 @@ module Assistants
       end
       engage_with_new_friends
     end
-    
+
     def engage_with_new_friends
       new_friends = get_new_friends
       new_friends.each { |friend| engage_with_user(friend[:username]) }
     end
-    
+
     def get_recommended_friends
       [{ username: 'friend1' }, { username: 'friend2' }]
     end
-    
+
     def add_friend(username)
       puts "Added friend: #{username}"
     end
-    
+
     def get_new_friends
       [{ username: 'new_friend1' }, { username: 'new_friend2' }]
     end
-    
+
     def send_message(user_id, message, message_type)
       puts "Sent message to #{user_id}: #{message}"
     end
