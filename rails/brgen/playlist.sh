@@ -1,7 +1,5 @@
-#!/bin/bash
-
-#!/usr/bin/env zsh
-set -e
+#!/bin/sh
+set -euo pipefail
 
 # Brgen Playlist setup: Music playlist sharing platform with streaming, collaboration, and social features on OpenBSD 7.5, unprivileged user
 # Framework v37.3.2 compliant with enhanced music sharing capabilities
@@ -10,7 +8,7 @@ APP_NAME="brgen_playlist"
 BASE_DIR="/home/dev/rails"
 BRGEN_IP="46.23.95.45"
 
-source "./__shared.sh"
+. "./__shared.sh"
 
 log "Starting Brgen Playlist setup with music streaming and collaboration features"
 

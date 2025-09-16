@@ -1,6 +1,4 @@
-#!/bin/bash
-
-#!/usr/bin/env zsh
+#!/bin/sh
 set -euo pipefail
 
 # Brgen Marketplace setup: Multi-vendor marketplace with Solidus, payments, Mapbox, search, and anonymous features on OpenBSD 7.5, unprivileged user
@@ -10,7 +8,7 @@ APP_NAME="brgen_marketplace"
 BASE_DIR="/home/dev/rails"
 BRGEN_IP="46.23.95.45"
 
-source "./__shared.sh"
+. "./__shared.sh"
 
 log "Starting Brgen Marketplace setup with Solidus e-commerce platform"
 

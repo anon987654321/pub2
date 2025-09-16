@@ -1,6 +1,4 @@
-#!/bin/bash
-
-#!/usr/bin/env zsh
+#!/bin/sh
 set -euo pipefail
 
 # Brgen Takeaway setup: Food delivery platform with real-time tracking, restaurant management, and location services on OpenBSD 7.5, unprivileged user
@@ -10,7 +8,7 @@ APP_NAME="brgen_takeaway"
 BASE_DIR="/home/dev/rails"
 BRGEN_IP="46.23.95.45"
 
-source "./__shared.sh"
+. "./__shared.sh"
 
 log "Starting Brgen Takeaway setup with food delivery and restaurant management"
 

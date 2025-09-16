@@ -1,69 +1,73 @@
-#!/bin/bash
-
-#!/usr/bin/env zsh
+#!/bin/sh
+set -euo pipefail
 # Finds and deletes large files to free up space.
 # Usage: ./free_up_space.sh [directory]
 
-set -e
-setopt extended_glob null_glob
-
 search_dir="${1:-.}"
 
-if [[ ! -d "$search_dir" ]]; then
-  echo "Error: '$search_dir' is not a directory"
+if [ ! -d "$search_dir" ]; then
+  printf "Error: '%s' is not a directory\n" "$search_dir" >&2
   exit 1
 fi
 
-echo "Scanning '$search_dir'..."
-typeset -a large_files
-# Lists top 10 largest files by size.
-find "$search_dir" -type f -exec du -k {} + 2>/dev/null | sort -nr | head -n 10 | while read -r size path; do
-  human_size=$(echo "$size" | awk '{printf "%.1fK", $1}')
-  large_files+=("$human_size $path")
-done
+printf "Scanning '%s'...\n" "$search_dir"
 
-if (( ${#large_files} == 0 )); then
-  echo "No files found."
+# Create temporary file for large files list
+large_files_tmp="$(mktemp)"
+cleanup() {
+  rm -f "$large_files_tmp"
+}
+trap cleanup EXIT
+
+# Lists top 10 largest files by size
+find "$search_dir" -type f -exec du -k {} + 2>/dev/null | sort -nr | head -n 10 > "$large_files_tmp"
+
+if [ ! -s "$large_files_tmp" ]; then
+  printf "No files found.\n"
   exit 0
 fi
 
-echo "Largest files:"
-for i in {1..${#large_files}}; do
-  printf "%2d: %s\n" "$i" "${large_files[i]}"
-done
+printf "Largest files:\n"
+i=1
+while read -r size path; do
+  human_size="$(awk "BEGIN {printf \"%.1fK\", $size}")"
+  printf "%2d: %s %s\n" "$i" "$human_size" "$path"
+  i=$((i + 1))
+done < "$large_files_tmp"
 
-echo "\nDelete? (y/N)"
+printf "\nDelete? (y/N) "
 read -r response
-if [[ ! "$response" =~ ^[Yy]$ ]]; then
-  echo "Done."
-  exit 0
-fi
+case "$response" in
+  [Yy]|[Yy][Ee][Ss]) ;;
+  *) printf "Done.\n"; exit 0 ;;
+esac
 
-echo "Enter numbers (e.g., 1 3 5) or 'all':"
+printf "Enter numbers (e.g., 1 3 5) or 'all': "
 read -r delete_list
 
-if [[ "$delete_list" == "all" ]]; then
-  for line in "${large_files[@]}"; do
-    path="${line#* }"
-    if rm -f "$path" 2>/dev/null; then
-      echo "Deleted: $path"
+if [ "$delete_list" = "all" ]; then
+  while read -r size path; do
+    if [ -n "$path" ] && rm -f "$path" 2>/dev/null; then
+      printf "Deleted: %s\n" "$path"
     else
-      echo "Failed: $path"
+      printf "Failed: %s\n" "$path"
     fi
-  done
+  done < "$large_files_tmp"
 else
-  for num in ${(s: :)delete_list}; do
-    if (( num >= 1 && num <= ${#large_files} )); then
-      path="${large_files[num]#* }"
-      if rm -f "$path" 2>/dev/null; then
-        echo "Deleted: $path"
+  for num in $delete_list; do
+    # Get the nth line from the file
+    line="$(sed -n "${num}p" "$large_files_tmp")"
+    if [ -n "$line" ]; then
+      path="$(printf '%s' "$line" | cut -d' ' -f2-)"
+      if [ -n "$path" ] && rm -f "$path" 2>/dev/null; then
+        printf "Deleted: %s\n" "$path"
       else
-        echo "Failed: $path"
+        printf "Failed: %s\n" "$path"
       fi
     else
-      echo "Invalid: $num"
+      printf "Invalid: %s\n" "$num"
     fi
   done
 fi
 
-echo "Done."
+printf "Done.\n"

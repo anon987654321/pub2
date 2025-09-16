@@ -1,6 +1,4 @@
-#!/bin/bash
-
-#!/usr/bin/env zsh
+#!/bin/sh
 set -euo pipefail
 
 # Brgen Dating setup: Location-based dating platform with matchmaking, Mapbox, live search, infinite scroll, and anonymous features on OpenBSD 7.5, unprivileged user
@@ -10,7 +8,7 @@ APP_NAME="brgen_dating"
 BASE_DIR="/home/dev/rails"
 BRGEN_IP="46.23.95.45"
 
-source "./__shared.sh"
+. "./__shared.sh"
 
 log "Starting Brgen Dating setup with enhanced matchmaking"
 

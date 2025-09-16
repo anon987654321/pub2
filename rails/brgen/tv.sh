@@ -1,6 +1,4 @@
-#!/bin/bash
-
-#!/usr/bin/env zsh
+#!/bin/sh
 set -euo pipefail
 
 # Brgen TV setup: Video streaming platform with live streaming, content management, and social viewing features on OpenBSD 7.5, unprivileged user
@@ -10,7 +8,7 @@ APP_NAME="brgen_tv"
 BASE_DIR="/home/dev/rails"
 BRGEN_IP="46.23.95.45"
 
-source "./__shared.sh"
+. "./__shared.sh"
 
 log "Starting Brgen TV setup with video streaming and live broadcasting"
 

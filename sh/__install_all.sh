@@ -1,15 +1,12 @@
-#!/bin/bash
-
-#!/usr/bin/env zsh
+#!/bin/sh
+set -euo pipefail
 # Sets up utility scripts in ~/bin and adds them to PATH.
 # Usage: ./install.sh
 
-set -e
-
-echo "Installing scripts..."
+printf "Installing scripts...\n"
 
 log_file="$HOME/script_errors.log"
-[[ -f "$log_file" ]] && rm "$log_file"
+[ -f "$log_file" ] && rm -f "$log_file"
 
 cat << 'EOF' > backup.sh
 #!/usr/bin/env zsh
