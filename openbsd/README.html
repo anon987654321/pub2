@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenBSD Setup for Scalable Rails and Secure Email</title>
+</head>
+<body>
+  <h1># OpenBSD Setup for Scalable Rails and Secure Email</h1>
+  <p></p>
+  <p>This script configures OpenBSD 7.7 as a robust,</p>
+  <p>modular platform for Ruby on Rails applications and a single-user email service,</p>
+  <p>embodying the Unix philosophy of doing one thing well to power a focused,</p>
+  <p>secure system for hyperlocal platforms with DNSSEC.</p>
+  <p></p>
+  <h2>## Setup Instructions</h2>
+  <p></p>
+  <p>1. **Prerequisites**:</p>
+  <p>   - OpenBSD 7.7 installed on master (PowerPC Mac Mini) and slave (VM).</p>
+  <p>   - Directories (`/var/nsd`,</p>
+  <p>`/var/www/acme`,</p>
+  <p>`/var/postgresql/data`,</p>
+  <p>`/var/redis`,</p>
+  <p>`/var/vmail`) have correct ownership/permissions (e.g.,</p>
+  <p>`/var/www/acme` as `root:_httpd`,</p>
+  <p>755).</p>
+  <p>   - Rails apps (`brgen`,</p>
+  <p>`amber`,</p>
+  <p>`bsdports`) ready to upload to `/home/<app>/<app>` with `Gemfile` and `database.yml`.</p>
+  <p>   - Unprivileged user `gfuser` with `mutt` installed for email access.</p>
+  <p>   - Internet connectivity for package installation.</p>
+  <p>   - Domain (e.g., `brgen.no`) registered with Domeneshop.no, ready for DS records.</p>
+  <p></p>
+  <p>2. **Run the Script**:</p>
+  <p>   ```bash</p>
+  <p>   doas zsh openbsd.sh</p>
+  <p>   ```</p>
+  <p>   - `--resume`: Run after Stage 1 (DNS/certs).</p>
+  <p>   - `--mail`: Run after Stage 2 (services/apps) for email.</p>
+  <p>   - `--help`: Show usage.</p>
+  <p></p>
+  <p>3. **Stages**:</p>
+  <p>   - **Stage 1**: Installs `ruby-3.3.5`,</p>
+  <p>`ldns-utils`,</p>
+  <p>`postgresql-server`,</p>
+  <p>`redis`,</p>
+  <p>and `zap` using OpenBSD 7.7’s default `pkg_add`. Configures `ns.brgen.no` (46.23.95.45) as master nameserver with DNSSEC (ECDSAP256SHA256 keys,</p>
+  <p>signed zones),</p>
+  <p>allowing zone transfers to `ns.hyp.net` (194.63.248.53,</p>
+  <p>managed by Domeneshop.no) via TCP 53 and sending NOTIFY via UDP 53,</p>
+  <p>with `pf` permitting TCP/UDP 53 traffic on `ext_if` (vio0). Generates TLSA records for HTTPS services. Issues certificates via Let’s Encrypt. Pauses to let you upload Rails apps (`brgen`,</p>
+  <p>`amber`,</p>
+  <p>`bsdports`) to `/home/<app>/<app>` with `Gemfile` and `database.yml`. Press Enter to proceed,</p>
+  <p>then submit DS records from `/var/nsd/zones/master/*.ds` to Domeneshop.no. Test with `dig @46.23.95.45 brgen.no SOA`,</p>
+  <p>`dig @46.23.95.45 denvr.us A`,</p>
+  <p>`dig DS brgen.no +short`,</p>
+  <p>and `dig TLSA _443._tcp.brgen.no`. Wait for propagation (24–48 hours) before `--resume`. `ns.hyp.net` requires no local setup (configure slave separately).</p>
+  <p>   - **Stage 2**: Sets up PostgreSQL,</p>
+  <p>Redis,</p>
+  <p>PF firewall,</p>
+  <p>relayd with security headers,</p>
+  <p>and Rails apps with Falcon server. Logs go to `/var/log/messages`. Applies CSS micro-text (e.g.,</p>
+  <p>7.5pt) for app footer branding if applicable.</p>
+  <p>   - **Stage 3**: Configures OpenSMTPD for `bergen@pub.attorney`, accessible via `mutt` for `gfuser`.</p>
+  <p></p>
+  <p>4. **Verification**:</p>
+  <p>   - Services: `rcctl check nsd httpd postgresql redis relayd smtpd`.</p>
+  <p>   - DNS: `dig @46.23.95.45 brgen.no SOA`, `dig @46.23.95.45 denvr.us A`.</p>
+  <p>   - DNSSEC: `dig DS brgen.no +short`, `dig DNSKEY brgen.no +short`.</p>
+  <p>   - TLSA: `dig TLSA _443._tcp.brgen.no`.</p>
+  <p>   - Firewall: `doas pfctl -s rules` to confirm DNS and other rules.</p>
+  <p>   - Email: Check `/var/vmail/pub.attorney/bergen/new` as `gfuser` with `mutt`.</p>
+</body>
+</html>

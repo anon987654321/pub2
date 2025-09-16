@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI^3 CLI</title>
+</head>
+<body>
+  <p>AI^3 CLI</p>
+  <p>AI^3 is a modular command-line interface (CLI) built in Ruby,</p>
+  <p>leveraging LangChain.rb for multi-LLM integration,</p>
+  <p>retrieval-augmented generation (RAG),</p>
+  <p>and role-specific assistants. It runs on OpenBSD with secure execution (pledge/unveil) and supports Ruby 3.2+.</p>
+  <p>Features</p>
+
+  <p>Interactive CLI: Launch with ruby ai3.rb for a TTY-based interface.</p>
+  <p>Multi-LLM Support: Integrates with Grok, Claude, OpenAI, and Ollama.</p>
+  <p>RAG: Uses Weaviate for context-aware responses.</p>
+  <p>15 Assistants: Specialized roles (e.g., General, Lawyer, Hacker, Medical).</p>
+  <p>UniversalScraper: Ferrum-based scraper with page source and screenshots.</p>
+  <p>Multimedia: Manages Replicate.com AI models for TV/news broadcasting.</p>
+  <p>FileUtils: Grants LLMs command-line access, including root via doas.</p>
+  <p>Security: OpenBSD pledge/unveil, encrypted sessions.</p>
+  <p>Localization: Supports multiple languages via I18n.</p>
+  <p>Caching: Stores LLM responses, scraped data, and multimedia outputs.</p>
+
+  <p>Installation</p>
+  <p>Prerequisites</p>
+
+  <p>OpenBSD (required for pledge/unveil and doas)</p>
+  <p>Ruby 3.2+</p>
+  <p>zsh for installation scripts</p>
+  <p>Optional: API keys for XAI, Anthropic, OpenAI, Replicate</p>
+  <p>Optional: Weaviate instance for RAG</p>
+
+  <p>Steps</p>
+
+  <p>Clone the repository:git clone <repository_url></p>
+  <p>cd ai3</p>
+
+
+  <p>Run the core installation script:./install.sh</p>
+
+
+  <p>Installs Ruby gems via Gemfile.</p>
+  <p>Prompts for API keys (stored in ~/.ai3_keys).</p>
+  <p>Sets ai3.rb as executable.</p>
+
+
+  <p>Install assistants:./install_ass.sh</p>
+
+
+  <p>Generates 15 assistant Ruby files in assistants/.</p>
+  <p>Configures config.yml and en.yml.</p>
+
+
+
+  <p>Post-Installation</p>
+
+  <p>Run the CLI:ruby ai3.rb</p>
+
+
+
+  <p>Usage</p>
+  <p>Launch the interactive CLI with ruby ai3.rb. Available commands:</p>
+
+  <p>chat <query>: Chat with an assistant (e.g., chat What is AI?).</p>
+  <p>task <name> [args]: Run a task (e.g., task analyze_market Bitcoin).</p>
+  <p>rag <query>: Perform a RAG query (e.g., rag Norwegian laws).</p>
+  <p>list: List available assistants.</p>
+  <p>help: Show help.</p>
+  <p>exit: Exit the CLI.</p>
+
+  <p>Assistants</p>
+
+
+
+  <p>Assistant</p>
+  <p>Role</p>
+  <p>Example Command</p>
+
+
+
+  <p>General</p>
+  <p>General-purpose queries</p>
+  <p>chat Explain quantum computing</p>
+
+
+  <p>OffensiveOps</p>
+  <p>Sentiment trend analysis</p>
+  <p>chat Analyze news sentiment</p>
+
+
+  <p>Influencer</p>
+  <p>Social media content curation</p>
+  <p>chat Curate Instagram posts</p>
+
+
+  <p>Lawyer</p>
+  <p>Legal research</p>
+  <p>rag Norwegian data privacy laws</p>
+
+
+  <p>Trader</p>
+  <p>Cryptocurrency analysis</p>
+  <p>task analyze_market Ethereum</p>
+
+
+  <p>Architect</p>
+  <p>Parametric design</p>
+  <p>chat Explore sustainable designs</p>
+
+
+  <p>Hacker</p>
+  <p>Ethical hacking</p>
+  <p>chat Find Apache vulnerabilities</p>
+
+
+  <p>ChatbotSnapchat</p>
+  <p>Snapchat engagement</p>
+  <p>chat Engage Snapchat users</p>
+
+
+  <p>ChatbotOnlyfans</p>
+  <p>OnlyFans engagement</p>
+  <p>chat Engage OnlyFans users</p>
+
+
+  <p>Personal</p>
+  <p>Task management</p>
+  <p>chat Schedule my day</p>
+
+
+  <p>Music</p>
+  <p>Music creation</p>
+  <p>chat Compose a jazz track</p>
+
+
+  <p>MaterialRepurposing</p>
+  <p>Repurposing ideas</p>
+  <p>chat Repurpose plastic bottles</p>
+
+
+  <p>SEO</p>
+  <p>Web optimization</p>
+  <p>chat Optimize blog for SEO</p>
+
+
+  <p>Medical</p>
+  <p>Medical research</p>
+  <p>rag Latest on Alzheimer’s</p>
+
+
+  <p>PropulsionEngineer</p>
+  <p>Propulsion analysis</p>
+  <p>chat Analyze rocket engines</p>
+
+
+  <p>LinuxOpenbsdDriverTranslator</p>
+  <p>Driver translation</p>
+  <p>chat Translate Linux driver</p>
+
+
+  <p>Advanced Features</p>
+
+  <p>UniversalScraper: Uses Ferrum to scrape web content, capturing page source and screenshots to determine depth.</p>
+  <p>Multimedia: Combines Replicate.com’s AI models for TV/news broadcasting (e.g., real-time visuals, automated scripts).</p>
+  <p>FileUtils: Allows LLMs to:</p>
+  <p>Execute system commands (e.g., doas su for root access).</p>
+  <p>Browse the internet via UniversalScraper.</p>
+  <p>Complete projects (e.g., generate code, manage files).</p>
+  <p>Speculative: Orchestrate 3D printing of exoskeletons.</p>
+
+
+
+  <p>Configuration</p>
+  <p>Edit config.yml to customize:</p>
+
+  <p>LLM Settings: Primary/secondary LLMs, temperature, max tokens.</p>
+  <p>RAG: Weaviate host, index name, sources.</p>
+  <p>Scraper: Max depth, timeout, screenshot directory.</p>
+  <p>Multimedia: Model cache, output directory.</p>
+  <p>FileUtils: Root access, command timeout, max file size.</p>
+  <p>Assistants: Tools, URLs, default goals.</p>
+
+  <p>Example:</p>
+  <p>llm:</p>
+  <p>  primary: "xai"</p>
+  <p>  temperature: 0.6</p>
+  <p>scraper:</p>
+  <p>  max_depth: 2</p>
+  <p>  timeout: 30</p>
+  <p>multimedia:</p>
+  <p>  output_dir: "data/models/multimedia"</p>
+  <p>assistants:</p>
+  <p>  general:</p>
+  <p>    role: "General-purpose assistant"</p>
+  <p>    default_goal: "Explore diverse topics"</p>
+
+  <p>Development</p>
+  <p>Dependencies</p>
+  <p>Install gems via Gemfile:</p>
+  <p>bundle install</p>
+
+  <p>Directory Structure</p>
+  <p>ai3/</p>
+  <p>├── ai3.rb                # Interactive CLI</p>
+  <p>├── assistants/           # Assistant Ruby files</p>
+  <p>├── config/</p>
+  <p>│   ├── config.yml        # Configuration</p>
+  <p>│   └── locales/en.yml    # Localization</p>
+  <p>├── lib/</p>
+  <p>│   ├── cognitive.rb      # Shared logic</p>
+  <p>│   ├── multimedia.rb     # Replicate model management</p>
+  <p>│   ├── scraper.rb        # UniversalScraper</p>
+  <p>│   ├── mock_classes.rb   # Mock dependencies</p>
+  <p>│   └── utils/</p>
+  <p>│       ├── config.rb     # Config loader</p>
+  <p>│       ├── file.rb       # File and system operations</p>
+  <p>│       └── llm.rb        # LLM utilities</p>
+  <p>├── data/                 # Cache, vector DB, models, screenshots</p>
+  <p>├── logs/                 # Logs</p>
+  <p>├── tmp/                  # Temporary files</p>
+  <p>├── install.sh            # Core installer</p>
+  <p>├── install_ass.sh        # Assistants installer</p>
+  <p>├── Gemfile               # Dependencies</p>
+  <p>└── README.md             # Documentation</p>
+
+  <p>Adding Assistants</p>
+
+  <p>Create a new Ruby file in assistants/ (e.g., new_assistant.rb):# frozen_string_literal: true</p>
+
+  <p>require_relative "base_assistant"</p>
+  <p>require_relative "../lib/cognitive"</p>
+
+  <p>class NewAssistant < BaseAssistant</p>
+  <p>  include Cognitive</p>
+
+  <p>  def initialize</p>
+  <p>    super("new_assistant")</p>
+  <p>    set_goal(AI3::Config.instance["assistants"]["new_assistant"]["default_goal"])</p>
+  <p>  end</p>
+
+  <p>  def respond(input)</p>
+  <p>    decrypted_input = AI3.session_manager.decrypt(input)</p>
+  <p>    pursue_goal if rand < 0.2</p>
+  <p>    AI3.with_retry do</p>
+  <p>      response = @agent.run(decrypted_input)</p>
+  <p>      AI3.session_manager.encrypt(AI3.summarize(response))</p>
+  <p>    end</p>
+  <p>  end</p>
+  <p>end</p>
+
+
+  <p>Update config.yml:assistants:</p>
+  <p>  new_assistant:</p>
+  <p>    role: "New assistant role"</p>
+  <p>    llm: "grok"</p>
+  <p>    tools: ["SystemTool"]</p>
+  <p>    urls: ["https://example.com"]</p>
+  <p>    default_goal: "Explore new topics"</p>
+
+
+  <p>Run install_ass.sh to regenerate assistants.</p>
+
+  <p>Security</p>
+
+  <p>OpenBSD: Uses pledge/unveil to restrict system calls and file access.</p>
+  <p>Root Access: Enabled via doas for network diagnostics, system modifications.</p>
+  <p>Encryption: Session data encrypted via SessionManager.</p>
+  <p>Ethics: Input checked for unethical content.</p>
+
+  <p>Troubleshooting</p>
+
+  <p>LLM Errors: Ensure API keys are set in ~/.ai3_keys.</p>
+  <p>Weaviate Issues: Verify Weaviate is running at the configured host.</p>
+  <p>Scraper Issues: Check Ferrum installation and network connectivity.</p>
+  <p>Logs: Check logs/ai3.log for errors.</p>
+
+  <p>License</p>
+  <p>MIT License. See LICENSE for details.</p>
+  <p>Contact</p>
+</body>
+</html>

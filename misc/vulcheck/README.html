@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><html><head></head><body><pre><code># vulcheck.rb - Comprehensive Security Check for macOS, iOS, and Android</title>
+</head>
+<body>
+  <p><html><head></head><body><pre><code># vulcheck.rb - Comprehensive Security Check for macOS, iOS, and Android</p>
+
+  <h2>## Overview</h2>
+  <p>`vulcheck.rb` is a Ruby-based script designed to detect system infections,</p>
+  <p>rootkits,</p>
+  <p>jailbreaks,</p>
+  <p>and unauthorized system access. It automates the installation and updating of essential tools,</p>
+  <p>performs in-depth security scans,</p>
+  <p>and provides actionable logs for analysis.</p>
+
+  <h3>### Key Features</h3>
+  <li>**macOS Support**: Uses `chkrootkit`, `rkhunter`, and `aide` to detect rootkits, malware, and file integrity issues. Fully compatible with legacy macOS versions.</li>
+  <li>**iOS Jailbreak Detection**: Identifies common jailbreak indicators, ensuring a quick security assessment for both jailbroken and non-jailbroken devices.</li>
+  <li>**Android Root Access Detection**: Detects root access indicators like `su` binaries and unauthorized system modifications.</li>
+  <li>**Real-Time Intrusion Detection**: Scans active network connections and running processes to detect ongoing intrusions.</li>
+  <li>**Automated Tool Management**: Updates detection tools to ensure the latest signatures and rules are applied.</li>
+  <li>**Cross-Platform**: Runs seamlessly on macOS, iOS, and Android.</li>
+
+  <h2>## Requirements</h2>
+  <h3>### macOS</h3>
+  <li>**MacPorts**: Required to install and manage dependencies. Install from [MacPorts](https://www.macports.org/).</li>
+  <li>**Root Privileges**: The script must be run with `sudo` to perform system-level scans.</li>
+
+  <h3>### iOS</h3>
+  <li>**No Additional Setup Required**: The script detects jailbreak indicators with no need for installation.</li>
+
+  <h3>### Android</h3>
+  <li>**Rooted or Non-Rooted Devices**: Supports scanning both rooted and non-rooted devices.</li>
+  <li>**Optional**: Use [Termux](https://f-droid.org/packages/com.termux/) for an enhanced scanning environment.</li>
+
+  <h2>## Installation</h2>
+  <p>1. Clone or download the repository.</p>
+  <p>   ```bash</p>
+  <p>   git clone &lt;repository-url&gt;</p>
+  <p>   cd &lt;repository-folder&gt;</p>
+  <p>   ```</p>
+  <p>2. Ensure Ruby is installed:</p>
+  <p>   - macOS: Ruby comes pre-installed.</p>
+  <p>   - Android: Install Ruby via Termux:</p>
+  <p>     ```bash</p>
+  <p>     pkg update &amp;&amp; pkg upgrade</p>
+  <p>     pkg install ruby</p>
+  <p>     ```</p>
+  <p>3. For macOS, ensure MacPorts is installed and functional.</p>
+
+  <h2>## Usage</h2>
+  <p>Run the script with the appropriate option for your platform:</p>
+
+  <h3>### macOS</h3>
+  <p>Install dependencies, update tools, and perform full security scans:</p>
+  <p>```bash</p>
+  <p>sudo ruby vulcheck.rb --macos</p>
+  <p>```</p>
+
+  <h3>### iOS</h3>
+  <p>Scan for jailbreak indicators and perform basic security checks:</p>
+  <p>```bash</p>
+  <p>sudo ruby vulcheck.rb --ios</p>
+  <p>```</p>
+
+  <h3>### Android</h3>
+  <p>Detect root access indicators and unauthorized system modifications:</p>
+  <p>```bash</p>
+  <p>ruby vulcheck.rb --android</p>
+  <p>```</p>
+
+  <h2>## Logs</h2>
+  <p>All results are logged to `vulcheck_log.txt` in the current directory. Logs include:</p>
+  <li>Timestamped actions and scan results.</li>
+  <li>Identified rootkits, suspicious files, and unauthorized access indicators.</li>
+  <li>Summaries of active connections and processes.</li>
+
+  <h2>## Notes</h2>
+  <li>**macOS**: Regularly update tools (`chkrootkit` and `rkhunter`) to ensure detection rules remain effective.</li>
+  <li>**iOS**: Jailbreaking is not required for basic checks but enables deeper scans.</li>
+  <li>**Android**: The presence of the `su` binary typically indicates root access; review logs carefully to verify.</li>
+
+  <h2>## Limitations</h2>
+  <li>**Non-Jailbroken iOS Devices**: Limited to basic checks for jailbreak indicators.</li>
+  <li>**Unrooted Android Devices**: Cannot access system-level files; limited to user-space scans.</li>
+</body>
+</html>
