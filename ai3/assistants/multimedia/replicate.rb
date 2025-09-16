@@ -11,7 +11,7 @@ class ReplicateAssistant
     # Image generation using Replicate models
     puts "Generating image with prompt: #{prompt}"
     puts "Using model: #{model}"
-    
+
     # Mock response structure
     {
       id: "prediction_#{rand(1000000)}",
@@ -26,7 +26,7 @@ class ReplicateAssistant
     # Video generation using Replicate models
     puts "Generating video with prompt: #{prompt}"
     puts "Using model: #{model}"
-    
+
     {
       id: "prediction_#{rand(1000000)}",
       status: "starting",
@@ -41,7 +41,7 @@ class ReplicateAssistant
     # Image upscaling
     puts "Upscaling image: #{image_url}"
     puts "Scale factor: #{scale_factor}x"
-    
+
     {
       id: "prediction_#{rand(1000000)}",
       status: "starting",
@@ -54,7 +54,7 @@ class ReplicateAssistant
   def get_prediction(prediction_id)
     # Check status of a prediction
     puts "Checking status for prediction: #{prediction_id}"
-    
+
     # Mock status check
     {
       id: prediction_id,
@@ -66,7 +66,7 @@ class ReplicateAssistant
   def list_models
     # List available models
     puts "Fetching available Replicate models..."
-    
+
     [
       "stability-ai/stable-diffusion",
       "anotherjesse/zeroscope-v2-xl",

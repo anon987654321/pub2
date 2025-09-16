@@ -70,7 +70,7 @@ module Assistants
     # Enhanced medical condition lookup with comprehensive analysis
     def lookup_condition(condition)
       puts "🔍 Searching comprehensive medical databases for: #{condition}"
-      
+
       condition_info = {
         condition: condition,
         specialty: determine_specialty(condition),
@@ -80,7 +80,7 @@ module Assistants
         prognosis: assess_prognosis(condition),
         prevention: prevention_measures(condition)
       }
-      
+
       @diagnostic_history << condition_info
       format_medical_information(condition_info)
     end
@@ -88,11 +88,11 @@ module Assistants
     # Comprehensive medical advice with symptom analysis
     def provide_medical_advice(symptoms)
       puts "🩺 Analyzing symptoms for medical guidance..."
-      
+
       symptom_analysis = analyze_symptom_cluster(symptoms)
       urgency_level = assess_urgency(symptoms)
       recommendations = generate_recommendations(symptoms, urgency_level)
-      
+
       advice = {
         symptoms: symptoms,
         analysis: symptom_analysis,
@@ -101,18 +101,18 @@ module Assistants
         next_steps: determine_next_steps(urgency_level),
         red_flags: identify_red_flags(symptoms)
       }
-      
+
       format_medical_advice(advice)
     end
 
     # Symptom checker with diagnostic assistance
     def symptom_checker(symptom_list)
       puts "🔍 Running comprehensive symptom analysis..."
-      
+
       categorized_symptoms = categorize_symptoms(symptom_list)
       possible_conditions = match_symptoms_to_conditions(categorized_symptoms)
       risk_assessment = assess_symptom_risk(symptom_list)
-      
+
       {
         input_symptoms: symptom_list,
         categorized_symptoms: categorized_symptoms,
@@ -125,10 +125,10 @@ module Assistants
     # Drug interaction checker
     def check_drug_interactions(medications)
       puts "💊 Checking for potential drug interactions..."
-      
+
       interactions = analyze_drug_interactions(medications)
       severity_levels = assess_interaction_severity(interactions)
-      
+
       {
         medications: medications,
         interactions_found: interactions,
@@ -140,11 +140,11 @@ module Assistants
     # Medical history analysis
     def analyze_medical_history(history)
       puts "📋 Analyzing comprehensive medical history..."
-      
+
       risk_factors = identify_risk_factors(history)
       patterns = detect_health_patterns(history)
       preventive_measures = suggest_preventive_care(risk_factors)
-      
+
       {
         history_summary: summarize_history(history),
         identified_risks: risk_factors,
@@ -156,7 +156,7 @@ module Assistants
     # Generate health assessment report
     def generate_health_report(patient_data)
       puts "📊 Generating comprehensive health assessment report..."
-      
+
       report = {
         patient_overview: create_patient_overview(patient_data),
         risk_assessment: comprehensive_risk_assessment(patient_data),
@@ -165,17 +165,17 @@ module Assistants
         follow_up_plan: create_follow_up_plan(patient_data),
         lifestyle_advice: generate_lifestyle_advice(patient_data)
       }
-      
+
       format_health_report(report)
     end
 
     # Emergency triage assessment
     def emergency_triage(symptoms, vitals = {})
       puts "🚨 Performing emergency triage assessment..."
-      
+
       triage_level = determine_triage_level(symptoms, vitals)
       immediate_actions = determine_immediate_actions(triage_level)
-      
+
       {
         triage_level: triage_level,
         urgency_score: calculate_urgency_score(symptoms, vitals),
@@ -211,7 +211,7 @@ module Assistants
         'mental' => :psychiatry,
         'lung' => :pulmonology
       }
-      
+
       condition_lower = condition.downcase
       specialty_mappings.find { |key, _| condition_lower.include?(key) }&.last || :general_medicine
     end
@@ -261,7 +261,7 @@ module Assistants
       categorized = categorize_symptoms(symptoms.split(/[,;]/))
       severity = assess_symptom_severity(symptoms)
       duration = assess_symptom_duration(symptoms)
-      
+
       {
         categories: categorized,
         severity: severity,
@@ -272,23 +272,23 @@ module Assistants
 
     def categorize_symptoms(symptom_list)
       categorized = {}
-      
+
       SYMPTOM_CATEGORIES.each do |category, symptoms|
         matches = symptom_list.select do |symptom|
           symptoms.any? { |s| symptom.downcase.include?(s.tr('_', ' ')) }
         end
         categorized[category] = matches unless matches.empty?
       end
-      
+
       categorized
     end
 
     def assess_urgency(symptoms)
       high_urgency_indicators = [
-        'chest pain', 'severe headache', 'difficulty breathing', 
+        'chest pain', 'severe headache', 'difficulty breathing',
         'severe bleeding', 'loss of consciousness', 'severe pain'
       ]
-      
+
       symptoms_lower = symptoms.downcase
       if high_urgency_indicators.any? { |indicator| symptoms_lower.include?(indicator) }
         :high
@@ -344,14 +344,14 @@ module Assistants
         'breathing difficulties',
         'chest pain'
       ]
-      
+
       symptoms_lower = symptoms.downcase
       red_flags.select { |flag| symptoms_lower.include?(flag.split.last) }
     end
 
     def match_symptoms_to_conditions(categorized_symptoms)
       conditions = []
-      
+
       categorized_symptoms.each do |category, symptoms|
         case category
         when :cardiovascular
@@ -364,7 +364,7 @@ module Assistants
           conditions += ['Migraine', 'Tension headache', 'Neuropathy']
         end
       end
-      
+
       conditions.uniq
     end
 
@@ -372,9 +372,9 @@ module Assistants
       # Simple risk assessment based on symptom content
       high_risk_terms = ['severe', 'acute', 'sudden', 'intense']
       moderate_risk_terms = ['persistent', 'worsening', 'recurring']
-      
+
       symptoms_lower = symptoms.join(' ').downcase
-      
+
       if high_risk_terms.any? { |term| symptoms_lower.include?(term) }
         :high
       elsif moderate_risk_terms.any? { |term| symptoms_lower.include?(term) }
@@ -402,7 +402,7 @@ module Assistants
         'metformin' => ['contrast agents'],
         'digoxin' => ['diuretics', 'ACE inhibitors']
       }
-      
+
       interactions = []
       medications.each do |med1|
         medications.each do |med2|
@@ -412,7 +412,7 @@ module Assistants
           end
         end
       end
-      
+
       interactions
     end
 
@@ -443,7 +443,7 @@ module Assistants
 
     def format_medical_advice(advice)
       urgency_emoji = { high: '🚨', moderate: '⚠️', low: 'ℹ️' }
-      
+
       "#{urgency_emoji[advice[:urgency]]} **Medical Assessment**\n\n" \
         "**Symptoms Analyzed:** #{advice[:symptoms]}\n" \
         "**Urgency Level:** #{advice[:urgency].to_s.upcase}\n" \

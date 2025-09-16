@@ -38,7 +38,7 @@ module Dating
       likes_given = user.dating_likes.pluck(:liked_user_id)
       likes_received = Dating::Like.where(liked_user_id: user.id).pluck(:user_id)
       mutual_likes = likes_given & likes_received
-      
+
       # Create matches for mutual likes
       mutual_likes.each do |match_id|
         match_user = User.find(match_id)
@@ -48,7 +48,7 @@ module Dating
           status: 'matched'
         )
       end
-      
+
       # Return potential matches based on location and interests
       find_potential_matches(user)
     end
@@ -104,7 +104,7 @@ module Dating
         user: current_user,
         liked_user: @profile.user
       )
-      
+
       # Check for match
       if Dating::Like.exists?(user: @profile.user, liked_user: current_user)
         Match.find_or_create_by(
@@ -114,7 +114,7 @@ module Dating
         )
         flash[:notice] = "It's a match! 🎉"
       end
-      
+
       redirect_to dating_profiles_path
     end
 
@@ -123,7 +123,7 @@ module Dating
         user: current_user,
         disliked_user: @profile.user
       )
-      
+
       redirect_to dating_profiles_path
     end
 

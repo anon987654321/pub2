@@ -36,14 +36,14 @@ BRGEN Dating is a modern, location-based dating platform built as part of the BR
 class Profile < ApplicationRecord
   belongs_to :user
   has_many_attached :photos
-  
+
   validates :bio, length: { maximum: 500 }
   validates :age, presence: true, numericality: { in: 18..100 }
   validates :gender, inclusion: { in: %w[male female non-binary] }
-  
+
   geocoded_by :location
   after_validation :geocode, if: :location_changed?
-  
+
   scope :within_radius, ->(lat, lng, radius) { near([lat, lng], radius) }
   scope :available, -> { where(status: 'active') }
 end
@@ -58,25 +58,25 @@ module Dating
 
       # Exclude already interacted users
       excluded_ids = get_excluded_user_ids(user)
-      
+
       # Base query for potential matches
       potential_matches = Profile.joins(:user)
                                 .where.not(user_id: excluded_ids)
                                 .where(gender: compatible_genders(user.profile.gender))
                                 .available
-      
+
       # Apply location filtering
       if user.profile.lat.present? && user.profile.lng.present?
         potential_matches = potential_matches.within_radius(
-          user.profile.lat, 
-          user.profile.lng, 
+          user.profile.lat,
+          user.profile.lng,
           user.profile.max_distance || 50
         )
       end
-      
+
       # Apply interest matching
       potential_matches = apply_interest_filtering(potential_matches, user)
-      
+
       # Score and sort by compatibility
       score_and_rank_matches(potential_matches, user)
     end
@@ -94,7 +94,7 @@ module Dating
     def self.compatible_genders(user_gender)
       case user_gender
       when 'male' then ['female', 'non-binary']
-      when 'female' then ['male', 'non-binary']  
+      when 'female' then ['male', 'non-binary']
       when 'non-binary' then ['male', 'female', 'non-binary']
       else ['male', 'female', 'non-binary']
       end
@@ -102,12 +102,12 @@ module Dating
 
     def self.apply_interest_filtering(profiles, user)
       return profiles unless user.profile.interests.present?
-      
+
       user_interests = user.profile.interests.split(',').map(&:strip)
-      
+
       profiles.select do |profile|
         next true unless profile.interests.present?
-        
+
         profile_interests = profile.interests.split(',').map(&:strip)
         common_interests = user_interests & profile_interests
         common_interests.length >= 1  # At least one shared interest
@@ -119,7 +119,7 @@ module Dating
         score = calculate_compatibility_score(profile, user)
         { profile: profile, score: score }
       end
-      
+
       scored_profiles.sort_by { |item| -item[:score] }
                     .first(20)
                     .map { |item| item[:profile] }
@@ -127,7 +127,7 @@ module Dating
 
     def self.calculate_compatibility_score(profile, user)
       score = 0
-      
+
       # Distance factor (closer = higher score)
       if profile.lat && profile.lng && user.profile.lat && user.profile.lng
         distance = Geocoder::Calculations.distance_between(
@@ -136,7 +136,7 @@ module Dating
         )
         score += [50 - distance, 0].max
       end
-      
+
       # Interest compatibility
       if profile.interests.present? && user.profile.interests.present?
         user_interests = user.profile.interests.split(',').map(&:strip)
@@ -144,16 +144,16 @@ module Dating
         common_interests = user_interests & profile_interests
         score += common_interests.length * 10
       end
-      
+
       # Age compatibility
       age_difference = (profile.age - user.profile.age).abs
       score += [20 - age_difference, 0].max
-      
+
       # Activity factor (recently active users)
       if profile.user.last_sign_in_at && profile.user.last_sign_in_at > 7.days.ago
         score += 15
       end
-      
+
       score
     end
   end
@@ -173,7 +173,7 @@ module Dating
     def index
       @profiles = MatchmakingService.find_matches(current_user)
       @current_profile = @profiles.first
-      
+
       respond_to do |format|
         format.html
         format.json { render json: @profiles }
@@ -188,7 +188,7 @@ module Dating
 
     def like
       result = create_interaction(:like)
-      
+
       respond_to do |format|
         format.turbo_stream { render_interaction_response(result) }
         format.json { render json: result }
@@ -197,7 +197,7 @@ module Dating
 
     def dislike
       result = create_interaction(:dislike)
-      
+
       respond_to do |format|
         format.turbo_stream { render_interaction_response(result) }
         format.json { render json: result }
@@ -221,7 +221,7 @@ module Dating
           user: current_user,
           liked_user: @profile.user
         )
-        
+
         # Check for mutual like (match)
         if Dating::Like.exists?(user: @profile.user, liked_user: current_user)
           match = Match.create!(
@@ -230,15 +230,15 @@ module Dating
             status: 'matched',
             matched_at: Time.current
           )
-          
+
           # Send match notifications
           MatchNotificationJob.perform_later(match)
-          
+
           { success: true, matched: true, match: match }
         else
           { success: true, matched: false }
         end
-        
+
       when :dislike
         Dating::Dislike.find_or_create_by(
           user: current_user,
@@ -251,12 +251,12 @@ module Dating
     def render_interaction_response(result)
       if result[:matched]
         render turbo_stream: [
-          turbo_stream.replace("profile-card-#{@profile.id}", 
-            partial: "dating/shared/match_celebration", 
+          turbo_stream.replace("profile-card-#{@profile.id}",
+            partial: "dating/shared/match_celebration",
             locals: { match: result[:match] }
           ),
-          turbo_stream.append("notifications", 
-            partial: "dating/shared/match_notification", 
+          turbo_stream.append("notifications",
+            partial: "dating/shared/match_notification",
             locals: { match: result[:match] }
           )
         ]
@@ -286,21 +286,21 @@ export default class extends Controller {
   setupSwipeGestures() {
     let startX = null
     let startY = null
-    
+
     this.cardTarget.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX
       startY = e.touches[0].clientY
     })
-    
+
     this.cardTarget.addEventListener('touchend', (e) => {
       if (!startX || !startY) return
-      
+
       const endX = e.changedTouches[0].clientX
       const endY = e.changedTouches[0].clientY
-      
+
       const deltaX = endX - startX
       const deltaY = endY - startY
-      
+
       // Only process horizontal swipes
       if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 100) {
         if (deltaX > 0) {
@@ -309,7 +309,7 @@ export default class extends Controller {
           this.dislike()
         }
       }
-      
+
       startX = null
       startY = null
     })
@@ -339,10 +339,10 @@ export default class extends Controller {
     const card = this.cardTarget
     const translateX = direction === 'right' ? '100vw' : '-100vw'
     const rotation = direction === 'right' ? '30deg' : '-30deg'
-    
+
     card.style.transition = 'transform 0.3s ease-out'
     card.style.transform = `translateX(${translateX}) rotate(${rotation})`
-    
+
     setTimeout(() => {
       card.remove()
     }, 300)
@@ -350,7 +350,7 @@ export default class extends Controller {
 
   submitInteraction(action) {
     const url = `/dating/profiles/${this.profileIdValue}/${action}`
-    
+
     fetch(url, {
       method: 'POST',
       headers: {
@@ -399,7 +399,7 @@ export default class extends Controller {
       const parser = new DOMParser()
       const doc = parser.parseFromString(html, 'text/html')
       const nextCard = doc.querySelector('.profile-card')
-      
+
       if (nextCard) {
         this.element.insertAdjacentHTML('beforeend', nextCard.outerHTML)
       }
@@ -416,7 +416,7 @@ export default class extends Controller {
     error.className = 'error-notification'
     error.textContent = message
     document.body.appendChild(error)
-    
+
     setTimeout(() => error.remove(), 3000)
   }
 }

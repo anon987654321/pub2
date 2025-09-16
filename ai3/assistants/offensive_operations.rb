@@ -61,7 +61,7 @@ module Assistants
       @sentiment_analyzer.load_defaults
       @logger = Logger.new('offensive_ops.log', 'daily')
       @profiles = []
-      
+
       configure_replicate if defined?(Replicate)
     end
 
@@ -85,7 +85,7 @@ module Assistants
     # Engage target with created profiles
     def engage_target
       return "No target specified" unless @target
-      
+
       @profiles.each_with_index do |profile, index|
         puts "Profile #{index + 1} engaging target: #{@target}"
         # Simulation of engagement
@@ -112,7 +112,7 @@ module Assistants
 
     def configure_replicate
       return unless ENV["REPLICATE_API_KEY"]
-      
+
       Replicate.configure do |config|
         config.api_token = ENV["REPLICATE_API_KEY"]
       end
@@ -127,7 +127,7 @@ module Assistants
         # Handle gender-based generation from operations2
         source_video_path = "path/to/source_video_#{input_description}.mp4"
         target_face_path = "path/to/target_face_#{input_description}.jpg"
-        
+
         if defined?(Replicate)
           model = Replicate::Model.new("deepfake_model_path")
           deepfake_video = model.predict(source_video: source_video_path, target_face: target_face_path)
@@ -158,14 +158,14 @@ module Assistants
       else
         # Handle gender-based analysis from operations2
         user_id = "#{text_sample}_user"
-        
+
         if defined?(Twitter)
           begin
             client = Twitter::REST::Client.new
             tweets = client.user_timeline(user_id, count: 100)
             sentiments = tweets.map { |tweet| @sentiment_analyzer.sentiment(tweet.text) }
             average_sentiment = sentiments.sum / sentiments.size.to_f
-            
+
             traits = {
               openness: average_sentiment > 0.5 ? "high" : "low",
               conscientiousness: average_sentiment > 0.3 ? "medium" : "low",
@@ -173,7 +173,7 @@ module Assistants
               agreeableness: average_sentiment > 0.6 ? "high" : "medium",
               neuroticism: average_sentiment < 0.2 ? "high" : "low"
             }
-            
+
             { user_id: user_id, traits: traits }
           rescue StandardError => e
             "Twitter analysis failed: #{e.message}"
@@ -448,7 +448,7 @@ module Assistants
       target_name ||= @target || "default_target"
       topic ||= "default_topic"
       target_demographic ||= "general_public"
-      
+
       prompt = "Generate mass disinformation on the topic '#{topic}' targeted at the demographic of #{target_demographic}."
       invoke_llm(prompt)
     end

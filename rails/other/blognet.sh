@@ -540,7 +540,7 @@ p {
 // Blog Cards
 .blog-card {
   @extend .card;
-  
+
   .blog-header {
     position: relative;
     height: 200px;
@@ -550,13 +550,13 @@ p {
     justify-content: center;
     color: white;
   }
-  
+
   .blog-title {
     font-size: 1.5rem;
     font-weight: 600;
     margin: 0;
   }
-  
+
   .blog-meta {
     display: flex;
     justify-content: space-between;
@@ -565,7 +565,7 @@ p {
     color: var(--text-muted);
     margin-top: 1rem;
   }
-  
+
   .blog-stats {
     display: flex;
     gap: 1rem;
@@ -575,35 +575,35 @@ p {
 // Post Cards
 .post-card {
   @extend .card;
-  
+
   .post-image {
     width: 100%;
     height: 200px;
     object-fit: cover;
   }
-  
+
   .post-title {
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
-    
+
     a {
       color: var(--text-primary);
       text-decoration: none;
     }
-    
+
     a:hover {
       color: var(--primary);
     }
   }
-  
+
   .post-excerpt {
     color: var(--text-secondary);
     font-size: 0.9rem;
     line-height: 1.5;
     margin-bottom: 1rem;
   }
-  
+
   .post-meta {
     display: flex;
     justify-content: space-between;
@@ -611,13 +611,13 @@ p {
     font-size: 0.875rem;
     color: var(--text-muted);
   }
-  
+
   .post-author {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
-  
+
   .post-date {
     font-size: 0.8rem;
   }
@@ -805,14 +805,14 @@ p {
 .stat-card {
   @extend .card;
   text-align: center;
-  
+
   .stat-value {
     font-size: 2rem;
     font-weight: 700;
     color: var(--primary);
     margin-bottom: 0.5rem;
   }
-  
+
   .stat-label {
     color: var(--text-secondary);
     font-weight: 500;
@@ -840,15 +840,15 @@ p {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .nav-links {
     gap: 1rem;
   }
-  
+
   .analytics-grid {
     grid-template-columns: 1fr;
   }
-  
+
   h1 { font-size: 1.875rem; }
   h2 { font-size: 1.5rem; }
   h3 { font-size: 1.25rem; }
@@ -905,7 +905,7 @@ no:
     subtitle: "Administrer flere megablogger på tvers av forskjellige domener"
     home_title: "Blognet Hjem"
     home_description: "AI-forbedret bloggnettverk med sentralisert administrasjon"
-    
+
     # Navigation
     home: "Hjem"
     blogs: "Blogger"
@@ -914,7 +914,7 @@ no:
     dashboard: "Dashboard"
     new_blog: "Ny Blogg"
     new_post: "Nytt Innlegg"
-    
+
     # Blog management
     blog_created: "Blogg opprettet"
     blog_updated: "Blogg oppdatert"
@@ -924,7 +924,7 @@ no:
     blog_subdomain: "Subdomene"
     blog_domain: "Domene"
     blog_theme: "Tema"
-    
+
     # Post management
     post_created: "Innlegg opprettet"
     post_updated: "Innlegg oppdatert"
@@ -935,31 +935,31 @@ no:
     post_tags: "Etiketter"
     post_published: "Publisert"
     featured_image: "Hovedbilde"
-    
+
     # Comments
     comment_created: "Kommentar opprettet"
     comment_approved: "Kommentar godkjent"
     comment_rejected: "Kommentar avvist"
     comment_content: "Kommentarinnhold"
     pending_approval: "Venter på godkjenning"
-    
+
     # Categories
     category_name: "Kategorinavn"
     category_description: "Kategoribeskrivelse"
     category_color: "Kategori farge"
-    
+
     # AI Features
     ai_content_generation: "AI Innholdsgenerering"
     ai_title_suggestion: "AI Tittelforslag"
     generate_content: "Generer innhold"
     suggest_title: "Foreslå tittel"
-    
+
     # Analytics
     page_views: "Sidevisninger"
     unique_visitors: "Unike besøkende"
     bounce_rate: "Avvisningsrate"
     popular_posts: "Populære innlegg"
-    
+
     # Actions
     view_blog: "Vis blogg"
     edit_blog: "Rediger blogg"
@@ -969,21 +969,21 @@ no:
     delete_post: "Slett innlegg"
     approve_comment: "Godkjenn kommentar"
     reject_comment: "Avvis kommentar"
-    
+
     # Messages
     not_authorized: "Ikke autorisert"
     confirm_delete: "Er du sikker på at du vil slette?"
     no_posts: "Ingen innlegg funnet"
     no_blogs: "Ingen blogger funnet"
     no_comments: "Ingen kommentarer"
-    
+
     # Dashboard
     dashboard_title: "Dashboard"
     my_blogs: "Mine blogger"
     recent_posts: "Nylige innlegg"
     pending_comments: "Ventende kommentarer"
     blog_stats: "Bloggstatistikk"
-    
+
     # Forms
     create_blog: "Opprett blogg"
     update_blog: "Oppdater blogg"
@@ -991,13 +991,13 @@ no:
     update_post: "Oppdater innlegg"
     save_draft: "Lagre utkast"
     publish_now: "Publiser nå"
-    
+
     # Placeholders
     blog_name_placeholder: "Min fantastiske blogg"
     subdomain_placeholder: "minblogg"
     post_title_placeholder: "Skriv en fengslende tittel..."
     post_excerpt_placeholder: "Kort sammendrag av innlegget..."
-    
+
     # Examples
     example_blogs:
       foodielicious: "Foodielicio.us - Matoppskrifter og kulinariske eventyr"
@@ -1014,13 +1014,13 @@ cat <<EOF > app/views/layouts/application.html.erb
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><%= content_for?(:title) ? yield(:title) : t("blognet.title") %></title>
     <meta name="description" content="<%= content_for?(:description) ? yield(:description) : t("blognet.home_description") %>">
-    
+
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    
+
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
-    
+
     <%= yield(:head) if content_for?(:head) %>
   </head>
 
@@ -1031,7 +1031,7 @@ cat <<EOF > app/views/layouts/application.html.erb
           <div class="navbar-brand">
             <%= link_to t("blognet.title"), root_path, class: "logo" %>
           </div>
-          
+
           <ul class="nav-links">
             <li><%= link_to t("blognet.home"), root_path %></li>
             <li><%= link_to t("blognet.blogs"), blogs_path %></li>
@@ -1211,29 +1211,29 @@ cat <<EOF > config/routes.rb
 Rails.application.routes.draw do
   devise_for :users
   root "home#index"
-  
+
   get "dashboard", to: "home#dashboard"
-  
+
   resources :blogs do
     resources :posts do
       resources :comments, except: [:index, :show, :edit, :update, :destroy]
     end
     resources :categories
   end
-  
+
   resources :posts, only: [:index, :show] do
     resources :comments, only: [:create]
   end
-  
+
   resources :comments, only: [:index, :show] do
     member do
       patch :approve
       patch :reject
     end
   end
-  
+
   resources :categories, only: [:index, :show]
-  
+
   # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 end
@@ -1284,7 +1284,7 @@ sample_blogs.each do |blog_data|
     b.active = true
     b.user = admin_user
   end
-  
+
   # Create categories for each blog
   categories = case blog_data[:theme]
   when "food"
@@ -1296,14 +1296,14 @@ sample_blogs.each do |blog_data|
   else
     ["Generelt", "Nyheter", "Anmeldelser"]
   end
-  
+
   categories.each do |cat_name|
     Category.find_or_create_by(name: cat_name, blog: blog) do |c|
       c.description = "#{cat_name} relaterte innlegg"
       c.slug = cat_name.downcase.gsub(/\s+/, '-')
     end
   end
-  
+
   # Create sample posts
   5.times do |i|
     post = Post.find_or_create_by(
@@ -1317,13 +1317,13 @@ sample_blogs.each do |blog_data|
       p.tags = "#{blog_data[:theme]}, eksempel, demo"
       p.view_count = rand(10..500)
     end
-    
+
     # Assign categories
     if blog.categories.any?
       post.categories << blog.categories.sample unless post.categories.any?
     end
   end
-  
+
   puts "Created blog: #{blog.name} with #{blog.posts.count} posts"
 end
 

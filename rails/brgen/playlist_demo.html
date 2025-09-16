@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <!--
   J Dilla Sacred Geometry Visualizer
-  
-  A transcendent audio-visual experience combining J Dilla's rhythmic genius 
-  with sacred geometry patterns. Features 5 distinct visualization modes that 
-  automatically cycle with each track, creating a continuous flow of mathematical 
+
+  A transcendent audio-visual experience combining J Dilla's rhythmic genius
+  with sacred geometry patterns. Features 5 distinct visualization modes that
+  automatically cycle with each track, creating a continuous flow of mathematical
   beauty synchronized to the beats.
-  
+
   Sacred Geometry Modes:
   1. Warp Tunnel - Particle-based tunnel with smooth movement
-  2. Sacred Mandala - Golden ratio spirals with layered patterns  
+  2. Sacred Mandala - Golden ratio spirals with layered patterns
   3. Flower of Life - Fractal circles with recursive depth
   4. Lissajous Mesh - Parametric curves creating geometric nets
   5. DMT Polygon Tunnel - Polygonal tunnel with fractal harmonics
-  
+
   Features:
   - 14 J Dilla tracks with YouTube integration
   - Auto-mode switching (new geometry per song)
@@ -193,28 +193,28 @@
       .start-title {
         font-size: 36px;
       }
-      
+
       .start-subtitle {
         font-size: 16px;
         padding: 0 20px;
       }
-      
+
       .start-button {
         padding: 15px 30px;
         font-size: 18px;
       }
-      
+
       .track-info {
         bottom: 20px;
         left: 20px;
         right: 20px;
         padding: 15px;
       }
-      
+
       .track-title {
         font-size: 18px;
       }
-      
+
       .track-artist {
         font-size: 14px;
       }
@@ -238,7 +238,7 @@
       .custom-cursor {
         display: none;
       }
-      
+
       body {
         cursor: default;
       }
@@ -253,7 +253,7 @@
   <div class="start-overlay" id="startOverlay">
     <h1 class="start-title">J Dilla Sacred Geometry</h1>
     <p class="start-subtitle">
-      Experience the rhythmic genius of J Dilla through transcendent sacred geometry patterns. 
+      Experience the rhythmic genius of J Dilla through transcendent sacred geometry patterns.
       Each track transforms into a unique visual meditation combining mathematics and music.
     </p>
     <button class="start-button" id="startButton" aria-label="Start the sacred geometry visualizer">
@@ -265,7 +265,7 @@
   <div class="visualizer-container" id="visualizerContainer">
     <canvas class="geometry-canvas" id="geometryCanvas" aria-label="Sacred geometry visualization"></canvas>
     <div id="youtube-player"></div>
-    
+
     <!-- Track info display -->
     <div class="track-info" id="trackInfo">
       <div class="track-title" id="trackTitle">J Dilla Sacred Geometry</div>
@@ -284,7 +284,7 @@
       MODES: ['warp-tunnel', 'sacred-mandala', 'flower-of-life', 'lissajous-mesh', 'dmt-polygon'],
       MODE_NAMES: {
         'warp-tunnel': 'Warp Tunnel',
-        'sacred-mandala': 'Sacred Mandala', 
+        'sacred-mandala': 'Sacred Mandala',
         'flower-of-life': 'Flower of Life',
         'lissajous-mesh': 'Lissajous Mesh',
         'dmt-polygon': 'DMT Polygon Tunnel'
@@ -344,9 +344,9 @@
       canvas = document.getElementById('geometryCanvas');
       ctx = canvas.getContext('2d');
       resizeCanvas();
-      
+
       window.addEventListener('resize', resizeCanvas);
-      
+
       // Initialize with first mode
       updateTrackInfo();
       updateVisualizerStatus();
@@ -359,18 +359,18 @@
 
     function setupCustomCursor() {
       const cursor = document.getElementById('customCursor');
-      
+
       // Only on desktop
       if (window.innerWidth > 768) {
         document.addEventListener('mousemove', (e) => {
           cursor.style.left = e.clientX - 10 + 'px';
           cursor.style.top = e.clientY - 10 + 'px';
         });
-        
+
         document.addEventListener('mousedown', () => {
           cursor.style.transform = 'scale(0.8)';
         });
-        
+
         document.addEventListener('mouseup', () => {
           cursor.style.transform = 'scale(1)';
         });
@@ -382,24 +382,24 @@
     function setupStartButton() {
       const startButton = document.getElementById('startButton');
       const startOverlay = document.getElementById('startOverlay');
-      
+
       startButton.addEventListener('click', async () => {
         try {
           // Initialize audio context
           audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          
+
           // Create YouTube player (with fallback)
           await createYouTubePlayer();
-          
+
           // Hide overlay
           startOverlay.style.opacity = '0';
           setTimeout(() => {
             startOverlay.style.display = 'none';
           }, 300);
-          
+
           // Start visualization
           startVisualization();
-          
+
         } catch (error) {
           console.error('Error starting visualizer:', error);
           // Continue without audio if YouTube fails
@@ -420,7 +420,7 @@
           resolve(null);
           return;
         }
-        
+
         try {
           youtubePlayer = new YT.Player('youtube-player', {
             height: '1',
@@ -473,11 +473,11 @@
       currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
       currentMode = currentTrackIndex % CONFIG.MODES.length;
       trackStartTime = Date.now();
-      
+
       if (youtubePlayer) {
         youtubePlayer.loadVideoById(tracks[currentTrackIndex].id);
       }
-      
+
       updateTrackInfo();
       updateVisualizerStatus();
     }
@@ -485,7 +485,7 @@
     function updateTrackInfo() {
       const track = tracks[currentTrackIndex];
       const modeName = CONFIG.MODE_NAMES[CONFIG.MODES[currentMode]];
-      
+
       document.getElementById('trackTitle').textContent = track.title;
       document.getElementById('trackArtist').textContent = track.artist;
       document.getElementById('trackMode').textContent = `Mode: ${modeName}`;
@@ -495,7 +495,7 @@
       const status = document.getElementById('visualizerStatus');
       const track = tracks[currentTrackIndex];
       const modeName = CONFIG.MODE_NAMES[CONFIG.MODES[currentMode]];
-      
+
       status.textContent = `${isPlaying ? 'Playing' : 'Paused'}: ${track.title} by ${track.artist}. Visual mode: ${modeName}`;
     }
 
@@ -509,19 +509,19 @@
     function animate() {
       const currentTime = Date.now();
       const elapsed = (currentTime - startTime) / 1000;
-      
+
       // Auto-advance tracks if no YouTube player or after track duration
       if (!youtubePlayer && currentTime - trackStartTime > trackDuration) {
         nextTrack();
       }
-      
+
       // Clear canvas
       ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       // Get audio data for reactivity
       updateAudioData();
-      
+
       // Render current geometry mode
       const mode = CONFIG.MODES[currentMode];
       switch (mode) {
@@ -541,7 +541,7 @@
           renderDMTPolygon(elapsed);
           break;
       }
-      
+
       animationId = requestAnimationFrame(animate);
     }
 
@@ -560,29 +560,29 @@
       const centerY = canvas.height / 2;
       const numRings = 20;
       const numParticles = 100;
-      
+
       ctx.strokeStyle = `hsla(${180 + bassLevel * 60}, 70%, 60%, 0.8)`;
       ctx.lineWidth = 2;
-      
+
       // Draw tunnel rings
       for (let i = 0; i < numRings; i++) {
         const z = i / numRings;
         const radius = (1 - z) * Math.min(canvas.width, canvas.height) * 0.4;
         const alpha = 1 - z;
-        
+
         ctx.beginPath();
         ctx.strokeStyle = `hsla(${180 + bassLevel * 60}, 70%, 60%, ${alpha * 0.5})`;
         ctx.arc(centerX, centerY, radius + bassLevel * 50, 0, Math.PI * 2);
         ctx.stroke();
       }
-      
+
       // Draw particles
       for (let i = 0; i < numParticles; i++) {
         const angle = (i / numParticles) * Math.PI * 2;
         const radius = 100 + midLevel * 200;
         const x = centerX + Math.cos(angle + time) * radius;
         const y = centerY + Math.sin(angle + time) * radius;
-        
+
         ctx.beginPath();
         ctx.fillStyle = `hsla(${(i * 10 + time * 50) % 360}, 70%, 60%, 0.8)`;
         ctx.arc(x, y, 3 + highLevel * 5, 0, Math.PI * 2);
@@ -595,23 +595,23 @@
       const centerY = canvas.height / 2;
       const numSpirals = 8;
       const goldenAngle = Math.PI * 2 / (CONFIG.GOLDEN_RATIO * CONFIG.GOLDEN_RATIO);
-      
+
       ctx.strokeStyle = `hsla(${45 + bassLevel * 60}, 80%, 70%, 0.6)`;
       ctx.lineWidth = 1;
-      
+
       // Draw golden ratio spirals
       for (let spiral = 0; spiral < numSpirals; spiral++) {
         const spiralOffset = (spiral / numSpirals) * Math.PI * 2;
-        
+
         ctx.beginPath();
         for (let i = 0; i < 200; i++) {
           const t = i * 0.05;
           const angle = spiralOffset + t * goldenAngle + time * 0.5;
           const radius = t * 2 + bassLevel * 20;
-          
+
           const x = centerX + Math.cos(angle) * radius;
           const y = centerY + Math.sin(angle) * radius;
-          
+
           if (i === 0) {
             ctx.moveTo(x, y);
           } else {
@@ -620,17 +620,17 @@
         }
         ctx.stroke();
       }
-      
+
       // Draw mandala circles
       for (let ring = 1; ring <= 5; ring++) {
         const ringRadius = ring * 60 + midLevel * 30;
         const numCircles = ring * 6;
-        
+
         for (let i = 0; i < numCircles; i++) {
           const angle = (i / numCircles) * Math.PI * 2 + time * 0.3;
           const x = centerX + Math.cos(angle) * ringRadius;
           const y = centerY + Math.sin(angle) * ringRadius;
-          
+
           ctx.beginPath();
           ctx.strokeStyle = `hsla(${(ring * 60 + time * 30) % 360}, 80%, 70%, 0.4)`;
           ctx.arc(x, y, 5 + highLevel * 10, 0, Math.PI * 2);
@@ -644,38 +644,38 @@
       const centerY = canvas.height / 2;
       const baseRadius = 50 + bassLevel * 30;
       const numLayers = 5;
-      
+
       ctx.strokeStyle = `hsla(${270 + bassLevel * 60}, 70%, 60%, 0.6)`;
       ctx.lineWidth = 2;
-      
+
       // Draw concentric flower patterns
       for (let layer = 0; layer < numLayers; layer++) {
         const layerRadius = baseRadius * (layer + 1);
         const numCircles = 6 * (layer + 1);
-        
+
         for (let i = 0; i < numCircles; i++) {
           const angle = (i / numCircles) * Math.PI * 2 + time * 0.2;
           const x = centerX + Math.cos(angle) * layerRadius;
           const y = centerY + Math.sin(angle) * layerRadius;
-          
+
           ctx.beginPath();
           ctx.strokeStyle = `hsla(${(270 + layer * 30 + time * 50) % 360}, 70%, 60%, ${0.8 - layer * 0.1})`;
           ctx.arc(x, y, baseRadius * 0.8 + midLevel * 20, 0, Math.PI * 2);
           ctx.stroke();
         }
       }
-      
+
       // Draw connecting lines
       ctx.strokeStyle = `hsla(${270 + highLevel * 60}, 70%, 80%, 0.3)`;
       ctx.lineWidth = 1;
-      
+
       for (let i = 0; i < 6; i++) {
         const angle = (i / 6) * Math.PI * 2 + time * 0.1;
         const x1 = centerX + Math.cos(angle) * baseRadius;
         const y1 = centerY + Math.sin(angle) * baseRadius;
         const x2 = centerX + Math.cos(angle + Math.PI) * baseRadius;
         const y2 = centerY + Math.sin(angle + Math.PI) * baseRadius;
-        
+
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
@@ -687,23 +687,23 @@
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const scale = Math.min(canvas.width, canvas.height) * 0.3;
-      
+
       ctx.strokeStyle = `hsla(${120 + bassLevel * 60}, 70%, 60%, 0.6)`;
       ctx.lineWidth = 1;
-      
+
       // Draw Lissajous curves
       for (let curve = 0; curve < 5; curve++) {
         const a = curve + 1;
         const b = curve + 2;
         const delta = time * 0.5 + curve * 0.3;
-        
+
         ctx.beginPath();
         ctx.strokeStyle = `hsla(${(120 + curve * 40 + time * 30) % 360}, 70%, 60%, 0.6)`;
-        
+
         for (let t = 0; t < Math.PI * 2; t += 0.01) {
           const x = centerX + Math.sin(a * t + delta) * scale * (0.5 + midLevel * 0.5);
           const y = centerY + Math.sin(b * t + delta) * scale * (0.5 + bassLevel * 0.5);
-          
+
           if (t === 0) {
             ctx.moveTo(x, y);
           } else {
@@ -712,20 +712,20 @@
         }
         ctx.stroke();
       }
-      
+
       // Draw parametric mesh
       const gridSize = 20;
       ctx.strokeStyle = `hsla(${120 + highLevel * 60}, 70%, 80%, 0.2)`;
-      
+
       for (let i = 0; i <= gridSize; i++) {
         const t = (i / gridSize) * Math.PI * 2;
-        
+
         ctx.beginPath();
         for (let j = 0; j <= gridSize; j++) {
           const s = (j / gridSize) * Math.PI * 2;
           const x = centerX + Math.cos(t + time * 0.3) * Math.sin(s) * scale * 0.6;
           const y = centerY + Math.sin(t + time * 0.3) * Math.cos(s) * scale * 0.6;
-          
+
           if (j === 0) {
             ctx.moveTo(x, y);
           } else {
@@ -741,25 +741,25 @@
       const centerY = canvas.height / 2;
       const numSides = 6;
       const numLayers = 8;
-      
+
       ctx.strokeStyle = `hsla(${300 + bassLevel * 60}, 80%, 70%, 0.7)`;
       ctx.lineWidth = 2;
-      
+
       // Draw polygonal tunnel
       for (let layer = 0; layer < numLayers; layer++) {
         const z = layer / numLayers;
         const radius = (1 - z) * Math.min(canvas.width, canvas.height) * 0.4;
         const rotation = time * 0.5 + layer * 0.3;
         const sides = numSides + Math.floor(layer / 2);
-        
+
         ctx.beginPath();
         ctx.strokeStyle = `hsla(${(300 + layer * 30 + time * 40) % 360}, 80%, 70%, ${0.8 - z * 0.5})`;
-        
+
         for (let i = 0; i <= sides; i++) {
           const angle = (i / sides) * Math.PI * 2 + rotation;
           const x = centerX + Math.cos(angle) * (radius + bassLevel * 30);
           const y = centerY + Math.sin(angle) * (radius + bassLevel * 30);
-          
+
           if (i === 0) {
             ctx.moveTo(x, y);
           } else {
@@ -768,21 +768,21 @@
         }
         ctx.stroke();
       }
-      
+
       // Draw fractal harmonics
       for (let harmonic = 0; harmonic < 3; harmonic++) {
         const frequency = harmonic + 1;
         const amplitude = 100 / (frequency + 1);
-        
+
         ctx.strokeStyle = `hsla(${(300 + harmonic * 60 + time * 60) % 360}, 80%, 60%, 0.4)`;
         ctx.lineWidth = 1;
-        
+
         ctx.beginPath();
         for (let angle = 0; angle < Math.PI * 2; angle += 0.01) {
           const radius = amplitude + midLevel * 50;
           const x = centerX + Math.cos(angle * frequency + time) * radius;
           const y = centerY + Math.sin(angle * frequency + time) * radius;
-          
+
           if (angle === 0) {
             ctx.moveTo(x, y);
           } else {

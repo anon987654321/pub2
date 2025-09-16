@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   J Dilla - Ultra Minimal Mobile-First Carousel
-  
+
   Features:
   - Ultra minimal mobile-first design with touch-friendly controls
   - Auto-rotating carousel with random visualizer selection (15s intervals for demo, change to 45s)
@@ -11,15 +11,15 @@
   - Fade transitions between visualizers (2 second duration)
   - Touch swipe gestures for manual navigation
   - Responsive design optimized for mobile screens
-  
+
   Controls:
   - Play/Pause button: Start/stop audio and auto-rotation
   - Touch swipes: Manually navigate between visualizers
   - Space bar: Manual rotation trigger (for testing)
-  
+
   Requirements implemented:
   ✅ NO FANCY PANELS - Minimal touch-friendly interface only
-  ✅ MOBILE FIRST - Designed for phone screens primarily  
+  ✅ MOBILE FIRST - Designed for phone screens primarily
   ✅ CLEAN & SIMPLE - Focus entirely on visual experience
   ✅ RANDOM AUTOROTATE - Automatically cycle through visualizers
   ✅ FADE IN/OUT - Gentle opacity transitions between slides
@@ -259,16 +259,16 @@
       .placeholder-title {
         font-size: 1.8rem;
       }
-      
+
       .placeholder-subtitle {
         font-size: 1rem;
       }
-      
+
       .minimal-controls {
         bottom: 15px;
         padding: 12px 16px;
       }
-      
+
       .track-info {
         max-width: 150px;
         font-size: 13px;
@@ -279,7 +279,7 @@
 <body>
   <!-- AUTO-ROTATING CAROUSEL -->
   <div class="auto-carousel">
-    
+
     <!-- Slide 1: Starfield Warp Tunnel (PRESERVED EXACTLY) -->
     <div class="visualizer-slide active" id="starfield-slide">
       <div class="starfield-slide" id="starfield-container">
@@ -383,10 +383,10 @@
     const autoRotateTime = 15000; // 15 seconds for demo (change to 45000 for production)
     const fadeTransitionTime = 2000; // 2 seconds
     let visualizerInitialized = { starfield: false, warpTunnel: false };
-    
+
     const slides = [
       'starfield-slide',
-      'ultimate-slide', 
+      'ultimate-slide',
       'master-slide',
       'warp-tunnel-slide'
     ];
@@ -460,7 +460,7 @@
     // Audio Control Functions
     function togglePlayPause() {
       if (!youtubePlayer) return;
-      
+
       if (isPlaying) {
         youtubePlayer.pauseVideo();
       } else {
@@ -476,7 +476,7 @@
 
     function loadTrack() {
       if (!youtubePlayer) return;
-      
+
       const track = tracks[currentTrackIndex];
       youtubePlayer.loadVideoById(track.id);
       updateTrackInfo();
@@ -491,7 +491,7 @@
     // Auto-Rotation System
     function startAutoRotation() {
       if (isAutoRotating) return;
-      
+
       isAutoRotating = true;
       autoRotateInterval = setInterval(randomAutoRotate, autoRotateTime);
     }
@@ -510,25 +510,25 @@
       do {
         nextIndex = Math.floor(Math.random() * slides.length);
       } while (nextIndex === currentSlideIndex && slides.length > 1);
-      
+
       fadeToSlide(nextIndex);
     }
 
     function fadeToSlide(slideIndex) {
       const currentSlide = document.getElementById(slides[currentSlideIndex]);
       const nextSlide = document.getElementById(slides[slideIndex]);
-      
+
       // Update visualizer indicator
       document.getElementById('visualizer-indicator').textContent = slideNames[slideIndex];
-      
+
       // Fade out current
       currentSlide.classList.remove('active');
-      
+
       // Fade in next after a brief delay
       setTimeout(() => {
         nextSlide.classList.add('active');
         currentSlideIndex = slideIndex;
-        
+
         // Initialize visualizer if needed
         if (slideIndex === 0 && !visualizerInitialized.starfield) {
           initStarfield();
@@ -549,8 +549,8 @@
       canvas.addEventListener('mousedown', mouseDownHandler, false);
       canvas.addEventListener('mouseup', mouseUpHandler, false);
       canvas.addEventListener('mousemove', mouseMoveHandler, false);
-      canvas.addEventListener('mouseenter', mouseEnterHandler, false); 
-      canvas.addEventListener('mouseleave', mouseLeaveHandler, false); 
+      canvas.addEventListener('mouseenter', mouseEnterHandler, false);
+      canvas.addEventListener('mouseleave', mouseLeaveHandler, false);
 
       container.appendChild(canvas);
       context = canvas.getContext('2d');
@@ -584,7 +584,7 @@
 
     function audioSetup() {
       txtStatus.innerHTML = 'Audio System Ready - Use main controls to play music';
-      
+
       if (!audioContext) {
         try {
           audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -624,7 +624,7 @@
       var sy = (y1 < y2) ? 1 : -1;
       var err = dx - dy;
 
-      var lx = x1, ly = y1;    
+      var lx = x1, ly = y1;
       while (true) {
         if (lx > 0 && lx < w && ly > 0 && ly < h) {
           setPixel(lx, ly, r, g, b, a);
@@ -885,15 +885,15 @@
       if (!warpCanvas) return;
 
       warpContext = warpCanvas.getContext('2d');
-      
+
       function resizeWarpCanvas() {
         warpCanvas.width = window.innerWidth;
         warpCanvas.height = window.innerHeight;
       }
-      
+
       resizeWarpCanvas();
       window.addEventListener('resize', resizeWarpCanvas);
-      
+
       // Initialize warp particles
       warpParticles = [];
       for (let i = 0; i < 200; i++) {
@@ -905,21 +905,21 @@
           prevY: 0
         });
       }
-      
+
       animateWarpTunnel();
     }
 
     function animateWarpTunnel() {
       if (!warpContext || !warpCanvas) return;
-      
+
       warpContext.fillStyle = 'rgba(0, 0, 0, 0.1)';
       warpContext.fillRect(0, 0, warpCanvas.width, warpCanvas.height);
-      
+
       const centerX = warpCanvas.width / 2;
       const centerY = warpCanvas.height / 2;
-      
+
       warpTime += 0.01;
-      
+
       warpParticles.forEach(particle => {
         particle.z -= 5;
         if (particle.z <= 0) {
@@ -927,17 +927,17 @@
           particle.x = (Math.random() - 0.5) * 2000;
           particle.y = (Math.random() - 0.5) * 2000;
         }
-        
+
         const x = (particle.x / particle.z) * 500 + centerX;
         const y = (particle.y / particle.z) * 500 + centerY;
-        
+
         const size = (1 - particle.z / 1000) * 3;
-        
+
         warpContext.beginPath();
         warpContext.arc(x, y, size, 0, Math.PI * 2);
         warpContext.fillStyle = `hsl(${(particle.z * 0.1 + warpTime * 50) % 360}, 70%, 60%)`;
         warpContext.fill();
-        
+
         if (particle.prevX && particle.prevY) {
           warpContext.beginPath();
           warpContext.moveTo(particle.prevX, particle.prevY);
@@ -946,11 +946,11 @@
           warpContext.lineWidth = size * 0.5;
           warpContext.stroke();
         }
-        
+
         particle.prevX = x;
         particle.prevY = y;
       });
-      
+
       requestAnimationFrame(animateWarpTunnel);
     }
 
@@ -966,14 +966,14 @@
     document.addEventListener('touchend', (e) => {
       const touchEndX = e.changedTouches[0].clientX;
       const diff = touchStartX - touchEndX;
-      
+
       // Swipe left/right to manually change visualizer
       if (Math.abs(diff) > 50) {
         if (diff > 0) {
           // Swipe left - next visualizer
           fadeToSlide((currentSlideIndex + 1) % slides.length);
         } else {
-          // Swipe right - previous visualizer  
+          // Swipe right - previous visualizer
           fadeToSlide((currentSlideIndex - 1 + slides.length) % slides.length);
         }
       }
@@ -983,7 +983,7 @@
     window.addEventListener('load', () => {
       initStarfield();
       visualizerInitialized.starfield = true;
-      
+
       // Auto-start after a brief delay if user doesn't interact
       setTimeout(() => {
         if (!isPlaying) {

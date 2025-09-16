@@ -174,15 +174,15 @@
       next(){ this.beginCrossfade({fast:false}); }
       toggleMute(){ this.muted=!this.muted; if (IN_SANDBOX) return;
         try{ if(this.apiReady){ const p=this.players[this.activeKey]; this.muted? p.mute() : p.unMute(); } else { const iframe=document.getElementById("player-fallback-"+this.activeKey); ytPost(iframe,this.muted?"mute":"unMute",[]); } }catch{} try{ navigator.vibrate?.(6); }catch{} }
-      updateUITrack(){ 
-        const uiLabel=document.getElementById("uiLabel"); 
-        if(!uiLabel) return; 
-        if(IN_SANDBOX){ 
-          uiLabel.textContent="Visual-only (sandboxed)"; 
-          return; 
+      updateUITrack(){
+        const uiLabel=document.getElementById("uiLabel");
+        if(!uiLabel) return;
+        if(IN_SANDBOX){
+          uiLabel.textContent="Visual-only (sandboxed)";
+          return;
         }
         // Just show "Streaming" instead of track details
-        uiLabel.textContent = "Streaming"; 
+        uiLabel.textContent = "Streaming";
       }
       _fadeVolumes({fromKey,toKey,ms=FADE_MS}={}){
         if (IN_SANDBOX) return;
@@ -194,7 +194,7 @@
           const progress=step/steps;
           const fromVol=Math.round(100*(1-progress));
           const toVol=Math.round(100*progress);
-          
+
           if(this.apiReady){
             try{ if(fromKey && this.players[fromKey]) this.players[fromKey].setVolume(fromVol); }catch{}
             try{ if(toKey && this.players[toKey]) this.players[toKey].setVolume(toVol); }catch{}
@@ -202,7 +202,7 @@
             if(fromKey) ytPost(document.getElementById("player-fallback-"+fromKey),"setVolume",[fromVol]);
             if(toKey) ytPost(document.getElementById("player-fallback-"+toKey),"setVolume",[toVol]);
           }
-          
+
           if(step>=steps){
             clearInterval(this._fadeIv);
             this.activeKey=toKey;

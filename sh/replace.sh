@@ -51,7 +51,7 @@ for file in "$folder"/**/*(.N); do
         if "$backup"; then
           cp "$file" "$file.bak" 2>/dev/null || echo "Backup failed: $file"
         fi
-        
+
         sed "s|$old_str|$new_str|g" "$file" > "$file.tmp" 2>/dev/null
         if [[ $? -eq 0 ]]; then
           mv "$file.tmp" "$file"

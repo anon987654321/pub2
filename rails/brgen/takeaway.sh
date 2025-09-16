@@ -328,7 +328,7 @@ cat <<EOF > app/views/restaurants/_card.html.erb
       <%= tag.span "\#{restaurant.rating}/5", class: "rating" if restaurant.rating %>
     <% end %>
   <% end %>
-  
+
   <%= tag.div class: "restaurant-info" do %>
     <%= tag.p restaurant.location, class: "location" %>
     <%= tag.div class: "delivery-info" do %>
@@ -378,7 +378,7 @@ cat <<EOF > app/views/restaurants/show.html.erb
     <%= tag.section aria_labelledby: "menu-heading" do %>
       <%= tag.h2 t("takeaway.menu"), id: "menu-heading" %>
       <%= link_to t("takeaway.order_now"), new_restaurant_order_path(@restaurant), class: "button primary" %>
-      
+
       <% if @menu_items.any? %>
         <% @menu_items.group_by(&:category).each do |category, items| %>
           <%= tag.div class: "menu-category" do %>
@@ -410,7 +410,7 @@ cat <<EOF > app/views/orders/index.html.erb
     <%= tag.div data: { turbo_frame: "notices" } do %>
       <%= render "shared/notices" %>
     <% end %>
-    
+
     <%= turbo_frame_tag "orders", data: { controller: "infinite-scroll" } do %>
       <% @orders.each do |order| %>
         <%= render partial: "orders/card", locals: { order: order } %>
@@ -434,7 +434,7 @@ cat <<EOF > app/views/orders/_card.html.erb
       <%= tag.span order.status.humanize, class: "status status-\#{order.status}" %>
     <% end %>
   <% end %>
-  
+
   <%= tag.div class: "order-info" do %>
     <%= tag.p number_to_currency(order.total_amount), class: "total" %>
     <%= tag.p order.created_at.strftime("%Y-%m-%d %H:%M"), class: "created-at" %>
@@ -443,7 +443,7 @@ cat <<EOF > app/views/orders/_card.html.erb
   <%= tag.footer do %>
     <%= link_to t("takeaway.view_order"), order_path(order), class: "button primary" %>
     <% if order.pending? %>
-      <%= link_to t("takeaway.cancel_order"), order_path(order), method: :delete, 
+      <%= link_to t("takeaway.cancel_order"), order_path(order), method: :delete,
           confirm: t("takeaway.confirm_cancel"), class: "button secondary" %>
     <% end %>
   <% end %>

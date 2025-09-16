@@ -92,7 +92,7 @@ The platform provides detailed analysis across multiple dimensions:
 ### Visual Design
 The application preserves the exact visual design from the original HTML prototype:
 
-- **Color Scheme**: 
+- **Color Scheme**:
   - Background: `#000000` (pure black) and `#121212` (dark gray)
   - Text: `#f5f5f5` (light gray) with `#009688` (teal) accents
   - Special sections: Custom backgrounds for Aramaic, KJV, and BAIBL text blocks
@@ -135,7 +135,7 @@ The application maintains complete Norwegian localization:
 
 ### Key Terms
 - **Bibelvers**: Biblical verses
-- **Oversettelser**: Translations  
+- **Oversettelser**: Translations
 - **Analyser vers**: Analyze verse
 - **Lingvistisk nøyaktighet**: Linguistic accuracy
 - **Kontekstuell troskap**: Contextual fidelity

@@ -24,7 +24,7 @@ declare -A new_checksums
 for subdir in */; do
   [ -d "$subdir" ] || continue
   folder="${subdir%/}"
-  
+
   # Creates a unique hash from all files in folder.
   checksum=$(find "$folder" -type f -exec md5sum {} + | sort | md5sum | cut -d' ' -f1)
   new_checksums["$folder"]="$checksum"
