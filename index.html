@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -13,7 +13,8 @@
   <style>
     :root { --safe-top: env(safe-area-inset-top, 0px); --safe-right: env(safe-area-inset-right, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); --safe-left: env(safe-area-inset-left, 0px); }
     html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
-    canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; background: #000; touch-action: none; image-rendering: pixelated; }
+    /* Prefer dynamic viewport units with safe fallback; baseline box-sizing */
+    canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; width: 100dvw; height: 100dvh; display: block; background: #000; touch-action: none; image-rendering: pixelated; }
     @keyframes start-ack { 0%{transform:scale(1)} 50%{transform:scale(1.02)} 100%{transform:scale(1)} }
     canvas.start-ack { animation: start-ack 240ms ease-out; }
     h1.city-carousel { position: fixed; top: calc(12px + var(--safe-top)); left: calc(12px + var(--safe-left)); width: min(92vw, 560px); height: 40px; z-index: 95; pointer-events: none; user-select: none; overflow: hidden; margin: 0; }
@@ -40,7 +41,8 @@
     .settings-row select, .settings-row input[type="checkbox"] { justify-self: start; }
     @media (pointer: coarse) { .settings-row label { min-height: 44px; display: flex; align-items: center; } .settings-row input[type="checkbox"] { width: 28px; height: 28px; } .settings-row input[type="range"] { height: 44px; } }
     :focus-visible { outline: 2px solid #dcdcdc; outline-offset: 2px; }
-    *, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }
+    /* Baseline box-sizing and no visual pollution */
+    *, *::before, *::after { box-sizing: border-box; box-shadow: none !important; text-shadow: none !important; }
     @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
     @media (max-width: 768px) { h1.city-carousel { width: min(94vw, 520px); } .carousel-slide { font-size: clamp(18px, 4vw, 28px); } }
     .tap-ripple { position: fixed; left: 0; top: 0; width: 10px; height: 10px; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%) scale(0.4); opacity: 0.85; background: radial-gradient(circle, rgba(220,220,220,0.35) 0%, rgba(220,220,220,0.18) 40%, rgba(220,220,220,0) 70%); mix-blend-mode: screen; filter: blur(0.3px); animation: ripple 680ms ease-out forwards; z-index: 999; }
@@ -100,9 +102,9 @@
   <!-- Dual YT players for crossfade -->
   <div id="yt-player-a" aria-hidden="true" role="none" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></div>
   <div id="yt-player-b" aria-hidden="true" role="none" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></div>
-  <iframe id="player-fallback-a" src="about:blank" title="YouTube audio player A (hidden)" aria-hidden="true" tabindex="-1" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></iframe>
-  <iframe id="player-fallback-b" src="about:blank" title="YouTube audio player B (hidden)" aria-hidden="true" tabindex="-1" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></iframe>
-  <script src="https://www.youtube.com/iframe_api"></script>
+  <iframe id="player-fallback-a" src="about:blank" title="YouTube audio player A (hidden)" aria-hidden="true" tabindex="-1" width="1" height="1" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></iframe>
+  <iframe id="player-fallback-b" src="about:blank" title="YouTube audio player B (hidden)" aria-hidden="true" tabindex="-1" width="1" height="1" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></iframe>
+  <script src="https://www.youtube.com/iframe_api" async></script>
   <script>
     "use strict";
     // Crossfade settings
