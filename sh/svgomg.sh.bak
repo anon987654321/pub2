@@ -1,12 +1,11 @@
-#!/bin/sh
-set -euo pipefail
-
+#!/bin/bash
 
 #!/usr/bin/env zsh
 # Shrinks SVG files to save space.
 # Usage: ./svgomg.sh [folder]
 
 set -e
+setopt extendedglob
 
 if ! command -v svgo >/dev/null 2>&1; then
   echo "Error: svgo not found. Install via npm."

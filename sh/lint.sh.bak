@@ -1,12 +1,11 @@
-#!/bin/sh
-set -euo pipefail
-
+#!/bin/bash
 
 #!/usr/bin/env zsh
 # Checks and fixes Ruby code files for errors.
 # Usage: ./lint.sh
 
 set -e
+setopt extended_glob null_glob
 
 check_tool() {
   if ! command -v "$1" >/dev/null 2>&1; then

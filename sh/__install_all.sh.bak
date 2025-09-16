@@ -1,6 +1,4 @@
-#!/bin/sh
-set -euo pipefail
-
+#!/bin/bash
 
 #!/usr/bin/env zsh
 # Sets up utility scripts in ~/bin and adds them to PATH.
@@ -19,6 +17,7 @@ cat << 'EOF' > backup.sh
 # Usage: ./backup.sh [directory]
 
 set -e
+setopt extended_glob null_glob
 
 log_error() { echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1" >> "$HOME/script_errors.log"; }
 
@@ -75,6 +74,7 @@ cat << 'EOF' > clean.sh
 # Usage: ./clean.sh [target_folder]
 
 set -e
+setopt extended_glob
 
 dir="${1:-.}"
 
@@ -114,6 +114,7 @@ cat << 'EOF' > hack.sh
 # Usage: ./hack.sh [pattern]
 
 set -e
+setopt nullglob extendedglob
 
 pattern="$1"
 if [[ -n "$pattern" ]]; then
@@ -159,6 +160,7 @@ cat << 'EOF' > lint.sh
 # Usage: ./lint.sh
 
 set -e
+setopt extended_glob null_glob
 
 check_tool() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -199,6 +201,7 @@ cat << 'EOF' > perms.sh
 # Usage: ./perms.sh <owner> <group> <file_perms> <folder_perms>
 
 set -e
+setopt extended_glob null_glob
 
 if (( $# < 4 )); then
   echo "Usage: $0 <owner> <group> <file_perms> <folder_perms>"
@@ -255,6 +258,7 @@ cat << 'EOF' > replace.sh
 # Usage: ./replace.sh [-b] <old> <new> [folder]
 
 set -e
+setopt extendedglob
 
 backup=false
 if [[ "$1" == "-b" ]]; then
@@ -324,6 +328,7 @@ cat << 'EOF' > showp.sh
 # Usage: ./showp.sh
 
 set -e
+setopt extendedglob
 
 root=$(basename "$PWD")
 date=$(date +"%Y-%m-%d_%H%M%S")
@@ -361,6 +366,7 @@ cat << 'EOF' > svgomg.sh
 # Usage: ./svgomg.sh [folder]
 
 set -e
+setopt extendedglob
 
 if ! command -v svgo >/dev/null 2>&1; then
   echo "Error: svgo not found. Install via npm."
@@ -393,6 +399,7 @@ cat << 'EOF' > tree.sh
 # Usage: ./tree.sh [folder] [-a]
 
 set -e
+setopt globdots
 
 include_hidden=false
 folder="."
@@ -437,6 +444,7 @@ cat << 'EOF' > free_up_space.sh
 # Usage: ./free_up_space.sh [directory]
 
 set -e
+setopt extended_glob null_glob
 
 search_dir="${1:-.}"
 

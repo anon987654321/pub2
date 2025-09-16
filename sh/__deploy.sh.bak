@@ -1,6 +1,4 @@
-#!/bin/sh
-set -euo pipefail
-
+#!/usr/bin/env zsh
 
 for file in *.sh; do 
   destination="/usr/local/bin/${file:r}"

@@ -1,6 +1,4 @@
-#!/bin/sh
-set -euo pipefail
-
+#!/bin/bash
 
 #!/usr/bin/env zsh
 

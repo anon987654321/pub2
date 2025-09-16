@@ -1,12 +1,11 @@
-#!/bin/sh
-set -euo pipefail
-
+#!/usr/bin/env zsh
 #
 # OPENS MATCHING TEXT FILES IN VIM
 #
 #   Usage: hack <string, leave empty to open all files>
 #
 
+setopt nullglob extendedglob
 
 dir=${1:-"."} # Default to the current directory if no argument is given
 

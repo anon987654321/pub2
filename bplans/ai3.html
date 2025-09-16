@@ -1,17 +1,23 @@
-# Ruby 3D Printing for Aerospace & Propulsion Systems
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruby 3D Printing for Aerospace &amp; Propulsion Systems</title>
+</head>
+<body>
+  <h1>Ruby 3D Printing for Aerospace &amp; Propulsion Systems</h1>
 
-**Technology Innovation Plan** | **Domain**: Technology & Innovation | **Framework**: master.json v111.3-autonomous  
-**Cross-References**: [Rails Ecosystem](./rails-ecosystem-overview.md) | [Lab Controller](./lab-equipment-controller.rb) | [Financial Portfolio](../finance/)
+  <p><strong>Technology Innovation Plan</strong> | <strong>Domain</strong>: Technology &amp; Innovation | <strong>Framework</strong>: master.json v111.3-autonomous<br>
+  <strong>Cross-References</strong>: <a href="./rails-ecosystem-overview.md">Rails Ecosystem</a> | <a href="./lab-equipment-controller.rb">Lab Controller</a> | <a href="../finance/">Financial Portfolio</a></p>
 
----
+  <hr>
 
-3D printing with Ruby could be a groundbreaking approach,
-especially when integrating space propulsion designs. Here is how you can conceptualize Ruby-driven 3D printing for aerospace components and propulsion systems.
+  <p>3D printing with Ruby could be a groundbreaking approach, especially when integrating space propulsion designs. Here is how you can conceptualize Ruby-driven 3D printing for aerospace components and propulsion systems.</p>
 
-### 1. **Basic 3D Printing Model in Ruby**
+  <h3>1. Basic 3D Printing Model in Ruby</h3>
 
-```ruby
-class ThreeDPrinter
+  <pre><code>class ThreeDPrinter
   attr_reader :material, :layer_height, :speed
 
   def initialize(material, layer_height, speed)
@@ -28,21 +34,15 @@ end
 
 # Example for printing a propulsion component:
 printer = ThreeDPrinter.new("carbon fiber", 0.1, 50)
-printer.print_component("Quantum Vacuum Thruster", 1200)  # 1200 cubic mm
-```
+printer.print_component("Quantum Vacuum Thruster", 1200)  # 1200 cubic mm</code></pre>
 
-This basic class simulates how a 3D printer works with given material,
-layer height,
-and speed. This can be expanded to factor in temperature,
-different printing techniques (FDM,
-SLS),
-or material strength.
+  <p>This basic class simulates how a 3D printer works with given material, layer height, and speed. This can be expanded to factor in temperature, different printing techniques (FDM, SLS), or material strength.</p>
 
----
+  <hr>
 
-### 2. **3D Printing an Electrodynamic Drone**
+  <h3>2. 3D Printing an Electrodynamic Drone</h3>
 
-Considering the electrodynamic propulsion system, you could define 3D-printable components that make up the drone:
+  <p>Considering the electrodynamic propulsion system, you could define 3D-printable components that make up the drone:</p>
 
 ```ruby
 class DronePart

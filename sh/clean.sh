@@ -1,16 +1,13 @@
-#!/bin/bash
+#!/bin/sh
+set -euo pipefail
 
-#!/usr/bin/env zsh
 # Removes carriage returns, trailing whitespaces, and extra blank lines from text files.
 # Usage: ./clean.sh [target_folder]
 
-set -e
-setopt extended_glob
-
 dir="${1:-.}"
 
-if [[ ! -d "$dir" ]]; then
-  echo "Error: '$dir' is not a directory"
+if [ ! -d "$dir" ]; then
+  printf "Error: '%s' is not a directory\n" "$dir"
   exit 1
 fi
 

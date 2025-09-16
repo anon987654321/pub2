@@ -1,12 +1,11 @@
-#!/bin/sh
-set -euo pipefail
-
+#!/bin/bash
 
 #!/usr/bin/env zsh
 # Finds and deletes large files to free up space.
 # Usage: ./free_up_space.sh [directory]
 
 set -e
+setopt extended_glob null_glob
 
 search_dir="${1:-.}"
 
