@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#000000" />
   <meta name="description" content="Classic warp tunnel with multiple views. Tilt device for parallax." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>" />
-  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUmFkaW8gQmVyZ2VuIiwic2hvcnRfbmFtZSI6IlJhZGlvIEJlcmdlbiIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMDAwMDAwIiwidGhlbWVfY29sb3IiOiIjMDAwMDAwIiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCIsInR5cGUiOiJpbWFnZS9zdmcrMztLCJzaXplcyI6IjE5MngxOTIifV19" />
+  <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUmFkaW8gQmVyZ2VuIiwic2hvcnRfbmFtZSI6IlJhZGlvIEJlcmdlbiIsInN0YXJ1cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzAwMDAwMCIsInRoZW1lX2NvbG9yIjoiIzAwMDAwMCIsImljb25zIjpbXX0=" />
   <style>
     :root { --safe-top: env(safe-area-inset-top, 0px); --safe-right: env(safe-area-inset-right, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px); --safe-left: env(safe-area-inset-left, 0px); }
     html, body { margin: 0; height: 100%; background: #000; color: #9aa; font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
@@ -97,19 +97,35 @@
   <div id="overlay" class="overlay" role="dialog" aria-labelledby="start-title" aria-modal="true" tabindex="0"><div><h2 id="start-title">Tap to start</h2></div></div>
   <div class="ui" id="ui" role="status" aria-live="off" aria-atomic="true"><span class="label">Streaming</span><span class="dots" id="uiDots" aria-hidden="true"></span></div>
   <div class="swipe-hint" id="swipeHint">← Swipe for tracks →</div>
-  <div id="yt-player" aria-hidden="true" role="none" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></div>
-  <iframe id="player-fallback" src="about:blank" title="YouTube audio player (hidden)" aria-hidden="true" tabindex="-1" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></iframe>
+  <!-- Dual YT players for crossfade -->
+  <div id="yt-player-a" aria-hidden="true" role="none" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></div>
+  <div id="yt-player-b" aria-hidden="true" role="none" style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></div>
+  <iframe id="player-fallback-a" src="about:blank" title="YouTube audio player A (hidden)" aria-hidden="true" tabindex="-1" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></iframe>
+  <iframe id="player-fallback-b" src="about:blank" title="YouTube audio player B (hidden)" aria-hidden="true" tabindex="-1" frameborder="0" allow="autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture; fullscreen" allowfullscreen style="position:fixed;top:-10000px;left:-10000px;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1"></iframe>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     "use strict";
+    // Crossfade settings
+    const FADE_MS = 3500;
+    const START_FADE_IN = true;
+
     const DEBUG = false, warn = (...args) => { if (DEBUG) { try { console.warn(...args); } catch {} } };
     const DPR = Math.min(2, window.devicePixelRatio || 1), isLowEnd = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) || (navigator.deviceMemory && navigator.deviceMemory <= 2);
-    (function dots(){ const el = document.getElementById("uiDots"); if(!el) return; const seq = [0,1,2,3,1,2,3]; let i=0; function tick(){ el.textContent = ".".repeat(seq[i]); i=(i+1)%seq.length; } tick(); try{ clearInterval(window.__RB_DOTS_IV); }catch{} window.__RB_DOTS_IV = setInterval(tick, 600); })();
+
+    (function dots() {
+      const el = document.getElementById("uiDots"); if (!el) return;
+      const seq = [0, 1, 2, 3, 1, 2, 3]; let i = 0;
+      function tick() { el.textContent = ".".repeat(seq[i]); i = (i + 1) % seq.length; }
+      tick(); try { clearInterval(window.__RB_DOTS_IV); } catch {}
+      window.__RB_DOTS_IV = setInterval(tick, 600);
+    })();
+
     const DEFAULTS = { reducedMotion: false };
     function loadSettings() { try { const raw = localStorage.getItem("rb_settings"); if (!raw) return { ...DEFAULTS }; const parsed = JSON.parse(raw); return { ...DEFAULTS, ...parsed }; } catch { return { ...DEFAULTS }; } }
     function saveSettings(s) { try { localStorage.setItem("rb_settings", JSON.stringify(s)); } catch {} }
     let settings = loadSettings();
     function motionScale() { const prefersReduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches; return (settings.reducedMotion || prefersReduced) ? 0.35 : 1; }
+
     const settingsPanel = document.createElement("div");
     settingsPanel.id = "settingsPanel"; settingsPanel.className = "settings-panel"; settingsPanel.setAttribute("role", "dialog"); settingsPanel.setAttribute("aria-modal", "false"); settingsPanel.setAttribute("aria-label", "Settings");
     settingsPanel.innerHTML = `<h3>Settings</h3><div class="settings-row"><label for="reducedMotion">Reduced motion</label><input id="reducedMotion" type="checkbox" /></div>`;
@@ -119,8 +135,10 @@
     applySettingsToUI();
     function broadcastSettings() { saveSettings(settings); if (rendererWorker) { rendererWorker.postMessage({ type: "settings", settings }); } else if (window.tunnelRenderer && window.tunnelRenderer.applySettings) { window.tunnelRenderer.applySettings(settings); } }
     reducedMotionEl.addEventListener("change", () => { settings.reducedMotion = !!reducedMotionEl.checked; broadcastSettings(); });
+
     class SimpleCarousel { constructor(element, interval = 2800) { this.slides = Array.from(element.querySelectorAll(".carousel-slide")); this.i = 0; this.n = this.slides.length; if (this.n > 1) this.t = setInterval(() => this.next(), interval); } next() { this.slides[this.i].classList.remove("active"); this.i = (this.i + 1) % this.n; this.slides[this.i].classList.add("active"); } }
     new SimpleCarousel(document.getElementById("cityCarousel"));
+
     const YOUTUBE_TRACKS = [
       { artist: "J Dilla", title: "Microphone Master", id: "9EGHwkDix78" },
       { artist: "J Dilla", title: "In Space", id: "vO2nWXCVt6o" },
@@ -145,45 +163,219 @@
       { artist: "Bob Marley", title: "Forever Loving Jah", id: "sRsefcInwdg" }
     ];
     const YT_ORIGIN = "https://www.youtube.com";
-    class AudioEngine {
-      constructor() { this.apiReady = false; this.player = null; this.fallbackIframe = document.getElementById("player-fallback"); this.started = false; this.muted = true; this.trackIndex = 0; this.tracks = YOUTUBE_TRACKS.sort(() => Math.random() - 0.5); this._advanceTimer = null; this._loadTimeout = null; this.beatPhase = 0; this.energyLevel = 0.5; }
-      initAPI() { try { this.player = new YT.Player("yt-player", { width: "1", height: "1", playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0, playsinline: 1, origin: location.origin }, events: { onReady: () => this.onReady(), onStateChange: (e) => this.onStateChange(e), onError: () => this.onError() } }); this.apiReady = true; } catch { this.apiReady = false; } }
-      onReady() { try { this.player.unMute(); this.muted = false; } catch {}; if (this.started) this.loadAndPlay(this.tracks[this.trackIndex]); }
-      onStateChange(e) { const S = YT.PlayerState; if (e.data === S.ENDED) this.next(); else if (e.data === S.PLAYING) { clearTimeout(this._loadTimeout); } }
-      onError() { clearTimeout(this._loadTimeout); try { navigator.vibrate?.([8, 40, 8]); } catch {} this.next(); }
-      start() { this.started = true; this.loadAndPlay(this.tracks[this.trackIndex]); }
-      loadAndPlay(track) {
-        const id = track.id; clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout);
-        if (this.apiReady && this.player && this.player.loadVideoById) { try { this.player.loadVideoById({ videoId: id, startSeconds: 0, suggestedQuality: "small" }); try { this.player.unMute(); this.muted = false; } catch {} this.afterStart(); this._loadTimeout = setTimeout(() => { this.next(); }, 7000); return; } catch {} }
-        const src = "https://www.youtube.com/embed/" + id + "?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1&mute=" + (this.muted ? 1 : 0) + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
-        this.fallbackIframe.src = src;
-        this.fallbackIframe.onload = () => { clearTimeout(this._loadTimeout); this.afterStart(); setTimeout(() => { try { this.fallbackIframe.contentWindow.postMessage({ event: "command", func: "unMute", args: [] }, YT_ORIGIN); this.muted = false; } catch {} }, 800); };
-        this._loadTimeout = setTimeout(() => { this.next(); }, 7000);
+
+    // Best-effort YouTube postMessage helper (fallback iframes)
+    function ytPost(iframe, func, args = []) {
+      try {
+        iframe.contentWindow.postMessage({ event: "command", func, args }, YT_ORIGIN);
+      } catch (e1) {
+        // In sandboxed viewers, recipient origin may be "null". Fallback to "*".
+        try { iframe.contentWindow.postMessage({ event: "command", func, args }, "*"); } catch (e2) {}
       }
-      afterStart() { clearTimeout(this._advanceTimer); this._advanceTimer = setTimeout(() => this.next(), 180000); }
-      next() { clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout); this.trackIndex = (this.trackIndex + 1) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); try { navigator.vibrate?.(10); } catch {} }
-      prev() { clearTimeout(this._advanceTimer); clearTimeout(this._loadTimeout); this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length; this.loadAndPlay(this.tracks[this.trackIndex]); try { navigator.vibrate?.(10); } catch {} }
-      toggleMute() { this.muted = !this.muted; try { if (this.apiReady && this.player) { if (this.muted) this.player.mute(); else this.player.unMute(); } else { const cmd = this.muted ? "mute" : "unMute"; this.fallbackIframe.contentWindow.postMessage({ event: "command", func: cmd, args: [] }, YT_ORIGIN); } } catch {} try { navigator.vibrate?.(6); } catch {} }
+    }
+
+    class AudioEngine {
+      constructor() {
+        this.apiReady = false;
+        this.players = { a: null, b: null };
+        this.started = false;
+        this.muted = true;
+        this.trackIndex = 0;
+        this.tracks = YOUTUBE_TRACKS.sort(() => Math.random() - 0.5);
+        this.activeKey = "a";
+        this.inactiveKey = "b";
+        this._fadeIv = null;
+        this._prefadeTimer = null;
+        this._loadWatch = null;
+        this.beatPhase = 0;
+        this.energyLevel = 0.5;
+      }
+      initAPI() {
+        try {
+          this.players.a = new YT.Player("yt-player-a", {
+            width: "1", height: "1",
+            playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0, playsinline: 1, origin: location.origin },
+            events: { onReady: () => this.onReady("a"), onStateChange: (e) => this.onStateChange("a", e), onError: () => this.onError("a") }
+          });
+          this.players.b = new YT.Player("yt-player-b", {
+            width: "1", height: "1",
+            playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, rel: 0, playsinline: 1, origin: location.origin },
+            events: { onReady: () => this.onReady("b"), onStateChange: (e) => this.onStateChange("b", e), onError: () => this.onError("b") }
+          });
+          this.apiReady = true;
+        } catch {
+          this.apiReady = false;
+        }
+      }
+      onReady(key) {
+        try { this.players[key].unMute(); this.players[key].setVolume(0); } catch {}
+        if (this.started && key === this.activeKey) {
+          const t = this.tracks[this.trackIndex];
+          this._loadOn(key, t, { fadeIn: START_FADE_IN });
+        }
+      }
+      onStateChange(key, e) {
+        const S = YT.PlayerState;
+        if (e.data === S.ENDED) {
+          if (key === this.activeKey) this.beginCrossfade({ fast: true });
+        } else if (e.data === S.PLAYING) {
+          clearTimeout(this._loadWatch);
+          try {
+            const p = this.players[key];
+            const setPrefade = () => {
+              const dur = p.getDuration ? (p.getDuration() || 0) : 0;
+              if (dur > 0) {
+                const ms = Math.max(FADE_MS + 1000, (dur * 1000) - FADE_MS - 500);
+                clearTimeout(this._prefadeTimer);
+                this._prefadeTimer = setTimeout(() => this.beginCrossfade({}), ms);
+              }
+            };
+            setPrefade();
+            setTimeout(setPrefade, 500);
+            setTimeout(setPrefade, 1500);
+          } catch {}
+        }
+      }
+      onError(_key) {
+        clearTimeout(this._loadWatch);
+        try { navigator.vibrate?.([8, 40, 8]); } catch {}
+        this.beginCrossfade({ fast: true });
+      }
+      start() {
+        this.started = true;
+        const t = this.tracks[this.trackIndex];
+        this._loadOn(this.activeKey, t, { fadeIn: START_FADE_IN });
+      }
+      _loadOn(key, track, { fadeIn } = { fadeIn: true }) {
+        clearTimeout(this._loadWatch);
+        const id = track.id;
+        if (this.apiReady && this.players[key] && this.players[key].loadVideoById) {
+          try {
+            const p = this.players[key];
+            p.loadVideoById({ videoId: id, startSeconds: 0, suggestedQuality: "small" });
+            try { p.unMute(); } catch {}
+            if (fadeIn) { this._fadeVolumes({ toKey: key, ms: FADE_MS }); }
+            this._loadWatch = setTimeout(() => {
+              try {
+                const tNow = p.getCurrentTime ? p.getCurrentTime() : 0;
+                if (tNow < 0.1) { this.beginCrossfade({ fast: true }); }
+              } catch { this.beginCrossfade({ fast: true }); }
+            }, 4000);
+            return;
+          } catch {}
+        }
+        // Fallback iframes
+        const iframe = document.getElementById("player-fallback-" + key);
+        const src = "https://www.youtube.com/embed/" + id +
+          "?autoplay=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1" +
+          "&mute=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+        iframe.src = src;
+        iframe.onload = () => {
+          ytPost(iframe, "playVideo", []);
+          if (fadeIn) {
+            ytPost(iframe, "setVolume", [0]);
+            ytPost(iframe, "unMute", []);
+            this._fadeVolumes({ toKey: key, ms: FADE_MS, fallback: true });
+          } else {
+            ytPost(iframe, "setVolume", [100]);
+            ytPost(iframe, "unMute", []);
+          }
+        };
+        this._loadWatch = setTimeout(() => { this.beginCrossfade({ fast: true }); }, 5000);
+      }
+      beginCrossfade({ fast = false } = {}) {
+        clearInterval(this._fadeIv);
+        clearTimeout(this._prefadeTimer);
+        const nextIndex = (this.trackIndex + 1) % this.tracks.length;
+        const nextTrack = this.tracks[nextIndex];
+        const fromKey = this.activeKey;
+        const toKey = this.inactiveKey;
+        this._loadOn(toKey, nextTrack, { fadeIn: false });
+        setTimeout(() => {
+          this._fadeVolumes({ fromKey, toKey, ms: fast ? Math.min(1200, FADE_MS) : FADE_MS, fallback: !this.apiReady });
+          this.trackIndex = nextIndex;
+        }, fast ? 200 : 500);
+      }
+      _fadeVolumes({ fromKey = null, toKey, ms = FADE_MS } = {}) {
+        const steps = Math.max(8, Math.floor(ms / 50));
+        let i = 0;
+        const ifrA = document.getElementById("player-fallback-a");
+        const ifrB = document.getElementById("player-fallback-b");
+        const setVol = (key, v) => {
+          const vv = Math.max(0, Math.min(100, v));
+          if (this.apiReady) {
+            try { this.players[key].setVolume(vv); this.players[key].unMute(); } catch {}
+          } else {
+            const iframe = key === "a" ? ifrA : ifrB;
+            ytPost(iframe, "setVolume", [vv]); ytPost(iframe, "unMute", []);
+          }
+        };
+        if (fromKey) setVol(fromKey, 100);
+        setVol(toKey, 0);
+        if (this.apiReady) { try { this.players[toKey].playVideo?.(); } catch {} }
+        clearInterval(this._fadeIv);
+        this._fadeIv = setInterval(() => {
+          i++;
+          const t = i / steps;
+          if (fromKey) setVol(fromKey, Math.round(100 * (1 - t)));
+          setVol(toKey, Math.round(100 * t));
+          if (i >= steps) {
+            clearInterval(this._fadeIv);
+            if (fromKey) {
+              if (this.apiReady) { try { this.players[fromKey].stopVideo?.(); } catch {} }
+              else { const iframe = fromKey === "a" ? ifrA : ifrB; ytPost(iframe, "pauseVideo", []); }
+            }
+            this.activeKey = toKey;
+            this.inactiveKey = fromKey || (toKey === "a" ? "b" : "a");
+          }
+        }, Math.max(10, Math.floor(ms / steps)));
+      }
+      next() { this.beginCrossfade({}); try { navigator.vibrate?.(10); } catch {} }
+      prev() {
+        this.trackIndex = (this.trackIndex - 1 + this.tracks.length) % this.tracks.length;
+        const fromKey = this.activeKey;
+        const toKey = this.inactiveKey;
+        this._loadOn(toKey, this.tracks[this.trackIndex], { fadeIn: false });
+        setTimeout(() => this._fadeVolumes({ fromKey, toKey, ms: FADE_MS }), 400);
+        try { navigator.vibrate?.(10); } catch {}
+      }
+      toggleMute() {
+        this.muted = !this.muted;
+        try {
+          if (this.apiReady) {
+            const p = this.players[this.activeKey];
+            if (this.muted) p.mute(); else p.unMute();
+          } else {
+            const iframe = document.getElementById("player-fallback-" + this.activeKey);
+            ytPost(iframe, this.muted ? "mute" : "unMute", []);
+          }
+        } catch {}
+        try { navigator.vibrate?.(6); } catch {}
+      }
       trackLabel() { const t = this.tracks[this.trackIndex]; return t.artist + " — " + t.title; }
       data() {
-        const ms = motionScale(); this.beatPhase += 0.08 * ms; this.energyLevel = this.energyLevel*0.999 + Math.random()*0.001;
+        const ms = motionScale(); this.beatPhase += 0.08 * ms; this.energyLevel = this.energyLevel * 0.999 + Math.random() * 0.001;
         const bass = 0.5 + 0.4 * Math.sin(this.beatPhase * 0.8), mid = 0.45 + 0.35 * Math.sin(this.beatPhase * 1.2 + 0.7), high = 0.35 + 0.35 * Math.sin(this.beatPhase * 1.8 + 1.2), avg = (bass + mid + high) / 3;
         const beatRaw = Math.sin(this.beatPhase) > 0.8 ? 1 : 0; this._beatEnv = (this._beatEnv || 0) + (beatRaw - (this._beatEnv || 0)) * (beatRaw ? 0.4 : 0.06);
         return { bass, mid, high, average: avg, beat: this._beatEnv, energy: this.energyLevel };
       }
     }
+
     let audio = new AudioEngine();
     window.onYouTubeIframeAPIReady = function () { audio.initAPI(); };
-    const canvas = document.getElementById("canvas"), canOffscreen = !!HTMLCanvasElement.prototype.transferControlToOffscreen && typeof Worker !== "undefined";
+
+    const canvas = document.getElementById("canvas"), USE_OFFSCREEN = false, canOffscreen = USE_OFFSCREEN && !!HTMLCanvasElement.prototype.transferControlToOffscreen && typeof Worker !== "undefined";
     let rendererWorker = null, workerInitialized = false, INTERNAL_SCALE = 1, w = 0, h = 0;
-    function applyInternalScale(baseQuality = (isLowEnd ? 0.75 : 1)) { INTERNAL_SCALE = baseQuality * Math.min(2, DPR); }
-    (function setupFallbackRenderer() {
+    function applyInternalScale(baseQuality = (isLowEnd ? 0.75 : 1)) { INTERNAL_SCALE = baseQuality * Math.min(1, DPR); }
+
+    // Fallback renderer (only create context if needed)
+    function setupFallbackRenderer() {
       class PixelTunnel {
         constructor(ctx) { this.ctx = ctx; this.w = 0; this.h = 0; this.s = 1; this.imageData = null; this.data = null; this.fov = 250; this.speed = 0.75; this.segments = 64; this.baseRadius = 75; this.zStep = 4; this.particles = []; this.centers = []; this.time = 0; this.mouse = { x: 0, y: 0, down: false, active: false }; this.ori = { active: false, beta: 0, gamma: 0 }; this.invertValue = 0; }
         resize(w, h, s) { this.w = w; this.h = h; this.s = s; this.ctx.fillStyle = "#000"; this.ctx.fillRect(0, 0, w, h); this.imageData = this.ctx.getImageData(0, 0, w, h); this.data = this.imageData.data; this.init(); }
-        applySettings(s) {}
-        clearImageData() { const d = this.data; for (let i = 0, l = d.length; i < l; i += 4) { d[i]=0; d[i+1]=0; d[i+2]=0; d[i+3]=255; } }
-        setPixel(x, y, r, g, b, a) { if (x <= 0 || x >= this.w || y <= 0 || y >= this.h) return; const i = (x + y * this.imageData.width) * 4; this.data[i]=r; this.data[i+1]=g; this.data[i+2]=b; this.data[i+3]=a; }
+        applySettings(_s) {}
+        clearImageData() { const d = this.data; for (let i = 0, l = d.length; i < l; i += 4) { d[i] = 0; d[i + 1] = 0; d[i + 2] = 0; d[i + 3] = 255; } }
+        setPixel(x, y, r, g, b, a) { if (x <= 0 || x >= this.w || y <= 0 || y >= this.h) return; const i = (x + y * this.imageData.width) * 4; this.data[i] = r; this.data[i + 1] = g; this.data[i + 2] = b; this.data[i + 3] = a; }
         drawLine(x1, y1, x2, y2, r, g, b, a) {
           let dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1), sx = (x1 < x2) ? 1 : -1, sy = (y1 < y2) ? 1 : -1, err = dx - dy, lx = x1, ly = y1;
           for (;;) { if (lx > 0 && lx < this.w && ly > 0 && ly < this.h) this.setPixel(lx, ly, r, g, b, a); if (lx === x2 && ly === y2) break; const e2 = 2 * err; if (e2 > -dy) { err -= dy; lx += sx; } if (e2 < dx) { err += dx; ly += sy; } }
@@ -199,7 +391,7 @@
             this.particles.push(row);
           }
         }
-        softInvert(value) { const d = this.data; for (let j = 0, n = d.length; j < n; j += 4) { d[j] = Math.abs(value - d[j]); d[j+1] = Math.abs(value - d[j+1]); d[j+2] = Math.abs(value - d[j+2]); d[j+3] = 255; } }
+        softInvert(value) { const d = this.data; for (let j = 0, n = d.length; j < n; j += 4) { d[j] = Math.abs(value - d[j]); d[j + 1] = Math.abs(value - d[j + 1]); d[j + 2] = Math.abs(value - d[j + 2]); d[j + 3] = 255; } }
         frame(audioData) {
           const ms = motionScale(); this.clearImageData(); const l = this.particles.length; let sortArray = false;
           for (let i = 0; i < l; i++) {
@@ -213,7 +405,7 @@
               if (this.mouse.down) { p.z += this.speed * ms; if (p.z > this.fov) { p.z -= (this.fov * 2); sortArray = true; } } else { p.z -= this.speed * ms; if (p.z < -this.fov) { p.z += (this.fov * 2); sortArray = true; } }
               const curPos = this.getCirclePos(p.centerX, p.centerY, p.radiusAudio, p.index, p.segments); p.x = curPos.x; p.y = curPos.y;
             }
-            const r = Math.round(255 * (audioData?.high || 0.35)), g = Math.round(100 * (audioData?.average || 0.45) + (i/l * 50)), b = Math.round(200 * (audioData?.bass || 0.5));
+            const r = Math.round(255 * (audioData?.high || 0.35)), g = Math.round(100 * (audioData?.average || 0.45) + (i / l * 50)), b = Math.round(200 * (audioData?.bass || 0.5));
             for (let j = 1; j < row.length; j++) { const p = row[j], prev = row[j - 1]; this.drawLine(p.x2d | 0, p.y2d | 0, prev.x2d | 0, prev.y2d | 0, r, g, b, 255); }
             if (row.length > 2) { const first = row[0], last = row[row.length - 1]; this.drawLine(last.x2d | 0, last.y2d | 0, first.x2d | 0, first.y2d | 0, r, g, b, 255); }
             if (i > 0 && i < l - 1 && rowBack) { for (let j = 0; j < row.length; j++) { const p = row[j], pB = (j === 0) ? rowBack[rowBack.length - 1] : rowBack[j - 1]; this.drawLine(p.x2d | 0, p.y2d | 0, pB.x2d | 0, pB.y2d | 0, r, g, b, 255); } }
@@ -226,15 +418,47 @@
       }
       const ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true }) || canvas.getContext("2d");
       window.tunnelRenderer = new PixelTunnel(ctx);
-    })();
-    function sizeCanvas() { applyInternalScale(); w = Math.floor(window.innerWidth * INTERNAL_SCALE); h = Math.floor(window.innerHeight * INTERNAL_SCALE); canvas.width = w; canvas.height = h; canvas.style.width = window.innerWidth + "px"; canvas.style.height = window.innerHeight + "px"; if (rendererWorker && workerInitialized) { rendererWorker.postMessage({ type: "resize", width: w, height: h, internalScale: INTERNAL_SCALE }); } if (window.tunnelRenderer && window.tunnelRenderer.resize) { window.tunnelRenderer.resize(w, h, INTERNAL_SCALE); } }
+    }
+
+    function sizeCanvas() {
+      applyInternalScale();
+      const cssW = window.innerWidth;
+      const cssH = window.innerHeight;
+      const targetW = Math.floor(cssW * INTERNAL_SCALE);
+      const targetH = Math.floor(cssH * INTERNAL_SCALE);
+      if (rendererWorker && workerInitialized) {
+        rendererWorker.postMessage({
+          type: "resize",
+          width: targetW,
+          height: targetH,
+          internalScale: INTERNAL_SCALE
+        });
+      } else {
+        // Fallback (main-thread 2D)
+        w = targetW; h = targetH;
+        canvas.width = w; canvas.height = h;
+        if (window.tunnelRenderer && window.tunnelRenderer.resize) {
+          window.tunnelRenderer.resize(w, h, INTERNAL_SCALE);
+        }
+      }
+      // Always set CSS size for layout/pointer math
+      canvas.style.width = cssW + "px";
+      canvas.style.height = cssH + "px";
+    }
+
     function bootWorkerInline() {
       try {
-        let workerCode = '"use strict";\\n(function(){\\nlet canvas,ctx,imageData,data,w=0,h=0,SCALE=1;\\nconst fov=250,baseRadius=75,segments=64,zStep=4;let speed=0.75;\\nlet particles=[],centers=[],time=0;\\nlet mouse={x:0,y:0,down:false,active:false};let ori={active:false,beta:0,gamma:0};\\nlet MOTION=1.0;function clearImageData(){for(let i=0,l=data.length;i<l;i+=4){data[i]=0;data[i+1]=0;data[i+2]=0;data[i+3]=255;}}\\nfunction setPixel(x,y,r,g,b,a){if(x<=0||x>=w||y<=0||y>=h)return;const i=(x+y*imageData.width)*4;data[i]=r;data[i+1]=g;data[i+2]=b;data[i+3]=a;}\\nfunction drawLine(x1,y1,x2,y2,r,g,b,a){let dx=Math.abs(x2-x1),dy=Math.abs(y2-y1);let sx=(x1<x2)?1:-1,sy=(y1<y2)?1:-1;let err=dx-dy,lx=x1,ly=y1;for(;;){if(lx>0&&lx<w&&ly>0&&ly<h)setPixel(lx,ly,r,g,b,a);if(lx===x2&&ly===y2)break;const e2=2*err;if(e2>-dx){err-=dy;lx+=sx;}if(e2<dx){err+=dx;ly+=sy;}}}\\nfunction getCirclePos(cx,cy,radius,index,seg){const angle=index*((Math.PI*2)/seg)+time;return{x:cx+Math.cos(angle)*radius,y:cy+Math.sin(angle)*radius};}\\nfunction init(){particles=[];centers=[];const w1=Math.random()*(w/1);const h1=Math.random()*(h/1);let c=0;for(let z=-fov;z<fov;z+=zStep){const coords=[];for(let i=0;i<segments;i++){const p=getCirclePos(0,0,baseRadius,i,segments);coords.push({x:p.x,y:p.y,index:i,radius:baseRadius,segments:segments,centerX:0,centerY:0});}const center={x:(((w/2)-w1)*(c/15))+w/2,y:(((h/2)-h1)*(c/15))+h/2};c++;centers.push(center);const row=[];let audioIndex=8+Math.floor(Math.random()*1024);for(let i=0;i<coords.length;i++){const co=coords[i];const p={x:co.x,y:co.y,z,x2d:0,y2d:0,audioIndex,index:co.index,radius:co.radius,radiusAudio:co.radius,segments:co.segments,centerX:co.centerX,centerY:co.centerY};row.push(p);if(i<coords.length/2)audioIndex++;else audioIndex--;if(audioIndex>1024)audioIndex=8;if(audioIndex<8)audioIndex=1024;}particles.push(row);}}\\nfunction frame(audio){clearImageData();const l=particles.length;let sortArray=false;for(let i=0;i<l;i++){const row=particles[i];const rowBack=(i>0)?particles[i-1]:null;const center=centers[i];if(mouse.active){center.x=(((w/2)-(mouse.x/SCALE))*((row[0].z-fov)/500))+w/2;center.y=(((h/2)-(mouse.y/SCALE))*((row[0].z-fov)/500))+h/2;}else if(ori.active){const mx=-ori.gamma*(w/180);const my=-ori.beta*(h/180);center.x=(w/2)+mx*((row[0].z-fov)/500);center.y=(h/2)+my*((row[0].z-fov)/500);}else{center.x+=((w/2)-center.x)*0.015;center.y+=((h/2)-center.y)*0.015;}for(let j=0,k=row.length;j<k;j++){const p=row[j];const scale=fov/(fov+p.z);p.x2d=(p.x*scale)+center.x;p.y2d=(p.y*scale)+center.y;const freqAdd=((audio?.average||0)*64)+((audio?.beat?1:0)*8);p.radiusAudio=p.radius+freqAdd;if(mouse.down){p.z+=speed*MOTION;if(p.z>fov){p.z-=(fov*2);sortArray=true;}}else{p.z-=speed*MOTION;if(p.z<-fov){p.z+=(fov*2);sortArray=true;}}const curPos=getCirclePos(p.centerX,p.centerY,p.radiusAudio,p.index,p.segments);p.x=curPos.x;p.y=curPos.y;}const r=Math.round(255*(audio?.high||0.35));const g=Math.round(100*(audio?.average||0.45)+(i/l*50));const b=Math.round(200*(audio?.bass||0.5));for(let j=1;j<row.length;j++){const p=row[j],prev=row[j-1];drawLine(p.x2d|0,p.y2d|0,prev.x2d|0,prev.y2d|0,r,g,b,255);}if(row.length>2){const first=row[0],last=row[row.length-1];drawLine(last.x2d|0,last.y2d|0,first.x2d|0,first.y2d|0,r,g,b,255);}if(i>0&&i<l-1&&rowBack){for(let j=0;j<row.length;j++){const p=row[j];const pB=(j===0)?rowBack[rowBack.length-1]:rowBack[j-1];drawLine(p.x2d|0,p.y2d|0,pB.x2d|0,pB.y2d|0,r,g,b,255);}}}if(sortArray){particles=particles.sort((a,b)=>(b[0].z-a[0].z));}time+=(mouse.down?-0.005:0.005)*MOTION;ctx.putImageData(imageData,0,0);}\\nself.onmessage=(e)=>{const msg=e.data||{};if(msg.type==="init"){canvas=msg.canvas;w=msg.width|0;h=msg.height|0;SCALE=msg.internalScale||1;ctx=canvas.getContext("2d",{alpha:false,desynchronized:true,willReadFrequently:true});ctx.fillStyle="#000";ctx.fillRect(0,0,w,h);imageData=ctx.getImageData(0,0,w,h);data=imageData.data;const s=msg.settings||{};MOTION=(s.reducedMotion?0.35:1.0);init();}else if(msg.type==="resize"){w=msg.width|0;h=msg.height|0;SCALE=msg.internalScale||1;canvas.width=w;canvas.height=h;ctx.fillStyle="#000";ctx.fillRect(0,0,w,h);imageData=ctx.getImageData(0,0,w,h);data=imageData.data;init();}else if(msg.type==="settings"){const s=msg.settings||{};MOTION=(s.reducedMotion?0.35:1.0);}else if(msg.type==="input"){const m=msg.mouse||{};mouse.x=m.x|0;mouse.y=m.y|0;mouse.down=!!m.down;mouse.active=!!m.active;const o=msg.orientation||{};ori.active=!!o.active;ori.beta=o.beta||0;ori.gamma=o.gamma||0;}else if(msg.type==="frame"){frame(msg.audio||{average:0,beat:0,bass:0.5,mid:0.45,high:0.35});}};\\n})();\\n';
+        let workerCode = '"use strict";\\n(function(){\\nlet canvas,ctx,imageData,data,w=0,h=0,SCALE=1;\\nconst fov=250,baseRadius=75,segments=64,zStep=4;let speed=0.75;\\nlet particles=[],centers=[],time=0;\\nlet mouse={x:0,y:0,down:false,active:false};let ori={active:false,beta:0,gamma:0};\\nlet MOTION=1.0;function clearImageData(){for(let i=0,l=data.length;i<l;i+=4){data[i]=0;data[i+1]=0;data[i+2]=0;data[i+3]=255;}}\\nfunction setPixel(x,y,r,g,b,a){if(x<=0||x>=w||y<=0||y>=h)return;const i=(x+y*imageData.width)*4;data[i]=r;data[i+1]=g;data[i+2]=b;data[i+3]=a;}\\nfunction drawLine(x1,y1,x2,y2,r,g,b,a){let dx=Math.abs(x2-x1),dy=Math.abs(y2-y1);let sx=(x1<x2)?1:-1,sy=(y1<y2)?1:-1;let err=dx-dy,lx=x1,ly=y1;for(;;){if(lx>0&&lx<w&&ly>0&&ly<h)setPixel(lx,ly,r,g,b,a);if(lx===x2&&ly===y2)break;const e2=2*err;if(e2>-dy){err-=dy;lx+=sx;}if(e2<dx){err+=dx;ly+=sy;}}}\\nfunction getCirclePos(cx,cy,radius,index,seg){const angle=index*((Math.PI*2)/seg)+time;return{x:cx+Math.cos(angle)*radius,y:cy+Math.sin(angle)*radius};}\\nfunction init(){particles=[];centers=[];const w1=Math.random()*(w/1);const h1=Math.random()*(h/1);let c=0;for(let z=-fov;z<fov;z+=zStep){const coords=[];for(let i=0;i<segments;i++){const p=getCirclePos(0,0,baseRadius,i,segments);coords.push({x:p.x,y:p.y,index:i,radius:baseRadius,segments:segments,centerX:0,centerY:0});}const center={x:(((w/2)-w1)*(c/15))+w/2,y:(((h/2)-h1)*(c/15))+h/2};c++;centers.push(center);const row=[];let audioIndex=8+Math.floor(Math.random()*1024);for(let i=0;i<coords.length;i++){const co=coords[i];const p={x:co.x,y:co.y,z,x2d:0,y2d:0,audioIndex,index:co.index,radius:co.radius,radiusAudio:co.radius,segments:co.segments,centerX:co.centerX,centerY:co.centerY};row.push(p);if(i<coords.length/2)audioIndex++;else audioIndex--;if(audioIndex>1024)audioIndex=8;if(audioIndex<8)audioIndex=1024;}particles.push(row);}}\\nfunction frame(audio){clearImageData();const l=particles.length;let sortArray=false;for(let i=0;i<l;i++){const row=particles[i];const rowBack=(i>0)?particles[i-1]:null;const center=centers[i];if(mouse.active){center.x=(((w/2)-(mouse.x/SCALE))*((row[0].z-fov)/500))+w/2;center.y=(((h/2)-(mouse.y/SCALE))*((row[0].z-fov)/500))+h/2;}else if(ori.active){const mx=-ori.gamma*(w/180);const my=-ori.beta*(h/180);center.x=(w/2)+mx*((row[0].z-fov)/500);center.y=(h/2)+my*((row[0].z-fov)/500);}else{center.x+=((w/2)-center.x)*0.015;center.y+=((h/2)-center.y)*0.015;}for(let j=0,k=row.length;j<k;j++){const p=row[j];const scale=fov/(fov+p.z);p.x2d=(p.x*scale)+center.x;p.y2d=(p.y*scale)+center.y;const freqAdd=((audio?.average||0)*64)+((audio?.beat?1:0)*8);p.radiusAudio=p.radius+freqAdd;if(mouse.down){p.z+=speed*MOTION;if(p.z>fov){p.z-=(fov*2);sortArray=true;}}else{p.z-=speed*MOTION;if(p.z<-fov){p.z+=(fov*2);sortArray=true;}}const curPos=getCirclePos(p.centerX,p.centerY,p.radiusAudio,p.index,p.segments);p.x=curPos.x;p.y=curPos.y;}const r=Math.round(255*(audio?.high||0.35));const g=Math.round(100*(audio?.average||0.45)+(i/l*50));const b=Math.round(200*(audio?.bass||0.5));for(let j=1;j<row.length;j++){const p=row[j],prev=row[j-1];drawLine(p.x2d|0,p.y2d|0,prev.x2d|0,prev.y2d|0,r,g,b,255);}if(row.length>2){const first=row[0],last=row[row.length-1];drawLine(last.x2d|0,last.y2d|0,first.x2d|0,first.y2d|0,r,g,b,255);}if(i>0&&i<l-1&&rowBack){for(let j=0;j<row.length;j++){const p=row[j];const pB=(j===0)?rowBack[rowBack.length-1]:rowBack[j-1];drawLine(p.x2d|0,p.y2d|0,pB.x2d|0,pB.y2d|0,r,g,b,255);}}}if(sortArray){particles=particles.sort((a,b)=>(b[0].z-a[0].z));}time+=(mouse.down?-0.005:0.005)*MOTION;ctx.putImageData(imageData,0,0);}\\nself.onmessage=(e)=>{const msg=e.data||{};if(msg.type===\\"init\\"){canvas=msg.canvas;w=msg.width|0;h=msg.height|0;SCALE=msg.internalScale||1;ctx=canvas.getContext(\\"2d\\",{alpha:false,desynchronized:true,willReadFrequently:true});ctx.fillStyle=\\"#000\\";ctx.fillRect(0,0,w,h);imageData=ctx.getImageData(0,0,w,h);data=imageData.data;const s=msg.settings||{};MOTION=(s.reducedMotion?0.35:1.0);init();}else if(msg.type===\\"resize\\"){w=msg.width|0;h=msg.height|0;SCALE=msg.internalScale||1;canvas.width=w;canvas.height=h;ctx.fillStyle=\\"#000\\";ctx.fillRect(0,0,w,h);imageData=ctx.getImageData(0,0,w,h);data=imageData.data;init();}else if(msg.type===\\"settings\\"){const s=msg.settings||{};MOTION=(s.reducedMotion?0.35:1.0);}else if(msg.type===\\"input\\"){const m=msg.mouse||{};mouse.x=m.x|0;mouse.y=m.y|0;mouse.down=!!m.down;mouse.active=!!m.active;const o=msg.orientation||{};ori.active=!!o.active;ori.beta=o.beta||0;ori.gamma=o.gamma||0;}else if(msg.type===\\"frame\\"){frame(msg.audio||{average:0,beat:0,bass:0.5,mid:0.45,high:0.35});}};\\n})();\\n';
         const blob = new Blob([workerCode], { type: "application/javascript" }), url = URL.createObjectURL(blob);
         rendererWorker = new Worker(url);
         rendererWorker.onmessage = () => {};
-        rendererWorker.onerror = () => { try { rendererWorker.terminate(); } catch {}; rendererWorker = null; warn("Worker failed; falling back to main-thread renderer."); };
+        rendererWorker.onerror = () => {
+          try { rendererWorker.terminate(); } catch {}
+          rendererWorker = null;
+          workerInitialized = false;
+          warn("Worker failed; falling back to main-thread renderer.");
+          try { setupFallbackRenderer(); sizeCanvas(); } catch (err) { warn("Fallback renderer init failed", err); }
+        };
         const off = canvas.transferControlToOffscreen();
         applyInternalScale(); w = Math.floor(window.innerWidth * INTERNAL_SCALE); h = Math.floor(window.innerHeight * INTERNAL_SCALE);
         canvas.style.width = window.innerWidth + "px"; canvas.style.height = window.innerHeight + "px";
@@ -243,33 +467,109 @@
         workerInitialized = true; return true;
       } catch (e) { warn("bootWorkerInline error:", e); rendererWorker = null; workerInitialized = false; return false; }
     }
+
     function updateHud() {}
     function doResize() { sizeCanvas(); }
     window.addEventListener("resize", () => { clearTimeout(window.__rzT); window.__rzT = setTimeout(doResize, 80); });
+
     let mouseDown = false, mouseActive = false, mousePos = { x: 0, y: 0 }, orientationActive = false, beta = 0, gamma = 0;
-    function sendInput() { const payload = { type: "input", mouse: { x: mousePos.x, y: mousePos.y, down: mouseDown, active: mouseActive }, orientation: { active: orientationActive, beta, gamma } }; if (rendererWorker) rendererWorker.postMessage(payload); else if (window.tunnelRenderer) { window.tunnelRenderer.mouse = { ...payload.mouse }; window.tunnelRenderer.ori = { ...payload.orientation }; } }
+    function sendInput() {
+      const payload = { type: "input", mouse: { x: mousePos.x, y: mousePos.y, down: mouseDown, active: mouseActive }, orientation: { active: orientationActive, beta, gamma } };
+      if (rendererWorker) rendererWorker.postMessage(payload);
+      else if (window.tunnelRenderer) { window.tunnelRenderer.mouse = { ...payload.mouse }; window.tunnelRenderer.ori = { ...payload.orientation }; }
+    }
     function spawnRipple(x, y) { try { const r = document.createElement("div"); r.className = "tap-ripple"; r.style.setProperty("--x", x + "px"); r.style.setProperty("--y", y + "px"); document.body.appendChild(r); r.addEventListener("animationend", () => r.remove(), { once: true }); } catch {} }
-    function rippleAtEvent(e) { try { let x=0, y=0; if ("touches" in e && e.touches.length) { x = e.touches[0].clientX; y = e.touches[0].clientY; } else if ("changedTouches" in e && e.changedTouches?.length) { x = e.changedTouches[0].clientX; y = e.changedTouches[0].clientY; } else { x = e.clientX; y = e.clientY; } spawnRipple(x, y); } catch {} }
+    function rippleAtEvent(e) { try { let x = 0, y = 0; if ("touches" in e && e.touches.length) { x = e.touches[0].clientX; y = e.touches[0].clientY; } else if ("changedTouches" in e && e.changedTouches?.length) { x = e.changedTouches[0].clientX; y = e.changedTouches[0].clientY; } else { x = e.clientX; y = e.clientY; } spawnRipple(x, y); } catch {} }
+
     const overlayEl = document.getElementById("overlay"), startTitle = document.getElementById("start-title"), swipeHint = document.getElementById("swipeHint"), uiEl = document.getElementById("ui");
     function setInversion(active) { if (active) uiEl.classList.add("ui-inverted"); else uiEl.classList.remove("ui-inverted"); }
-    function startApp(ev) { if (audio.started) return; try { navigator.vibrate?.(12); } catch {} if (ev) rippleAtEvent(ev); overlayEl.style.pointerEvents = "none"; overlayEl.classList.add("ack"); startTitle.classList.add("clicked"); canvas.classList.add("start-ack"); setupSensors(); audio.start(); setTimeout(() => { overlayEl.hidden = true; overlayEl.classList.remove("ack"); startTitle.classList.remove("clicked"); canvas.classList.remove("start-ack"); canvas.focus?.(); }, 220); }
+    function startApp(ev) {
+      if (audio.started) return;
+      try { navigator.vibrate?.(12); } catch {}
+      if (ev) rippleAtEvent(ev);
+      overlayEl.style.pointerEvents = "none";
+      overlayEl.classList.add("ack"); startTitle.classList.add("clicked"); canvas.classList.add("start-ack");
+      setupSensors();
+      audio.start();
+      setTimeout(() => { overlayEl.hidden = true; overlayEl.classList.remove("ack"); startTitle.classList.remove("clicked"); canvas.classList.remove("start-ack"); canvas.focus?.(); }, 220);
+    }
     overlayEl.addEventListener("click", (e) => { e.stopPropagation(); e.preventDefault(); startApp(e); });
     overlayEl.addEventListener("pointerdown", (e) => { rippleAtEvent(e); try { navigator.vibrate?.(8); } catch {} }, { passive: true });
     overlayEl.addEventListener("keydown", (e) => { if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); startApp(); return; } if (e.code === "Tab") { e.preventDefault(); overlayEl.focus(); return; } });
+
     canvas.addEventListener("mousedown", (e) => { mouseDown = true; setInversion(true); sendInput(); rippleAtEvent(e); }, false);
     canvas.addEventListener("mouseup", (e) => { mouseDown = false; setInversion(false); sendInput(); rippleAtEvent(e); }, false);
     canvas.addEventListener("mousemove", (e) => { const rect = canvas.getBoundingClientRect(), xCSS = e.clientX - rect.left, yCSS = e.clientY - rect.top; mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; mouseActive = true; sendInput(); }, false);
     canvas.addEventListener("mouseleave", () => { mouseActive = false; mouseDown = false; setInversion(false); sendInput(); }, false);
+
     let touchStartX = 0, touchStartY = 0, lastTapTime = 0; const swipeThreshold = 70, doubleTapMs = 300;
-    canvas.addEventListener("touchstart", (e) => { e.preventDefault(); const t = e.touches[0], rect = canvas.getBoundingClientRect(), xCSS = t.clientX - rect.left, yCSS = t.clientY - rect.top; touchStartX = xCSS; touchStartY = yCSS; mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; mouseDown = true; setInversion(true); sendInput(); rippleAtEvent(e); const now = performance.now(); if (now - lastTapTime < doubleTapMs && audio.started) { mouseDown = !mouseDown; setInversion(mouseDown); sendInput(); try { navigator.vibrate?.(8); } catch {} } lastTapTime = now; }, { passive: false });
-    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); const t = e.touches[0], rect = canvas.getBoundingClientRect(), xCSS = t.clientX - rect.left, yCSS = t.clientY - rect.top; mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; sendInput(); }, { passive: false });
-    canvas.addEventListener("touchend", (e) => { e.preventDefault(); mouseDown = false; setInversion(false); sendInput(); rippleAtEvent(e); if (audio.started) { const t = e.changedTouches[0], rect = canvas.getBoundingClientRect(), endXCSS = t.clientX - rect.left, endYCSS = t.clientY - rect.top, dx = endXCSS - touchStartX, dy = endYCSS - touchStartY; if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) { if (Math.abs(dx) > Math.abs(dy)) { if (dx > 0) { audio.prev(); } else { audio.next(); } } else { swipeHint.textContent = "Warp Tunnel"; swipeHint.classList.add("show"); setTimeout(() => swipeHint.classList.remove("show"), 1400); } try { navigator.vibrate?.(10); } catch {} } } }, { passive: false });
-    function setupSensors() { try { if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") { DeviceOrientationEvent.requestPermission().then((state) => { if (state === "granted") window.addEventListener("deviceorientation", (e) => { beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true; sendInput(); }, { passive: true }); }).catch(() => {}); } else if (window.DeviceOrientationEvent) { window.addEventListener("deviceorientation", (e) => { beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true; sendInput(); }, { passive: true }); } } catch {} }
-    addEventListener("keydown", (e) => { if (e.key && e.key.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; } if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); } return; } if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); } return; } if (e.code === "KeyS") { e.preventDefault(); settingsPanel.classList.toggle("show"); return; } if (e.code === "KeyR") { e.preventDefault(); settings = { ...DEFAULTS }; applySettingsToUI(); broadcastSettings(); return; } });
+    canvas.addEventListener("touchstart", (e) => {
+      e.preventDefault(); const t = e.touches[0], rect = canvas.getBoundingClientRect(), xCSS = t.clientX - rect.left, yCSS = t.clientY - rect.top;
+      touchStartX = xCSS; touchStartY = yCSS; mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE;
+      mouseDown = true; setInversion(true); sendInput(); rippleAtEvent(e);
+      const now = performance.now(); if (now - lastTapTime < doubleTapMs && audio.started) { mouseDown = !mouseDown; setInversion(mouseDown); sendInput(); try { navigator.vibrate?.(8); } catch {} }
+      lastTapTime = now;
+    }, { passive: false });
+    canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault(); const t = e.touches[0], rect = canvas.getBoundingClientRect(), xCSS = t.clientX - rect.left, yCSS = t.clientY - rect.top;
+      mousePos.x = xCSS * INTERNAL_SCALE; mousePos.y = yCSS * INTERNAL_SCALE; sendInput();
+    }, { passive: false });
+    canvas.addEventListener("touchend", (e) => {
+      e.preventDefault(); mouseDown = false; setInversion(false); sendInput(); rippleAtEvent(e);
+      if (audio.started) {
+        const t = e.changedTouches[0], rect = canvas.getBoundingClientRect(), endXCSS = t.clientX - rect.left, endYCSS = t.clientY - rect.top, dx = endXCSS - touchStartX, dy = endYCSS - touchStartY;
+        if (Math.abs(dx) > swipeThreshold || Math.abs(dy) > swipeThreshold) {
+          if (Math.abs(dx) > Math.abs(dy)) { if (dx > 0) { audio.prev(); } else { audio.next(); } }
+          else { swipeHint.textContent = "Warp Tunnel"; swipeHint.classList.add("show"); setTimeout(() => swipeHint.classList.remove("show"), 1400); }
+          try { navigator.vibrate?.(10); } catch {}
+        }
+      }
+    }, { passive: false });
+
+    function setupSensors() {
+      try {
+        if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+          DeviceOrientationEvent.requestPermission().then((state) => {
+            if (state === "granted") window.addEventListener("deviceorientation", (e) => { beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true; sendInput(); }, { passive: true });
+          }).catch(() => {});
+        } else if (window.DeviceOrientationEvent) {
+          window.addEventListener("deviceorientation", (e) => { beta = e.beta || 0; gamma = e.gamma || 0; orientationActive = true; sendInput(); }, { passive: true });
+        }
+      } catch {}
+    }
+
+    addEventListener("keydown", (e) => {
+      if (e.key && e.key.toLowerCase() === "m") { e.preventDefault(); if (audio.started) audio.toggleMute(); return; }
+      if (e.code === "ArrowRight") { e.preventDefault(); if (audio.started) { audio.next(); } return; }
+      if (e.code === "ArrowLeft") { e.preventDefault(); if (audio.started) { audio.prev(); } return; }
+      if (e.code === "KeyS") { e.preventDefault(); settingsPanel.classList.toggle("show"); return; }
+      if (e.code === "KeyR") { e.preventDefault(); settings = { ...DEFAULTS }; applySettingsToUI(); broadcastSettings(); return; }
+    });
+
     let pageHidden = document.hidden; document.addEventListener("visibilitychange", () => { pageHidden = document.hidden; });
-    function animate() { if (pageHidden) { requestAnimationFrame(animate); return; } const audioData = audio.started ? audio.data() : { average: 0, beat: 0, bass: 0.5, mid: 0.45, high: 0.35 }; if (rendererWorker) rendererWorker.postMessage({ type: "frame", audio: audioData }); else if (window.tunnelRenderer) window.tunnelRenderer.frame(audioData); requestAnimationFrame(animate); }
-    if ("serviceWorker" in navigator) { const swCode = `self.addEventListener('install',e=>e.waitUntil(caches.open('rb-cache').then(c=>c.add('/'))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`; const swBlob = new Blob([swCode], { type: "application/javascript" }), swUrl = URL.createObjectURL(swBlob); navigator.serviceWorker.register(swUrl).then(reg => console.log("SW registered")).catch(err => console.warn("SW failed", err)); }
-    function boot() { if (canOffscreen) bootWorkerInline(); sizeCanvas(); document.getElementById("overlay").focus(); requestAnimationFrame(animate); }
+
+    function animate() {
+      if (pageHidden) { requestAnimationFrame(animate); return; }
+      const audioData = audio.started ? audio.data() : { average: 0, beat: 0, bass: 0.5, mid: 0.45, high: 0.35 };
+      if (rendererWorker) rendererWorker.postMessage({ type: "frame", audio: audioData });
+      else if (window.tunnelRenderer) window.tunnelRenderer.frame(audioData);
+      requestAnimationFrame(animate);
+    }
+
+    if ("serviceWorker" in navigator) {
+      const swCode = `self.addEventListener('install',e=>e.waitUntil(caches.open('rb-cache').then(c=>c.add('/'))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));`;
+      const swBlob = new Blob([swCode], { type: "application/javascript" }), swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl).then(() => console.log("SW registered")).catch(err => console.warn("SW failed", err));
+    }
+
+    function boot() {
+      let workerOk = false;
+      if (canOffscreen) { workerOk = bootWorkerInline(); }
+      if (!workerOk) { setupFallbackRenderer(); }
+      sizeCanvas();
+      document.getElementById("overlay").focus();
+      requestAnimationFrame(animate);
+    }
     if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
   </script>
 </body>
