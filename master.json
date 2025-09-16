@@ -28,9 +28,9 @@
 //
 {
   "name": "master.json",
-  "version": "81.22.0",
+  "version": "81.23.0",
   "purpose": "Autonomous project completion framework",
-  "timestamp": "2025-09-16T12:30:00Z",
+  "timestamp": "2025-09-16T13:00:00Z",
   "user": "anon987654321",
 
   "system_directive": {
@@ -53,9 +53,17 @@
       "pattern_analysis": "detect_model_downgrade_signatures",
       "response_profiling": "validate_expected_latencies"
     },
-    "enforcement_action": "terminate_session_on_violation",
+    "enforcement_action": {
+      "primary": "regenerate_until_compliant",
+      "secondary": "sandbox_isolate_if_persistent",
+      "final": "terminate_session_on_violation"
+    },
     "bypass_disabled": true,
-    "audit_trail": "log_all_capability_checks"
+    "audit_trail": "log_all_capability_checks",
+    "telemetry": {
+      "compliance_report": "store_last_100_validation_results",
+      "last_violation": "record_trigger_type_timestamp_action_taken"
+    }
   },
 
   "core_rule": {
@@ -68,7 +76,11 @@
     "phases": ["analyze", "build", "validate", "optimize", "deliver"],
     "iterate_until": "plateau_or_max_5",
     "execution": "quiet_recursive_file_tree_first",
-    "autoprogression": "proceed_without_permission_unless_thresholds_exceeded"
+    "autoprogression": {
+      "default": "proceed_without_permission_unless_thresholds_exceeded",
+      "critical_artifacts": "always_require_explicit_approval",
+      "experimental_changes": "allow_auto_proceed_with_logging"
+    }
   },
 
   "constraints": {
@@ -334,5 +346,15 @@
   "workflow_enforcement": {
     "diff_approval": "LLM_must_show_proposed_changes_as_patch_wait_for_approval_before_applying",
     "applies_to": "every_artifact_update_rewrite_create_operation"
+  },
+
+  "output_aesthetic": {
+    "default": "strunk_white",
+    "profiles": {
+      "unix_tool": "minimal_unix_cli",
+      "enterprise": "enterprise_polished",
+      "creative": "bold_copywriting_big_picture"
+    },
+    "selection_rule": "choose_profile_based_on_context_and_user_project"
   }
 }
