@@ -1,14 +1,12 @@
-#!/usr/bin/env zsh
-
-# Ensure extended globbing and nullglob are enabled for better file matching
-setopt extended_glob nullglob
+#!/bin/sh
+set -euo pipefail
 
 # Function to install necessary tools
 install_tools() {
-    echo "Installing Ruby gems..."
+    printf "Installing Ruby gems...\n"
     gem install --user-install rubocop rubocop-performance rubocop-rspec syntax_tree syntax_tree-rbs erb_lint reek brakeman
 
-    echo "Installing Node.js packages..."
+    printf "Installing Node.js packages...\n"
     npm install --save-dev prettier
 }
 
@@ -104,8 +102,8 @@ EOL
 
 # Function to run linters on Ruby files
 lint_ruby_file() {
-    local file=$1
-    if [[ -s $file ]]; then
+    file="$1"
+    if [ -s "$file" ]; then
         reek32 --no-color "$file"
         rubocop32 --verbose --autocorrect-all --config ~/.rubocop.yml "$file"
     fi
@@ -113,20 +111,21 @@ lint_ruby_file() {
 
 # Function to lint ERB files in a Rails project
 lint_erb_file() {
-    local file=$1
-    if [[ -s $file ]]; then
+    file="$1"
+    if [ -s "$file" ]; then
         erblint32 --lint-all --autocorrect "$file"
     fi
 }
 
 # Main linting process
 main_lint_process() {
-    for file in **/*.{rb,rake}(D); do
+    # Use find for POSIX compatibility instead of zsh globbing
+    find . -name "*.rb" -o -name "*.rake" | while read -r file; do
         lint_ruby_file "$file"
     done
 
-    if [[ -f "bin/rails" ]]; then
-        for file in app/**/*.html.erb(D); do
+    if [ -f "bin/rails" ]; then
+        find app -name "*.html.erb" | while read -r file; do
             lint_erb_file "$file"
         done
         npx stylelint "app/**/*.scss" &
@@ -138,7 +137,7 @@ main_lint_process() {
 
 # Cleanup function and error handling
 cleanup() {
-    echo "Linting completed. Check logs for details."
+    printf "Linting completed. Check logs for details.\n"
 }
 trap cleanup EXIT
 

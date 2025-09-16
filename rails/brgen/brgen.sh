@@ -1,7 +1,5 @@
-#!/bin/bash
-
-#!/usr/bin/env zsh
-set -e
+#!/bin/sh
+set -euo pipefail
 
 # Brgen core setup: Multi-tenant social and marketplace platform with Mapbox, live search, infinite scroll, and anonymous features on OpenBSD 7.5, unprivileged user
 
@@ -9,7 +7,7 @@ APP_NAME="brgen"
 BASE_DIR="/home/dev/rails"
 BRGEN_IP="46.23.95.45"
 
-source "./__shared.sh"
+. "./__shared.sh"
 
 log "Starting Brgen core setup"
 

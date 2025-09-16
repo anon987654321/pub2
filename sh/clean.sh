@@ -1,36 +1,31 @@
-#!/bin/bash
-
-#!/usr/bin/env zsh
+#!/bin/sh
+set -euo pipefail
 # Removes carriage returns, trailing whitespaces, and extra blank lines from text files.
 # Usage: ./clean.sh [target_folder]
 
-set -e
-setopt extended_glob
-
 dir="${1:-.}"
 
-if [[ ! -d "$dir" ]]; then
-  echo "Error: '$dir' is not a directory"
+if [ ! -d "$dir" ]; then
+  printf "Error: '%s' is not a directory\n" "$dir" >&2
   exit 1
 fi
 
-for file in "$dir"/**/*(.N); do
+# Use find for POSIX compatibility instead of zsh globbing
+find "$dir" -type f | while read -r file; do
   if file -b "$file" | grep -q "text"; then
-  
-    tmp=$(mktemp)
-    if [[ $? -ne 0 ]]; then
-      echo "Error: mktemp failed"
+    tmp="$(mktemp)"
+    if [ $? -ne 0 ]; then
+      printf "Error: mktemp failed\n" >&2
       exit 1
     fi
     
-    # Removes CRLF, trims trailing whitespaces, reduces blank lines.
-    tr -d '\r' < "$file" | awk '{sub(/[ \t]+$/, "");} NF{print; if(p)print ""} {p=NF}' > "$tmp" 2>/dev/null
-    if [[ $? -eq 0 ]]; then
+    # Removes CRLF, trims trailing whitespaces, reduces blank lines
+    if tr -d '\r' < "$file" | awk '{sub(/[ \t]+$/, "");} NF{print; if(p)print ""} {p=NF}' > "$tmp" 2>/dev/null; then
       mv "$tmp" "$file"
-      echo "Cleaned: $file"
+      printf "Cleaned: %s\n" "$file"
     else
-      rm "$tmp"
-      echo "Failed: $file"
+      rm -f "$tmp"
+      printf "Failed: %s\n" "$file"
     fi
   fi
 done
