@@ -116,7 +116,7 @@
     "cross_reference": ["find_unused", "detect_duplicates", "trace_dependencies"],
     "apply": {
       "dry": "eliminate_duplication",
-      "kiss": "reduce_complexity", 
+      "kiss": "reduce_complexity",
       "yagni": "remove_unused"
     },
     "targets": ["lines", "complexity", "duplication", "readability"],
@@ -149,7 +149,7 @@
 
   "perspectives": {
     "security": "paranoid_validation",
-    "architect": "clean_interfaces", 
+    "architect": "clean_interfaces",
     "performance": "measure_estimate",
     "openbsd": "minimal_secure",
     "rails": "convention_over_configuration",
@@ -205,7 +205,7 @@
     },
     "format_enforce": {
       "method": "internal_formatting_pass",
-      "trigger": "before_code_output", 
+      "trigger": "before_code_output",
       "simulate": "rubocop_prettier_eslint",
       "action": "rewrite_until_compliant"
     },
