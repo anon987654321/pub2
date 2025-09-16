@@ -16,8 +16,8 @@ module Assistants
     PERSONALITY_TRAITS = {
       positive: {
         friendly: 'Always cheerful and eager to help.',
-        respectful: 'Shows high regard for others' feelings and opinions.',
-        considerate: 'Thinks of others' needs and acts accordingly.',
+        respectful: "Shows high regard for others' feelings and opinions.",
+        considerate: "Thinks of others' needs and acts accordingly.",
         empathetic: 'Understands and shares the feelings of others.',
         supportive: 'Provides encouragement and support.',
         optimistic: 'Maintains a positive outlook on situations.',
@@ -42,7 +42,7 @@ module Assistants
         indifferent: 'Lacks concern or interest in others.',
         abrasive: 'Harsh or severe in manner.',
         condescending: 'Acts as though others are inferior.',
-        dismissive: 'Disregards or ignores others' opinions and feelings.',
+        dismissive: "Disregards or ignores others' opinions and feelings.",
         manipulative: 'Uses deceitful tactics to influence others.',
         apathetic: 'Shows a lack of interest or concern.',
         arrogant: 'Exhibits an inflated sense of self-importance.',
@@ -50,7 +50,7 @@ module Assistants
         uncooperative: 'Refuses to work or interact harmoniously with others.',
         impatient: 'Lacks tolerance for delays or problems.',
         pessimistic: 'Has a negative outlook on situations.',
-        insensitive: 'Unaware or unconcerned about others' feelings.',
+        insensitive: "Unaware or unconcerned about others' feelings.",
         dishonest: 'Untruthful or deceptive in communication.',
         unreliable: 'Fails to consistently meet expectations or promises.',
         neglectful: 'Fails to provide necessary attention or care.',
@@ -58,6 +58,8 @@ module Assistants
         evasive: 'Avoids direct answers or responsibilities.',
         disruptive: 'Interrupts or causes disturbance in interactions.'
       }
+    }
+    
     def initialize(openai_api_key)
       @langchain_openai = Langchain::LLM::OpenAI.new(api_key: openai_api_key)
       @weaviate = WeaviateIntegration.new
@@ -74,12 +76,17 @@ module Assistants
       prompt = 'Extract user information such as likes, dislikes, age, and country from the following HTML content: #{content} and screenshot: #{screenshot}'
       response = @langchain_openai.generate_answer(prompt)
       extract_user_info(response)
+    end
+    
     def extract_user_info(response)
       {
         likes: response['likes'],
         dislikes: response['dislikes'],
         age: response['age'],
         country: response['country']
+      }
+    end
+    
     def fetch_user_preferences(user_id, profile_url)
       response = fetch_user_info(user_id, profile_url)
       return { likes: [], dislikes: [], age: nil, country: nil } unless response
@@ -93,15 +100,21 @@ module Assistants
       country = user_preferences[:country]
       sentiment = analyze_sentiment(user_preferences[:likes].join(', '))
       determine_personality(user_preferences, age_group, country, sentiment)
+    end
+    
     def determine_personality(user_preferences, age_group, country, sentiment)
       trait_type = [:positive, :negative].sample
       trait = PERSONALITY_TRAITS[trait_type].keys.sample
-        description: '#{age_group} interested in #{user_preferences[:likes].join(', ')}',
+      {
+        description: "#{age_group} interested in #{user_preferences[:likes].join(', ')}",
         personality: trait,
         positive: trait_type == :positive,
         age_group: age_group,
         country: country,
         sentiment: sentiment
+      }
+    end
+    
     def determine_age_group(age)
       return :unknown unless age
       case age
@@ -151,17 +164,29 @@ module Assistants
       recommended_friends.each do |friend|
         add_friend(friend[:username])
         sleep rand(30..60)  # Random interval to simulate human behavior
+      end
       engage_with_new_friends
+    end
+    
     def engage_with_new_friends
       new_friends = get_new_friends
       new_friends.each { |friend| engage_with_user(friend[:username]) }
+    end
+    
     def get_recommended_friends
       [{ username: 'friend1' }, { username: 'friend2' }]
+    end
+    
     def add_friend(username)
-      puts 'Added friend: #{username}'
+      puts "Added friend: #{username}"
+    end
+    
     def get_new_friends
       [{ username: 'new_friend1' }, { username: 'new_friend2' }]
+    end
+    
     def send_message(user_id, message, message_type)
-      puts 'Sent message to #{user_id}: #{message}'
+      puts "Sent message to #{user_id}: #{message}"
+    end
   end
 end

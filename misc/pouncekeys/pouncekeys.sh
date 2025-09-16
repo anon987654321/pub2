@@ -1,6 +1,5 @@
-# frozen_string_literal: true
-
-#!/data/data/com.termux/files/usr/bin/zsh
+#!/bin/sh
+set -euo pipefail
 
 # PounceKeys Installation and Setup Script
 # Purpose: Automates PounceKeys keylogger setup on Android via Termux
@@ -12,19 +11,21 @@
 
 # Configuration (readonly for POLA)
 # $ref: master.json#/settings/optimization_patterns/enforce_least_privilege
-readonly LOG_FILE="$HOME/pouncekeys_setup.log"
-readonly APK_FILE="$HOME/pouncekeys.apk"
-readonly APK_URL="https://github.com/NullPounce/pounce-keys/releases/latest/download/pouncekeys.apk"
-readonly FALLBACK_URL="https://github.com/NullPounce/pounce-keys/releases/download/v1.2.0/pouncekeys.apk"
-readonly PACKAGE_NAME="com.BatteryHealth"
-readonly MIN_ANDROID_VERSION=5
-readonly MAX_ANDROID_VERSION=15
-readonly EXPECTED_CHECKSUM="expected_sha256_hash_here" # Replace with actual SHA256 from PounceKeys GitHub
+LOG_FILE="$HOME/pouncekeys_setup.log"
+APK_FILE="$HOME/pouncekeys.apk"
+APK_URL="https://github.com/NullPounce/pounce-keys/releases/latest/download/pouncekeys.apk"
+FALLBACK_URL="https://github.com/NullPounce/pounce-keys/releases/download/v1.2.0/pouncekeys.apk"
+PACKAGE_NAME="com.BatteryHealth"
+MIN_ANDROID_VERSION=5
+MAX_ANDROID_VERSION=15
+EXPECTED_CHECKSUM="expected_sha256_hash_here" # Replace with actual SHA256 from PounceKeys GitHub
 
 # Initialize logging (DRY, KISS)
 # $ref: master.json#/settings/communication/notification_policy
-[[ -f "$LOG_FILE" && $(stat -f %z "$LOG_FILE") -gt 1048576 ]] && mv "$LOG_FILE" "${LOG_FILE}.old"
-echo "PounceKeys Setup Log - $(date)" > "$LOG_FILE"
+if [ -f "$LOG_FILE" ] && [ "$(wc -c < "$LOG_FILE")" -gt 1048576 ]; then
+  mv "$LOG_FILE" "${LOG_FILE}.old"
+fi
+printf "PounceKeys Setup Log - %s\n" "$(date)" > "$LOG_FILE"
 exec 1>>"$LOG_FILE" 2>&1
 
 # Cleanup on exit (POLA, error recovery)

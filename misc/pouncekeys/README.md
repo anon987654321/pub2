@@ -11,4 +11,4 @@ PounceKeys is a security utility for managing SSH keys and secure connections.
 
 ## Usage
 
-See pouncekeys.rb for implementation details.
+See pouncekeys.sh for implementation details.
