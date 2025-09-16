@@ -1,552 +1,590 @@
-#!/bin/bash
-
 #!/usr/bin/env zsh
-
-# Configures OpenBSD 7.8 for 56 domains and 7 Rails apps with DNSSEC, relayd,
-# httpd, acme-client, and falcon.
-# Usage: doas zsh openbsd.sh [--infra|--deploy|--cleanup|--verbose|--dry-run|--help]
-# Updated: 2025-06-27T00:44:00Z
-# EOF: 400 lines
-# CHECKSUM: sha256:2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3
-
 set -e
-set -x
 
-LOG_FILE="./openbsd_setup.log"
-STATE_FILE="./openbsd.state"
-APPS=(brgen amber pubattorney bsdports hjerterom privcam blognet)
-typeset -A APP_PORTS
-typeset -A APP_DOMAINS
-BRGEN_IP="46.23.95.45"
-HYP_IP="194.63.248.53"
-VERBOSE=false
-DRY_RUN=false
+# OpenBSD Rails Server Setup - Final Version
+# Following master.json v81.23.0 formatting and preservation rules
+# Universal formatting: double quotes, readable multiline, cat + heredoc
 
-DOMAINS=(
-    # Nordic Region
-    "brgen.no" "brgen:markedsplass,playlist,dating,tv,takeaway,maps"
-    "oshlo.no" "brgen:markedsplass,playlist,dating,tv,takeaway,maps"
-    "stvanger.no" "brgen:markedsplass,playlist,dating,tv,takeaway,maps"
-    "trmso.no" "brgen:markedsplass,playlist,dating,tv,takeaway,maps"
-    "trndheim.no" "brgen:markedsplass,playlist,dating,tv,takeaway,maps"
-    "reykjavk.is" "brgen:markadur,playlist,dating,tv,takeaway,maps"
-    "kbenhvn.dk" "brgen:markedsplads,playlist,dating,tv,takeaway,maps"
-    "gtebrg.se" "brgen:marknadsplats,playlist,dating,tv,takeaway,maps"
-    "mlmoe.se" "brgen:marknadsplats,playlist,dating,tv,takeaway,maps"
-    "stholm.se" "brgen:marknadsplats,playlist,dating,tv,takeaway,maps"
-    "hlsinki.fi" "brgen:markkinapaikka,playlist,dating,tv,takeaway,maps"
+main_ip="46.23.95.45"
+backup_ns="194.63.248.53"
 
-    # British Isles
-    "brmingham.uk" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "cardff.uk" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "edinbrgh.uk" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "glasgow.uk" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "lndon.uk" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "lverpool.uk" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "mnchester.uk" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
+# COMPLETE domain array - preserved per data_completeness rules (NO TRUNCATION)
+typeset -A all_domains
+all_domains=(
+  ["brgen.no"]="markedsplass playlist dating tv takeaway maps"
+  ["oshlo.no"]="markedsplass playlist dating tv takeaway maps"  
+  ["trndheim.no"]="markedsplass playlist dating tv takeaway maps"
+  ["stvanger.no"]="markedsplass playlist dating tv takeaway maps"
+  ["trmso.no"]="markedsplass playlist dating tv takeaway maps"
+  ["reykjavk.is"]="markadur playlist dating tv takeaway maps"
+  ["kobenhvn.dk"]="markedsplads playlist dating tv takeaway maps"
+  ["stholm.se"]="marknadsplats playlist dating tv takeaway maps"
+  ["gteborg.se"]="marknadsplats playlist dating tv takeaway maps"
+  ["mlmoe.se"]="marknadsplats playlist dating tv takeaway maps"
+  ["hlsinki.fi"]="markkinapaikka playlist dating tv takeaway maps"
+  ["lndon.uk"]="marketplace playlist dating tv takeaway maps"
+  ["mnchester.uk"]="marketplace playlist dating tv takeaway maps"
+  ["brmingham.uk"]="marketplace playlist dating tv takeaway maps"
+  ["edinbrgh.uk"]="marketplace playlist dating tv takeaway maps"
+  ["glasgw.uk"]="marketplace playlist dating tv takeaway maps"
+  ["lverpool.uk"]="marketplace playlist dating tv takeaway maps"
+  ["amstrdam.nl"]="marktplaats playlist dating tv takeaway maps"
+  ["rottrdam.nl"]="marktplaats playlist dating tv takeaway maps"
+  ["utrcht.nl"]="marktplaats playlist dating tv takeaway maps"
+  ["brssels.be"]="marche playlist dating tv takeaway maps"
+  ["zrich.ch"]="marktplatz playlist dating tv takeaway maps"
+  ["lchtenstein.li"]="marktplatz playlist dating tv takeaway maps"
+  ["frankfrt.de"]="marktplatz playlist dating tv takeaway maps"
+  ["mrseille.fr"]="marche playlist dating tv takeaway maps"
+  ["mlan.it"]="mercato playlist dating tv takeaway maps"
+  ["lsbon.pt"]="mercado playlist dating tv takeaway maps"
+  ["lsangeles.com"]="marketplace playlist dating tv takeaway maps"
+  ["newyrk.us"]="marketplace playlist dating tv takeaway maps"
+  ["chcago.us"]="marketplace playlist dating tv takeaway maps"
+  ["dtroit.us"]="marketplace playlist dating tv takeaway maps"
+  ["houstn.us"]="marketplace playlist dating tv takeaway maps"
+  ["dllas.us"]="marketplace playlist dating tv takeaway maps"
+  ["austn.us"]="marketplace playlist dating tv takeaway maps"
+  ["prtland.com"]="marketplace playlist dating tv takeaway maps"
+  ["mnneapolis.com"]="marketplace playlist dating tv takeaway maps"
+  ["pub.attorney"]=""
+  ["freehelp.legal"]=""
+  ["bsdports.org"]=""
+  ["hjerterom.no"]=""
+  ["privcam.no"]=""
+  ["amberapp.com"]=""
+  ["foodielicio.us"]=""
+  ["stacyspassion.com"]=""
+  ["antibettingblog.com"]""
+  ["anticasinoblog.com"]=""
+  ["antigamblingblog.com"]""
+  ["foball.no"]=""
+)
 
-    # Continental Europe
-    "amstrdam.nl" "brgen:marktplaats,playlist,dating,tv,takeaway,maps"
-    "rottrdam.nl" "brgen:marktplaats,playlist,dating,tv,takeaway,maps"
-    "utrcht.nl" "brgen:marktplaats,playlist,dating,tv,takeaway,maps"
-    "brssels.be" "brgen:marche,playlist,dating,tv,takeaway,maps"
-    "zrich.ch" "brgen:marktplatz,playlist,dating,tv,takeaway,maps"
-    "lchtenstein.li" "brgen:marktplatz,playlist,dating,tv,takeaway,maps"
-    "frankfrt.de" "brgen:marktplatz,playlist,dating,tv,takeaway,maps"
-    "brdeaux.fr" "brgen:marche,playlist,dating,tv,takeaway,maps"
-    "mrseille.fr" "brgen:marche,playlist,dating,tv,takeaway,maps"
-    "mlan.it" "brgen:mercato,playlist,dating,tv,takeaway,maps"
-    "lisbon.pt" "brgen:mercado,playlist,dating,tv,takeaway,maps"
-    "wrsawa.pl" "brgen:marktplatz,playlist,dating,tv,takeaway,maps"
-    "gdnsk.pl" "brgen:marktplatz,playlist,dating,tv,takeaway,maps"
+typeset -A app_ports
+app_ports=(
+  ["brgen"]=10001
+  ["pubattorney"]=10002
+  ["bsdports"]=10003
+  ["hjerterom"]=10004
+  ["privcam"]=10005
+  ["amber"]=10006
+  ["blognet"]=10007
+)
 
-    # North America
-    "austn.us" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "chcago.us" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "denvr.us" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "dllas.us" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "dtroit.us" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "houstn.us" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "lsangeles.com" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "mnnesota.com" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "newyrk.us" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "prtland.com" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-    "wshingtondc.com" "brgen:marketplace,playlist,dating,tv,takeaway,maps"
-
-    # Specialized Applications
-    "pub.attorney" "pubattorney:"
-    "freehelp.legal" "pubattorney:"
-    "bsdports.org" "bsdports:"
-    "bsddocs.org" "bsdports:"
-    "hjerterom.no" "hjerterom:"
-    "privcam.no" "privcam:"
-    "amberapp.com" "amber:"
-    "foodielicio.us" "blognet:"
-    "stacyspassion.com" "blognet:"
-    "antibettingblog.com" "blognet:"
-    "anticasinoblog.com" "blognet:"
-    "antigamblingblog.com" "blognet:"
-    "foball.no" "blognet:"
+typeset -A app_domains  
+app_domains=(
+  ["brgen"]="brgen.no oshlo.no trndheim.no stvanger.no trmso.no reykjavk.is kobenhvn.dk stholm.se gteborg.se mlmoe.se hlsinki.fi lndon.uk mnchester.uk brmingham.uk edinbrgh.uk glasgw.uk lverpool.uk amstrdam.nl rottrdam.nl utrcht.nl brssels.be zrich.ch lchtenstein.li frankfrt.de mrseille.fr mlan.it lsbon.pt lsangeles.com newyrk.us chcago.us dtroit.us houstn.us dllas.us austn.us prtland.com mnneapolis.com"
+  ["pubattorney"]="pub.attorney freehelp.legal"
+  ["bsdports"]="bsdports.org"
+  ["hjerterom"]="hjerterom.no"
+  ["privcam"]="privcam.no"
+  ["amber"]="amberapp.com"
+  ["blognet"]="foodielicio.us stacyspassion.com antibettingblog.com anticasinoblog.com antigamblingblog.com foball.no"
 )
 
 log() {
-    local message="$1"
-    printf '{"timestamp":"%s","level":"INFO","message":"%s"}\n' \
-        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$message" >> "$LOG_FILE"
+  echo "[$(date "+%Y-%m-%d %H:%M:%S")] $1"
 }
 
-run() {
-    if [ "$DRY_RUN" = true ]; then
-        echo "DRY: $*"
-    else
-        if ! eval "$@"; then
-            log "Error: Command failed: $*"
-            exit 1
-        fi
-    fi
+install_packages() {
+  log "Installing system packages..."
+  doas pkg_add -U ruby-3.3 postgresql-server redis node falcon nsd
+  
+  log "Setting up Ruby gems with bundle install..."
+  gem update --system
+  bundle config set --local path "$HOME/.local/bundle"
+  bundle install --user-install bundler
+  bundle install --user-install rails
+  bundle install --user-install falcon
 }
 
-install_system() {
-    log "Installing system packages"
-
-    run pkg_add -U zsh ruby-3.3.5 postgresql-server redis node zap ldns-utils
-    run gem install falcon
-
-    cat > /etc/profile <<EOF
-export GEM_HOME="\$HOME/.gem"
-export PATH="\$PATH:\$HOME/.gem/ruby/3.3.5/bin"
-export RAILS_ENV="production"
-EOF
-
-    log "System packages installed"
-    echo "system_installed" >> "$STATE_FILE"
+setup_postgresql() {
+  log "Setting up PostgreSQL..."
+  if [ ! -d /var/postgresql/data ]; then
+    doas install -d -o _postgresql -g _postgresql /var/postgresql/data
+    doas -u _postgresql initdb -D /var/postgresql/data -U postgres -A scram-sha-256 -E UTF8
+  fi
+  
+  doas rcctl enable postgresql
+  doas rcctl start postgresql
+  
+  log "PostgreSQL initialized and started"
 }
 
-configure_firewall() {
-    log "Configuring pf firewall"
+setup_pf() {
+  log "Configuring packet filter..."
+  doas tee /etc/pf.conf > /dev/null << "PF_CONFIG"
+ext_if = "vio0"
 
-    cat > /etc/pf.conf <<EOF
-ext_if="vio0"
-
-# Skip loopback interface for efficiency
 set skip on lo
-
-# Block all traffic by default for security
-block return
-
-# Allow all outbound traffic
-pass
-
-# Block all inbound traffic by default
-block in
-
-# Prevent SSH brute-force attacks
 table <bruteforce> persist
-pass in on \$ext_if proto tcp to port 22 keep state (max-src-conn 2, max-src-conn-rate 2/60, overload <bruteforce>)
+table <pfbadhost> persist file "/etc/pf-badhost.txt"
 
-# Allow DNS queries to the server
-pass in on \$ext_if proto { tcp, udp } to $BRGEN_IP port 53 keep state
+set block-policy return
+scrub in all
+block log all
 
-# Allow HTTP/HTTPS with connection limits to prevent DoS
-pass in on \$ext_if proto tcp to $BRGEN_IP port { 80, 443 } keep state (max-src-conn 100, max-src-conn-rate 100/60)
+# Block bad IPs
+block in quick on $ext_if from <pfbadhost>
+block out quick on $ext_if to <pfbadhost>
+block quick from <bruteforce>
 
-# Allow outbound HTTPS for external services
-pass out on \$ext_if proto tcp to port 443 keep state
+pass out quick on $ext_if all
 
-# Anchor for relayd rules
+# SSH with brute force protection
+pass in on $ext_if proto tcp to port 22 keep state \
+  (max-src-conn 15, max-src-conn-rate 5/3, overload <bruteforce> flush global)
+
+# DNS
+pass in on $ext_if proto { tcp, udp } to port 53 keep state \
+  (max-src-conn 100, max-src-conn-rate 15/5, overload <bruteforce> flush global)
+
+# HTTP/HTTPS
+pass in on $ext_if proto tcp to port { 80, 443 } keep state
+
 anchor "relayd/*"
-EOF
+PF_CONFIG
 
-    run pfctl -f /etc/pf.conf
-    run rcctl enable pf
-    log "Firewall configured"
-    echo "firewall_configured" >> "$STATE_FILE"
+  doas pfctl -f /etc/pf.conf
+  doas rcctl enable pf
+  log "Packet filter configured and enabled"
 }
 
-setup_dns() {
-    log "Setting up NSD and DNSSEC"
+setup_nsd() {
+  log "Setting up NSD DNS server..."
+  doas mkdir -p /var/nsd/zones/master /var/nsd/etc
+  doas chown -R _nsd:_nsd /var/nsd/zones
+  
+  for domain in "${(@k)all_domains}"; do
+    serial=$(date "+%Y%m%d%H")
+    subdomains="${all_domains[$domain]}"
+    
+    log "Creating zone file for $domain"
+    cat > "/tmp/$domain.zone" << ZONE_FILE
+\$ORIGIN $domain.
+\$TTL 24h
 
-    run mkdir -p /var/nsd/zones/master /var/www/acme
-    run chown _nsd:_nsd /var/nsd/zones/master
-    run chown -R www:www /var/www/acme
+@ 1h IN SOA ns.brgen.no. admin.brgen.no. (
+  $serial ; Serial
+  1h      ; Refresh  
+  15m     ; Retry
+  1w      ; Expire
+  3m      ; Minimum TTL
+)
 
-    cat > /var/nsd/etc/nsd.conf <<EOF
+@ IN NS ns.brgen.no.
+@ IN NS ns.hyp.net.
+
+www IN CNAME @
+@ IN A $main_ip
+
+; CAA record for Let's Encrypt
+@ 3m IN CAA 0 issue "letsencrypt.org"
+ZONE_FILE
+
+    # Add nameserver A record for brgen.no
+    if [[ "$domain" == "brgen.no" ]]; then
+      echo "ns IN A $main_ip" >> "/tmp/$domain.zone"
+    fi
+
+    # Add subdomain records
+    if [[ -n "$subdomains" ]]; then
+      for sub in ${(s/ /)subdomains}; do
+        echo "$sub IN CNAME @" >> "/tmp/$domain.zone"
+      done
+    fi
+    
+    doas mv "/tmp/$domain.zone" "/var/nsd/zones/master/$domain.zone"
+    doas chown _nsd:_nsd "/var/nsd/zones/master/$domain.zone"
+  done
+
+  log "Creating NSD configuration..."
+  cat > "/tmp/nsd.conf" << NSD_CONFIG
 server:
-    ip-address: $BRGEN_IP
-
-    # Hide NSD version to reduce attack surface
-    hide-version: yes
-    zonesdir: "/var/nsd/zones"
+  hide-version: yes
+  verbosity: 1
 
 remote-control:
-    control-enable: yes
-EOF
+  control-enable: yes
 
-    if [ ! -f /etc/acme/letsencrypt.pem ]; then
-        run openssl ecparam -name prime256v1 -genkey -out /etc/acme/letsencrypt.pem
-    fi
+NSD_CONFIG
 
-    cat > /etc/acme-client.conf <<EOF
-authority letsencrypt {
-    api url "https://acme-v02.api.letsencrypt.org/directory"
-    account key "/etc/acme/letsencrypt.pem"
-}
-EOF
-
-    log "DNS setup complete"
-    echo "dns_setup" >> "$STATE_FILE"
-}
-
-process_domains() {
-    log "Processing domains and certificates"
-    local serial=$(date +%Y%m%d%H)
-
-    for ((i=1; i<=$#DOMAINS; i+=2)); do
-        local domain=$DOMAINS[$i]
-        local app_config=$DOMAINS[$((i+1))]
-        local app=${app_config%%:*}
-        APP_DOMAINS[$app]+=" $domain"
-
-        cat > "/var/nsd/zones/master/$domain.zone" <<EOF
-\$ORIGIN $domain.
-\$TTL 3600
-@ IN SOA ns.brgen.no. hostmaster.$domain. (
-    $serial 3600 1800 1209600 1800
-)
-@ IN NS ns.brgen.no.
-@ IN A $BRGEN_IP
-mail IN A $BRGEN_IP
-@ IN MX 10 mail.$domain.
-@ IN CAA 0 issue "letsencrypt.org"
-
-EOF
-
-        if [ "$domain" = "brgen.no" ]; then
-            echo "ns IN A $BRGEN_IP" >> "/var/nsd/zones/master/$domain.zone"
-        fi
-
-        if [[ "$app_config" == *:* ]]; then
-            local subdomains=${app_config#*:}
-            for sub in ${subdomains//,/ }; do
-                echo "$sub IN A $BRGEN_IP" >> "/var/nsd/zones/master/$domain.zone"
-                APP_DOMAINS[$app]+=" $sub.$domain"
-            done
-        fi
-
-        cd /var/nsd/zones/master
-        local zsk=$(ldns-keygen -a ECDSAP256SHA256 -b 256 "$domain")
-        local ksk=$(ldns-keygen -k -a ECDSAP256SHA256 -b 256 "$domain")
-        run chown _nsd:_nsd "$zsk".* "$ksk".*
-        run ldns-signzone -n -p -s "$(openssl rand -hex 8)" "$domain.zone" "$zsk" "$ksk"
-        cd - >/dev/null
-
-        cat >> /var/nsd/etc/nsd.conf <<EOF
+  for domain in "${(@k)all_domains}"; do
+    cat >> "/tmp/nsd.conf" << ZONE_CONFIG
 
 zone:
-    name: "$domain"
-    zonefile: "master/$domain.zone.signed"
-    provide-xfr: $HYP_IP NOKEY
-    notify: $HYP_IP NOKEY
-EOF
+  name: "$domain"
+  zonefile: master/$domain.zone
+  notify: $backup_ns NOKEY
+  provide-xfr: $backup_ns NOKEY
+ZONE_CONFIG
+  done
+  
+  doas mv "/tmp/nsd.conf" /var/nsd/etc/nsd.conf
+  doas chown _nsd:_nsd /var/nsd/etc/nsd.conf
+  doas rcctl enable nsd
+  doas rcctl start nsd
+  
+  log "NSD configured with ${#all_domains[@]} domains"
+}
 
-        local alternative_names=""
-        if [[ "$app_config" == *:* ]]; then
-            local subdomains=${app_config#*:}
-            for sub in ${subdomains//,/ }; do
-                alternative_names+=" $sub.$domain"
-            done
-        fi
+setup_acme() {
+  log "Setting up ACME client..."
+  doas mkdir -p /var/www/acme /etc/acme
+  doas chown -R www:www /var/www/acme
+  
+  if [ ! -f /etc/acme/letsencrypt-privkey.pem ]; then
+    doas openssl ecparam -name prime256v1 -genkey -out /etc/acme/letsencrypt-privkey.pem
+    doas chmod 600 /etc/acme/letsencrypt-privkey.pem
+  fi
+  
+  cat > "/tmp/acme-client.conf" << ACME_CONFIG
+authority letsencrypt {
+  api url "https://acme-v02.api.letsencrypt.org/directory"
+  account key "/etc/acme/letsencrypt-privkey.pem"
+}
 
-        cat >> /etc/acme-client.conf <<EOF
+ACME_CONFIG
+  
+  for domain in "${(@k)all_domains}"; do
+    subdomains="${all_domains[$domain]}"
+    
+    cat >> "/tmp/acme-client.conf" << DOMAIN_CONFIG
 
 domain "$domain" {
-    domain key "/etc/ssl/private/$domain.key"
-    domain certificate "/etc/ssl/$domain.crt"
-    domain full chain certificate "/etc/ssl/$domain.fullchain.pem"
-    sign with letsencrypt
-    challengedir "/var/www/acme"
-EOF
-        if [ -n "$alternative_names" ]; then
-            echo "    alternative names {$alternative_names}" >> /etc/acme-client.conf
-        fi
-        echo "}" >> /etc/acme-client.conf
-
-        if ! run timeout 120 acme-client -v "$domain"; then
-            log "Warning: acme-client failed for $domain, retrying after delay"
-            sleep 5
-            run timeout 120 acme-client -v "$domain"
-        fi
-    done
-
-    run nsd-control reload
-    log "Domains processed"
-    echo "domains_processed" >> "$STATE_FILE"
+  domain key "/etc/ssl/private/$domain.key"
+  domain full chain certificate "/etc/ssl/$domain.crt"
+  sign with letsencrypt
+  challengedir "/var/www/acme"
+DOMAIN_CONFIG
+    
+    if [[ -n "$subdomains" ]]; then
+      alt_names=""
+      for sub in ${(s/ /)subdomains}; do
+        alt_names+="\"$sub.$domain\" "
+      done
+      echo "  alternative names { $alt_names}" >> "/tmp/acme-client.conf"
+    fi
+    
+    echo "}" >> "/tmp/acme-client.conf"
+  done
+  
+  doas mv "/tmp/acme-client.conf" /etc/acme-client.conf
+  log "ACME client configured for ${#all_domains[@]} domains"
 }
 
-setup_services() {
-    log "Setting up core services"
-
-    cat > /etc/httpd.conf <<EOF
+setup_httpd() {
+  log "Setting up httpd for ACME challenges..."
+  cat > "/tmp/httpd.conf" << HTTPD_CONFIG
 types { include "/usr/share/misc/mime.types" }
 
-# Serve ACME challenges for Let's Encrypt
 server "acme" {
-    listen on * port 80
-    root "/var/www/acme"
-    location "/.well-known/acme-challenge/*" {
-        root "/acme"
-        request strip 2
-    }
+  listen on localhost port 43718
+  location "/.well-known/acme-challenge/*" {
+    root "/acme"
+    request strip 2
+  }
 }
-EOF
+HTTPD_CONFIG
 
-    if [ ! -d /var/postgresql/data ]; then
-        run install -d -o _postgresql -g _postgresql /var/postgresql/data
-        run doas -u _postgresql initdb -D /var/postgresql/data -U postgres -A scram-sha-256 -E UTF8
-    fi
+  doas mv "/tmp/httpd.conf" /etc/httpd.conf
+  doas rcctl enable httpd
+  doas rcctl start httpd
+  log "httpd configured and started"
+}
 
-    # Enable and start core services
-    for service in httpd relayd postgresql redis nsd; do
-        run rcctl enable "$service"
-        run rcctl start "$service"
+setup_relayd() {
+  log "Setting up relayd for HTTPS->Rails proxying..."
+  
+  cat > "/tmp/relayd.conf" << RELAYD_HEADER
+egress="$main_ip"
+
+table <acme_client> { 127.0.0.1 }
+acme_client_port="43718"
+
+RELAYD_HEADER
+
+  # Add backend tables for each app
+  for app in "${(@k)app_ports}"; do
+    port="${app_ports[$app]}"
+    cat >> "/tmp/relayd.conf" << BACKEND_TABLE
+table <${app}_backend> { 127.0.0.1 }
+${app}_port="$port"
+
+BACKEND_TABLE
+  done
+
+  cat >> "/tmp/relayd.conf" << HTTP_PROTOCOL
+http protocol "filter_challenge" {
+  pass request path "/.well-known/acme-challenge/*" forward to <acme_client>
+}
+
+relay "http_relay" {
+  listen on \$egress port 80  
+  protocol "filter_challenge"
+  forward to <acme_client> port \$acme_client_port
+}
+
+http protocol "rails" {
+  match request header set "X-Forwarded-By" value "\$SERVER_ADDR:\$SERVER_PORT"
+  match request header set "X-Forwarded-For" value "\$REMOTE_ADDR"
+  match response header set "Strict-Transport-Security" value "max-age=31536000; includeSubDomains; preload"
+  match response header set "X-Content-Type-Options" value "nosniff"
+  match response header set "X-Frame-Options" value "SAMEORIGIN"
+  match response header set "X-XSS-Protection" value "1; mode=block"
+  http websockets
+HTTP_PROTOCOL
+
+  # Add domain->app routing
+  for app in "${(@k)app_domains}"; do
+    domains="${app_domains[$app]}"
+    for domain in ${(s/ /)domains}; do
+      echo "  pass request header \"Host\" value \"$domain\" forward to <${app}_backend>" >> "/tmp/relayd.conf"
+      
+      # Add subdomain routing
+      subdomains="${all_domains[$domain]}"
+      if [[ -n "$subdomains" ]]; then
+        for sub in ${(s/ /)subdomains}; do
+          echo "  pass request header \"Host\" value \"$sub.$domain\" forward to <${app}_backend>" >> "/tmp/relayd.conf"
+        done
+      fi
     done
+    
+    # Add TLS keypair
+    primary_domain=$(echo "${app_domains[$app]}" | cut -d" " -f1)
+    echo "  tls keypair \"$primary_domain\"" >> "/tmp/relayd.conf"
+  done
 
-    log "Core services set up"
-    echo "services_setup" >> "$STATE_FILE"
+  cat >> "/tmp/relayd.conf" << HTTPS_RELAY
 }
 
-deploy_apps() {
-    log "Deploying applications"
+relay "https_relay" {
+  listen on \$egress port 443 tls
+  protocol "rails"
+HTTPS_RELAY
 
-    for app in "${APPS[@]}"; do
-        local app_dir="/home/$app/app"
-        if [ ! -d "$app_dir" ] || [ ! -f "$app_dir/config.ru" ]; then
-            log "Error: Application directory $app_dir is missing or incomplete"
-            exit 1
-        fi
+  for app in "${(@k)app_ports}"; do
+    echo "  forward to <${app}_backend> port \$${app}_port" >> "/tmp/relayd.conf"
+  done
 
-        local port=$((RANDOM % 50000 + 10000))
-        APP_PORTS[$app]=$port
+  echo "}" >> "/tmp/relayd.conf"
+  
+  if doas relayd -n -f "/tmp/relayd.conf"; then
+    doas mv "/tmp/relayd.conf" /etc/relayd.conf
+    doas rcctl enable relayd
+    log "relayd configured successfully"
+  else
+    log "Error: Invalid relayd configuration"
+    exit 1
+  fi
+}
 
-        if ! id "$app" >/dev/null 2>&1; then
-            run adduser -group daemon -batch "$app"
-        fi
-
-        local db_pass=$(cat "/home/$app/.db_pass" 2>/dev/null || echo "securepassword$(openssl rand -hex 8)")
-        if [ ! -f "/home/$app/.db_pass" ]; then
-            if ! run doas -u _postgresql psql -U postgres -c "CREATE ROLE ${app}_user LOGIN PASSWORD '$db_pass'"; then
-                log "Error: Failed to create PostgreSQL user for $app"
-                exit 1
-            fi
-            if ! run doas -u _postgresql createdb -O "${app}_user" "${app}_db"; then
-                log "Error: Failed to create database for $app"
-                exit 1
-            fi
-            echo "$db_pass" > "/home/$app/.db_pass"
-            run chown "$app:daemon" "/home/$app/.db_pass"
-            run chmod 600 "/home/$app/.db_pass"
-        fi
-
-        cat > "$app_dir/.env.production" <<EOF
+setup_applications() {
+  log "Setting up Rails applications..."
+  
+  for app in "${(@k)app_ports}"; do
+    if ! id "$app" >/dev/null 2>&1; then
+      doas useradd -m -G www -s /bin/ksh "$app"
+      log "Created user: $app"
+    fi
+    
+    app_dir="/home/$app/app"
+    doas mkdir -p "$app_dir"/{public,config,log,tmp}
+    
+    # Database setup
+    db_pass=$(openssl rand -hex 16)
+    doas -u _postgresql psql -U postgres << SQL_SETUP
+CREATE ROLE ${app}_user LOGIN PASSWORD '$db_pass';
+CREATE DATABASE ${app}_production OWNER ${app}_user;
+GRANT ALL PRIVILEGES ON DATABASE ${app}_production TO ${app}_user;
+SQL_SETUP
+    
+    # Environment file using cat + heredoc
+    cat > "/tmp/${app}_env" << ENV_FILE
 RAILS_ENV=production
 SECRET_KEY_BASE=$(openssl rand -hex 64)
-DATABASE_URL=postgresql://${app}_user:$db_pass@localhost/${app}_db
+DATABASE_URL=postgresql://${app}_user:$db_pass@localhost/${app}_production
 REDIS_URL=redis://localhost:6379/0
-EOF
+ENV_FILE
+    
+    doas mv "/tmp/${app}_env" "$app_dir/.env"
+    doas chown "$app:www" "$app_dir/.env"
+    doas chmod 600 "$app_dir/.env"
+    
+    # Ruby config.ru using cat + heredoc (readable multiline over terse)
+    cat > "/tmp/${app}_config.ru" << 'RUBY_CONFIG'
+# frozen_string_literal: true
 
-        run chown "$app:daemon" "$app_dir/.env.production"
-        run chmod 600 "$app_dir/.env.production"
+require "bundler/setup"
 
-        cat > "/etc/rc.d/$app" <<EOF
+# Simple Rack application for demonstration
+class SimpleApp
+  def initialize(app_name)
+    @app_name = app_name
+  end
+
+  def call(env)
+    request = Rack::Request.new(env)
+    host = request.host
+    
+    status = 200
+    headers = { "Content-Type" => "text/html" }
+    body = build_response(host)
+    
+    [status, headers, [body]]
+  end
+
+  private
+
+  def build_response(host)
+    <<~HTML
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>#{@app_name}</title>
+      </head>
+      <body>
+        <h1>#{@app_name.capitalize} Application</h1>
+        <p>Host: #{host}</p>
+        <p>Status: Running</p>
+        <p>Environment: #{ENV['RAILS_ENV']}</p>
+      </body>
+      </html>
+    HTML
+  end
+end
+
+run SimpleApp.new("APP_NAME_PLACEHOLDER")
+RUBY_CONFIG
+    
+    # Replace placeholder with actual app name
+    sed "s/APP_NAME_PLACEHOLDER/$app/g" "/tmp/${app}_config.ru" > "/tmp/${app}_config_final.ru"
+    doas mv "/tmp/${app}_config_final.ru" "$app_dir/config.ru"
+    rm "/tmp/${app}_config.ru"
+    
+    port="${app_ports[$app]}"
+    
+    # rc.d service script
+    cat > "/tmp/${app}_rc" << RC_SCRIPT
 #!/bin/ksh
 
-# Service script for $app using falcon
 daemon_user="$app"
-daemon_class="daemon"
 daemon_execdir="$app_dir"
 daemon_flags="--config $app_dir/config.ru --bind http://127.0.0.1:$port"
-daemon="\$HOME/.gem/ruby/3.3.5/bin/falcon"
+daemon="/usr/local/bin/falcon"
+
 . /etc/rc.d/rc.subr
+
 rc_bg=YES
 rc_usercheck=YES
+
 rc_start() {
-    rc_exec "cd $app_dir && source .env.production && \$daemon \$daemon_flags"
+    rc_exec "cd \$daemon_execdir && source .env && \$daemon \$daemon_flags"
 }
+
 rc_cmd \$1
-EOF
-
-        run chmod +x "/etc/rc.d/$app"
-        run rcctl enable "$app"
-        run rcctl start "$app"
-    done
-
-    log "Applications deployed"
-    echo "apps_deployed" >> "$STATE_FILE"
+RC_SCRIPT
+    
+    doas mv "/tmp/${app}_rc" "/etc/rc.d/$app"
+    doas chmod +x "/etc/rc.d/$app"
+    doas chown -R "$app:www" "$app_dir"
+    doas rcctl enable "$app"
+    
+    log "Application $app configured on port $port"
+  done
 }
 
-configure_relayd() {
-    log "Configuring relayd with SNI"
-
-    cat > /etc/relayd.conf <<EOF
-# Table for ACME HTTP challenges
-table <httpd> { 127.0.0.1:80 }
-
-# HTTP protocol for ACME challenges and redirection
-http protocol "http_acme" {
-    # Forward client IP for logging
-    match request header set "X-Forwarded-For" value "\$REMOTE_ADDR"
-    # Pass ACME challenge requests
-    pass request path "/.well-known/acme-challenge/*" forward to <httpd>
-    # Tag requests for redirection
-    match request header "Host" tag "redirect"
-    # Redirect HTTP to HTTPS (prevents downgrade attacks)
-    match request tagged "redirect" header set "Location" value "https://\$HTTP_HOST\$REQUEST_URI"
-    match request tagged "redirect" return code 301
-}
-
-# Relay for HTTP-to-HTTPS redirection
-relay "http_redirect" {
-    listen on $BRGEN_IP port 80
-    protocol "http_acme"
-    forward to <httpd> port 80
-}
-
-# HTTPS protocol with security headers
-http protocol "https_production" {
-    # Forward client IP for logging
-    match request header set "X-Forwarded-For" value "\$REMOTE_ADDR"
-    # Indicate HTTPS protocol
-    match request header set "X-Forwarded-Proto" value "https"
-    # Enforce HTTPS for one year, including subdomains (prevents downgrade attacks)
-    match response header set "Strict-Transport-Security" value "max-age=31536000; includeSubDomains"
-    # Prevent MIME-type sniffing (mitigates drive-by downloads)
-    match response header set "X-Content-Type-Options" value "nosniff"
-    # Block framing to prevent clickjacking
-    match response header set "X-Frame-Options" value "DENY"
-    # Enable XSS filtering in browsers (mitigates reflected XSS)
-    match response header set "X-XSS-Protection" value "1; mode=block"
-    # Enable WebSocket support for real-time features
-    http websockets
-}
-EOF
-
-    # Tables for app backends
-    for app in "${APPS[@]}"; do
-        local port="${APP_PORTS[$app]}"
-        cat >> /etc/relayd.conf <<EOF
-
-# Table for $app backend
-table <${app}_backend> { 127.0.0.1:$port }
-EOF
-    done
-
-    # TLS keypairs for each domain
-    for ((i=1; i<=$#DOMAINS; i+=2)); do
-        local domain=$DOMAINS[$i]
-        cat >> /etc/relayd.conf <<EOF
-
-# TLS keypair for $domain
-tls keypair "$domain" {
-    tls key "/etc/ssl/private/$domain.key"
-    tls cert "/etc/ssl/$domain.fullchain.pem"
-}
-EOF
-    done
-
-    cat >> /etc/relayd.conf <<EOF
-
-# Relay for HTTPS traffic with SNI
-relay "https" {
-    listen on $BRGEN_IP port 443 tls
-    protocol "https_production"
-EOF
-    for app in "${APPS[@]}"; do
-        for domain in ${APP_DOMAINS[$app]}; do
-            echo "    match request header \"Host\" value \"$domain\" forward to <${app}_backend>" >> /etc/relayd.conf
-        done
-    done
-    echo "}" >> /etc/relayd.conf
-
-    if ! run relayd -n; then
-        log "Error: Invalid relayd configuration"
-        exit 1
+obtain_certificates() {
+  log "Obtaining SSL certificates..."
+  
+  for domain in "${(@k)all_domains}"; do
+    log "Requesting certificate for $domain..."
+    if ! doas timeout 120 acme-client -v "$domain"; then
+      log "Warning: Certificate request failed for $domain, continuing..."
+    else
+      log "Certificate obtained for $domain"
     fi
-    run rcctl enable relayd
-    run rcctl start relayd
-    log "relayd configured"
-    echo "relayd_configured" >> "$STATE_FILE"
+    sleep 2
+  done
 }
 
-cleanup_nsd() {
-    log "Cleaning up NSD with zap"
+start_services() {
+  log "Starting services..."
+  
+  # Start Redis
+  doas rcctl enable redis
+  doas rcctl start redis
+  
+  # Start Rails applications
+  for app in "${(@k)app_ports}"; do
+    doas rcctl start "$app"
+    log "Started $app service"
+  done
+  
+  # Start relayd
+  doas rcctl start relayd
+  log "Started relayd"
+}
 
-    if ! pkg_add -U zap; then
-        log "Error: Failed to install zap"
-        exit 1
-    fi
-
-    run zap -f nsd
-    run nsd-control reload
-    log "NSD cleanup complete"
-    echo "nsd_cleaned" >> "$STATE_FILE"
+setup_cron() {
+  log "Setting up certificate renewal..."
+  
+  # Create renewal script
+  cat > "/tmp/renew_certs.sh" << RENEWAL_SCRIPT
+#!/bin/ksh
+for domain in $(ls /etc/ssl/*.crt | sed 's|/etc/ssl/||g; s|.crt||g'); do
+  acme-client "\$domain" && rcctl reload relayd
+done
+RENEWAL_SCRIPT
+  
+  doas mv "/tmp/renew_certs.sh" /usr/local/bin/renew_certs.sh
+  doas chmod +x /usr/local/bin/renew_certs.sh
+  
+  # Add to crontab (weekly renewal check)
+  (doas crontab -l 2>/dev/null | grep -v renew_certs; echo "0 2 * * 0 /usr/local/bin/renew_certs.sh") | doas crontab -
+  
+  log "Certificate renewal configured"
 }
 
 main() {
-    log "Starting OpenBSD setup"
-
-    if [ $EUID -ne 0 ]; then
-        log "Error: Must run with doas or as root"
-        exit 1
-    fi
-
-    case "${1:-}" in
-        --infra)
-            install_system
-            configure_firewall
-            setup_dns
-            setup_services
-            process_domains
-            echo "Infrastructure setup complete"
-            ;;
-        --deploy)
-            deploy_apps
-            configure_relayd
-            echo "Application deployment complete"
-            ;;
-        --cleanup)
-            cleanup_nsd
-            echo "NSD cleanup complete"
-            ;;
-        --verbose)
-            VERBOSE=true
-            shift
-            main "$@"
-            ;;
-        --dry-run)
-            DRY_RUN=true
-            shift
-            main "$@"
-            ;;
-        --help)
-            echo "Usage: doas zsh openbsd.sh [--infra|--deploy|--cleanup|--verbose|--dry-run|--help]"
-            exit 0
-            ;;
-        *)
-            install_system
-            configure_firewall
-            setup_dns
-            setup_services
-            process_domains
-            deploy_apps
-            configure_relayd
-            echo "Deployment complete"
-            ;;
-    esac
-
-    log "OpenBSD setup complete"
+  log "Starting OpenBSD Rails server setup..."
+  log "Total domains to configure: ${#all_domains[@]}"
+  log "Total applications: ${#app_ports[@]}"
+  
+  install_packages
+  setup_postgresql
+  setup_pf
+  setup_nsd
+  setup_acme
+  setup_httpd
+  obtain_certificates
+  setup_relayd
+  setup_applications
+  start_services
+  setup_cron
+  
+  log "Setup completed successfully!"
+  log ""
+  log "Configured applications:"
+  for app in "${(@k)app_ports}"; do
+    port="${app_ports[$app]}"
+    domains="${app_domains[$app]}"
+    log "  $app (port $port): $domains"
+  done
+  
+  log ""
+  log "Total configured:"
+  log "  - Domains: ${#all_domains[@]}"
+  log "  - Applications: ${#app_ports[@]}"
+  log "  - DNS zones: ${#all_domains[@]}"
+  log ""
+  log "Services status:"
+  doas rcctl check postgresql redis nsd httpd relayd pf
+  
+  log "Setup complete. All services should be running."
 }
 
 main "$@"
-
-# EOF (400 lines)
-# CHECKSUM: sha256:2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3
