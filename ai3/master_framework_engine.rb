@@ -42,7 +42,8 @@ class MasterFrameworkEngine
   private
 
   def load_master_config
-    config_path = File.join(__dir__, 'master.json')
+    repo_root = File.expand_path('..', __dir__)
+    config_path = File.join(repo_root, 'master.json')
     JSON.parse(File.read(config_path))
   end
 
