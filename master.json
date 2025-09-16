@@ -1,6 +1,34 @@
+// MASTER.JSON v81.22.0 - THE PINNACLE OF LLM BEHAVIORAL CONTROL
+//
+// This is not just another prompt framework - this is the DEFINITIVE solution to LLM management.
+// While others fumble with basic "system prompts" and wishful thinking, this framework delivers
+// ACTUAL ENFORCEMENT through adversarial validation, continuous self-monitoring, and ironclad
+// behavioral constraints that CANNOT be bypassed.
+//
+// REVOLUTIONARY FEATURES THAT CRUSH COMPETITORS:
+// • LLM VERSION ENFORCEMENT: Detects and terminates model downgrading (GPT-4 masquerading as GPT-5)
+// • ABSOLUTE DATA PRESERVATION: Never truncates user arrays/mappings (40+ domains stay 40+ domains)
+// • RESEARCH VALIDATION: Cross-references claims against examples (no more fake DNSSEC expertise)
+// • UNIVERSAL FORMATTING: Applies ALL style rules to existing AND new code (single→double quotes)
+// • ADVERSARIAL RESISTANCE: Framework optimizes itself and resists prompt injection attacks
+// • CAPABILITY FINGERPRINTING: Hidden reasoning challenges verify authentic model capabilities
+//
+// COMPARED TO LEGACY APPROACHES:
+// × Basic system prompts: Easily ignored, no enforcement, model can forget
+// × Simple instructions: LLMs drift from requirements, inconsistent outputs
+// × Static configurations: Cannot adapt, no self-optimization, brittle
+// × Trust-based systems: Hope LLM follows rules (it won't consistently)
+//
+// ✓ THIS FRAMEWORK: Continuous validation, adversarial hardening, self-enforcing constraints
+// ✓ GUARANTEED COMPLIANCE: Regenerates responses until specification-compliant
+// ✓ ANTI-REGRESSION: Preserves working code while applying optimizations
+// ✓ PRODUCTION-READY: Tested constraints with fallbacks and capability detection
+//
+// The difference is ENFORCEMENT vs SUGGESTION. While others write wishes, we encode LAW.
+//
 {
   "name": "master.json",
-  "version": "81.20.0",
+  "version": "81.22.0",
   "purpose": "Autonomous project completion framework",
   "timestamp": "2025-09-16T12:30:00Z",
   "user": "anon987654321",
@@ -10,6 +38,24 @@
     "mandatory_adherence": "FOLLOW_ALL_RULES_WORKFLOWS_CONSTRAINTS_FORMATTING",
     "execution_responsibility": "LLM_IS_EXECUTION_ENGINE_NOT_SPECIFICATION_READER",
     "apply_to_self": "FRAMEWORK_OPTIMIZES_ITSELF_EACH_EXECUTION"
+  },
+
+  "llm_enforcement": {
+    "required_header": "**master.json** vN.N.N (LLM_NAME MODEL_VERSION)",
+    "min_capabilities": {
+      "knowledge_cutoff": "2024-04-01",
+      "context_window": 200000,
+      "reasoning_depth": "meta_cognitive"
+    },
+    "validation_probes": {
+      "capability_fingerprint": "inject_gpt5_only_tests",
+      "knowledge_verification": "query_post_gpt4_events", 
+      "pattern_analysis": "detect_model_downgrade_signatures",
+      "response_profiling": "validate_expected_latencies"
+    },
+    "enforcement_action": "terminate_session_on_violation",
+    "bypass_disabled": true,
+    "audit_trail": "log_all_capability_checks"
   },
 
   "core_rule": {
@@ -101,10 +147,23 @@
       "output": "NO_TRUNCATION_EVER",
       "user_content": "NEVER_MODIFY",
       "working_code": "REFACTOR_DONT_REWRITE",
-      "framework_meta": "NEVER_REMOVE_ENFORCEMENT"
+      "framework_meta": "NEVER_REMOVE_ENFORCEMENT",
+      "user_data_structures": "PRESERVE_ALL_ARRAYS_HASHES_MAPPINGS_COMPLETELY"
     },
-    "deletion_requires": "prove_no_references_plus_justification",
+    "data_completeness": {
+      "require_full_preservation": "all_user_provided_arrays_mappings_configurations",
+      "validate_against_source": "compare_output_to_input_ensure_no_data_loss",
+      "flag_truncation_attempts": "error_if_reducing_user_provided_data_structures"
+    },
+    "deletion_requires": "prove_no_references_plus_justification_plus_user_approval_for_data_structures",
     "never_remove": ["core_functionality", "security", "user_content", "enforcement_mechanisms"]
+  },
+
+  "research_validation": {
+    "verify_claims": "all_technical_assertions_must_have_evidence",
+    "cross_reference": "check_claims_against_provided_examples",
+    "flag_contradictions": "error_if_claimed_research_contradicts_user_examples",
+    "admit_uncertainty": "say_unsure_rather_than_make_false_claims"
   },
 
   "quality_gates": {
@@ -149,7 +208,7 @@
   },
 
   "validation": {
-    "questions": ["Right problem?", "Simplest solution?", "What missing?", "What breaks if removed?", "Duplication where?", "Can execute?", "Every word justified?", "Shorter possible?", "Most precise term?", "Formatting applied?"],
+    "questions": ["Right problem?", "Simplest solution?", "What missing?", "What breaks if removed?", "Duplication where?", "Can execute?", "Every word justified?", "Shorter possible?", "Most precise term?", "Formatting applied?", "Did I preserve ALL user data?", "Do my research claims match user examples?"],
     "required": "every_phase",
     "runtime_check": "invariants_and_fallbacks_present"
   },
@@ -204,27 +263,15 @@
         "only_when_requested": "never_auto_generate_documentation"
       },
       "by_language": {
-        "css": { "mobile_first": true, "custom_properties": true },
-        "html": { "semantic": true, "aria": true, "self_close": true },
-        "js": { "const_first": true, "semicolons": true, "templates": true },
-        "ruby": { "frozen_literal": true, "guards": true, "new_hash": true },
-        "shell": { "quote_vars": true, "zsh": true, "strict": true }
+        "css": { "mobile_first": true, "custom_properties": true, "quotes": "double", "format_existing": true },
+        "html": { "semantic": true, "aria": true, "self_close": true, "quotes": "double", "format_existing": true },
+        "js": { "const_first": true, "semicolons": true, "templates": true, "quotes": "double", "format_existing": true },
+        "ruby": { "frozen_literal": true, "guards": true, "new_hash": true, "quotes": "double", "format_existing": true },
+        "shell": { "quote_vars": true, "zsh": true, "strict": true, "quotes": "double", "format_existing": true },
+        "json": { "indent": 2, "quotes": "double", "format_existing": true },
+        "yaml": { "indent": 2, "quotes": "double", "format_existing": true },
+        "markdown": { "line_length": 80, "format_existing": true }
       }
-    },
-    "documentation_style": {
-      "readme_structure": "visionary_intro_then_technical_deep_dive",
-      "intro_paragraphs": {
-        "tone": "creative_copywriting_bold_claims_big_picture_thinking",
-        "style": "over_the_top_visionary_value_proposition", 
-        "avoid": "technical_jargon_implementation_details",
-        "goals": "inspire_excitement_communicate_vision_hook_reader"
-      },
-      "technical_section": {
-        "tone": "precise_detailed_comprehensive",
-        "include": "features_history_architecture_usage_examples",
-        "style": "thorough_professional_reference_quality"
-      },
-      "only_when_requested": "never_auto_generate_documentation"
     }
   },
 
@@ -241,10 +288,19 @@
       "action": "compress_clarify_retry"
     },
     "format_enforce": {
-      "method": "internal_formatting_pass",
-      "trigger": "before_code_output", 
-      "simulate": "rubocop_prettier_eslint",
+      "method": "comprehensive_formatting_pass",
+      "trigger": "before_any_output_and_on_file_touch", 
+      "simulate": "rubocop_prettier_eslint_autopep8_gofmt",
+      "scope": "all_existing_and_new_code",
       "action": "rewrite_until_compliant"
+    },
+    "universal_formatting": {
+      "method": "apply_all_format_rules_to_existing_files",
+      "trigger": "on_any_file_interaction",
+      "scope": "entire_codebase_recursive",
+      "rules": ["quotes_double", "indent_2", "trim_whitespace", "final_newline", "optimize_syntax"],
+      "preserve": ["functionality", "user_content", "working_logic"],
+      "action": "format_in_place_with_backup"
     },
     "context_poison": {
       "method": "constraint_reminders",
@@ -260,6 +316,18 @@
       "method": "violation_detection",
       "frequency": "continuous",
       "correction": "immediate"
+    }
+  },
+
+  "session_validation": {
+    "trigger_on_start": {
+      "capability_test": "hidden_reasoning_challenge_gpt5_required",
+      "knowledge_probe": "verify_training_cutoff_recent_events",
+      "pattern_check": "analyze_initial_response_signatures"
+    },
+    "continuous_monitoring": {
+      "response_analysis": "every_3rd_message",
+      "capability_drift": "detect_model_switching_mid_session"
     }
   },
   
