@@ -1,22 +1,29 @@
 #!/bin/bash
 
-# Optimize SVG files using SVGO
-# Compresses SVG files to reduce file size
+#!/usr/bin/env zsh
+# Shrinks SVG files to save space.
+# Usage: ./svgomg.sh [folder]
 
 set -e
+setopt extendedglob
 
 if ! command -v svgo >/dev/null 2>&1; then
-    echo "SVGO not found. Install with: npm install -g svgo"
-    exit 1
+  echo "Error: svgo not found. Install via npm."
+  exit 1
 fi
 
-echo "Optimizing SVG files..."
+dir="${1:-.}"
 
-# Find all SVG files and optimize them
-find . -name "*.svg" -type f | while read -r file; do
-    echo "Optimizing: $file"
-    svgo "$file" --output "$file.optimized"
-    mv "$file.optimized" "$file"
+if [[ ! -d "$dir" ]]; then
+  echo "Error: '$dir' is not a directory"
+  exit 1
+fi
+
+for svg in "$dir"/**/*.svg(.N); do
+  svgo --pretty "$svg" 2>>"$HOME/script_errors.log"
+  if [[ $? -eq 0 ]]; then
+    echo "Processed: $svg"
+  else
+    echo "Failed: $svg; see $HOME/script_errors.log"
+  fi
 done
-
-echo "SVG optimization complete."

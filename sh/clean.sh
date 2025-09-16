@@ -1,28 +1,36 @@
 #!/bin/bash
 
-# Clean temporary files and build artifacts
-# Removes cache, logs, and temporary files
+#!/usr/bin/env zsh
+# Removes carriage returns, trailing whitespaces, and extra blank lines from text files.
+# Usage: ./clean.sh [target_folder]
 
 set -e
+setopt extended_glob
 
-echo "Cleaning temporary files..."
+dir="${1:-.}"
 
-# Remove common temp files
-find . -name "*.tmp" -delete 2>/dev/null || true
-find . -name "*.log" -delete 2>/dev/null || true  
-find . -name ".DS_Store" -delete 2>/dev/null || true
-find . -name "Thumbs.db" -delete 2>/dev/null || true
+if [[ ! -d "$dir" ]]; then
+  echo "Error: '$dir' is not a directory"
+  exit 1
+fi
 
-# Clean Ruby artifacts
-find . -name "*.gem" -delete 2>/dev/null || true
-rm -rf ai3/.bundle 2>/dev/null || true
-
-# Clean Node artifacts  
-rm -rf node_modules 2>/dev/null || true
-rm -rf .npm 2>/dev/null || true
-
-# Clean backup files
-find . -name "*~" -delete 2>/dev/null || true
-find . -name "*.backup" -delete 2>/dev/null || true
-
-echo "Cleanup complete."
+for file in "$dir"/**/*(.N); do
+  if file -b "$file" | grep -q "text"; then
+  
+    tmp=$(mktemp)
+    if [[ $? -ne 0 ]]; then
+      echo "Error: mktemp failed"
+      exit 1
+    fi
+    
+    # Removes CRLF, trims trailing whitespaces, reduces blank lines.
+    tr -d '\r' < "$file" | awk '{sub(/[ \t]+$/, "");} NF{print; if(p)print ""} {p=NF}' > "$tmp" 2>/dev/null
+    if [[ $? -eq 0 ]]; then
+      mv "$tmp" "$file"
+      echo "Cleaned: $file"
+    else
+      rm "$tmp"
+      echo "Failed: $file"
+    fi
+  fi
+done

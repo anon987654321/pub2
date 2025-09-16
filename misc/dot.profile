@@ -1,48 +1,35 @@
-# Profile configuration for shells
-# Common environment settings and aliases
+#!/bin/sh
 
-# Environment variables
-export EDITOR=vi
-export PAGER=less
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
+# Mounts the OpenBSD server's filesystem to the Mac and optionally prompts to SSH into the server.
 
-# PATH additions
-export PATH=$PATH:/usr/local/bin:/opt/local/bin:$HOME/bin
+OPENBSD_IP="46.23.95.45"
+OPENBSD_USER="dev"
+OPENBSD_REMOTE_DIR="/home/$OPENBSD_USER"
+MACOS_MOUNTPOINT="/Users/admin/Desktop/openbsd.amsterdam"
 
-# Ruby environment
-export GEM_HOME=$HOME/.gem
-export PATH=$PATH:$GEM_HOME/bin
+alias su="sudo su"
+alias ams="ssh $OPENBSD_USER@$OPENBSD_IP"
+alias ams-f="sftp $OPENBSD_USER@$OPENBSD_IP"
+alias ams-u="umount $MACOS_MOUNTPOINT"
 
-# Node.js environment  
-export NODE_PATH=/usr/local/lib/node_modules
-export PATH=$PATH:/usr/local/bin/node
-
-# Aliases
-alias ll='ls -la'
-alias la='ls -la'
-alias l='ls -l'
-alias ..='cd ..'
-alias ...='cd ../..'
-alias grep='grep --color=auto'
-alias tree='tree -I ".git|node_modules|.bundle"'
-
-# Git aliases
-alias gs='git status'
-alias gd='git diff'
-alias gc='git commit'
-alias gp='git push'
-alias gl='git log --oneline'
-
-# Functions
-mkcd() {
-    mkdir -p "$1" && cd "$1"
+# Check if sshfs is installed, if not, install via MacPorts
+check_sshfs() {
+  if ! command -v sshfs &> /dev/null; then
+    echo "sshfs is not installed. Installing with MacPorts..."
+    sudo port install sshfs
+  fi
 }
 
-# Set prompt
-PS1='\u@\h:\w$ '
+# Mount the OpenBSD filesystem regardless
+check_sshfs
+sshfs $OPENBSD_USER@$OPENBSD_IP:$OPENBSD_REMOTE_DIR $MACOS_MOUNTPOINT
 
-# History settings
-export HISTSIZE=1000
-export HISTFILESIZE=2000
-export HISTCONTROL=ignoredups
+# SSH prompt (optional)
+ssh_openbsd_prompt() {
+  echo "SSH as '$OPENBSD_USER' to openbsd.amsterdam? (Y/n)"
+  read -r answer
+  if [[ "$answer" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    ssh $OPENBSD_USER@$OPENBSD_IP
+  fi
+}
+ssh_openbsd_prompt

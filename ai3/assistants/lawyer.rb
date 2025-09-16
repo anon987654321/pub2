@@ -1,374 +1,461 @@
 # frozen_string_literal: true
 
-# Lawyer Assistant - Consolidated legal expertise combining multiple specializations
-# Integrates Norwegian legal system (Lovdata.no) with international legal knowledge
-
 require 'yaml'
 require 'i18n'
 require_relative '../lib/universal_scraper'
 require_relative '../lib/rag_engine'
-require_relative '../lib/weaviate_integration'
 
-module Assistants
-  class Lawyer
-    attr_reader :name, :role, :capabilities, :specializations, :lovdata_scraper, :rag_engine
+# Norwegian Legal Assistant with Lovdata.no integration
+# Specializes in 10 Norwegian legal areas with comprehensive legal research capabilities
+class LawyerAssistant
+  attr_reader :name, :role, :capabilities, :specializations, :lovdata_scraper, :rag_engine, :cognitive_monitor
 
-    # Combined knowledge sources from lawyer_assistant.rb and legal_specialist.rb
-    KNOWLEDGE_SOURCES = [
-      'https://lovdata.no/',
-      'https://bufdir.no/',
-      'https://lexisnexis.com/',
-      'https://westlaw.com/',
-      'https://courtlistener.com/',
-      'https://scholar.google.com/scholar',
-      'https://justia.com/',
-      'https://findlaw.com/',
-      'https://regjeringen.no/',
-      'https://domstol.no/'
-    ].freeze
+  # 10 Norwegian Legal Specializations
+  LEGAL_SPECIALIZATIONS = {
+    familierett: {
+      name: 'Familierett',
+      description: 'Family Law - Marriage, divorce, child custody, inheritance',
+      keywords: %w[familie skilsmisse foreldrerett barnebidrag arv ektepakt samboer],
+      lovdata_sections: %w[ekteskapsloven barnelova arvelova vergemålslova]
+    },
+    straffrett: {
+      name: 'Straffrett',
+      description: 'Criminal Law - Criminal cases, procedures, penalties',
+      keywords: %w[straffesak domstol anklage forsvar straff bot fengsel],
+      lovdata_sections: %w[straffeloven straffeprosessloven]
+    },
+    sivilrett: {
+      name: 'Sivilrett',
+      description: 'Civil Law - Contracts, property, obligations, tort',
+      keywords: %w[kontrakt eiendom erstatning avtale mislighold kjøp salg],
+      lovdata_sections: %w[avtalelov kjøpsloven skadeserstatningsloven]
+    },
+    forvaltningsrett: {
+      name: 'Forvaltningsrett',
+      description: 'Administrative Law - Government decisions, appeals, public administration',
+      keywords: %w[forvaltning vedtak klage offentlig myndighet fylkesmann],
+      lovdata_sections: %w[forvaltningsloven offentlighetsloven]
+    },
+    grunnlovsrett: {
+      name: 'Grunnlovsrett',
+      description: 'Constitutional Law - Constitutional principles, human rights',
+      keywords: %w[grunnlov menneskerettigheter demokrati ytringsfrihet religionsfrihet],
+      lovdata_sections: %w[grunnloven menneskerettsloven]
+    },
+    selskapsrett: {
+      name: 'Selskapsrett',
+      description: 'Corporate Law - Company formation, governance, mergers',
+      keywords: %w[selskap aksjer styre AS aksjeselskap fusjon oppkjøp],
+      lovdata_sections: %w[aksjeloven allmennaksjeloven]
+    },
+    eiendomsrett: {
+      name: 'Eiendomsrett',
+      description: 'Property Law - Real estate, land rights, registration',
+      keywords: %w[eiendom grunn bygning tinglysing servitutt naboforhold],
+      lovdata_sections: %w[jordlova eierseksjonsloven bustadbyggjelova]
+    },
+    arbeidsrett: {
+      name: 'Arbeidsrett',
+      description: 'Employment Law - Worker rights, labor relations, unions',
+      keywords: %w[arbeid ansatt oppsigelse tariffavtale fagforening permittering],
+      lovdata_sections: %w[arbeidsmiljøloven ferieloven]
+    },
+    skatterett: {
+      name: 'Skatterett',
+      description: 'Tax Law - Tax obligations, planning, disputes',
+      keywords: %w[skatt avgift skattemelding mva formuesskatt arveavgift],
+      lovdata_sections: %w[skatteloven merverdiavgiftsloven]
+    },
+    utlendingsrett: {
+      name: 'Utlendingsrett',
+      description: 'Immigration Law - Visa, residence permits, citizenship',
+      keywords: %w[innvandring opphold statsborgerskap asyl arbeidsvilkår utvisning],
+      lovdata_sections: %w[utlendingsloven statsborgerloven]
+    }
+  }.freeze
 
-    # Norwegian Legal Specializations (from lawyer_assistant.rb)
-    NORWEGIAN_SPECIALIZATIONS = {
-      familierett: {
-        name: 'Familierett',
-        description: 'Family Law - Marriage, divorce, child custody, inheritance',
-        keywords: %w[familie skilsmisse foreldrerett barnebidrag arv ektepakt samboer],
-        lovdata_sections: %w[ekteskapsloven barnelova arvelova vergemålslova]
-      },
-      straffrett: {
-        name: 'Straffrett', 
-        description: 'Criminal Law - Criminal cases, procedures, penalties',
-        keywords: %w[straffesak domstol anklage forsvar straff bot fengsel],
-        lovdata_sections: %w[straffeloven straffeprosessloven]
-      },
-      sivilrett: {
-        name: 'Sivilrett',
-        description: 'Civil Law - Contracts, property, obligations, tort',
-        keywords: %w[kontrakt eiendom erstatning avtale mislighold kjøp salg],
-        lovdata_sections: %w[avtalelov kjøpsloven skadeserstatningsloven]
-      },
-      forvaltningsrett: {
-        name: 'Forvaltningsrett',
-        description: 'Administrative Law - Government decisions, appeals',
-        keywords: %w[forvaltning vedtak klage offentlig myndighet fylkesmann],
-        lovdata_sections: %w[forvaltningsloven offentlighetsloven]
-      },
-      selskapsrett: {
-        name: 'Selskapsrett',
-        description: 'Corporate Law - Company formation, governance, mergers',
-        keywords: %w[selskap aksjer styre AS aksjeselskap fusjon oppkjøp],
-        lovdata_sections: %w[aksjeloven allmennaksjeloven]
-      }
-    }.freeze
+  def initialize(cognitive_monitor = nil)
+    @name = 'Norwegian Legal Specialist'
+    @role = 'Norwegian legal expert with Lovdata.no integration'
+    @capabilities = [
+      'norwegian_law', 'legal_research', 'document_analysis',
+      'precedent_search', 'compliance_checking', 'lovdata_integration'
+    ]
+    @specializations = LEGAL_SPECIALIZATIONS.keys
+    @cognitive_monitor = cognitive_monitor
+    
+    # Initialize components
+    initialize_lovdata_scraper
+    initialize_rag_engine
+    
+    # Load configuration
+    load_config
+  end
 
-    # International Legal Subspecialties (from legal_specialist.rb)
-    INTERNATIONAL_SUBSPECIALTIES = {
-      family: %i[family_law divorce child_custody],
-      corporate: %i[corporate_law business_contracts mergers_and_acquisitions],
-      criminal: %i[criminal_defense white_collar_crime drug_offenses],
-      immigration: %i[immigration_law visa_applications deportation_defense],
-      real_estate: %i[property_law real_estate_transactions landlord_tenant_disputes],
-      intellectual_property: %i[copyright patent trademark trade_secrets],
-      employment: %i[employment_law labor_disputes workplace_rights],
-      tax: %i[tax_law tax_planning tax_litigation],
-      environmental: %i[environmental_law regulatory_compliance],
-      health: %i[healthcare_law medical_malpractice]
-    }.freeze
+  # Main interface for handling legal queries
+  def respond(query, context: {})
+    # Detect Norwegian legal specialization from query
+    specialization = detect_specialization(query)
+    
+    puts I18n.t('ai3.legal.norwegian.specialization_selected', area: specialization[:name])
+    
+    # Search Lovdata for relevant legal information
+    lovdata_results = search_lovdata(query, specialization)
+    
+    # Search existing legal knowledge base
+    rag_results = @rag_engine.search(query, collection: 'norwegian_legal')
+    
+    # Find relevant precedents
+    precedents = find_precedents(query, specialization)
+    
+    # Generate comprehensive legal response
+    generate_legal_response(query, specialization, lovdata_results, rag_results, precedents)
+  end
 
-    def initialize(config = {})
-      @name = 'Legal Expert'
-      @role = 'Comprehensive Legal Assistant and Advisor'
-      @capabilities = [
-        'Norwegian and international legal research',
-        'Contract analysis and drafting',
-        'Legal compliance guidance',
-        'Case law research',
-        'Document review',
-        'Legal writing assistance',
-        'Regulatory compliance',
-        'Cross-jurisdictional legal analysis'
-      ]
-      @specializations = NORWEGIAN_SPECIALIZATIONS.merge(
-        INTERNATIONAL_SUBSPECIALTIES.transform_values { |v| { description: v.join(', ') } }
-      )
-      
-      @language = config[:language] || 'en'
-      @jurisdiction = config[:jurisdiction] || 'NO'
-      @subspecialty = config[:subspecialty] || :general
-      
-      initialize_tools
+  # Norwegian legal document analysis
+  def analyze_document(document_text, document_type = :unknown)
+    puts I18n.t('ai3.legal.norwegian.document_analyzed')
+    
+    # Detect legal areas covered in document
+    relevant_areas = detect_legal_areas(document_text)
+    
+    # Extract key legal concepts
+    legal_concepts = extract_legal_concepts(document_text)
+    
+    # Check compliance with Norwegian law
+    compliance_status = check_compliance(document_text, relevant_areas)
+    
+    {
+      legal_areas: relevant_areas,
+      legal_concepts: legal_concepts,
+      compliance: compliance_status,
+      recommendations: generate_compliance_recommendations(compliance_status)
+    }
+  end
+
+  # Search Høyesterett and lower court decisions
+  def search_precedents(query, court_level = :all)
+    courts = case court_level
+             when :høyesterett
+               ['Høyesterett']
+             when :lagmannsrett
+               ['Lagmannsrett', 'Høyesterett']
+             when :tingrett
+               ['Tingrett', 'Lagmannsrett', 'Høyesterett']
+             else
+               ['Tingrett', 'Lagmannsrett', 'Høyesterett']
+             end
+    
+    results = []
+    courts.each do |court|
+      court_results = search_court_decisions(query, court)
+      results.concat(court_results)
     end
+    
+    puts I18n.t('ai3.legal.norwegian.precedent_found', count: results.size)
+    results
+  end
 
-    def process(input, context = {})
-      # Determine if this is a Norwegian or international legal query
-      jurisdiction = detect_jurisdiction(input) || @jurisdiction
-      
-      if jurisdiction == 'NO'
-        process_norwegian_legal_query(input, context)
-      else
-        process_international_legal_query(input, context)
-      end
+  # Norwegian business regulatory compliance checking
+  def check_business_compliance(business_data)
+    compliance_areas = [
+      :company_registration,
+      :tax_obligations,
+      :employment_law,
+      :data_protection,
+      :industry_specific_regulations
+    ]
+    
+    compliance_results = {}
+    
+    compliance_areas.each do |area|
+      compliance_results[area] = assess_compliance_area(business_data, area)
     end
+    
+    overall_status = calculate_overall_compliance(compliance_results)
+    puts I18n.t('ai3.legal.norwegian.compliance_check', status: overall_status)
+    
+    {
+      overall_status: overall_status,
+      area_results: compliance_results,
+      recommendations: generate_business_recommendations(compliance_results)
+    }
+  end
 
-    def get_legal_advice(query, specialization = nil)
-      specialization ||= detect_specialization(query)
+  # Multi-agent legal research coordination
+  def coordinate_legal_research(complex_query)
+    return unless @cognitive_monitor
+    
+    # Assess complexity and cognitive load
+    complexity = @cognitive_monitor.assess_complexity(complex_query)
+    
+    if complexity > 6
+      # Break down into smaller research tasks
+      subtasks = decompose_legal_query(complex_query)
       
-      context = build_legal_context(query, specialization)
-      research_results = conduct_legal_research(query, specialization)
-      
-      generate_legal_response(query, context, research_results, specialization)
-    end
-
-    def analyze_contract(contract_text, contract_type = 'general')
-      analysis = {
-        contract_type: contract_type,
-        key_clauses: extract_key_clauses(contract_text),
-        potential_issues: identify_potential_issues(contract_text),
-        recommendations: generate_contract_recommendations(contract_text),
-        compliance_check: check_legal_compliance(contract_text, contract_type)
-      }
-      
-      format_contract_analysis(analysis)
-    end
-
-    def research_case_law(query, jurisdiction = nil)
-      jurisdiction ||= @jurisdiction
-      
-      case jurisdiction
-      when 'NO'
-        research_norwegian_case_law(query)
-      else
-        research_international_case_law(query, jurisdiction)
-      end
-    end
-
-    private
-
-    def initialize_tools
-      @lovdata_scraper = UniversalScraper.new(base_url: 'https://lovdata.no')
-      @rag_engine = RagEngine.new
-      @weaviate_client = WeaviateIntegration.new if defined?(WeaviateIntegration)
-    end
-
-    def detect_jurisdiction(input)
-      norwegian_indicators = %w[lovdata lov forskrift norsk norge norwegian]
-      
-      return 'NO' if norwegian_indicators.any? { |indicator| input.downcase.include?(indicator) }
-      
-      # Check for other jurisdiction indicators
-      return 'US' if input.downcase.match?(/\b(us|usa|american|federal)\b/)
-      return 'UK' if input.downcase.match?(/\b(uk|british|england|wales|scotland)\b/)
-      return 'EU' if input.downcase.match?(/\b(eu|european union|gdpr)\b/)
-      
-      nil
-    end
-
-    def detect_specialization(query)
-      query_lower = query.downcase
-      
-      # Check Norwegian specializations
-      NORWEGIAN_SPECIALIZATIONS.each do |key, spec|
-        return key if spec[:keywords].any? { |keyword| query_lower.include?(keyword) }
-      end
-      
-      # Check international specializations
-      INTERNATIONAL_SUBSPECIALTIES.each do |key, subspecs|
-        return key if subspecs.any? { |subspec| query_lower.include?(subspec.to_s.gsub('_', ' ')) }
-      end
-      
-      :general
-    end
-
-    def process_norwegian_legal_query(input, context)
-      specialization = detect_specialization(input)
-      lovdata_results = @lovdata_scraper.search(input)
-      
-      response = "**Norwegian Legal Analysis**\n\n"
-      response += "**Specialization:** #{NORWEGIAN_SPECIALIZATIONS[specialization][:name]}\n\n"
-      
-      if lovdata_results&.any?
-        response += "**Relevant Legal Sources:**\n"
-        lovdata_results.each do |result|
-          response += "- #{result[:title]}: #{result[:url]}\n"
-        end
-        response += "\n"
-      end
-      
-      response += generate_legal_analysis(input, specialization, 'NO')
-      response
-    end
-
-    def process_international_legal_query(input, context)
-      specialization = detect_specialization(input)
-      jurisdiction = detect_jurisdiction(input) || 'INTERNATIONAL'
-      
-      response = "**International Legal Analysis**\n\n"
-      response += "**Jurisdiction:** #{jurisdiction}\n"
-      response += "**Specialization:** #{specialization.to_s.humanize}\n\n"
-      
-      response += generate_legal_analysis(input, specialization, jurisdiction)
-      response
-    end
-
-    def conduct_legal_research(query, specialization)
       results = []
+      subtasks.each do |subtask|
+        result = respond(subtask[:query], context: subtask[:context])
+        results << { subtask: subtask, result: result }
+      end
       
-      # Search relevant knowledge sources
-      KNOWLEDGE_SOURCES.each do |source|
-        begin
-          search_results = @rag_engine.search(query, source: source)
-          results.concat(search_results) if search_results
-        rescue => e
-          puts "Error searching #{source}: #{e.message}"
+      # Synthesize results
+      synthesize_legal_research(results)
+    else
+      # Handle as single task
+      respond(complex_query)
+    end
+  end
+
+  private
+
+  def initialize_lovdata_scraper
+    @lovdata_scraper = UniversalScraper.new(
+      screenshot_dir: 'data/lovdata_screenshots',
+      timeout: 45,
+      user_agent: 'AI3-Legal-Research-Bot/1.0'
+    )
+    @lovdata_scraper.set_cognitive_monitor(@cognitive_monitor) if @cognitive_monitor
+  end
+
+  def initialize_rag_engine
+    @rag_engine = RAGEngine.new(
+      db_path: 'data/norwegian_legal_vector_store.db'
+    )
+    @rag_engine.set_cognitive_monitor(@cognitive_monitor) if @cognitive_monitor
+  end
+
+  def load_config
+    config_path = File.join(__dir__, '..', 'config', 'config.yml')
+    @config = File.exist?(config_path) ? YAML.load_file(config_path) : {}
+  end
+
+  def detect_specialization(query)
+    # Analyze query to determine most relevant legal specialization
+    query_downcase = query.downcase
+    
+    best_match = nil
+    best_score = 0
+    
+    LEGAL_SPECIALIZATIONS.each do |key, spec|
+      score = spec[:keywords].count { |keyword| query_downcase.include?(keyword) }
+      if score > best_score
+        best_score = score
+        best_match = spec
+      end
+    end
+    
+    best_match || LEGAL_SPECIALIZATIONS[:sivilrett] # Default to civil law
+  end
+
+  def search_lovdata(query, specialization)
+    return [] unless lovdata_enabled?
+    
+    puts I18n.t('ai3.legal.norwegian.searching_lovdata')
+    
+    # Construct Lovdata search URLs for relevant legal sections
+    search_results = []
+    
+    specialization[:lovdata_sections].each do |section|
+      search_url = construct_lovdata_url(query, section)
+      
+      begin
+        result = @lovdata_scraper.scrape(search_url)
+        if result[:success]
+          processed_result = process_lovdata_content(result, section)
+          search_results << processed_result
+          
+          # Add to RAG for future searches
+          add_to_legal_knowledge_base(processed_result)
         end
+      rescue => e
+        puts "Error scraping Lovdata for #{section}: #{e.message}"
       end
-      
-      results
     end
+    
+    search_results
+  end
 
-    def generate_legal_analysis(input, specialization, jurisdiction)
-      analysis = <<~ANALYSIS
-        **Legal Analysis:**
-        
-        Based on the query regarding #{specialization}, the following considerations apply:
-        
-        1. **Primary Legal Framework:** The applicable legal framework depends on the jurisdiction (#{jurisdiction}) and specific circumstances.
-        
-        2. **Key Considerations:** 
-           - Statutory requirements and regulations
-           - Relevant case law precedents
-           - Procedural requirements
-           - Potential legal risks and mitigation strategies
-        
-        3. **Recommendations:**
-           - Consult with a qualified attorney for specific legal advice
-           - Review all relevant documentation
-           - Consider jurisdiction-specific requirements
-           - Ensure compliance with applicable regulations
-        
-        **Disclaimer:** This analysis is for informational purposes only and does not constitute legal advice. Always consult with a qualified attorney for legal matters.
-      ANALYSIS
-      
-      analysis
+  def construct_lovdata_url(query, section)
+    base_url = @config.dig('norwegian_legal', 'lovdata', 'base_url') || 'https://lovdata.no'
+    # Simplified URL construction - in practice, this would use Lovdata's search API
+    "#{base_url}/pro#search/#{URI.encode_www_form_component(query)}/#{section}"
+  end
+
+  def process_lovdata_content(scraped_result, section)
+    {
+      section: section,
+      title: scraped_result[:title],
+      content: scraped_result[:content],
+      url: scraped_result[:url],
+      timestamp: Time.now,
+      source: 'Lovdata.no'
+    }
+  end
+
+  def find_precedents(query, specialization)
+    # Search for relevant court decisions
+    search_precedents(query, :all)
+  end
+
+  def search_court_decisions(query, court)
+    # In practice, this would integrate with court database APIs
+    # For now, returning mock structure
+    []
+  end
+
+  def detect_legal_areas(document_text)
+    detected_areas = []
+    
+    LEGAL_SPECIALIZATIONS.each do |key, spec|
+      keyword_matches = spec[:keywords].count { |keyword| document_text.downcase.include?(keyword) }
+      detected_areas << key if keyword_matches > 0
     end
+    
+    detected_areas
+  end
 
-    def extract_key_clauses(contract_text)
-      # Simple pattern matching for common contract clauses
-      clauses = []
-      
-      clauses << 'Payment terms' if contract_text.match?(/payment|fee|cost|price/i)
-      clauses << 'Termination clause' if contract_text.match?(/terminat|end|expir/i)
-      clauses << 'Liability limitation' if contract_text.match?(/liabilit|damages|limit/i)
-      clauses << 'Confidentiality' if contract_text.match?(/confident|secret|proprietary/i)
-      clauses << 'Governing law' if contract_text.match?(/governing|applicable|law|jurisdiction/i)
-      
-      clauses
+  def extract_legal_concepts(document_text)
+    # Extract key legal terms, references to laws, etc.
+    # This would use NLP in practice
+    concepts = []
+    
+    # Look for law references (simplified)
+    law_references = document_text.scan(/(?:§\s*\d+|lov|forskrift|rundskriv)/i)
+    concepts.concat(law_references)
+    
+    concepts.uniq
+  end
+
+  def check_compliance(document_text, relevant_areas)
+    # Check document against Norwegian legal requirements
+    compliance_issues = []
+    
+    relevant_areas.each do |area|
+      area_issues = check_area_compliance(document_text, area)
+      compliance_issues.concat(area_issues)
     end
+    
+    {
+      status: compliance_issues.empty? ? :compliant : :issues_found,
+      issues: compliance_issues
+    }
+  end
 
-    def identify_potential_issues(contract_text)
-      issues = []
-      
-      issues << 'Missing payment terms' unless contract_text.match?(/payment|fee|cost/i)
-      issues << 'No termination clause' unless contract_text.match?(/terminat|end/i)
-      issues << 'Unclear liability provisions' unless contract_text.match?(/liabilit|damages/i)
-      issues << 'Missing governing law clause' unless contract_text.match?(/governing.*law|applicable.*law/i)
-      
-      issues
+  def check_area_compliance(document_text, area)
+    # Area-specific compliance checking
+    # This would contain detailed compliance rules
+    []
+  end
+
+  def generate_compliance_recommendations(compliance_status)
+    return [] if compliance_status[:status] == :compliant
+    
+    compliance_status[:issues].map do |issue|
+      "Consider addressing: #{issue}"
     end
+  end
 
-    def generate_contract_recommendations(contract_text)
-      recommendations = [
-        'Review all terms carefully with legal counsel',
-        'Ensure all parties understand their obligations',
-        'Verify compliance with applicable laws',
-        'Consider including dispute resolution clauses'
-      ]
-      
-      recommendations
+  def assess_compliance_area(business_data, area)
+    # Assess specific compliance area for business
+    {
+      status: :requires_review,
+      details: "#{area} compliance assessment needed",
+      risk_level: :medium
+    }
+  end
+
+  def calculate_overall_compliance(area_results)
+    risk_levels = area_results.values.map { |result| result[:risk_level] }
+    
+    if risk_levels.include?(:high)
+      :high_risk
+    elsif risk_levels.include?(:medium)
+      :medium_risk
+    else
+      :low_risk
     end
+  end
 
-    def check_legal_compliance(contract_text, contract_type)
-      compliance_items = []
-      
-      case contract_type
-      when 'employment'
-        compliance_items << 'Wage and hour law compliance'
-        compliance_items << 'Non-discrimination provisions'
-        compliance_items << 'Workplace safety requirements'
-      when 'real_estate'
-        compliance_items << 'Property disclosure requirements'
-        compliance_items << 'Zoning compliance'
-        compliance_items << 'Environmental regulations'
-      else
-        compliance_items << 'General contract law requirements'
-        compliance_items << 'Consumer protection laws (if applicable)'
+  def generate_business_recommendations(compliance_results)
+    recommendations = []
+    
+    compliance_results.each do |area, result|
+      if result[:risk_level] != :low
+        recommendations << "Review #{area} compliance requirements"
       end
-      
-      compliance_items
     end
+    
+    recommendations
+  end
 
-    def format_contract_analysis(analysis)
-      output = "**Contract Analysis Report**\n\n"
-      output += "**Contract Type:** #{analysis[:contract_type].humanize}\n\n"
-      
-      output += "**Key Clauses Identified:**\n"
-      analysis[:key_clauses].each { |clause| output += "- #{clause}\n" }
-      output += "\n"
-      
-      if analysis[:potential_issues].any?
-        output += "**Potential Issues:**\n"
-        analysis[:potential_issues].each { |issue| output += "- #{issue}\n" }
-        output += "\n"
+  def decompose_legal_query(complex_query)
+    # Break complex query into manageable subtasks
+    # This would use advanced query analysis
+    [
+      { query: complex_query, context: {} }
+    ]
+  end
+
+  def synthesize_legal_research(results)
+    # Combine multiple research results into coherent response
+    combined_content = results.map { |r| r[:result] }.join("\n\n")
+    
+    "Comprehensive Legal Analysis:\n\n#{combined_content}"
+  end
+
+  def generate_legal_response(query, specialization, lovdata_results, rag_results, precedents)
+    response = "Norwegian Legal Analysis - #{specialization[:name]}\n\n"
+    
+    response += "Query: #{query}\n\n"
+    
+    unless lovdata_results.empty?
+      response += "Lovdata.no Results:\n"
+      lovdata_results.each do |result|
+        response += "- #{result[:section]}: #{result[:content][0..200]}...\n"
       end
-      
-      output += "**Recommendations:**\n"
-      analysis[:recommendations].each { |rec| output += "- #{rec}\n" }
-      output += "\n"
-      
-      output += "**Compliance Considerations:**\n"
-      analysis[:compliance_check].each { |item| output += "- #{item}\n" }
-      
-      output
+      response += "\n"
     end
-
-    def research_norwegian_case_law(query)
-      # Placeholder for Norwegian case law research
-      "Norwegian case law research for: #{query}\n\nConsult Lovdata.no for current cases and legal precedents."
-    end
-
-    def research_international_case_law(query, jurisdiction)
-      # Placeholder for international case law research  
-      "International case law research (#{jurisdiction}) for: #{query}\n\nConsult relevant legal databases for current cases."
-    end
-
-    def build_legal_context(query, specialization)
-      {
-        query: query,
-        specialization: specialization,
-        jurisdiction: @jurisdiction,
-        timestamp: Time.now,
-        language: @language
-      }
-    end
-
-    def generate_legal_response(query, context, research_results, specialization)
-      response = "**Legal Research Response**\n\n"
-      response += "**Query:** #{query}\n"
-      response += "**Specialization:** #{specialization}\n"
-      response += "**Jurisdiction:** #{context[:jurisdiction]}\n\n"
-      
-      if research_results.any?
-        response += "**Research Results:**\n"
-        research_results.first(5).each do |result|
-          response += "- #{result[:title] || result[:summary] || result.to_s}\n"
-        end
-        response += "\n"
+    
+    unless rag_results.empty?
+      response += "Knowledge Base Results:\n"
+      rag_results.each do |result|
+        response += "- #{result[:content][0..200]}...\n"
       end
-      
-      response += "**Legal Analysis:** [Detailed analysis would be provided here based on research]\n\n"
-      response += "**Disclaimer:** This is for informational purposes only. Consult qualified legal counsel."
-      
-      response
+      response += "\n"
     end
+    
+    unless precedents.empty?
+      response += "Relevant Precedents:\n"
+      precedents.each do |precedent|
+        response += "- #{precedent[:title]}: #{precedent[:summary]}\n"
+      end
+      response += "\n"
+    end
+    
+    response += "Legal Recommendation:\n"
+    response += generate_legal_recommendation(query, specialization)
+    
+    response
+  end
+
+  def generate_legal_recommendation(query, specialization)
+    "Based on #{specialization[:name]} analysis, consider consulting with a qualified Norwegian lawyer for specific legal advice regarding: #{query}"
+  end
+
+  def add_to_legal_knowledge_base(content)
+    document = {
+      content: content[:content],
+      title: content[:title],
+      section: content[:section],
+      source: content[:source],
+      timestamp: content[:timestamp]
+    }
+    
+    @rag_engine.add_document(document, collection: 'norwegian_legal')
+  end
+
+  def lovdata_enabled?
+    @config.dig('norwegian_legal', 'lovdata', 'enabled') != false
   end
 end

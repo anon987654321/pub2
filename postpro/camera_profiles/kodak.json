@@ -1,52 +1,17 @@
 {
-  "name": "Kodak Film Emulation",
-  "manufacturer": "Kodak",
-  "description": "Classic film emulation profile for Kodak characteristics",
-  "settings": {
-    "exposure_compensation": 0.2,
-    "highlights": -30,
-    "shadows": 25,
-    "whites": -15,
-    "blacks": 10,
-    "clarity": 5,
-    "vibrance": 15,
-    "saturation": 5,
-    "color_grading": {
-      "shadows": {
-        "hue": 220,
-        "saturation": 15,
-        "luminance": 5
-      },
-      "midtones": {
-        "hue": 0,
-        "saturation": 10,
-        "luminance": 0
-      },
-      "highlights": {
-        "hue": 45,
-        "saturation": 10,
-        "luminance": -5
-      }
+  "vendor": "kodak",
+  "profiles": {
+    "portra_400": {
+      "color_matrix": [0.9639, -0.0228, -0.0411, -0.2654, 1.2994, -0.0340, -0.0527, 0.1264, 0.9263],
+      "saturation": 1.25,
+      "vibrance": 0.35,
+      "grain": "medium"
     },
-    "tone_curve": {
-      "point_1": [30, 35],
-      "point_2": [70, 75]
-    },
-    "split_toning": {
-      "highlights": {
-        "hue": 50,
-        "saturation": 8
-      },
-      "shadows": {
-        "hue": 220,
-        "saturation": 12
-      },
-      "balance": -20
+    "ektar_100": {
+      "color_matrix": [0.9854, -0.0145, -0.0709, -0.2357, 1.2810, -0.0453, -0.0394, 0.1169, 0.9225],
+      "saturation": 1.45,
+      "vibrance": 0.55,
+      "grain": "fine"
     }
-  },
-  "film_characteristics": {
-    "grain": "medium",
-    "contrast": "soft",
-    "color_rendition": "warm"
   }
 }

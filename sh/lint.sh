@@ -1,30 +1,37 @@
 #!/bin/bash
 
-# Run linting tools on the codebase
-# Checks Ruby, JavaScript, and other code quality
+#!/usr/bin/env zsh
+# Checks and fixes Ruby code files for errors.
+# Usage: ./lint.sh
 
 set -e
+setopt extended_glob null_glob
 
-echo "Running linting tools..."
+check_tool() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Error: $1 not found. Install it."
+    exit 1
+  fi
+}
 
-# Ruby linting
-if command -v rubocop >/dev/null 2>&1; then
-    echo "Running RuboCop..."
-    cd ai3 && rubocop . || true
-    cd ..
-fi
+lint_ruby() {
+  local file="$1"
+  echo "Linting: $file"
+  
+  if ! reek "$file" >/dev/null 2>&1; then
+    echo "Reek flagged: $file"
+  fi
+  if ! rubocop --autocorrect "$file" >/dev/null 2>&1; then
+    echo "Rubocop failed: $file"
+  fi
+  
+  echo "Done: $file"
+}
 
-# Check shell scripts
-if command -v shellcheck >/dev/null 2>&1; then
-    echo "Running ShellCheck..."
-    find sh -name "*.sh" -exec shellcheck {} \; || true
-    find rails -name "*.sh" -exec shellcheck {} \; || true
-fi
+check_tool "rubocop"
+check_tool "reek"
 
-# Check JSON files
-if command -v jq >/dev/null 2>&1; then
-    echo "Validating JSON files..."
-    find . -name "*.json" -exec jq . {} \; > /dev/null || true
-fi
-
-echo "Linting complete."
+find . -type f \( -name "*.rb" -o -name "*.erb" \) \
+  ! -path "*/.gem/*" ! -path "*/vendor/*" | while read -r file; do
+    lint_ruby "$file"
+  done

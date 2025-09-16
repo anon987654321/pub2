@@ -1,283 +1,186 @@
 #!/usr/bin/env ruby
 
-# VulCheck - Vulnerability Scanner
-# Basic security vulnerability scanning tool
+# **vulcheck.rb**
+#
+# This script performs security checks for macOS, iOS, and Android devices. It detects rootkits, jailbreaks, unauthorized access, and active intrusions. It automates updates for tools like `chkrootkit` and `rkhunter`, and logs results for review.
 
-require 'socket'
-require 'net/http'
-require 'uri'
-require 'openssl'
-require 'json'
+require 'optparse'
+require 'fileutils'
+require 'open3'
 
-module VulCheck
-  class Scanner
-    attr_reader :host, :results
+class VulCheck
+  MACPORTS_PACKAGES = %w[chkrootkit rkhunter aide].freeze
+  # `aide` is included for file integrity checking, complementing `chkrootkit` and `rkhunter`.
+  LOG_FILE = 'vulcheck_log.txt'
 
-    def initialize(host, options = {})
-      @host = host
-      @options = options
-      @results = { host: host, scans: {} }
-    end
+  # Ensure script is run with sudo
+  def self.ensure_sudo
+    return if Process.uid.zero?
 
-    def scan
-      puts "Starting vulnerability scan for #{@host}"
-      
-      port_scan if @options[:ports] != false
-      http_scan if @options[:http] != false
-      ssl_scan if @options[:ssl] != false
-      
-      @results
-    end
+    log('Root privileges are necessary for installing tools and scanning system files.')
+    log_and_exit('This script must be run with sudo privileges.')
+  end
 
-    private
-
-    def port_scan
-      puts "Performing port scan..."
-      common_ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995]
-      open_ports = []
-
-      common_ports.each do |port|
-        if port_open?(port)
-          open_ports << port
-          puts "  Port #{port} is open"
-        end
+  # Determine the system type: macOS, iOS, or Android
+  def self.check_system
+    if RUBY_PLATFORM.include?('darwin')
+      if File.exist?('/Applications/Utilities/Terminal.app') # macOS
+        return 'macos'
+      elsif File.exist?('/System/Applications/Feedback.app') # iOS
+        return 'ios'
       end
-
-      @results[:scans][:ports] = {
-        open_ports: open_ports,
-        scan_time: Time.now
-      }
+    elsif RUBY_PLATFORM.include?('android')
+      return 'android'
     end
+    raise 'Unsupported OS'
+  end
 
-    def http_scan
-      puts "Performing HTTP scan..."
-      http_results = {}
+  # Ensure MacPorts is installed (for macOS)
+  def self.ensure_macports
+    return if system('which port > /dev/null 2>&1')
 
-      [80, 443].each do |port|
-        next unless port_open?(port)
-        
-        scheme = port == 443 ? 'https' : 'http'
-        url = "#{scheme}://#{@host}"
-        
-        begin
-          response = get_http_response(url)
-          http_results[port] = analyze_http_response(response)
-        rescue => e
-          http_results[port] = { error: e.message }
-        end
-      end
+    log_and_exit('MacPorts not found. Please install MacPorts first: https://www.macports.org/')
+  end
 
-      @results[:scans][:http] = http_results
-    end
-
-    def ssl_scan
-      puts "Performing SSL/TLS scan..."
-      
-      return unless port_open?(443)
-
-      begin
-        context = OpenSSL::SSL::SSLContext.new
-        socket = TCPSocket.new(@host, 443)
-        ssl_socket = OpenSSL::SSL::SSLSocket.new(socket, context)
-        ssl_socket.connect
-
-        cert = ssl_socket.peer_cert
-        ssl_info = {
-          subject: cert.subject.to_s,
-          issuer: cert.issuer.to_s,
-          not_before: cert.not_before,
-          not_after: cert.not_after,
-          expired: cert.not_after < Time.now,
-          version: ssl_socket.ssl_version,
-          cipher: ssl_socket.cipher
-        }
-
-        ssl_socket.close
-        socket.close
-
-        @results[:scans][:ssl] = ssl_info
-      rescue => e
-        @results[:scans][:ssl] = { error: e.message }
+  # Install required tools using MacPorts (for macOS)
+  def self.install_dependencies
+    log('Installing required tools using MacPorts...')
+    MACPORTS_PACKAGES.each do |pkg|
+      unless system("port installed #{pkg} > /dev/null 2>&1")
+        log("Installing #{pkg}...")
+        system("sudo port install #{pkg}") || raise("Failed to install #{pkg}.")
       end
     end
+    log('All required tools are installed.')
+  end
 
-    def port_open?(port)
-      begin
-        socket = TCPSocket.new(@host, port)
-        socket.close
-        true
-      rescue
-        false
-      end
-    end
+  # Update rootkit detection tools for macOS
+  def self.update_tools
+    log('Updating rootkit detection tools...')
+    system('sudo rkhunter --update') || log('Failed to update rkhunter. Regular updates ensure detection rules remain effective.')
+    system('sudo chkrootkit --update') || log('Failed to update chkrootkit.')
+    log('Tools updated successfully.')
+  end
 
-    def get_http_response(url)
-      uri = URI(url)
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = uri.scheme == 'https'
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE if uri.scheme == 'https'
-      
-      request = Net::HTTP::Get.new(uri)
-      response = http.request(request)
-      response
-    end
-
-    def analyze_http_response(response)
-      {
-        status: response.code,
-        headers: response.to_hash,
-        server: response['server'],
-        security_headers: check_security_headers(response),
-        vulnerabilities: check_http_vulnerabilities(response)
-      }
-    end
-
-    def check_security_headers(response)
-      security_headers = %w[
-        x-frame-options
-        x-content-type-options
-        x-xss-protection
-        strict-transport-security
-        content-security-policy
-      ]
-
-      missing = security_headers.reject { |header| response[header] }
-      {
-        present: security_headers - missing,
-        missing: missing
-      }
-    end
-
-    def check_http_vulnerabilities(response)
-      vulns = []
-
-      # Check for common vulnerabilities
-      vulns << 'Missing X-Frame-Options' unless response['x-frame-options']
-      vulns << 'Missing X-Content-Type-Options' unless response['x-content-type-options']
-      vulns << 'Server banner disclosure' if response['server']
-      vulns << 'Missing HSTS header' unless response['strict-transport-security']
-
-      vulns
+  # Run security scans on macOS
+  def self.run_macos_scans
+    log('Running security scans for macOS...')
+    MACPORTS_PACKAGES.each do |tool|
+      command = case tool
+                when 'chkrootkit' then tool
+                when 'rkhunter' then "#{tool} --check"
+                when 'aide' then "#{tool} --check"
+                else next
+                end
+      log("Executing: #{command}")
+      system(command) || log("Error: #{tool} scan encountered an issue.")
     end
   end
 
-  class Reporter
-    def initialize(results)
-      @results = results
+  # Detect active intrusions on macOS
+  def self.detect_active_intrusions
+    log('Checking for active intrusions on macOS...')
+    log('Active network connections:')
+    system('netstat -an | grep ESTABLISHED')
+    log('Review the above connections for unusual remote addresses or unauthorized access.')
+    log('Suspicious running processes:')
+    system('ps aux | grep -i suspicious')
+  end
+
+  # Detect jailbreak indicators on iOS
+  def self.check_ios_jailbreak
+    log('Checking for jailbreak indicators on iOS...')
+    jailbreak_indicators = [
+      '/Applications/Cydia.app',
+      '/usr/sbin/sshd',
+      '/bin/bash',
+      '/private/var/stash',
+      '/usr/libexec/ssh-keysign'
+    ]
+
+    jailbreak_indicators.each do |path|
+      log("Warning: Jailbreak indicator found at #{path}") if File.exist?(path)
+    end
+    log('Finished checking for jailbreak indicators on iOS.')
+  end
+
+  # Detect root access on Android
+  def self.check_android_root
+    log('Checking for root access on Android...')
+    root_indicators = [
+      '/system/xbin/su',
+      '/system/bin/su',
+      '/data/data/com.noshufou.android.su',
+      '/sbin/su'
+    ]
+
+    root_indicators.each do |path|
+      log("Warning: Root access indicator found at #{path}") if File.exist?(path)
     end
 
-    def summary
-      output = []
-      output << "Vulnerability Scan Report for #{@results[:host]}"
-      output << "=" * 50
+    log('Active network connections:')
+    system('netstat -an | grep ESTABLISHED')
 
-      if @results[:scans][:ports]
-        output << "\nPort Scan Results:"
-        open_ports = @results[:scans][:ports][:open_ports]
-        if open_ports.any?
-          output << "  Open ports: #{open_ports.join(', ')}"
-        else
-          output << "  No open ports found"
-        end
-      end
-
-      if @results[:scans][:http]
-        output << "\nHTTP Scan Results:"
-        @results[:scans][:http].each do |port, data|
-          next if data[:error]
-          
-          output << "  Port #{port}:"
-          output << "    Status: #{data[:status]}"
-          output << "    Server: #{data[:server] || 'Unknown'}"
-          
-          if data[:security_headers][:missing].any?
-            output << "    Missing security headers: #{data[:security_headers][:missing].join(', ')}"
-          end
-          
-          if data[:vulnerabilities].any?
-            output << "    Vulnerabilities: #{data[:vulnerabilities].join(', ')}"
-          end
-        end
-      end
-
-      if @results[:scans][:ssl]
-        output << "\nSSL/TLS Scan Results:"
-        ssl = @results[:scans][:ssl]
-        
-        if ssl[:error]
-          output << "  Error: #{ssl[:error]}"
-        else
-          output << "  Certificate Subject: #{ssl[:subject]}"
-          output << "  Certificate Issuer: #{ssl[:issuer]}"
-          output << "  Valid Until: #{ssl[:not_after]}"
-          output << "  Expired: #{ssl[:expired] ? 'Yes' : 'No'}"
-          output << "  SSL Version: #{ssl[:version]}"
-        end
-      end
-
-      output.join("\n")
+    if system('which su > /dev/null 2>&1')
+      log('The presence of `su` may indicate the device is rooted. Verify the need for this binary.')
+      log('Warning: Device may be rooted (su command found).')
     end
+    log('Finished checking for root access on Android.')
+  end
 
-    def json_report
-      @results.to_json
+  # Log messages to console and file
+  def self.log(message)
+    puts message
+    File.open(LOG_FILE, 'a') { |file| file.puts("#{Time.now}: #{message}") }
+  end
+
+  # Log an error and exit
+  def self.log_and_exit(message)
+    log(message)
+    exit(1)
+  end
+
+  # Execute the script based on detected OS
+  def self.execute
+    ensure_sudo
+    system_type = check_system
+    case system_type
+    when 'macos'
+      log('macOS detected.')
+      ensure_macports
+      install_dependencies
+      update_tools
+      detect_active_intrusions
+      run_macos_scans
+    when 'ios'
+      log('iOS detected.')
+      check_ios_jailbreak
+    when 'android'
+      log('Android detected.')
+      check_android_root
+    else
+      log_and_exit('Unsupported system type detected.')
     end
   end
 end
 
-# Command line interface
-if __FILE__ == $0
-  require 'optparse'
+# Parse command-line options
+options = {}
 
-  options = {}
-  
-  OptionParser.new do |opts|
-    opts.banner = "Usage: #{$0} [options]"
-    
-    opts.on('--host HOST', 'Target host to scan') do |host|
-      options[:host] = host
-    end
-    
-    opts.on('--ports PORTS', 'Comma-separated list of ports to scan') do |ports|
-      options[:ports] = ports.split(',').map(&:to_i)
-    end
-    
-    opts.on('--[no-]http', 'Enable/disable HTTP scanning') do |http|
-      options[:http] = http
-    end
-    
-    opts.on('--[no-]ssl', 'Enable/disable SSL scanning') do |ssl|
-      options[:ssl] = ssl
-    end
-    
-    opts.on('--full', 'Perform full scan (all options enabled)') do
-      options[:http] = true
-      options[:ssl] = true
-      options[:ports] = true
-    end
-    
-    opts.on('--report FORMAT', 'Report format (summary or json)') do |format|
-      options[:report] = format
-    end
-    
-    opts.on('-h', '--help', 'Show this help') do
-      puts opts
-      exit
-    end
-  end.parse!
+OptionParser.new do |opts|
+  opts.banner = 'Usage: vulcheck.rb [options]'
 
-  unless options[:host]
-    puts "Error: --host is required"
-    exit 1
+  opts.on('--macos', 'Run the script for macOS') { options[:macos] = true }
+  opts.on('--ios', 'Run the script for iOS') { options[:ios] = true }
+  opts.on('--android', 'Run the script for Android') { options[:android] = true }
+  opts.on_tail('-h', '--help', 'Show this message') do
+    puts opts
+    exit
   end
+end.parse!
 
-  scanner = VulCheck::Scanner.new(options[:host], options)
-  results = scanner.scan
-
-  reporter = VulCheck::Reporter.new(results)
-  
-  if options[:report] == 'json'
-    puts reporter.json_report
-  else
-    puts reporter.summary
-  end
+if options[:macos] || options[:ios] || options[:android]
+  VulCheck.execute
+else
+  VulCheck.log_and_exit('Error: Please specify either --macos, --ios, or --android.')
 end

@@ -1,26 +1,69 @@
 #!/bin/bash
 
-# Free up disk space by removing large unnecessary files
-# Helps when disk space is running low
+#!/usr/bin/env zsh
+# Finds and deletes large files to free up space.
+# Usage: ./free_up_space.sh [directory]
 
 set -e
+setopt extended_glob null_glob
 
-echo "Freeing up disk space..."
+search_dir="${1:-.}"
 
-# Remove large cache directories
-rm -rf ~/.cache 2>/dev/null || true
-rm -rf /tmp/* 2>/dev/null || true
+if [[ ! -d "$search_dir" ]]; then
+  echo "Error: '$search_dir' is not a directory"
+  exit 1
+fi
 
-# Remove old logs
-find /var/log -name "*.log.*" -delete 2>/dev/null || true
+echo "Scanning '$search_dir'..."
+typeset -a large_files
+# Lists top 10 largest files by size.
+find "$search_dir" -type f -exec du -k {} + 2>/dev/null | sort -nr | head -n 10 | while read -r size path; do
+  human_size=$(echo "$size" | awk '{printf "%.1fK", $1}')
+  large_files+=("$human_size $path")
+done
 
-# Remove package caches (OpenBSD)
-rm -rf /var/db/pkg/* 2>/dev/null || true
+if (( ${#large_files} == 0 )); then
+  echo "No files found."
+  exit 0
+fi
 
-# Remove core dumps
-find . -name "core.*" -delete 2>/dev/null || true
+echo "Largest files:"
+for i in {1..${#large_files}}; do
+  printf "%2d: %s\n" "$i" "${large_files[i]}"
+done
 
-# Remove old backups (older than 7 days)
-find . -name "backup_*" -type d -mtime +7 -exec rm -rf {} \; 2>/dev/null || true
+echo "\nDelete? (y/N)"
+read -r response
+if [[ ! "$response" =~ ^[Yy]$ ]]; then
+  echo "Done."
+  exit 0
+fi
 
-echo "Disk space cleanup complete."
+echo "Enter numbers (e.g., 1 3 5) or 'all':"
+read -r delete_list
+
+if [[ "$delete_list" == "all" ]]; then
+  for line in "${large_files[@]}"; do
+    path="${line#* }"
+    if rm -f "$path" 2>/dev/null; then
+      echo "Deleted: $path"
+    else
+      echo "Failed: $path"
+    fi
+  done
+else
+  for num in ${(s: :)delete_list}; do
+    if (( num >= 1 && num <= ${#large_files} )); then
+      path="${large_files[num]#* }"
+      if rm -f "$path" 2>/dev/null; then
+        echo "Deleted: $path"
+      else
+        echo "Failed: $path"
+      fi
+    else
+      echo "Invalid: $num"
+    fi
+  done
+fi
+
+echo "Done."

@@ -1,113 +1,36 @@
-#!/usr/bin/env ruby
+# frozen_string_literal: true
 
-# Discord Integration Module
-# Handles Discord bot functionality
+# encoding: utf-8
 
-module AI3
-  module Chatbots
-    class Discord
-      def initialize
-        @client = nil
-        @connected = false
-      end
-
-      def connect(config)
-        require 'discordrb'
-        
-        @client = Discordrb::Bot.new(
-          token: config[:token],
-          intents: [:server_messages, :direct_messages]
-        )
-        
-        @connected = true
-        puts "Connected to Discord"
-      rescue LoadError
-        puts "discordrb gem not available - Discord integration disabled"
-      rescue => e
-        puts "Discord connection failed: #{e.message}"
-      end
-
-      def on_message(&block)
-        return unless @client && @connected
-        
-        @client.message do |event|
-          message = AI3::Message.new(
-            content: event.content,
-            user_id: event.user.id.to_s,
-            channel: event.channel.name,
-            timestamp: event.timestamp,
-            platform_data: {
-              from_bot: event.user.bot_account?,
-              mentions_bot: event.content.include?(@client.profile.mention),
-              direct_message: event.channel.private?,
-              user_roles: event.user.roles.map(&:name),
-              discord_event: event
-            }
-          )
-          
-          block.call(message)
-        end
-        
-        @client.run
-      end
-
-      def send_message(options = {})
-        return unless @client && @connected
-        
-        channel = find_channel(options[:channel])
-        return unless channel
-        
-        channel.send_message(options[:content])
-      end
-
-      def reply(original_message, content)
-        return unless @client && @connected
-        
-        discord_event = original_message.platform_data[:discord_event]
-        return unless discord_event
-        
-        discord_event.respond(content)
-      end
-
-      def format_response(response)
-        # Discord supports markdown formatting
-        response = response.gsub(/\*\*(.*?)\*\*/, '**\1**')  # Bold
-        response = response.gsub(/\*(.*?)\*/, '*\1*')        # Italic
-        response = response.gsub(/`(.*?)`/, '`\1`')          # Code
-        
-        # Limit message length (Discord limit is 2000 characters)
-        if response.length > 1900
-          response = response[0..1896] + "..."
-        end
-        
-        response
-      end
-
-      def should_respond?(message)
-        # Respond to mentions and DMs by default
-        message.mentions_bot? || message.is_direct_message?
-      end
-
-      def disconnect
-        @client&.stop
-        @connected = false
-        puts "Disconnected from Discord"
-      end
-
-      private
-
-      def find_channel(channel_name)
-        return nil unless @client
-        
-        # Handle channel ID or name
-        if channel_name.is_a?(Integer) || channel_name.match?(/^\d+$/)
-          @client.channel(channel_name.to_i)
-        else
-          @client.servers.values.flat_map(&:channels).find do |channel|
-            channel.name == channel_name.to_s.gsub(/^#/, '')
-          end
-        end
-      end
+require_relative 'main'
+module Assistants
+  class DiscordAssistant < ChatbotAssistant
+    def initialize(openai_api_key)
+      super(openai_api_key)
+      @browser = Ferrum::Browser.new
     end
+    def fetch_user_info(user_id)
+      profile_url = 'https://discord.com/users/#{user_id}'
+      super(user_id, profile_url)
+    def send_message(user_id, message, message_type)
+      @browser.goto(profile_url)
+      css_classes = fetch_dynamic_css_classes(@browser.body, @browser.screenshot(base64: true), 'send_message')
+      if message_type == :text
+        @browser.at_css(css_classes['textarea']).send_keys(message)
+        @browser.at_css(css_classes['submit_button']).click
+      else
+        puts 'Sending media is not supported in this implementation.'
+      end
+    def engage_with_new_friends
+      @browser.goto('https://discord.com/channels/@me')
+      css_classes = fetch_dynamic_css_classes(@browser.body, @browser.screenshot(base64: true), 'new_friends')
+      new_friends = @browser.css(css_classes['friend_card'])
+      new_friends each do |friend|
+        add_friend(friend[:id])
+        engage_with_user(friend[:id], 'https://discord.com/users/#{friend[:id]}')
+    def fetch_dynamic_css_classes(html, screenshot, action)
+      prompt = 'Given the following HTML and screenshot, identify the CSS classes used for the #{action} action: #{html} #{screenshot}'
+      response = @langchain_openai.generate_answer(prompt)
+      JSON.parse(response)
   end
 end
