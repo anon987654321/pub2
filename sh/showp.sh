@@ -1,30 +1,34 @@
 #!/bin/bash
 
-# Show running processes related to the project
-# Useful for debugging and monitoring
+#!/usr/bin/env zsh
+# Creates a Markdown list of text files and their contents.
+# Usage: ./showp.sh
 
 set -e
+setopt extendedglob
 
-echo "Showing project-related processes..."
+root=$(basename "$PWD")
+date=$(date +"%Y-%m-%d_%H%M%S")
+output="$HOME/OUTPUT_${root}_${date}.md"
 
-# Ruby processes
-echo "=== Ruby processes ==="
-ps aux | grep ruby | grep -v grep || echo "No Ruby processes found"
+{
+  for file in **/*(-.N); do
+    if [[ "$file" == "$output" ]]; then
+      continue
+    fi
+    
+    if file -b "$file" | grep -q "text"; then
+      echo "## \`${file#./}\`"
+      echo '```'
+      cat "$file" 2>/dev/null || echo "Read failed: $file"
+      echo '```'
+      echo
+    fi
+  done
+} > "$output" 2>>"$HOME/script_errors.log"
+if [[ $? -ne 0 ]]; then
+  echo "Failed to write $output; see $HOME/script_errors.log"
+  exit 1
+fi
 
-# Node processes  
-echo "=== Node processes ==="
-ps aux | grep node | grep -v grep || echo "No Node processes found"
-
-# Database processes
-echo "=== Database processes ==="
-ps aux | grep -E "(postgres|redis)" | grep -v grep || echo "No database processes found"
-
-# Web server processes
-echo "=== Web server processes ==="
-ps aux | grep -E "(nginx|apache|falcon)" | grep -v grep || echo "No web server processes found"
-
-# Memory usage
-echo "=== Memory usage ==="
-free -h 2>/dev/null || top -n 1 | head -5
-
-echo "Process check complete."
+echo "Saved: $output"

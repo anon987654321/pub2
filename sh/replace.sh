@@ -1,28 +1,66 @@
 #!/bin/bash
 
-# Find and replace text across files
-# Usage: ./replace.sh "old_text" "new_text" [file_pattern]
+#!/usr/bin/env zsh
+# Swaps out words in files or renames them.
+# Usage: ./replace.sh [-b] <old> <new> [folder]
 
 set -e
+setopt extendedglob
 
-if [ $# -lt 2 ]; then
-    echo "Usage: $0 'old_text' 'new_text' [file_pattern]"
-    echo "Example: $0 'old_name' 'new_name' '*.rb'"
-    exit 1
+backup=false
+if [[ "$1" == "-b" ]]; then
+  backup=true
+  shift
 fi
 
-OLD_TEXT="$1"
-NEW_TEXT="$2"
-PATTERN="${3:-*}"
+is_filename=false
+if [[ "$1" == "-f" ]]; then
+  is_filename=true
+  shift
+fi
 
-echo "Replacing '$OLD_TEXT' with '$NEW_TEXT' in files matching '$PATTERN'..."
+old_str="$1"
+new_str="$2"
+folder="${3:-.}"
 
-# Find and replace in files
-find . -name "$PATTERN" -type f -exec grep -l "$OLD_TEXT" {} \; | \
-while read -r file; do
-    echo "Processing: $file"
-    sed -i.bak "s/$OLD_TEXT/$NEW_TEXT/g" "$file"
-    rm -f "$file.bak"
+if [[ -z "$old_str" || -z "$new_str" ]]; then
+  echo "Error: Must provide old and new strings"
+  exit 1
+fi
+if [[ ! -d "$folder" ]]; then
+  echo "Error: '$folder' is not a directory"
+  exit 1
+fi
+
+echo "Processing: $folder"
+for file in "$folder"/**/*(.N); do
+  if "$is_filename"; then
+    new_file="${file//$old_str/$new_str}"
+    if [[ "$file" != "$new_file" && ! -e "$new_file" ]]; then
+      mv "$file" "$new_file" 2>/dev/null
+      if [[ $? -eq 0 ]]; then
+        echo "Renamed: $file -> $new_file"
+      else
+        echo "Failed: $file"
+      fi
+    fi
+  else
+    is_text=$(file -b "$file" | grep -q "text"; echo $?)
+    if [[ $is_text -eq 0 ]]; then
+      if grep -q "$old_str" "$file" 2>/dev/null; then
+        if "$backup"; then
+          cp "$file" "$file.bak" 2>/dev/null || echo "Backup failed: $file"
+        fi
+        
+        sed "s|$old_str|$new_str|g" "$file" > "$file.tmp" 2>/dev/null
+        if [[ $? -eq 0 ]]; then
+          mv "$file.tmp" "$file"
+          echo "Updated: $file"
+        else
+          echo "Failed: $file"
+          rm -f "$file.tmp"
+        fi
+      fi
+    fi
+  fi
 done
-
-echo "Replacement complete."

