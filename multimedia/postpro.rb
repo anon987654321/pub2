@@ -4,17 +4,213 @@
 # Postpro.rb - Professional Cinematic Post-Processing
 # Version: 14.2.0 - Master.json Optimized
 
-require 'vips'
-require 'logger'
-require 'tty-prompt'
-require 'json'
-require 'time'
+require "logger"
+require "json"
+require "time"
+require "fileutils"
 
-$logger = Logger.new('postpro.log', 'daily', level: Logger::DEBUG)
+module PostproBootstrap
+  def self.dmesg(msg)
+    puts "[postpro] #{msg}"
+  end
+
+  def self.startup_banner
+    ruby_version = RUBY_VERSION
+    os = RbConfig::CONFIG["host_os"]
+    dmesg "boot ruby=#{ruby_version} os=#{os}"
+  end
+
+  def self.ensure_gems
+    vips_available = ensure_vips
+    tty_available = ensure_tty_prompt
+    
+    dmesg "vipsgem=#{vips_available} tty=#{tty_available}"
+    { vips: vips_available, tty: tty_available }
+  end
+
+  def self.ensure_vips
+    require "vips"
+    true
+  rescue LoadError
+    dmesg "WARN ruby-vips gem missing, attempting install..."
+    begin
+      if system("gem install ruby-vips --no-document")
+        require "vips"
+        dmesg "OK ruby-vips gem installed"
+        true
+      else
+        dmesg "WARN ruby-vips install failed"
+        probe_and_install_libvips
+        false
+      end
+    rescue => e
+      dmesg "WARN ruby-vips unavailable: #{e.message}"
+      false
+    end
+  end
+
+  def self.ensure_tty_prompt
+    require "tty-prompt"
+    true
+  rescue LoadError
+    dmesg "WARN tty-prompt gem missing, attempting install..."
+    begin
+      if system("gem install tty-prompt --no-document")
+        require "tty-prompt"
+        dmesg "OK tty-prompt gem installed"
+        true
+      else
+        dmesg "WARN tty-prompt install failed, degraded prompt experience"
+        false
+      end
+    rescue => e
+      dmesg "WARN tty-prompt unavailable: #{e.message}"
+      false
+    end
+  end
+
+  def self.probe_and_install_libvips
+    dmesg "probing libvips installation..."
+    
+    if system("pkg-config --exists vips") 
+      dmesg "OK libvips already installed"
+      return true
+    end
+
+    # Detect package manager and attempt install
+    os = RbConfig::CONFIG["host_os"]
+    case os
+    when /darwin/
+      if system("which brew > /dev/null 2>&1")
+        dmesg "attempting: brew install vips"
+        system("brew install vips")
+      else
+        dmesg "ERROR homebrew not found, install manually: brew install vips"
+      end
+    when /linux/
+      if system("which apt > /dev/null 2>&1")
+        dmesg "attempting: apt install libvips-dev"
+        system("sudo apt update && sudo apt install -y libvips-dev")
+      elsif system("which dnf > /dev/null 2>&1")
+        dmesg "attempting: dnf install vips-devel"
+        system("sudo dnf install -y vips-devel")
+      elsif system("which yum > /dev/null 2>&1")
+        dmesg "attempting: yum install vips-devel"
+        system("sudo yum install -y vips-devel")
+      elsif system("which apk > /dev/null 2>&1")
+        dmesg "attempting: apk add vips-dev"
+        system("sudo apk add vips-dev")
+      elsif system("which pacman > /dev/null 2>&1")
+        dmesg "attempting: pacman -S libvips"
+        system("sudo pacman -S --noconfirm libvips")
+      else
+        dmesg "ERROR no supported package manager found"
+      end
+    when /openbsd/
+      if system("which pkg_add > /dev/null 2>&1")
+        dmesg "attempting: pkg_add vips"
+        system("doas pkg_add vips")
+      else
+        dmesg "ERROR pkg_add not found"
+      end
+    else
+      dmesg "ERROR unsupported OS: #{os}"
+    end
+
+    # Verify installation
+    if system("pkg-config --exists vips")
+      dmesg "OK libvips installation successful"
+      true
+    else
+      dmesg "ERROR libvips installation failed"
+      false
+    end
+  end
+
+  def self.load_camera_profiles(profiles_path)
+    profiles = {}
+    
+    unless Dir.exist?(profiles_path)
+      dmesg "WARN camera profiles directory not found: #{profiles_path}"
+      return profiles
+    end
+
+    Dir.glob(File.join(profiles_path, "*.json")).each do |file|
+      begin
+        data = JSON.parse(File.read(file))
+        vendor = data["vendor"]
+        if vendor && data["profiles"]
+          profiles[vendor] = data["profiles"]
+        end
+      rescue => e
+        dmesg "WARN failed to load profile #{File.basename(file)}: #{e.message}"
+      end
+    end
+
+    brands = profiles.keys.join(",")
+    dmesg "camera_profiles=#{brands.empty? ? 'none' : brands}"
+    profiles
+  end
+
+  def self.load_master_config
+    return {} unless File.exist?("master.json")
+    
+    begin
+      master = JSON.parse(File.read("master.json").gsub(/^.*\/\/.*$/, ""))
+      config = master.dig("config", "multimedia", "postpro") || {}
+      dmesg "OK loaded defaults from master.json"
+      config
+    rescue => e
+      dmesg "WARN failed to parse master.json: #{e.message}"
+      {}
+    end
+  end
+
+  def self.run
+    startup_banner
+    gems = ensure_gems
+    
+    unless gems[:vips]
+      dmesg "FATAL libvips unavailable - image processing impossible"
+      puts "\nPostpro.rb requires libvips for image processing."
+      puts "Installation failed. Please install manually:"
+      puts "  macOS: brew install vips"
+      puts "  Ubuntu/Debian: sudo apt install libvips-dev"
+      puts "  OpenBSD: doas pkg_add vips"
+      exit 1
+    end
+
+    profiles_path = "multimedia/camera_profiles"
+    camera_profiles = load_camera_profiles(profiles_path)
+    config = load_master_config
+    
+    {
+      gems: gems,
+      camera_profiles: camera_profiles,
+      config: config
+    }
+  end
+end
+
+# Initialize postpro
+BOOTSTRAP = PostproBootstrap.run
+$logger = Logger.new("postpro.log", "daily", level: Logger::DEBUG)
 $cli_logger = Logger.new(STDOUT, level: Logger::INFO)
-PROMPT = TTY::Prompt.new
 
-REPLIGEN_PRESENT = File.exist?('repligen.rb')
+if BOOTSTRAP[:gems][:tty]
+  require "tty-prompt"
+  PROMPT = TTY::Prompt.new
+else
+  PROMPT = nil
+end
+
+if BOOTSTRAP[:gems][:vips]
+  require "vips"
+end
+
+REPLIGEN_PRESENT = File.exist?("repligen.rb")
+CAMERA_PROFILES = BOOTSTRAP[:camera_profiles]
+CONFIG = BOOTSTRAP[:config]
 
 STOCKS = {
   kodak_portra: { grain: 15, gamma: 0.65, rolloff: 0.88, lift: 0.05, matrix: [1.05, -0.02, -0.03, 0.02, 0.98, 0.00, 0.01, -0.05, 1.04] },
@@ -45,11 +241,75 @@ end
 def load_image(file)
   return nil unless File.exist?(file) && File.readable?(file)
   image = Vips::Image.new_from_file(file, access: :sequential)
-  image = image.colourspace('srgb') if image.bands < 3
+  image = image.colourspace("srgb") if image.bands < 3
   rgb_bands(image)
 rescue StandardError => e
   $logger.error "Load failed #{file}: #{e.message}"
   nil
+end
+
+def get_camera_profile(image)
+  return nil if CAMERA_PROFILES.empty?
+  
+  begin
+    make = image.get("exif-ifd0-Make")&.strip&.downcase
+    model = image.get("exif-ifd0-Model")&.strip&.downcase
+    
+    return nil unless make && model
+    
+    # Try exact model match first
+    CAMERA_PROFILES.each do |brand, profiles|
+      return profiles[model] if profiles[model]
+    end
+    
+    # Try brand match
+    CAMERA_PROFILES.each do |brand, profiles|
+      return profiles.values.first if make.include?(brand) || brand.include?(make)
+    end
+    
+    nil
+  rescue => e
+    $logger.debug "EXIF read failed: #{e.message}"
+    nil
+  end
+end
+
+def apply_camera_profile(image, profile)
+  return image unless profile && profile["color_matrix"]
+  
+  begin
+    matrix = profile["color_matrix"]
+    return image unless matrix.length == 9
+    
+    # Apply 3x3 color matrix
+    result = image.recomb([
+      [matrix[0], matrix[1], matrix[2]],
+      [matrix[3], matrix[4], matrix[5]],
+      [matrix[6], matrix[7], matrix[8]]
+    ])
+    
+    # Apply optional adjustments
+    if profile["saturation"]
+      hsv = result.colourspace("hsv")
+      h, s, v = hsv.bandsplit
+      s = s.linear([profile["saturation"]], [0])
+      result = Vips::Image.bandjoin([h, s, v]).colourspace("srgb")
+    end
+    
+    if profile["vibrance"]
+      # Simple vibrance simulation
+      result = result.linear([1.0 + profile["vibrance"] * 0.1], [0])
+    end
+    
+    if profile["base_tint"]
+      result = base_tint(result, profile["base_tint"], 0.1)
+    end
+    
+    safe_cast(result)
+  rescue => e
+    $logger.error "Camera profile failed: #{e.message}"
+    image
+  end
 end
 
 # Professional Color Science
@@ -186,7 +446,8 @@ end
 
 # Preset Application
 def preset(image, name)
-  p = PRESETS[name.to_sym] || return image
+  p = PRESETS[name.to_sym]
+  return image unless p
   result = image
   
   p[:fx].each do |fx|
@@ -326,9 +587,18 @@ def check_repligen
   end
 end
 
-def process_file(file, variations, preset_name = nil, recipe_data = nil, random_effects = nil, mode = 'professional')
+def process_file(file, variations, preset_name = nil, recipe_data = nil, random_effects = nil, mode = "professional")
   image = load_image(file)
   return 0 unless image
+  
+  # Apply camera profile first if enabled
+  if CONFIG["apply_camera_profile_first"]
+    profile = get_camera_profile(image)
+    if profile
+      image = apply_camera_profile(image, profile)
+      PostproBootstrap.dmesg "applied camera profile for #{file}"
+    end
+  end
   
   processed_count = 0
   variations.times do |i|
@@ -346,11 +616,12 @@ def process_file(file, variations, preset_name = nil, recipe_data = nil, random_
       next unless processed
       
       processed = rgb_bands(processed)
-      timestamp = Time.now.strftime('%Y%m%d%H%M%S')
-      suffix = preset_name || 'processed'
+      timestamp = Time.now.strftime("%Y%m%d%H%M%S")
+      suffix = preset_name || "processed"
       output = file.sub(File.extname(file), "_#{suffix}_v#{i + 1}_#{timestamp}#{File.extname(file)}")
       
-      processed.write_to_file(output, Q: 95)
+      quality = CONFIG["jpeg_quality"] || 95
+      processed.write_to_file(output, Q: quality)
       $cli_logger.info "Saved masterpiece #{i + 1}: #{File.basename(output)}"
       processed_count += 1
       
@@ -364,39 +635,64 @@ end
 
 # Main Workflow
 def get_input
-  $cli_logger.info 'Postpro.rb v14.2.0 Professional Edition'
-  $cli_logger.info 'Advanced Color Science & Cinematic Workflows' + (REPLIGEN_PRESENT ? ' | Repligen Active' : '')
+  $cli_logger.info "Postpro.rb v14.2.0 Professional Edition"
+  $cli_logger.info "Advanced Color Science & Cinematic Workflows" + (REPLIGEN_PRESENT ? " | Repligen Active" : "")
   
   check_repligen if REPLIGEN_PRESENT
   
-  workflow = PROMPT.select('Choose workflow:', [
-    'Masterpiece Presets (Recommended)',
-    'Random Effects (Experimental)', 
-    'Custom JSON Recipe'
-  ])
-  
-  patterns = PROMPT.ask('File patterns:', default: '**/*.{jpg,jpeg,png,webp}').strip.split(',').map(&:strip)
-  variations = PROMPT.ask('Variations per image:', convert: :int, default: 2) { |q| q.in('1-5') }
-  
-  case workflow
-  when 'Masterpiece Presets (Recommended)'
-    preset_name = PROMPT.select('Choose preset:', PRESETS.keys)
+  if PROMPT
+    workflow = PROMPT.select("Choose workflow:", [
+      "Masterpiece Presets (Recommended)",
+      "Random Effects (Experimental)", 
+      "Custom JSON Recipe"
+    ])
+    
+    patterns = PROMPT.ask("File patterns:", default: "**/*.{jpg,jpeg,png,webp}").strip.split(",").map(&:strip)
+    variations = PROMPT.ask("Variations per image:", convert: :int, default: CONFIG["variations"] || 2) { |q| q.in("1-5") }
+    
+    case workflow
+    when "Masterpiece Presets (Recommended)"
+      preset_name = PROMPT.select("Choose preset:", PRESETS.keys)
+      [patterns, variations, { type: :preset, preset: preset_name }]
+      
+    when "Random Effects (Experimental)"
+      mode = PROMPT.select("Mode:", ["Professional", "Experimental"])
+      fx_count = PROMPT.ask("Effects per variation:", convert: :int, default: 4) { |q| q.in("2-8") }
+      [patterns, variations, { type: :random, mode: mode.downcase, fx: fx_count }]
+      
+    when "Custom JSON Recipe"
+      file = PROMPT.ask("Recipe file path:").strip
+      recipe_data = File.exist?(file) ? JSON.parse(File.read(file)) : {}
+      [patterns, variations, { type: :recipe, recipe: recipe_data }]
+    end
+  else
+    # Fallback mode without tty-prompt
+    patterns = ["**/*.{jpg,jpeg,png,webp}"]
+    variations = CONFIG["variations"] || 2
+    preset_name = CONFIG["default_preset"] || "portrait"
     [patterns, variations, { type: :preset, preset: preset_name }]
-    
-  when 'Random Effects (Experimental)'
-    mode = PROMPT.select('Mode:', ['Professional', 'Experimental'])
-    fx_count = PROMPT.ask('Effects per variation:', convert: :int, default: 4) { |q| q.in('2-8') }
-    [patterns, variations, { type: :random, mode: mode.downcase, fx: fx_count }]
-    
-  when 'Custom JSON Recipe'
-    file = PROMPT.ask('Recipe file path:').strip
-    recipe_data = File.exist?(file) ? JSON.parse(File.read(file)) : {}
-    [patterns, variations, { type: :recipe, recipe: recipe_data }]
   end
 end
 
-def main
-  input = get_input
+def auto_mode
+  PostproBootstrap.dmesg "auto mode enabled"
+  patterns = ["**/*.{jpg,jpeg,png,webp}"]
+  variations = CONFIG["variations"] || 2
+  preset_name = CONFIG["default_preset"] || "portrait"
+  
+  [patterns, variations, { type: :preset, preset: preset_name }]
+end
+
+def auto_launch
+  if ARGV.include?("--auto") || (!$stdin.tty? && ARGV.include?("--from-repligen"))
+    input = auto_mode
+  elsif ARGV.include?("--from-repligen") && REPLIGEN_PRESENT
+    check_repligen
+    return
+  else
+    input = get_input
+  end
+  
   return unless input
   
   patterns, variations, config = input
@@ -405,7 +701,7 @@ def main
                   .reject { |f| File.basename(f).match?(/processed|masterpiece/) }
   
   if files.empty?
-    $cli_logger.error 'No files matched patterns!'
+    $cli_logger.error "No files matched patterns!"
     return
   end
   
@@ -423,7 +719,7 @@ def main
                 process_file(file, variations, config[:preset])
               when :random
                 fx = %w[grain leaks sepia bloom teal_orange cross vhs chroma glitch flare]
-                selected = config[:mode] == 'experimental' ? fx : fx.first(6)
+                selected = config[:mode] == "experimental" ? fx : fx.first(6)
                 random_effects = selected.shuffle.take(config[:fx])
                 process_file(file, variations, nil, nil, random_effects, config[:mode])
               when :recipe
@@ -448,10 +744,6 @@ def main
   if REPLIGEN_PRESENT && total_variations > 0
     $cli_logger.info "Tip: Run 'ruby repligen.rb' to generate more content!"
   end
-end
-
-def auto_launch
-  ARGV.include?('--from-repligen') && REPLIGEN_PRESENT ? check_repligen : main
 end
 
 auto_launch if __FILE__ == $0

@@ -1,14 +1,115 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require 'net/http'
-require 'json'
-require 'sqlite3'
-require 'logger'
-require 'optparse'
+require "net/http"
+require "json"
+require "logger"
+require "optparse"
+require "fileutils"
 
-# Repligen - AI Content Generation with Postpro Integration
+# Repligen - AI Content Generation with Postpro Integration  
 # Version: 7.3.0 - Master.json Optimized
+
+module Bootstrap
+  def self.dmesg(msg)
+    puts "[repligen] #{msg}"
+  end
+
+  def self.startup_banner
+    ruby_version = RUBY_VERSION
+    os = RbConfig::CONFIG["host_os"]
+    pwd = Dir.pwd
+    dmesg "boot ruby=#{ruby_version} os=#{os} pwd=#{pwd}"
+  end
+
+  def self.ensure_sqlite3
+    require "sqlite3"
+    dmesg "OK sqlite3 gem present"
+    true
+  rescue LoadError
+    dmesg "WARN sqlite3 gem missing, attempting install..."
+    begin
+      if system("gem install sqlite3 --no-document")
+        require "sqlite3"
+        dmesg "OK sqlite3 gem installed"
+        true
+      else
+        dmesg "WARN sqlite3 install failed, fallback to JSONL logging"
+        false
+      end
+    rescue => e
+      dmesg "WARN sqlite3 unavailable: #{e.message}, using JSONL fallback"
+      false
+    end
+  end
+
+  def self.ensure_token
+    return ENV["REPLICATE_API_TOKEN"] if ENV["REPLICATE_API_TOKEN"]
+
+    config_dir = File.expand_path("~/.config/repligen")
+    config_file = File.join(config_dir, "config.json")
+
+    if File.exist?(config_file)
+      begin
+        config = JSON.parse(File.read(config_file))
+        token = config["api_token"]
+        if token && !token.empty?
+          ENV["REPLICATE_API_TOKEN"] = token
+          dmesg "OK REPLICATE_API_TOKEN loaded from user config"
+          return token
+        end
+      rescue => e
+        dmesg "WARN config file corrupted: #{e.message}"
+      end
+    end
+
+    if $stdin.tty?
+      dmesg "PROMPT Enter REPLICATE_API_TOKEN (from https://replicate.com/account):"
+      print "Token: "
+      token = gets.chomp.strip
+      
+      if token && !token.empty?
+        FileUtils.mkdir_p(config_dir)
+        config = { "api_token" => token }
+        File.write(config_file, JSON.pretty_generate(config))
+        File.chmod(0600, config_file)
+        ENV["REPLICATE_API_TOKEN"] = token
+        dmesg "OK token saved to user config (#{config_file})"
+        return token
+      end
+    end
+
+    dmesg "ERROR no REPLICATE_API_TOKEN available"
+    nil
+  end
+
+  def self.load_master_config
+    return {} unless File.exist?("master.json")
+    
+    begin
+      master = JSON.parse(File.read("master.json").gsub(/^.*\/\/.*$/, ""))
+      config = master.dig("config", "multimedia", "repligen") || {}
+      dmesg "OK loaded defaults from master.json"
+      config
+    rescue => e
+      dmesg "WARN failed to parse master.json: #{e.message}"
+      {}
+    end
+  end
+
+  def self.run
+    startup_banner
+    sqlite_available = ensure_sqlite3
+    token = ensure_token
+    config = load_master_config
+    
+    {
+      sqlite_available: sqlite_available,
+      token: token,
+      config: config
+    }
+  end
+end
 
 class Repligen
   API = 'https://api.replicate.com/v1'
@@ -33,35 +134,85 @@ class Repligen
     chaos: -> { MODELS.keys.sample(rand(8..15)) }
   }.freeze
 
-  def initialize(token = ENV['REPLICATE_API_TOKEN'])
-    @token = token
-    @logger = Logger.new($stderr, level: ENV['DEBUG'] ? Logger::DEBUG : Logger::WARN)
-    @db = init_db
-    @postpro = File.exist?('postpro.rb')
+  def initialize(token = nil)
+    @bootstrap = Bootstrap.run
+    @token = token || @bootstrap[:token]
+    @logger = Logger.new($stderr, level: ENV["DEBUG"] ? Logger::DEBUG : Logger::WARN)
+    @config = @bootstrap[:config]
+    
+    if @bootstrap[:sqlite_available]
+      @db = init_db
+      @storage_mode = :sqlite
+    else
+      @db = nil
+      @storage_mode = :jsonl
+      @jsonl_file = "repligen_chains.jsonl"
+    end
+    
+    @postpro = File.exist?("postpro.rb")
   end
 
   def run(cmd = nil, *args)
     return auth_error unless @token
     
     case cmd
-    when 'generate', 'g' then gen_and_offer(args[0] || 'futuristic city')
-    when 'chain', 'c' then chain_and_offer(args[0]&.to_sym || :quick, args[1] || 'digital art')
-    when 'lora', 'l' then train_lora(args)
-    when 'cost' then puts "$%.3f" % cost(args[0]&.to_sym || :quick)
+    when "generate", "g" then gen_and_offer(args[0] || "futuristic city")
+    when "chain", "c" then chain_and_offer(args[0]&.to_sym || default_chain, args[1] || "digital art")
+    when "lora", "l" then train_lora(args)
+    when "cost" then puts "$%.3f" % cost(args[0]&.to_sym || default_chain)
+    when nil then autorun_default
     else interactive
     end
+  end
+
+  def default_chain
+    (@config["default_chain"] || "quick").to_sym
+  end
+
+  def autorun_default
+    Bootstrap.dmesg "autorun mode: #{default_chain} chain"
+    result = chain_and_offer(default_chain, "digital art")
+    
+    if result && @postpro && !$stdin.tty?
+      Bootstrap.dmesg "launching postpro.rb --from-repligen --auto"
+      system("ruby postpro.rb --from-repligen --auto")
+    end
+    
+    result
   end
 
   private
 
   def auth_error
-    puts 'Set REPLICATE_API_TOKEN. Get token at https://replicate.com/account'
+    puts "Set REPLICATE_API_TOKEN. Get token at https://replicate.com/account"
     exit 1
   end
 
   def init_db
-    SQLite3::Database.new('repligen.db').tap do |db|
-      db.execute('CREATE TABLE IF NOT EXISTS chains (id INTEGER PRIMARY KEY, models TEXT, cost REAL, created_at INTEGER)')
+    return nil unless @bootstrap[:sqlite_available]
+    
+    begin
+      require "sqlite3"
+      SQLite3::Database.new("repligen.db").tap do |db|
+        db.execute("CREATE TABLE IF NOT EXISTS chains (id INTEGER PRIMARY KEY, models TEXT, cost REAL, created_at INTEGER)")
+      end
+    rescue => e
+      Bootstrap.dmesg "WARN sqlite3 initialization failed: #{e.message}"
+      nil
+    end
+  end
+
+  def log_chain(models, cost)
+    if @storage_mode == :sqlite && @db
+      @db.execute("INSERT INTO chains (models, cost, created_at) VALUES (?, ?, ?)", 
+                  [models.join(","), cost, Time.now.to_i])
+    else
+      log_entry = {
+        models: models,
+        cost: cost,
+        timestamp: Time.now.iso8601
+      }
+      File.open(@jsonl_file, "a") { |f| f.puts JSON.generate(log_entry) }
     end
   end
 
@@ -133,12 +284,11 @@ class Repligen
       cost += COSTS[model.to_sym]
     end
     
-    @db.execute('INSERT INTO chains (models, cost, created_at) VALUES (?, ?, ?)', 
-                [models.join(','), cost, Time.now.to_i])
+    log_chain(models, cost)
     
     puts "\nComplete! Cost: $%.3f" % cost
     
-    save_output(output, type, prompt) if output.is_a?(String) && output.start_with?('http')
+    save_output(output, type, prompt) if output.is_a?(String) && output.start_with?("http")
     output
   end
 
@@ -194,15 +344,19 @@ class Repligen
   end
 
   def offer_postpro
-    puts "\nPostpro.rb detected! Want to apply cinematic processing?"
-    print "Launch postpro? (Y/n): "
-    
-    response = gets.chomp.downcase
-    if response.empty? || response.start_with?('y')
-      puts "Launching postpro.rb with masterpiece presets..."
-      system('ruby postpro.rb --from-repligen')
+    if $stdin.tty?
+      puts "\nPostpro.rb detected! Want to apply cinematic processing?"
+      print "Launch postpro? (Y/n): "
+      
+      response = gets.chomp.downcase
+      if response.empty? || response.start_with?("y")
+        puts "Launching postpro.rb with masterpiece presets..."
+        system("ruby postpro.rb --from-repligen")
+      else
+        puts "Run 'ruby postpro.rb' later to process generated images"
+      end
     else
-      puts "Run 'ruby postpro.rb' later to process generated images"
+      Bootstrap.dmesg "non-interactive mode, skipping postpro offer"
     end
   end
 
