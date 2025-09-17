@@ -1,11 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "json"
-require "fileutils"
-require "tempfile"
-
-class SOSDilla
+class Dilla
   VERSION = "1.0.0"
   
   PROGRESSIONS = {
@@ -250,18 +246,18 @@ class SOSDilla
   
   def self.show_help
     puts <<~HELP
-      SOS Dilla - J Dilla Style Generator
+      J Dilla Style Generator
       
       USAGE:
-        sos_dilla.rb gen [STYLE] [KEY] [BPM]    Generate progression
-        sos_dilla.rb list                       Show styles  
-        sos_dilla.rb info                       Show techniques
+        dilla.rb gen [STYLE] [KEY] [BPM]    Generate progression
+        dilla.rb list                       Show styles  
+        dilla.rb info                       Show techniques
       
       STYLES: donuts_classic neo_soul mpc_soul drunk
       
       EXAMPLES:
-        sos_dilla.rb gen donuts_classic Db 94
-        sos_dilla.rb gen neo_soul Ab 86
+        dilla.rb gen donuts_classic Db 94
+        dilla.rb gen neo_soul Ab 86
       
       REQUIRES: FluidSynth, SoX, midilib gem
     HELP
@@ -304,5 +300,5 @@ if __FILE__ == $PROGRAM_NAME
     exit 1
   end
   
-  SOSDilla.main(ARGV)
+  Dilla.main(ARGV)
 end
