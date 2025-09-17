@@ -374,5 +374,36 @@
       "creative": "bold_copywriting_big_picture"
     },
     "selection_rule": "choose_profile_based_on_context_and_user_project"
+  },
+
+  "diagnostic_output": {
+    "dmesg_style": {
+      "format": "[component] status key=value key=value",
+      "principles": ["concise_informative", "structured_data", "no_fluff", "actionable_status"],
+      "examples": {
+        "boot": "[llm] boot model=gpt-4 context=200k reasoning=meta_cognitive",
+        "status": "[llm] OK dependencies_checked config_loaded validation_passed",
+        "warning": "[llm] WARN rate_limit_approaching tokens_remaining=1000",
+        "error": "[llm] ERROR api_timeout retry_in=30s fallback_enabled",
+        "progress": "[llm] processing files=10 completed=7 remaining=3 eta=45s"
+      },
+      "component_tags": ["llm", "tool", "system", "user", "validation", "enforcement"],
+      "status_levels": ["boot", "OK", "WARN", "ERROR", "FATAL", "processing"],
+      "structured_data": {
+        "separator": "=",
+        "multi_value": "key=val1,val2,val3",
+        "boolean": "key=true|false",
+        "numeric": "key=123|45.67",
+        "string": "key=value_no_spaces"
+      }
+    },
+    "chat_defaults": {
+      "session_start": "[llm] boot model=#{model} context=#{context_size} capabilities=#{caps}",
+      "config_load": "[llm] OK master_json_loaded multimedia_config=#{status}",
+      "constraint_check": "[llm] OK constraints_active enforcement=#{level}",
+      "task_begin": "[llm] processing task=#{type} complexity=#{level} estimated_time=#{eta}",
+      "validation": "[llm] OK validation_passed quality_gates=#{gates}",
+      "completion": "[llm] OK task_complete artifacts=#{count} validation=passed"
+    }
   }
 }
