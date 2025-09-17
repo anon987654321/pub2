@@ -63,18 +63,18 @@ all_domains=(
 
 typeset -A app_ports
 app_ports=(
-  ["brgen"]=10001
-  ["pubattorney"]=10002
-  ["bsdports"]=10003
-  ["hjerterom"]=10004
-  ["privcam"]=10005
-  ["amber"]=10006
-  ["blognet"]=10007
+  ["brgen"]="10001"
+  ["pubattorney"]="10002"
+  ["bsdports"]="10003"
+  ["hjerterom"]="10004"
+  ["privcam"]="10005"
+  ["amber"]="10006"
+  ["blognet"]="10007"
 )
 
 typeset -A app_domains  
 app_domains=(
-  ["brgen"]="brgen.no oshlo.no trndheim.no stvanger.no trmso.no reykjavk.is kobenhvn.dk stholm.se gteborg.se mlmoe.se hlsinki.fi lndon.uk mnchester.uk brmingham.uk edinbrgh.uk glasgw.uk lverpool.u[...]"
+  ["brgen"]="brgen.no oshlo.no trndheim.no stvanger.no trmso.no reykjavk.is kobenhvn.dk stholm.se gteborg.se mlmoe.se hlsinki.fi lndon.uk mnchester.uk brmingham.uk edinbrgh.uk glasgw.uk lverpool.uk am[...]"
   ["pubattorney"]="pub.attorney freehelp.legal"
   ["bsdports"]="bsdports.org"
   ["hjerterom"]="hjerterom.no"
@@ -84,7 +84,7 @@ app_domains=(
 )
 
 log() {
-  echo "[$(date "+%Y-%m-%d %H:%M:%S")] $1"
+  echo "[$(date \"%Y-%m-%d %H:%M:%S\")] $1"
 }
 
 install_packages() {
@@ -152,7 +152,8 @@ setup_nsd() {
   log "Setting up NSD DNS server..."
   
   for domain in "
-  
+  for domain in "
+  """; do
     serial=$(date "+%Y%m%d%H")
     subdomains="${all_domains[$domain]}"
     
@@ -206,8 +207,7 @@ remote-control:
 
 NSD_CONFIG
 
-  for domain in "
-  do
+  for domain in "${(@k)all_domains}"; do
     cat >> "/tmp/nsd.conf" << ZONE_CONFIG
 
 zone:
@@ -218,7 +218,7 @@ zone:
 ZONE_CONFIG
   done
   
-doas mv "/tmp/nsd.conf" /var/nsd/etc/nsd.conf
+  doas mv "/tmp/nsd.conf" /var/nsd/etc/nsd.conf
   doas chown _nsd:_nsd /var/nsd/etc/nsd.conf
   doas rcctl enable nsd
   doas rcctl start nsd
@@ -244,8 +244,7 @@ authority letsencrypt {
 
 ACME_CONFIG
   
-  for domain in "
-  do
+  for domain in "${(@k)all_domains}"; do
     subdomains="${all_domains[$domain]}"
     
     cat >> "/tmp/acme-client.conf" << DOMAIN_CONFIG
@@ -267,7 +266,7 @@ DOMAIN_CONFIG
     echo "}" >> "/tmp/acme-client.conf"
   done
   
-doas mv "/tmp/acme-client.conf" /etc/acme-client.conf
+  doas mv "/tmp/acme-client.conf" /etc/acme-client.conf
   log "ACME client configured for ${#all_domains[@]} domains"
 }
 
@@ -295,7 +294,7 @@ setup_relayd() {
   log "Setting up relayd for HTTPS->Rails proxying..."
   
   cat > "/tmp/relayd.conf" << RELAYD_HEADER
-egreg="$main_ip"
+egres="$main_ip"
 
 table <acme_client> { 127.0.0.1 }
 acme_client_port="43718"
@@ -303,8 +302,7 @@ acme_client_port="43718"
 RELAYD_HEADER
 
   # Add backend tables for each app
-  for app in "
-  do
+  for app in "${(@k)app_ports}"; do
     port="${app_ports[$app]}"
     cat >> "/tmp/relayd.conf" << BACKEND_TABLE
 table <${app}_backend> { 127.0.0.1 }
@@ -335,8 +333,7 @@ http protocol "rails" {
 HTTP_PROTOCOL
 
   # Add domain->app routing
-  for app in "
-  do
+  for app in "${(@k)app_domains}"; do
     domains="${app_domains[$app]}"
     for domain in ${(s/ /)domains}; do
       echo "  pass request header \"Host\" value \"$domain\" forward to <${app}_backend>" >> "/tmp/relayd.conf"
@@ -363,8 +360,7 @@ relay "https_relay" {
   protocol "rails"
 HTTPS_RELAY
 
-  for app in "
-  do
+  for app in "${(@k)app_ports}"; do
     echo "  forward to <${app}_backend> port \$${app}_port" >> "/tmp/relayd.conf"
   done
 
@@ -383,8 +379,7 @@ HTTPS_RELAY
 setup_applications() {
   log "Setting up Rails applications..."
   
-  for app in "
-  do
+  for app in "${(@k)app_ports}"; do
     if ! id "$app" >/dev/null 2>&1; then
       doas useradd -m -G www -s /bin/ksh "$app"
       log "Created user: $app"
@@ -409,7 +404,7 @@ DATABASE_URL=postgresql://${app}_user:$db_pass@localhost/${app}_production
 REDIS_URL=redis://localhost:6379/0
 ENV_FILE
     
-doas mv "/tmp/${app}_env" "$app_dir/.env"
+    doas mv "/tmp/${app}_env" "$app_dir/.env"
     doas chown "$app:www" "$app_dir/.env"
     doas chmod 600 "$app_dir/.env"
     
@@ -501,8 +496,7 @@ doas mv "/tmp/${app}_rc" "/etc/rc.d/$app"
 obtain_certificates() {
   log "Obtaining SSL certificates..."
   
-  for domain in "
-  do
+  for domain in "${(@k)all_domains}"; do
     log "Requesting certificate for $domain..."
     if ! doas timeout 120 acme-client -v "$domain"; then
       log "Warning: Certificate request failed for $domain, continuing..."
@@ -521,8 +515,7 @@ start_services() {
   doas rcctl start redis
   
   # Start Rails applications
-  for app in "
-  do
+  for app in "${(@k)app_ports}"; do
     doas rcctl start "$app"
     log "Started $app service"
   done
@@ -538,7 +531,8 @@ setup_cron() {
   # Create renewal script
   cat > "/tmp/renew_certs.sh" << RENEWAL_SCRIPT
 #!/bin/ksh
-for domain in $(ls /etc/ssl/*.crt | sed 's|/etc/ssl/||g; s|.crt||g'); do
+for domain in \
+$(ls /etc/ssl/*.crt | sed 's|/etc/ssl/||g; s|.crt||g'); do
   acme-client "$domain" && rcctl reload relayd
 done
 RENEWAL_SCRIPT
@@ -572,8 +566,7 @@ main() {
   log "Setup completed successfully!"
   log ""
   log "Configured applications:"
-  for app in "
-  do
+  for app in "${(@k)app_ports}"; do
     port="${app_ports[$app]}"
     domains="${app_domains[$app]}"
     log "  $app (port $port): $domains"
