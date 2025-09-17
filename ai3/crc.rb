@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# CRC - Cognitive Ruby CLI
-# Autonomous AI coding assistant with cognitive load awareness
+# CRC - Claude Ruby CLI
+# Autonomous AI coding assistant with Claude load awareness
 
 require "yaml"
 require "json"
@@ -12,21 +12,8 @@ require "logger"
 require "concurrent-ruby"
 require "digest"
 require "io/console"
-
-# Optional dependencies with graceful fallback
-LANGCHAIN_AVAILABLE = begin
-  require "langchainrb"
-  true
-rescue LoadError
-  false
-end
-
-OCTOKIT_AVAILABLE = begin
-  require "octokit"
-  true
-rescue LoadError
-  false
-end
+require "langchainrb"
+require "octokit"
 
 RUGGED_AVAILABLE = begin
   require "rugged"
@@ -251,7 +238,7 @@ class CLILogger
   end
 end
 
-# Simple cognitive tracking (7±2 rule)
+# Simple Claude tracking (7±2 rule)
 class CognitiveTracker
   def initialize(enabled = true)
     @enabled = enabled
@@ -936,7 +923,7 @@ end
 class CognitiveRubyCLI
   def initialize
     Console.clear_screen
-    Console.print_header("CRC - Cognitive Ruby CLI")
+    Console.print_header("CRC - Claude Ruby CLI")
     
     OpenBSDSandbox.setup_filesystem_sandbox
     
@@ -944,7 +931,7 @@ class CognitiveRubyCLI
     @config = load_or_create_config
     
     @logger = CLILogger.setup(@config["log_level"])
-    @cognitive = CognitiveTracker.new(@config["cognitive_tracking"])
+    @Claude = CognitiveTracker.new(@config["cognitive_tracking"])
     @knowledge = KnowledgeStore.new(@config["knowledge_store"])
     @fallback = LLMFallback.new(@config, @logger)
     @tools = ToolsProvider.new(@config, @logger)
@@ -993,7 +980,7 @@ class CognitiveRubyCLI
       "AST analysis" => AST_AVAILABLE,
       "Web scraping" => FERRUM_AVAILABLE,
       "OpenBSD sandbox" => PLEDGE_AVAILABLE,
-      "Cognitive tracking" => @config&.dig("cognitive_tracking"),
+      "Claude tracking" => @config&.dig("cognitive_tracking"),
       "Knowledge store" => @config&.dig("knowledge_store")
     }
     features.each { |name, available| Console.print_success("  #{name}: #{available ? "Yes" : "No"}") }
@@ -1039,7 +1026,7 @@ class CognitiveRubyCLI
       config["autonomous_mode"] = true
     end
     
-    if Console.ask_yes_no("Enable cognitive tracking?", default: true)
+    if Console.ask_yes_no("Enable Claude tracking?", default: true)
       config["cognitive_tracking"] = true
     end
     
@@ -1068,7 +1055,7 @@ class CognitiveRubyCLI
     Console.print_header("Main Menu")
     
     status = @cognitive.status
-    puts "Cognitive Load: #{status[:load]}/#{status[:capacity]} (#{status[:tasks]} tasks)"
+    puts "Claude Load: #{status[:load]}/#{status[:capacity]} (#{status[:tasks]} tasks)"
     puts
     puts "1. Generate Code with AI"
     puts "2. Analyze File"
@@ -1080,7 +1067,7 @@ class CognitiveRubyCLI
     puts "8. Web Scraping"
     puts "9. Git Operations"
     puts "10. Autonomous Mode"
-    puts "11. Cognitive Status"
+    puts "11. Claude Status"
     puts "q. Quit"
     puts
   end
@@ -1117,7 +1104,7 @@ class CognitiveRubyCLI
     end
 
     if @cognitive.overloaded?
-      Console.print_warning("High cognitive load - simplifying task")
+      Console.print_warning("High Claude load - simplifying task")
     end
 
     task = Console.ask("What should I code?")
@@ -1250,7 +1237,7 @@ class CognitiveRubyCLI
   end
 
   def handle_cognitive_status
-    Console.print_header("Cognitive Status")
+    Console.print_header("Claude Status")
     
     status = @cognitive.status
     puts "Load: #{status[:load]}/#{status[:capacity]}"
@@ -1258,9 +1245,9 @@ class CognitiveRubyCLI
     puts "Overloaded: #{@cognitive.overloaded? ? "Yes" : "No"}"
     
     if @cognitive.overloaded?
-      if Console.ask_yes_no("Clear cognitive load?", default: true)
+      if Console.ask_yes_no("Clear Claude load?", default: true)
         @cognitive.clear
-        Console.print_success("Cognitive load cleared")
+        Console.print_success("Claude load cleared")
       end
     end
     
@@ -1323,7 +1310,7 @@ class CognitiveRubyCLI
       ["AST analysis", AST_AVAILABLE],
       ["Web scraping", FERRUM_AVAILABLE],
       ["OpenBSD sandbox", PLEDGE_AVAILABLE],
-      ["Cognitive tracking", @config["cognitive_tracking"]],
+      ["Claude tracking", @config["cognitive_tracking"]],
       ["Knowledge store", @config["knowledge_store"]]
     ]
     features.each { |name, available| puts "  #{name}: #{available ? "Yes" : "No"}" }
@@ -1354,11 +1341,11 @@ class CognitiveRubyCLI
     puts "Current Configuration:"
     puts "Default Model: #{@config["default_model"]}"
     puts "Autonomous Mode: #{@config["autonomous_mode"] ? "Enabled" : "Disabled"}"
-    puts "Cognitive Tracking: #{@config["cognitive_tracking"] ? "Enabled" : "Disabled"}"
+    puts "Claude Tracking: #{@config["cognitive_tracking"] ? "Enabled" : "Disabled"}"
     puts "Knowledge Store: #{@config["knowledge_store"] ? "Enabled" : "Disabled"}"
     puts
     
-    options = ["Back", "Edit API Keys", "Toggle Autonomous Mode", "Toggle Cognitive Tracking", "Toggle Knowledge Store"]
+    options = ["Back", "Edit API Keys", "Toggle Autonomous Mode", "Toggle Claude Tracking", "Toggle Knowledge Store"]
     choice = Console.select_option("Configuration Options:", options)
     
     case choice
@@ -1368,10 +1355,10 @@ class CognitiveRubyCLI
       @config["autonomous_mode"] = !@config["autonomous_mode"]
       Configuration.save(@config)
       Console.print_success("Autonomous mode #{@config["autonomous_mode"] ? "enabled" : "disabled"}")
-    when "Toggle Cognitive Tracking"
+    when "Toggle Claude Tracking"
       @config["cognitive_tracking"] = !@config["cognitive_tracking"]
       Configuration.save(@config)
-      Console.print_success("Cognitive tracking #{@config["cognitive_tracking"] ? "enabled" : "disabled"}")
+      Console.print_success("Claude tracking #{@config["cognitive_tracking"] ? "enabled" : "disabled"}")
     when "Toggle Knowledge Store"
       @config["knowledge_store"] = !@config["knowledge_store"]
       Configuration.save(@config)
