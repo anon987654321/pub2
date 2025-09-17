@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Dilla.rb
-
 class Dilla
   VERSION = "1.0.0"
   
