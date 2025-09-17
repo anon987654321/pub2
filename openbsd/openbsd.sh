@@ -55,9 +55,9 @@ all_domains=(
   ["amberapp.com"]=""
   ["foodielicio.us"]=""
   ["stacyspassion.com"]=""
-  ["antibettingblog.com"]""
+  ["antibettingblog.com"]=""
   ["anticasinoblog.com"]=""
-  ["antigamblingblog.com"]""
+  ["antigamblingblog.com"]=""
   ["foball.no"]=""
 )
 
@@ -74,7 +74,7 @@ app_ports=(
 
 typeset -A app_domains  
 app_domains=(
-  ["brgen"]="brgen.no oshlo.no trndheim.no stvanger.no trmso.no reykjavk.is kobenhvn.dk stholm.se gteborg.se mlmoe.se hlsinki.fi lndon.uk mnchester.uk brmingham.uk edinbrgh.uk glasgw.uk lverpool.uk amstrdam.nl rottrdam.nl utrcht.nl brssels.be zrich.ch lchtenstein.li frankfrt.de mrseille.fr mlan.it lsbon.pt lsangeles.com newyrk.us chcago.us dtroit.us houstn.us dllas.us austn.us prtland.com mnneapolis.com"
+  ["brgen"]="brgen.no oshlo.no trndheim.no stvanger.no trmso.no reykjavk.is kobenhvn.dk stholm.se gteborg.se mlmoe.se hlsinki.fi lndon.uk mnchester.uk brmingham.uk edinbrgh.uk glasgw.uk lverpool.u[...]"
   ["pubattorney"]="pub.attorney freehelp.legal"
   ["bsdports"]="bsdports.org"
   ["hjerterom"]="hjerterom.no"
@@ -119,15 +119,12 @@ ext_if = "vio0"
 
 set skip on lo
 table <bruteforce> persist
-table <pfbadhost> persist file "/etc/pf-badhost.txt"
 
 set block-policy return
 scrub in all
 block log all
 
-# Block bad IPs
-block in quick on $ext_if from <pfbadhost>
-block out quick on $ext_if to <pfbadhost>
+# Brute force protection table
 block quick from <bruteforce>
 
 pass out quick on $ext_if all
@@ -153,17 +150,16 @@ PF_CONFIG
 
 setup_nsd() {
   log "Setting up NSD DNS server..."
-  doas mkdir -p /var/nsd/zones/master /var/nsd/etc
-  doas chown -R _nsd:_nsd /var/nsd/zones
   
-  for domain in "${(@k)all_domains}"; do
+  for domain in "
+  
     serial=$(date "+%Y%m%d%H")
     subdomains="${all_domains[$domain]}"
     
     log "Creating zone file for $domain"
     cat > "/tmp/$domain.zone" << ZONE_FILE
-\$ORIGIN $domain.
-\$TTL 24h
+$ORIGIN $domain.
+$TTL 24h
 
 @ 1h IN SOA ns.brgen.no. admin.brgen.no. (
   $serial ; Serial
@@ -210,7 +206,8 @@ remote-control:
 
 NSD_CONFIG
 
-  for domain in "${(@k)all_domains}"; do
+  for domain in "
+  do
     cat >> "/tmp/nsd.conf" << ZONE_CONFIG
 
 zone:
@@ -221,7 +218,7 @@ zone:
 ZONE_CONFIG
   done
   
-  doas mv "/tmp/nsd.conf" /var/nsd/etc/nsd.conf
+doas mv "/tmp/nsd.conf" /var/nsd/etc/nsd.conf
   doas chown _nsd:_nsd /var/nsd/etc/nsd.conf
   doas rcctl enable nsd
   doas rcctl start nsd
@@ -247,11 +244,11 @@ authority letsencrypt {
 
 ACME_CONFIG
   
-  for domain in "${(@k)all_domains}"; do
+  for domain in "
+  do
     subdomains="${all_domains[$domain]}"
     
     cat >> "/tmp/acme-client.conf" << DOMAIN_CONFIG
-
 domain "$domain" {
   domain key "/etc/ssl/private/$domain.key"
   domain full chain certificate "/etc/ssl/$domain.crt"
@@ -270,7 +267,7 @@ DOMAIN_CONFIG
     echo "}" >> "/tmp/acme-client.conf"
   done
   
-  doas mv "/tmp/acme-client.conf" /etc/acme-client.conf
+doas mv "/tmp/acme-client.conf" /etc/acme-client.conf
   log "ACME client configured for ${#all_domains[@]} domains"
 }
 
@@ -298,7 +295,7 @@ setup_relayd() {
   log "Setting up relayd for HTTPS->Rails proxying..."
   
   cat > "/tmp/relayd.conf" << RELAYD_HEADER
-egress="$main_ip"
+egreg="$main_ip"
 
 table <acme_client> { 127.0.0.1 }
 acme_client_port="43718"
@@ -306,7 +303,8 @@ acme_client_port="43718"
 RELAYD_HEADER
 
   # Add backend tables for each app
-  for app in "${(@k)app_ports}"; do
+  for app in "
+  do
     port="${app_ports[$app]}"
     cat >> "/tmp/relayd.conf" << BACKEND_TABLE
 table <${app}_backend> { 127.0.0.1 }
@@ -337,7 +335,8 @@ http protocol "rails" {
 HTTP_PROTOCOL
 
   # Add domain->app routing
-  for app in "${(@k)app_domains}"; do
+  for app in "
+  do
     domains="${app_domains[$app]}"
     for domain in ${(s/ /)domains}; do
       echo "  pass request header \"Host\" value \"$domain\" forward to <${app}_backend>" >> "/tmp/relayd.conf"
@@ -364,7 +363,8 @@ relay "https_relay" {
   protocol "rails"
 HTTPS_RELAY
 
-  for app in "${(@k)app_ports}"; do
+  for app in "
+  do
     echo "  forward to <${app}_backend> port \$${app}_port" >> "/tmp/relayd.conf"
   done
 
@@ -383,7 +383,8 @@ HTTPS_RELAY
 setup_applications() {
   log "Setting up Rails applications..."
   
-  for app in "${(@k)app_ports}"; do
+  for app in "
+  do
     if ! id "$app" >/dev/null 2>&1; then
       doas useradd -m -G www -s /bin/ksh "$app"
       log "Created user: $app"
@@ -408,7 +409,7 @@ DATABASE_URL=postgresql://${app}_user:$db_pass@localhost/${app}_production
 REDIS_URL=redis://localhost:6379/0
 ENV_FILE
     
-    doas mv "/tmp/${app}_env" "$app_dir/.env"
+doas mv "/tmp/${app}_env" "$app_dir/.env"
     doas chown "$app:www" "$app_dir/.env"
     doas chmod 600 "$app_dir/.env"
     
@@ -488,7 +489,7 @@ rc_start() {
 rc_cmd \$1
 RC_SCRIPT
     
-    doas mv "/tmp/${app}_rc" "/etc/rc.d/$app"
+doas mv "/tmp/${app}_rc" "/etc/rc.d/$app"
     doas chmod +x "/etc/rc.d/$app"
     doas chown -R "$app:www" "$app_dir"
     doas rcctl enable "$app"
@@ -500,7 +501,8 @@ RC_SCRIPT
 obtain_certificates() {
   log "Obtaining SSL certificates..."
   
-  for domain in "${(@k)all_domains}"; do
+  for domain in "
+  do
     log "Requesting certificate for $domain..."
     if ! doas timeout 120 acme-client -v "$domain"; then
       log "Warning: Certificate request failed for $domain, continuing..."
@@ -519,7 +521,8 @@ start_services() {
   doas rcctl start redis
   
   # Start Rails applications
-  for app in "${(@k)app_ports}"; do
+  for app in "
+  do
     doas rcctl start "$app"
     log "Started $app service"
   done
@@ -536,11 +539,11 @@ setup_cron() {
   cat > "/tmp/renew_certs.sh" << RENEWAL_SCRIPT
 #!/bin/ksh
 for domain in $(ls /etc/ssl/*.crt | sed 's|/etc/ssl/||g; s|.crt||g'); do
-  acme-client "\$domain" && rcctl reload relayd
+  acme-client "$domain" && rcctl reload relayd
 done
 RENEWAL_SCRIPT
   
-  doas mv "/tmp/renew_certs.sh" /usr/local/bin/renew_certs.sh
+doas mv "/tmp/renew_certs.sh" /usr/local/bin/renew_certs.sh
   doas chmod +x /usr/local/bin/renew_certs.sh
   
   # Add to crontab (weekly renewal check)
@@ -569,7 +572,8 @@ main() {
   log "Setup completed successfully!"
   log ""
   log "Configured applications:"
-  for app in "${(@k)app_ports}"; do
+  for app in "
+  do
     port="${app_ports[$app]}"
     domains="${app_domains[$app]}"
     log "  $app (port $port): $domains"
