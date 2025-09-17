@@ -1,7 +1,5 @@
-#!/bin/bash
-
 #!/usr/bin/env zsh
-set -e
+set -euo pipefail
 
 # Brgen core setup: Multi-tenant social and marketplace platform with Mapbox, live search, infinite scroll, and anonymous features on OpenBSD 7.5, unprivileged user
 
@@ -128,8 +126,8 @@ class ApplicationController < ActionController::Base
   end
 
   def guest_user_allowed?
-    controller_name == "home" || 
-    (controller_name == "posts" && action_name.in?(["index", "show", "create"])) || 
+    controller_name == "home" ||
+    (controller_name == "posts" && action_name.in?(["index", "show", "create"])) ||
     (controller_name == "listings" && action_name.in?(["index", "show"]))
   end
 end
