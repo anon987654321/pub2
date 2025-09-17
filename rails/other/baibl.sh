@@ -1,5 +1,3 @@
-#!/bin/bash
-
 #!/usr/bin/env zsh
 set -euo pipefail
 
@@ -311,17 +309,17 @@ cat <<EOF > app/views/layouts/application.html.erb
   <meta name="keywords" content="<%= yield(:keywords) || 'BAIBL, AI-Bibel, lingvistikk, religiøs, AI, teknologi, presisjon' %>">
   <meta name="author" content="BAIBL">
   <link rel="canonical" href="<%= request.original_url %>">
-  
+
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@100;300;400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif:ital@0;1&display=swap" rel="stylesheet">
-  
+
   <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
   <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
-  
+
   <%= yield(:schema) %>
 </head>
 <body>
@@ -387,7 +385,7 @@ cat <<EOF > app/views/home/index.html.erb
 <section id="introduction">
   <h2><%= t('baibl.introduction_title') %></h2>
   <p><%= t('baibl.introduction_text') %></p>
-  
+
   <% if @featured_verses&.any? %>
     <div class="verse-container">
       <% @featured_verses.first.tap do |verse| %>
@@ -411,12 +409,12 @@ cat <<EOF > app/views/home/index.html.erb
 <section id="search">
   <h2>Søk i BAIBL</h2>
   <%= form_with url: search_verses_path, method: :get, local: true, data: { turbo_stream: true } do |f| %>
-    <%= f.text_field :q, placeholder: t('baibl.search_placeholder'), 
-                     data: { controller: "search", 
+    <%= f.text_field :q, placeholder: t('baibl.search_placeholder'),
+                     data: { controller: "search",
                             "search-target": "input",
                             action: "input->search#search" } %>
   <% end %>
-  
+
   <div id="search-results" data-search-target="results">
     <!-- Search results will be loaded here -->
   </div>
@@ -471,49 +469,49 @@ cat <<EOF > app/assets/stylesheets/baibl.scss
   --serif: "Noto Serif", serif;
 }
 
-* { 
-  box-sizing: border-box; 
-  margin: 0; 
-  padding: 0; 
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-body { 
-  background: var(--bg-dark); 
-  color: var(--text); 
+body {
+  background: var(--bg-dark);
+  color: var(--text);
   font: 400 1rem/1.6 var(--body);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-header, footer { 
-  text-align: center; 
-  padding: var(--space); 
+header, footer {
+  text-align: center;
+  padding: var(--space);
 }
 
-header { 
-  border-bottom: 1px solid var(--border); 
+header {
+  border-bottom: 1px solid var(--border);
 }
 
-footer { 
-  background: var(--bg-dark); 
+footer {
+  background: var(--bg-dark);
   color: var(--text);
   margin-top: auto;
 }
 
-.nav-bar { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  background: var(--bg-dark); 
-  padding: 0.5rem 1rem; 
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-dark);
+  padding: 0.5rem 1rem;
 }
 
-.nav-bar a { 
-  color: var(--text); 
-  text-decoration: none; 
-  font-family: var(--headline); 
-  margin-right: 0.5rem; 
+.nav-bar a {
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--headline);
+  margin-right: 0.5rem;
 }
 
 .nav-bar a:hover {
@@ -525,46 +523,46 @@ footer {
   gap: 1rem;
 }
 
-main { 
-  max-width: 900px; 
-  margin: 0 auto; 
+main {
+  max-width: 900px;
+  margin: 0 auto;
   padding: var(--space);
   flex: 1;
 }
 
-section { 
-  padding: 2rem 0; 
-  border-bottom: 1px solid var(--border); 
+section {
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--border);
 }
 
-h1, h2, h3 { 
-  font-family: var(--headline); 
-  margin-bottom: 0.5rem; 
+h1, h2, h3 {
+  font-family: var(--headline);
+  margin-bottom: 0.5rem;
   font-weight: 700;
   letter-spacing: 0.5px;
-  text-shadow: 
+  text-shadow:
     0px 1px 1px rgba(0,0,0,0.5),
     0px -1px 1px rgba(255,255,255,0.1),
     0px 0px 8px rgba(0,150,136,0.15);
 }
 
-p, li { 
-  margin-bottom: var(--space); 
+p, li {
+  margin-bottom: var(--space);
 }
 
-ul { 
-  padding-left: 1.5rem; 
+ul {
+  padding-left: 1.5rem;
 }
 
-a:focus, button:focus { 
-  outline: 2px dashed var(--accent); 
-  outline-offset: 4px; 
+a:focus, button:focus {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
 }
 
-.user-info { 
-  font-size: 0.8rem; 
-  margin-top: 0.5rem; 
-  color: var(--text); 
+.user-info {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  color: var(--text);
 }
 
 .vision-statement {
@@ -578,8 +576,8 @@ a:focus, button:focus {
   letter-spacing: 0.3px;
 }
 
-.verse-container { 
-  margin: 2rem 0; 
+.verse-container {
+  margin: 2rem 0;
 }
 
 .aramaic {
@@ -669,7 +667,7 @@ a:focus, button:focus {
   text-transform: uppercase;
   letter-spacing: 1px;
   margin: 1rem 0;
-  text-shadow: 
+  text-shadow:
     0px 2px 2px rgba(0,0,0,0.8),
     0px -1px 1px rgba(255,255,255,0.2),
     0px 0px 15px rgba(0,150,136,0.2);
@@ -741,19 +739,19 @@ input[type="text"]:focus, textarea:focus {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .hero-title {
     font-size: 2rem;
   }
-  
+
   .vision-statement {
     font-size: 1.1rem;
   }
-  
+
   main {
     padding: 0.5rem;
   }
-  
+
   .card-container {
     grid-template-columns: 1fr;
   }
@@ -766,14 +764,14 @@ cat <<EOF > app/reflexes/verse_search_reflex.rb
 class VerseSearchReflex < ApplicationReflex
   def search
     query = element.value.strip
-    
+
     if query.present? && defined?(Verse)
       verses = Verse.joins(:chapter, :book)
                    .where("aramaic_text ILIKE ? OR kjv_text ILIKE ? OR baibl_text ILIKE ? OR transliteration ILIKE ?",
                           "%#{query}%", "%#{query}%", "%#{query}%", "%#{query}%")
                    .limit(10)
                    .includes(:chapter, :book)
-      
+
       morph "#search-results", render(partial: "verses/search_results", locals: { verses: verses, query: query })
     else
       morph "#search-results", ""
@@ -852,7 +850,7 @@ genesis = Book.create!(
 john = Book.create!(
   title: "Johannes",
   abbreviation: "Joh",
-  testament: "New", 
+  testament: "New",
   chapter_count: 21
 )
 

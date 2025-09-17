@@ -1,10 +1,18 @@
 # brgen
 
-### brgen.no, oshlo.no, trndheim.no, stvanger.no, trmso.no, longyearbyn.no, reykjavk.is, kobenhvn.dk, stholm.se, gtebrg.se, mlmoe.se, hlsinki.fi, lndon.uk, cardff.uk, mnchester.uk, brmingham.uk, lverpool.uk, edinbrgh.uk, glasgw.uk, amstrdam.nl, rottrdam.nl, utrcht.nl, brssels.be, zrich.ch, lchtenstein.li, frankfrt.de, wrsawa.pl, gdnsk.pl, brdeaux.fr, mrseille.fr, mlan.it, lsbon.pt, lsangeles.com, newyrk.us, chcago.us, houstn.us, dllas.us, austn.us, prtland.com, mnneapolis.com
+### Supported Domains
 
-**Brgen** redefines the concept of a social network,
-leveraging AI to create a hyper-localized platform tailored to major cities around the globe. More than just a social hub,
-Brgen seamlessly integrates multiple sub-applications,
+brgen.no, oshlo.no, trndheim.no, stvanger.no, trmso.no, longyearbyn.no,
+reykjavk.is, kobenhvn.dk, stholm.se, gtebrg.se, mlmoe.se, hlsinki.fi,
+lndon.uk, cardff.uk, mnchester.uk, brmingham.uk, lverpool.uk, edinbrgh.uk,
+glasgw.uk, amstrdam.nl, rottrdam.nl, utrcht.nl, brssels.be, zrich.ch,
+lchtenstein.li, frankfrt.de, wrsawa.pl, gdnsk.pl, brdeaux.fr, mrseille.fr,
+mlan.it, lsbon.pt, lsangeles.com, newyrk.us, chcago.us, houstn.us, dllas.us,
+austn.us, prtland.com, mnneapolis.com
+
+**Brgen** redefines the concept of a social network, leveraging AI to create a
+hyper-localized platform tailored to major cities around the globe. More than
+just a social hub, Brgen seamlessly integrates multiple sub-applications,
 including:
 
 - **Online Marketplace**: A platform for local buying and selling.
@@ -20,21 +28,25 @@ Brgen operates in a growing list of major cities, including:
 
 - **Nordic Region**:
 
-  - **Norway**: Bergen (brgen.no), Oslo (oshlo.no), Trondheim (trndheim.no), Stavanger (stvanger.no), Tromsø (trmso.no), Longyearbyen (longyearbyn.no)
+  - **Norway**: Bergen (brgen.no), Oslo (oshlo.no), Trondheim (trndheim.no),
+    Stavanger (stvanger.no), Tromsø (trmso.no), Longyearbyen (longyearbyn.no)
   - **Iceland**: Reykjavik (reykjavk.is)
   - **Denmark**: Copenhagen (kobenhvn.dk)
-  - **Sweden**: Stockholm (stholm.se), Gothenburg (gtebrg.se), Malmö (mlmoe.se)
+  - **Sweden**: Stockholm (stholm.se), Gothenburg (gtebrg.se),
+    Malmö (mlmoe.se)
   - **Finland**: Helsinki (hlsinki.fi)
 
 - **United Kingdom**:
 
-  - **England**: London (lndon.uk), Manchester (mnchester.uk), Birmingham (brmingham.uk), Liverpool (lverpool.uk)
+  - **England**: London (lndon.uk), Manchester (mnchester.uk),
+    Birmingham (brmingham.uk), Liverpool (lverpool.uk)
   - **Wales**: Cardiff (cardff.uk)
   - **Scotland**: Edinburgh (edinbrgh.uk), Glasgow (glasgw.uk)
 
 - **Other European Cities**:
 
-  - **Netherlands**: Amsterdam (amstrdam.nl), Rotterdam (rottrdam.nl), Utrecht (utrcht.nl)
+  - **Netherlands**: Amsterdam (amstrdam.nl), Rotterdam (rottrdam.nl),
+    Utrecht (utrcht.nl)
   - **Belgium**: Brussels (brssels.be)
   - **Switzerland**: Zurich (zrich.ch)
   - **Liechtenstein**: Vaduz (lchtenstein.li)
@@ -66,9 +78,12 @@ Brgen harnesses sophisticated monetization strategies, including:
 
 - **Hyper-localized Content**: Custom content for each city.
 - **AI-driven Insights**: Personalized user experience using advanced AI models.
-- **Integrated Services**: All services are tightly integrated, providing a seamless user experience.
+- **Integrated Services**: All services are tightly integrated, providing a
+  seamless user experience.
 
 ### Summary
 
 Brgen is designed to bring communities together,
-making each city feel like a closely-knit hub. It leverages AI and innovative monetization strategies to support local businesses and provide a unique social experience.
+making each city feel like a closely-knit hub. It leverages AI and innovative
+monetization strategies to support local businesses and provide a unique social
+experience.

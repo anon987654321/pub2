@@ -64,13 +64,13 @@
 
 &nbsp;     \* { box-sizing: border-box; margin: 0; padding: 0; }
 
-&nbsp;     body { 
+&nbsp;     body {
 
-&nbsp;       background: var(--bg-dark); 
+&nbsp;       background: var(--bg-dark);
 
-&nbsp;       color: var(--text); 
+&nbsp;       color: var(--text);
 
-&nbsp;       font: 400 1rem/1.6 var(--body); 
+&nbsp;       font: 400 1rem/1.6 var(--body);
 
 &nbsp;     }
 
@@ -80,29 +80,29 @@
 
 &nbsp;     footer { background: var(--bg-dark); color: var(--text); }
 
-&nbsp;     .nav-bar { 
+&nbsp;     .nav-bar {
 
-&nbsp;       display: flex; 
+&nbsp;       display: flex;
 
-&nbsp;       justify-content: space-between; 
+&nbsp;       justify-content: space-between;
 
-&nbsp;       align-items: center; 
+&nbsp;       align-items: center;
 
-&nbsp;       background: var(--bg-dark); 
+&nbsp;       background: var(--bg-dark);
 
-&nbsp;       padding: 0.5rem 1rem; 
+&nbsp;       padding: 0.5rem 1rem;
 
 &nbsp;     }
 
-&nbsp;     .nav-bar a { 
+&nbsp;     .nav-bar a {
 
-&nbsp;       color: var(--text); 
+&nbsp;       color: var(--text);
 
-&nbsp;       text-decoration: none; 
+&nbsp;       text-decoration: none;
 
-&nbsp;       font-family: var(--headline); 
+&nbsp;       font-family: var(--headline);
 
-&nbsp;       margin-right: 0.5rem; 
+&nbsp;       margin-right: 0.5rem;
 
 &nbsp;     }
 
@@ -110,11 +110,11 @@
 
 &nbsp;     section { padding: 2rem 0; border-bottom: 1px solid var(--border); }
 
-&nbsp;     h1, h2, h3 { 
+&nbsp;     h1, h2, h3 {
 
-&nbsp;       font-family: var(--headline); 
+&nbsp;       font-family: var(--headline);
 
-&nbsp;       margin-bottom: 0.5rem; 
+&nbsp;       margin-bottom: 0.5rem;
 
 &nbsp;       font-weight: 700;
 
@@ -122,13 +122,13 @@
 
 &nbsp;       /\* Deboss effect with subtle glow \*/
 
-&nbsp;       text-shadow: 
+&nbsp;       text-shadow:
 
 &nbsp;         0px 1px 1px rgba(0,0,0,0.5),
 
 &nbsp;         0px -1px 1px rgba(255,255,255,0.1),
 
-&nbsp;         0px 0px 8px rgba(0,150,136,0.15);  
+&nbsp;         0px 0px 8px rgba(0,150,136,0.15);
 
 &nbsp;     }
 
@@ -142,7 +142,7 @@
 
 &nbsp;     .user-info { font-size: 0.8rem; margin-top: 0.5rem; color: var(--text); }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Vision statement \*/
 
@@ -166,7 +166,7 @@
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Verse styling \*/
 
@@ -242,7 +242,7 @@
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Table styling for accuracy metrics \*/
 
@@ -316,7 +316,7 @@
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Special text effect for header \*/
 
@@ -332,7 +332,7 @@
 
 &nbsp;       margin: 1rem 0;
 
-&nbsp;       text-shadow: 
+&nbsp;       text-shadow:
 
 &nbsp;         0px 2px 2px rgba(0,0,0,0.8),
 
@@ -342,7 +342,7 @@
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Code styling \*/
 
@@ -358,7 +358,7 @@
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     .code-header {
 
@@ -376,7 +376,7 @@
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     .code-content {
 
@@ -392,7 +392,7 @@
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Syntax highlighting \*/
 
@@ -450,7 +450,7 @@
 
 &nbsp;       </p>
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       <div class="verse-container">
 
@@ -482,7 +482,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Translation Technology -->
 
@@ -492,7 +492,7 @@
 
 &nbsp;       <p>Vår avanserte kode kombinerer dyp KI og lingvistiske modeller for å avsløre detaljerte nyanser i de opprinnelige tekstene.</p>
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       <div class="code-container">
 
@@ -608,7 +608,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Accuracy Scores Section -->
 
@@ -622,7 +622,7 @@
 
 &nbsp;       </p>
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       <table class="metrics-table">
 
@@ -710,7 +710,7 @@
 
 &nbsp;       </table>
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       <table class="metrics-table">
 
@@ -778,7 +778,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Manifest -->
 
@@ -792,7 +792,7 @@
 
 &nbsp;       </p>
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       <div class="verse-container">
 
@@ -824,7 +824,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Product \& Services -->
 
@@ -848,7 +848,7 @@
 
 &nbsp;       </ul>
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       <div class="verse-container">
 
@@ -880,7 +880,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Market Insights -->
 
@@ -896,7 +896,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Technology -->
 
@@ -912,7 +912,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Operations \& Team -->
 
@@ -934,7 +934,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Interactive Engagement -->
 
@@ -954,7 +954,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Financial Overview -->
 
@@ -976,7 +976,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Call to Action -->
 
@@ -992,7 +992,7 @@
 
 &nbsp;     </section>
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     <!-- Conclusion -->
 
@@ -1006,7 +1006,7 @@
 
 &nbsp;       </p>
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       <div class="verse-container">
 
@@ -1165,7 +1165,7 @@
 
 &nbsp;       --border-radius: 8px;
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       /\* Syntax highlighting colors \*/
 
@@ -1199,7 +1199,7 @@
 
 &nbsp;     .content { max-width: 65ch; margin: 0 auto; }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Typography \*/
 
@@ -1209,7 +1209,7 @@
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* HERO SECTION - fullscreen black with deboss title (using minimal text-shadow per web.dev guidelines, no additional shadows) \*/
 
@@ -1371,11 +1371,11 @@
 
 &nbsp;     .scripture { padding: var(--space) 0; }
 
-&nbsp;     .verse { 
+&nbsp;     .verse {
 
-&nbsp;       position: relative; 
+&nbsp;       position: relative;
 
-&nbsp;       margin-bottom: var(--space); 
+&nbsp;       margin-bottom: var(--space);
 
 &nbsp;       padding: var(--space);
 
@@ -1405,27 +1405,27 @@
 
 &nbsp;     .verse p { margin-left: calc(var(--space) \* 2.5); }
 
-&nbsp;     .verse-notes { 
+&nbsp;     .verse-notes {
 
-&nbsp;       font-size: 0.85rem; 
+&nbsp;       font-size: 0.85rem;
 
-&nbsp;       padding: calc(var(--space)/2) var(--space); 
+&nbsp;       padding: calc(var(--space)/2) var(--space);
 
-&nbsp;       margin-top: 0.5rem; 
+&nbsp;       margin-top: 0.5rem;
 
-&nbsp;       border-top: 1px solid var(--border); 
+&nbsp;       border-top: 1px solid var(--border);
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Code block with syntax highlighting \*/
 
-&nbsp;     .code-block { 
+&nbsp;     .code-block {
 
-&nbsp;       position: relative; 
+&nbsp;       position: relative;
 
-&nbsp;       padding: var(--space); 
+&nbsp;       padding: var(--space);
 
 &nbsp;       overflow: hidden;
 
@@ -1447,7 +1447,7 @@
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Ruby syntax highlighting \*/
 
@@ -1465,7 +1465,7 @@
 
 &nbsp;     .ruby .special-var { color: var(--code-constant); font-style: italic; }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Footer \*/
 
@@ -1481,21 +1481,21 @@
 
 &nbsp;     }
 
-&nbsp;     
+&nbsp;
 
 &nbsp;     /\* Responsive adjustments \*/
 
 &nbsp;     @media (max-width: 768px) {
 
-&nbsp;       .page-nav { 
+&nbsp;       .page-nav {
 
-&nbsp;         flex-direction: row; 
+&nbsp;         flex-direction: row;
 
-&nbsp;         justify-content: center; 
+&nbsp;         justify-content: center;
 
-&nbsp;         gap: 0.5rem; 
+&nbsp;         gap: 0.5rem;
 
-&nbsp;         padding: 0.5rem; 
+&nbsp;         padding: 0.5rem;
 
 &nbsp;         background: rgba(0, 0, 0, 0.8);
 
@@ -1581,7 +1581,7 @@
 
 &nbsp;         <p>Prosjektet er et samarbeid mellom lingvister, bibelforskere, kjønnsforskere og datavitere.</p>
 
-&nbsp;         
+&nbsp;
 
 &nbsp;         <p>Vi kombinerer filologiske metoder med moderne AI-teknologi. Vår metode er åpen og reproduserbar.</p>
 
@@ -2097,7 +2097,7 @@
 
 &nbsp;       const navLinks = document.querySelectorAll('.page-nav a');
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       // Function to update active navigation dot
 
@@ -2105,7 +2105,7 @@
 
 &nbsp;         let current = '';
 
-&nbsp;         
+&nbsp;
 
 &nbsp;         sections.forEach(section => {
 
@@ -2121,7 +2121,7 @@
 
 &nbsp;         });
 
-&nbsp;         
+&nbsp;
 
 &nbsp;         navLinks.forEach(link => {
 
@@ -2137,7 +2137,7 @@
 
 &nbsp;       }
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       // Add smooth scrolling to nav links
 
@@ -2147,13 +2147,13 @@
 
 &nbsp;           e.preventDefault();
 
-&nbsp;           
+&nbsp;
 
 &nbsp;           const targetId = this.getAttribute('href');
 
 &nbsp;           const targetSection = document.querySelector(targetId);
 
-&nbsp;           
+&nbsp;
 
 &nbsp;           window.scrollTo({
 
@@ -2167,13 +2167,13 @@
 
 &nbsp;       });
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       // Update active nav on scroll
 
 &nbsp;       window.addEventListener('scroll', updateActiveNav);
 
-&nbsp;       
+&nbsp;
 
 &nbsp;       // Initialize active nav
 

@@ -72,7 +72,7 @@ class Vendor < ApplicationRecord
                         .where(vendor_products: { vendor: self })
                         .where(completed_at: start_date..end_date)
                         .where(payment_state: 'paid')
-    
+
     orders.sum do |order|
       order.line_items.joins(product: :vendor_products)
            .where(vendor_products: { vendor: self })
@@ -90,7 +90,7 @@ class Vendor < ApplicationRecord
   def average_rating
     reviews = Spree::Review.joins(product: :vendor_products)
                           .where(vendor_products: { vendor: self })
-    
+
     return 0 if reviews.empty?
     reviews.average(:rating).to_f.round(2)
   end
@@ -107,7 +107,7 @@ class VendorProduct < ApplicationRecord
   validates :vendor_id, uniqueness: { scope: :product_id }
 
   delegate :name, :description, :price, :available?, to: :product
-  
+
   def vendor_commission(order_total)
     order_total * (commission_rate / 100.0)
   end
@@ -163,7 +163,7 @@ class MarketplaceController < ApplicationController
     @featured_products = Spree::Product.featured.available.limit(8)
     @categories = Spree::Taxon.roots
     @vendors = Vendor.active.verified.limit(6)
-    
+
     # Analytics data for homepage
     @stats = {
       total_products: Spree::Product.available.count,
@@ -177,7 +177,7 @@ class MarketplaceController < ApplicationController
     @search_term = params[:q]
     @products = search_products(@search_term)
     @filters = build_search_filters
-    
+
     respond_to do |format|
       format.html
       format.json { render json: serialize_search_results(@products) }
@@ -193,7 +193,7 @@ class MarketplaceController < ApplicationController
     @products = @vendor.products.available
     @products = filter_vendor_products(@products)
     @products = @products.page(params[:page])
-    
+
     respond_to do |format|
       format.html
       format.json { render json: @products }
@@ -210,7 +210,7 @@ class MarketplaceController < ApplicationController
     return Spree::Product.none if query.blank?
 
     products = Spree::Product.available
-    
+
     # Use Searchkick for full-text search
     if defined?(Searchkick)
       products = products.search(
@@ -225,7 +225,7 @@ class MarketplaceController < ApplicationController
     else
       # Fallback to basic SQL search
       products = products.where(
-        "name ILIKE ? OR description ILIKE ?", 
+        "name ILIKE ? OR description ILIKE ?",
         "%#{query}%", "%#{query}%"
       ).page(params[:page])
     end
@@ -450,10 +450,10 @@ class VendorAnalyticsService
 
   def calculate_revenue_data
     orders = vendor_orders_in_period
-    
+
     daily_revenue = orders.group_by_day(:completed_at, range: @start_date..@end_date)
                           .sum(:total)
-    
+
     {
       total_revenue: orders.sum(:total),
       daily_revenue: daily_revenue,
@@ -529,7 +529,7 @@ import debounce from "stimulus-debounce"
 
 export default class extends Controller {
   static targets = ["input", "results", "filters"]
-  static values = { 
+  static values = {
     url: String,
     minLength: { type: Number, default: 2 }
   }
@@ -540,14 +540,14 @@ export default class extends Controller {
 
   search() {
     const query = this.inputTarget.value.trim()
-    
+
     if (query.length < this.minLengthValue) {
       this.clearResults()
       return
     }
 
     this.showLoading()
-    
+
     const params = new URLSearchParams({
       q: query,
       ...this.getActiveFilters()
@@ -588,23 +588,23 @@ export default class extends Controller {
   filter(event) {
     const filterType = event.target.dataset.filterType
     const filterValue = event.target.value
-    
+
     // Update active filters
     this.updateFilter(filterType, filterValue)
-    
+
     // Re-run search with new filters
     this.search()
   }
 
   getActiveFilters() {
     const filters = {}
-    
+
     this.filtersTarget.querySelectorAll('input:checked, select').forEach(input => {
       if (input.value) {
         filters[input.name] = input.value
       }
     })
-    
+
     return filters
   }
 
@@ -684,7 +684,7 @@ end
 # Enable search for products
 Spree::Product.class_eval do
   searchkick word_start: [:name, :description]
-  
+
   def search_data
     {
       name: name,
@@ -765,10 +765,10 @@ services:
 
   db:
     image: postgres:14
-    
+
   redis:
     image: redis:7-alpine
-    
+
   elasticsearch:
     image: elasticsearch:8.5.0
 ```

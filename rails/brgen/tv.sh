@@ -1,5 +1,3 @@
-#!/bin/bash
-
 #!/usr/bin/env zsh
 set -euo pipefail
 
@@ -345,12 +343,12 @@ cat <<EOF > app/views/shows/index.html.erb
     <%= tag.div data: { turbo_frame: "notices" } do %>
       <%= render "shared/notices" %>
     <% end %>
-    
+
     <%= tag.div class: "filter-bar" do %>
       <%= form_with url: search_path, method: :get, local: true, data: { turbo_stream: true } do |f| %>
         <%= f.text_field :q, placeholder: t("tv.search_placeholder"), data: { reflex: "input->Shows#search" } %>
       <% end %>
-      
+
       <%= tag.div class: "genre-filters" do %>
         <% %w[Action Comedy Drama Horror Sci-Fi Documentary].each do |genre| %>
           <%= link_to genre, genre_shows_path(genre), class: "genre-button" %>
@@ -359,7 +357,7 @@ cat <<EOF > app/views/shows/index.html.erb
     <% end %>
 
     <%= link_to t("tv.new_show"), new_show_path, class: "button", "aria-label": t("tv.new_show") if current_user %>
-    
+
     <%= turbo_frame_tag "shows", data: { controller: "infinite-scroll" } do %>
       <% @shows.each do |show| %>
         <%= render partial: "shows/card", locals: { show: show } %>
@@ -384,7 +382,7 @@ cat <<EOF > app/views/shows/_card.html.erb
       <%= tag.span "\#{show.total_episodes} episodes", class: "episode-count" %>
     <% end %>
   <% end %>
-  
+
   <% if show.poster.attached? %>
     <%= tag.div class: "show-poster" do %>
       <%= image_tag show.poster, alt: show.title, loading: "lazy" %>
@@ -420,7 +418,7 @@ cat <<EOF > app/views/shows/show.html.erb
           <%= image_tag @show.poster, alt: @show.title %>
         <% end %>
       <% end %>
-      
+
       <%= tag.div class: "show-info" do %>
         <%= tag.h1 @show.title, id: "show-heading" %>
         <%= tag.div class: "show-meta" do %>
@@ -430,7 +428,7 @@ cat <<EOF > app/views/shows/show.html.erb
           <%= tag.span "\#{@show.duration} min", class: "duration" %>
         <% end %>
         <%= tag.p @show.description, class: "description" %>
-        
+
         <% if @show.trailer_url.present? %>
           <%= link_to t("tv.watch_trailer"), @show.trailer_url, target: "_blank", class: "button secondary" %>
         <% end %>
@@ -439,7 +437,7 @@ cat <<EOF > app/views/shows/show.html.erb
 
     <%= tag.section aria_labelledby: "episodes-heading" do %>
       <%= tag.h2 t("tv.episodes"), id: "episodes-heading" %>
-      
+
       <% if @episodes.any? %>
         <% @episodes.group_by(&:season_number).each do |season, episodes| %>
           <%= tag.div class: "season" do %>

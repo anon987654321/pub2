@@ -1,19 +1,31 @@
 # BAIBL - AI-Enhanced Biblical Analysis Platform
 
-**BAIBL** (Bible AI-Enhanced Biblical Learning) is a comprehensive Rails application that provides AI-powered biblical text analysis with precise linguistic interpretation. Originally designed as an HTML prototype, it has been fully converted to a modern Rails application while preserving the exact Norwegian interface and sophisticated dark theme styling.
+**BAIBL** (Bible AI-Enhanced Biblical Learning) is a comprehensive Rails
+application that provides AI-powered biblical text analysis with precise
+linguistic interpretation. Originally designed as an HTML prototype, it has been
+fully converted to a modern Rails application while preserving the exact
+Norwegian interface and sophisticated dark theme styling.
 
 ## Overview
 
-BAIBL combines ancient wisdom with cutting-edge AI technology to reveal the true essence of sacred texts. It represents a new era in spiritual insight where precision meets transcendence, solving centuries of interpretation problems with scientific accuracy.
+BAIBL combines ancient wisdom with cutting-edge AI technology to reveal the true
+essence of sacred texts. It represents a new era in spiritual insight where
+precision meets transcendence, solving centuries of interpretation problems with
+scientific accuracy.
 
 ## Features
 
 ### Core Functionality
-- **Multi-Language Biblical Texts**: Aramaic originals, KJV translations, and AI-enhanced BAIBL interpretations
-- **AI-Powered Analysis**: Advanced linguistic and theological analysis with confidence scoring
-- **Real-time Translation**: Interactive translation with StimulusReflex for immediate results
-- **Comprehensive Verse Management**: Full CRUD operations for biblical verses and translations
-- **Norwegian Interface**: Complete Norwegian localization preserving original design intent
+- **Multi-Language Biblical Texts**: Aramaic originals, KJV translations, and
+  AI-enhanced BAIBL interpretations
+- **AI-Powered Analysis**: Advanced linguistic and theological analysis with
+  confidence scoring
+- **Real-time Translation**: Interactive translation with StimulusReflex for
+  immediate results
+- **Comprehensive Verse Management**: Full CRUD operations for biblical verses
+  and translations
+- **Norwegian Interface**: Complete Norwegian localization preserving original
+  design intent
 
 ### Biblical Analysis
 - **Linguistic Accuracy**: 97.8% precision in original language interpretation
@@ -92,7 +104,7 @@ The platform provides detailed analysis across multiple dimensions:
 ### Visual Design
 The application preserves the exact visual design from the original HTML prototype:
 
-- **Color Scheme**: 
+- **Color Scheme**:
   - Background: `#000000` (pure black) and `#121212` (dark gray)
   - Text: `#f5f5f5` (light gray) with `#009688` (teal) accents
   - Special sections: Custom backgrounds for Aramaic, KJV, and BAIBL text blocks
@@ -135,7 +147,7 @@ The application maintains complete Norwegian localization:
 
 ### Key Terms
 - **Bibelvers**: Biblical verses
-- **Oversettelser**: Translations  
+- **Oversettelser**: Translations
 - **Analyser vers**: Analyze verse
 - **Lingvistisk nøyaktighet**: Linguistic accuracy
 - **Kontekstuell troskap**: Contextual fidelity

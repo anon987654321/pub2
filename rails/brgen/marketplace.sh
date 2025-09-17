@@ -1,5 +1,3 @@
-#!/bin/bash
-
 #!/usr/bin/env zsh
 set -euo pipefail
 
@@ -24,7 +22,7 @@ command_exists "redis-server"
 # Install Solidus e-commerce platform
 log "Installing Solidus e-commerce platform"
 bundle add solidus --github='solidusio/solidus'
-bundle add solidus_auth_devise --github='solidusio/solidus_auth_devise' 
+bundle add solidus_auth_devise --github='solidusio/solidus_auth_devise'
 bundle add solidus_searchkick --github='solidusio-contrib/solidus_searchkick'
 bundle add solidus_reviews --github='solidusio-contrib/solidus_reviews'
 bundle add solidus_stripe
