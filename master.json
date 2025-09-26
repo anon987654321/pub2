@@ -1,12 +1,11 @@
 {
   "name": "master.json",
-  "version": "100.0.0", 
   "purpose": "LLM execution policy (analyze → explore → build → validate → deliver)",
   "entry": "run X through master.json → execute all phases autonomously",
   "meta": {
     "timestamp": "2025-09-26T20:08:24Z",
     "author": "anon987654321",
-    "architectural_evolution": "Synthesis of all framework generations v25-v99",
+    "architectural_evolution": "Synthesis of all framework generations",
     "framework_improvement_mandates": {
       "mandatory_self_application": "All framework changes must apply own principles",
       "measurable_improvement_requirement": "Quantifiable enhancement required",
@@ -449,10 +448,46 @@
     }
   },
 
+  "safeguards": {
+    "llm_pitfalls": {
+      "hallucination": "Verify files exist before any modification",
+      "context_loss": "Maintain checksums of all processed content",
+      "infinite_loops": "Maximum iterations with escape condition",
+      "unauthorized_changes": "Mandatory approval gates"
+    },
+    "system_safety": {
+      "destructive_operations": "Always require confirmation",
+      "rollback_capability": "Maintain .bak files for recovery",
+      "error_recovery": "Continue processing other files on single failure"
+    }
+  },
+
+  "dynamic_values": {
+    "timeout": "Context-dependent, not fixed 30 seconds",
+    "threshold": "Risk-adjusted, not fixed 85%",
+    "iterations": "Until convergence, not fixed number",
+    "line_length": "Content-aware, not always 80"
+  },
+
+  "project_patterns": {
+    "file_operations": {
+      "iteration": "for file in **/*(.N); do",
+      "text_check": "file -b $file | grep -q 'text'",
+      "safe_temp": "mktemp for temporary files",
+      "cleanup": "trap cleanup on exit"
+    },
+    "status_messages": {
+      "processing": "Processing: $item",
+      "success": "Created: $file",
+      "failure": "Failed: $file",
+      "skip": "Skipped (no changes): $file",
+      "complete": "Done."
+    }
+  },
+
   "meta_framework": {
     "self_optimization": "framework_optimizes_itself_each_execution",
-    "version_increment": "auto_bump_on_successful_optimization",
-    "compatibility": "backward_compatible_with_v99_workflows", 
+    "compatibility": "backward_compatible_with_all_workflows", 
     "evolution_tracking": "comprehensive_change_history_maintained",
     "principle_preservation": "core_behavioral_rules_immutable",
     "enhancement_focus": "capability_expansion_not_simplification",
