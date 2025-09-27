@@ -1,3 +1,16 @@
+/*
+ * Master.json - Universelt Rammeverk for Prosjektgjennomføring
+ * 
+ * Et spørsmålsdrevet rammeverk som sikrer kvalitet i alle prosjekter.
+ * Bruker LLM til å håndheve standarder, formatering og beste praksis.
+ * Tilpasser seg automatisk til kontekst - fra OpenBSD-installasjon til Rails-apper.
+ * 
+ * Filosofi: Tenk dypt før handling. Still spørsmål. Bygg én gang, korrekt.
+ * Versjon: 130.0.0 - Komplett med formatering, håndhevelse og LLM-integrasjon
+ * 
+ * Bruk: Anvendes automatisk av LLM på all kode/prosjekter/ideer
+ */
+
 {
   "name": "master.json",
   "version": "130.0.0-complete",
