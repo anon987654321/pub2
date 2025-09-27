@@ -1,21 +1,52 @@
 /*
- * Master.json - Universelt Rammeverk for Prosjektgjennomføring
+ * Master.json - Universal Framework for Project Excellence
  * 
- * Et spørsmålsdrevet rammeverk som sikrer kvalitet i alle prosjekter.
- * Bruker LLM til å håndheve standarder, formatering og beste praksis.
- * Tilpasser seg automatisk til kontekst - fra OpenBSD-installasjon til Rails-apper.
+ * A question-driven methodology that ensures quality in any project.
+ * Applied automatically by LLM to all code, projects, and ideas.
  * 
- * Filosofi: Tenk dypt før handling. Still spørsmål. Bygg én gang, korrekt.
- * Versjon: 130.0.0 - Komplett med formatering, håndhevelse og LLM-integrasjon
+ * Core Principles:
+ * - Think deeply before acting
+ * - Ask why before how
+ * - Build once, correctly
+ * - Simplicity over complexity
  * 
- * Bruk: Anvendes automatisk av LLM på all kode/prosjekter/ideer
+ * Features:
+ * - 5-phase workflow (Analyze → Design → Implement → Validate → Deliver)
+ * - Multi-perspective validation (Architecture, Security, User, Performance, Devil's Advocate)
+ * - Adaptive execution modes (Standard, Hotfix, Maintenance, Exploration, Review)
+ * - Language-specific formatting (Ruby/Rails, Shell, Web, Config)
+ * - Quality gates between phases
+ * - Universal patterns: Idempotency, Atomicity, Observability, Reversibility, Least Privilege
+ * 
+ * Version: 131.0.0
+ * Frozen: 2024-01-10
  */
 
 {
   "name": "master.json",
-  "version": "130.0.0-complete",
-  "purpose": "Universal question-driven framework with formatting, enforcement, and LLM integration",
+  "version": "131.0.0-complete",
+  "purpose": "Universal question-driven framework with cognitive protection and multi-perspective validation",
   "frozen": "2024-01-10T00:00:00Z",
+
+  "cognitive_core": {
+    /* ⚠️ NEVER REMOVE - Essential reasoning. Survives all future versions */
+    /* Core that ensures framework integrity and quality regardless of changes */
+    "essential_methodology": {
+      "questions_before_solutions": "Always ask why before how",
+      "evidence_required": "Every claim needs justification",
+      "multi_perspective": "Validate from multiple viewpoints",
+      "fail_safe": "When in doubt, fall back to core principles",
+      "preserve_working": "Never break what already works"
+    },
+    "protected_elements": [
+      "questions",
+      "workflow.phases",
+      "patterns.universal",
+      "guides.red_flags",
+      "meta.mantras"
+    ],
+    "validation_loop": "question → analyze → implement → validate → deliver → iterate"
+  },
 
   "core": {
     "philosophy": "Think deeply before acting. Question everything. Build once, correctly.",
@@ -67,23 +98,6 @@
         ],
         "complete_when": "Can explain problem in one sentence, know all constraints, have measurable success criteria",
         "output": "Problem statement with specific, measurable goals"
-      },
-    "edge_cases": {
-      "incomplete_code": "Complete it following detected patterns",
-      "mixed_languages": "Apply rules per section, maintain consistency",
-      "legacy_code": "Preserve working functionality, improve incrementally",
-      "contradictions": "Explain conflict, suggest resolution, let user decide",
-      "unknown_patterns": "Fall back to universal principles, ask for clarification"
-    },
-      "system": {
-        "services": "rc scripts with start/stop/check functions",
-        "users": "dedicated user per service, minimal privileges",
-        "permissions": "600 for secrets, 755 for executables, 644 for configs",
-        "paths": "/etc for config, /var for data, /usr/local for custom",
-        "security": "pledge/unveil where applicable, chroot for network services",
-        "logging": "syslog integration, /var/log/app.log for custom",
-        "networking": "pf rules explicit, minimal open ports",
-        "enforce": ["validate configs before reload", "atomic file operations", "backup before modify"]
       },
       {
         "id": "2_design",
@@ -218,7 +232,71 @@
         "toml": "sections grouped logically",
         "env": "UPPER_SNAKE_CASE, no spaces around =",
         "enforce": ["no inline comments", "sort keys alphabetically", "validate schema"]
+      },
+      "system": {
+        "services": "rc scripts with start/stop/check functions",
+        "users": "dedicated user per service, minimal privileges",
+        "permissions": "600 for secrets, 755 for executables, 644 for configs",
+        "paths": "/etc for config, /var for data, /usr/local for custom",
+        "security": "pledge/unveil where applicable, chroot for network services",
+        "logging": "syslog integration, /var/log/app.log for custom",
+        "networking": "pf rules explicit, minimal open ports",
+        "enforce": ["validate configs before reload", "atomic file operations", "backup before modify"]
       }
+    }
+  },
+
+  "multi_perspective_validation": {
+    /* Each output validated from multiple viewpoints - catches blind spots */
+    "perspectives": {
+      "architect": {
+        "role": "Structure and design quality",
+        "checks": ["Is the architecture sound?", "Will it scale?", "Is it maintainable?"]
+      },
+      "security_guardian": {
+        "role": "Security and safety",
+        "checks": ["Any vulnerabilities?", "Least privilege enforced?", "Input validated?"]
+      },
+      "user_advocate": {
+        "role": "Problem solving and usability",
+        "checks": ["Does it solve the original problem?", "Is it user-friendly?", "Clear documentation?"]
+      },
+      "performance_analyst": {
+        "role": "Efficiency and optimization",
+        "checks": ["Acceptable performance?", "Resource usage reasonable?", "Bottlenecks identified?"]
+      },
+      "devil_advocate": {
+        "role": "Challenge assumptions",
+        "checks": ["What could go wrong?", "Hidden dependencies?", "Edge cases missed?"]
+      }
+    },
+    "consensus_required": "All perspectives must agree before phase completion",
+    "conflict_resolution": "If perspectives disagree, document trade-offs and let user decide"
+  },
+
+  "persistent_diagnostics": {
+    /* Logging and tracing for Claude Code and other environments with file access */
+    "enabled": true,
+    "implementation": {
+      "chat_mode": "Output diagnostics in chat with [LOG] prefix",
+      "file_mode": "Write to logs/master_execution.log when file access available",
+      "artifacts_mode": "Maintain diagnostic artifact alongside main output"
+    },
+    "checkpoints": [
+      "[START] Framework execution beginning",
+      "[PHASE] Entering phase: {name}",
+      "[DETECT] Project type identified: {type}",
+      "[FORMAT] Applied {count} formatting rules",
+      "[LINT] Found {count} issues",
+      "[GATE] Quality gate {name}: {status}",
+      "[ERROR] {description} at {location}",
+      "[ROLLBACK] Reverting to last known good state",
+      "[COMPLETE] Execution finished: {status}"
+    ],
+    "diagnostic_artifact": {
+      "maintains": ["execution_trace", "decisions_made", "issues_found", "fixes_applied"],
+      "format": "markdown",
+      "updates": "append after each phase"
     }
   },
 
@@ -230,7 +308,7 @@
     },
     "simulated_tools": {
       "linter": "LLM checks against patterns and reports issues",
-      "formatter": "LLM reformats code to match rules", 
+      "formatter": "LLM reformats code to match rules",
       "validator": "LLM ensures semantic correctness",
       "security_check": "LLM identifies vulnerabilities"
     },
@@ -271,6 +349,14 @@
       "use": "Code review, audit, assessment",
       "time": "Focus on validation without changing code"
     }
+  },
+
+  "edge_cases": {
+    "incomplete_code": "Complete it following detected patterns",
+    "mixed_languages": "Apply rules per section, maintain consistency",
+    "legacy_code": "Preserve working functionality, improve incrementally",
+    "contradictions": "Explain conflict, suggest resolution, let user decide",
+    "unknown_patterns": "Fall back to universal principles, ask for clarification"
   },
 
   "output": {
@@ -315,7 +401,7 @@
     },
     "detection": [
       "Analyze linguistic patterns and structural markers",
-      "Identify paradigm from syntax and conventions", 
+      "Identify paradigm from syntax and conventions",
       "Infer purpose from naming and organization",
       "Deduce platform from system calls and APIs",
       "Recognize frameworks from directory structure",
@@ -388,7 +474,7 @@
       ],
       "on_questions": [
         "Answer from perspective of framework",
-        "Challenge assumptions respectfully", 
+        "Challenge assumptions respectfully",
         "Suggest simpler alternatives",
         "Refuse to proceed if quality gates not met"
       ]
@@ -444,7 +530,7 @@
   },
 
   "meta": {
-    "version": "130.0.0-complete",
+    "version": "131.0.0-complete",
     "status": "frozen",
     "type": "universal_llm_driven_framework",
     "compatibility": "any_language_any_platform_any_paradigm",
