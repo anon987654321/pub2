@@ -1,65 +1,123 @@
-# OpenBSD Setup for Scalable Rails and Secure Email
+# OpenBSD Rails Infrastructure
 
-This script configures OpenBSD 7.7 as a robust,
-modular platform for Ruby on Rails applications and a single-user email service,
-embodying the Unix philosophy of doing one thing well to power a focused,
-secure system for hyperlocal platforms with DNSSEC.
+**The definitive deployment for hosting dozens of domains on OpenBSD.** This is infrastructure as philosophy: secure by design, minimal by nature, bulletproof by execution. One script deploys everything—DNS with DNSSEC, TLS termination, Rails applications, reverse DNS—creating a fortress that scales from startups to empires.
 
-## Setup Instructions
+Born from the Unix principle that each tool should do one thing well, this deployment orchestrates OpenBSD's native strengths into a cohesive platform. No Docker overhead. No Kubernetes complexity. Just OpenBSD doing what it does best: running forever.
 
-1. **Prerequisites**:
-   - OpenBSD 7.7 installed on master (PowerPC Mac Mini) and slave (VM).
-   - Directories (`/var/nsd`,
-`/var/www/acme`,
-`/var/postgresql/data`,
-`/var/redis`,
-`/var/vmail`) have correct ownership/permissions (e.g.,
-`/var/www/acme` as `root:_httpd`,
-755).
-   - Rails apps (`brgen`,
-`amber`,
-`bsdports`) ready to upload to `/home/<app>/<app>` with `Gemfile` and `database.yml`.
-   - Unprivileged user `gfuser` with `mutt` installed for email access.
-   - Internet connectivity for package installation.
-   - Domain (e.g., `brgen.no`) registered with Domeneshop.no, ready for DS records.
+## Architecture
 
-2. **Run the Script**:
-   ```bash
-   doas zsh openbsd.sh
-   ```
-   - `--resume`: Run after Stage 1 (DNS/certs).
-   - `--mail`: Run after Stage 2 (services/apps) for email.
-   - `--help`: Show usage.
+```
+Internet → PF → relayd (TLS) → Rails Apps (Falcon)
+         ↘ httpd (ACME)
+         
+DNS: NSD + DNSSEC → Master + Slave
+PTR: OpenBSD Amsterdam API
+```
 
-3. **Stages**:
-   - **Stage 1**: Installs `ruby-3.3.5`,
-`ldns-utils`,
-`postgresql-server`,
-`redis`,
-and `zap` using OpenBSD 7.7’s default `pkg_add`. Configures `ns.brgen.no` (46.23.95.45) as master nameserver with DNSSEC (ECDSAP256SHA256 keys,
-signed zones),
-allowing zone transfers to `ns.hyp.net` (194.63.248.53,
-managed by Domeneshop.no) via TCP 53 and sending NOTIFY via UDP 53,
-with `pf` permitting TCP/UDP 53 traffic on `ext_if` (vio0). Generates TLSA records for HTTPS services. Issues certificates via Let’s Encrypt. Pauses to let you upload Rails apps (`brgen`,
-`amber`,
-`bsdports`) to `/home/<app>/<app>` with `Gemfile` and `database.yml`. Press Enter to proceed,
-then submit DS records from `/var/nsd/zones/master/*.ds` to Domeneshop.no. Test with `dig @46.23.95.45 brgen.no SOA`,
-`dig @46.23.95.45 denvr.us A`,
-`dig DS brgen.no +short`,
-and `dig TLSA _443._tcp.brgen.no`. Wait for propagation (24–48 hours) before `--resume`. `ns.hyp.net` requires no local setup (configure slave separately).
-   - **Stage 2**: Sets up PostgreSQL,
-Redis,
-PF firewall,
-relayd with security headers,
-and Rails apps with Falcon server. Logs go to `/var/log/messages`. Applies CSS micro-text (e.g.,
-7.5pt) for app footer branding if applicable.
-   - **Stage 3**: Configures OpenSMTPD for `bergen@pub.attorney`, accessible via `mutt` for `gfuser`.
+**40+ domains, 7 applications, infinite possibilities.**
 
-4. **Verification**:
-   - Services: `rcctl check nsd httpd postgresql redis relayd smtpd`.
-   - DNS: `dig @46.23.95.45 brgen.no SOA`, `dig @46.23.95.45 denvr.us A`.
-   - DNSSEC: `dig DS brgen.no +short`, `dig DNSKEY brgen.no +short`.
-   - TLSA: `dig TLSA _443._tcp.brgen.no`.
-   - Firewall: `doas pfctl -s rules` to confirm DNS and other rules.
-   - Email: Check `/var/vmail/pub.attorney/bergen/new` as `gfuser` with `mutt`.
-   - Logs: `tail -f /var/log/messages` for Rails app activity.
+- **DNS**: NSD with DNSSEC (ECDSA P-256)
+- **TLS**: LibreSSL with Let's Encrypt
+- **Apps**: Falcon servers behind relayd
+- **Security**: PF with DDoS protection
+- **Data**: PostgreSQL + Redis
+
+## Domains
+
+**Geographic Coverage**: Norway to New York, Bergen to Berlin.
+
+```
+brgen.no       → markedsplass playlist dating tv takeaway maps
+oshlo.no       → markedsplass playlist dating tv takeaway maps
+lndon.uk       → marketplace playlist dating tv takeaway maps
+newyrk.us      → marketplace playlist dating tv takeaway maps
+pub.attorney   → legal services
+bsdports.org   → BSD packages
+```
+
+**7 Applications**:
+- brgen:10001 → 35+ city domains
+- pubattorney:10002 → legal services  
+- bsdports:10003 → BSD ports
+- hjerterom:10004 → Norwegian platform
+- privcam:10005 → streaming
+- amber:10006 → general app
+- blognet:10007 → blog network
+
+## Installation
+
+```bash
+git clone https://github.com/anon987654321/pub2.git
+cd pub2/openbsd
+doas ksh openbsd.sh
+```
+
+**That's it.** The script is idempotent—run it again if interrupted.
+
+## Prerequisites
+
+- OpenBSD 7.x with root access
+- Public IP and domain control
+- 2GB RAM, 10GB disk
+
+## What Happens
+
+1. **Environment**: Verify OpenBSD, connectivity, OpenBSD Amsterdam VM
+2. **DNS**: NSD with DNSSEC keys, signed zones
+3. **Firewall**: PF with rate limiting, DDoS protection
+4. **TLS**: acme-client with LibreSSL certificates
+5. **Web**: httpd for ACME, relayd for load balancing
+6. **Data**: PostgreSQL and Redis setup
+7. **Apps**: Rails applications with Falcon
+8. **PTR**: Reverse DNS (OpenBSD Amsterdam only)
+9. **Maintenance**: Cron jobs, limits, monitoring
+
+## After Deployment
+
+**DNS**: Point your domains to your server IP. Submit DS records from `/var/nsd/zones/keys/*.ds` to your registrar.
+
+**Apps**: Upload Rails code to `/home/APP/app/`. The script creates users, databases, and service scripts.
+
+**Monitoring**:
+```bash
+rcctl ls on                    # Services
+tail -f /var/log/messages     # Logs
+curl -I https://yourdomain.com # Test
+```
+
+## File Structure
+
+```
+/var/nsd/zones/               # DNS zones + DNSSEC keys
+/etc/acme-client.conf         # TLS certificates
+/etc/{httpd,pf,relayd}.conf   # Core services
+/home/APP/app/                # Rails applications
+```
+
+## Security Features
+
+- **DNSSEC**: Full chain of trust
+- **TLS 1.2+**: Modern ciphers only
+- **Rate Limiting**: 100 connections, 50/30 rate
+- **DDoS Protection**: Automatic blocking
+- **Isolation**: Separate users per app
+
+## Troubleshooting
+
+**DNS**: `dig @127.0.0.1 domain.com`
+**TLS**: `acme-client -v domain.com`
+**Apps**: `rcctl check APP_rails`
+**PTR**: OpenBSD Amsterdam VMs only
+
+## Maintenance
+
+- Certificates renew automatically via cron
+- DNSSEC keys should rotate annually
+- System updates: `pkg_add -u && syspatch`
+
+---
+
+Infrastructure that thinks in decades, not deployment cycles.
+
+**Author**: anon987654321  
+**Repository**: https://github.com/anon987654321/pub2/tree/main/openbsd
