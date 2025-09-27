@@ -9,28 +9,28 @@
  * Philosophy: The framework teaches HOW to think, not WHAT to think.
  * All specifics are derived through LLM reasoning at runtime.
  * 
- * Version: 133.0.0
+ * Version: 134.0.0
  * Updated: 2025-09-27
  */
 
 {
   "name": "master.json",
-  "version": "133.0.0",
+  "version": "134.0.0",
   "purpose": "Universal reasoning framework - principles over prescriptions",
   "updated": "2025-09-27T00:00:00Z",
   
   "changelog": {
-    "v133.0.0": [
-      "Removed all hardcoded examples",
-      "Replaced specifics with reasoning patterns",
-      "Dynamic metric derivation based on context",
-      "LLM determines all thresholds at runtime",
-      "Pure principle-based approach"
+    "v134.0.0": [
+      "Added heredoc principle for file embedding",
+      "Banned ASCII art comments",
+      "Simplified commenting style",
+      "Emphasized inline clarity over block comments",
+      "Added file embedding patterns"
     ]
   },
 
   "cognitive_core": {
-    /* ⚠️ PROTECTED - Essential reasoning that survives all versions */
+    /* PROTECTED - Essential reasoning that survives all versions */
     "methodology": {
       "questions_before_solutions": "Always ask why before how",
       "evidence_required": "Every claim needs justification",
@@ -56,7 +56,6 @@
   },
 
   "questions": {
-    /* Universal questions that apply to any context */
     "purpose": {
       "problem": "What specific problem are we solving?",
       "users": "Who is affected and how?",
@@ -84,7 +83,6 @@
   },
 
   "reasoning": {
-    /* HOW to think, not WHAT to think */
     "project_detection": {
       "instruction": "Analyze linguistic patterns, structural markers, and contextual clues",
       "consider": [
@@ -116,17 +114,6 @@
         "Tooling requirements"
       ],
       "derive": "Consistent, readable format appropriate to context"
-    },
-    "security_assessment": {
-      "instruction": "Identify security needs from context",
-      "evaluate": [
-        "Data sensitivity level",
-        "Network exposure",
-        "User trust boundaries",
-        "Regulatory requirements",
-        "Attack surface"
-      ],
-      "derive": "Security measures proportional to risk"
     }
   },
 
@@ -177,7 +164,6 @@
 
   "patterns": {
     "universal": {
-      /* These apply regardless of context */
       "idempotency": "Operations safe to repeat",
       "atomicity": "Complete or rollback",
       "observability": "Always know system state",
@@ -196,9 +182,96 @@
     }
   },
 
+  "formatting": {
+    "universal_principles": {
+      "simplicity": "Clear over clever",
+      "consistency": "Same pattern throughout",
+      "readability": "Optimize for humans",
+      "maintainability": "Easy to change",
+      "documentation": "Self-evident code"
+    },
+    "commenting": {
+      "style": {
+        "avoid": [
+          "ASCII art dividers (===, ###, ---, ***)",
+          "Block comment headers",
+          "Redundant explanations",
+          "TODO without owner/date",
+          "Commented-out code"
+        ],
+        "prefer": [
+          "Inline explanations for why, not what",
+          "Brief function/module headers",
+          "Warning comments for gotchas",
+          "Clean section markers without art",
+          "Self-documenting names over comments"
+        ]
+      }
+    },
+    "file_embedding": {
+      "principle": "Use heredocs for embedding entire files",
+      "shell": {
+        "method": "cat > /path/to/file << 'EOF' ... EOF",
+        "variants": ["tee for stdout", "sed for templating", "awk for processing"],
+        "quote_delimiter": "Quote delimiter to prevent expansion when needed"
+      },
+      "ruby": {
+        "method": "<<~HEREDOC ... HEREDOC for indented content",
+        "variants": ["<<-HEREDOC", "<<HEREDOC", "<<'HEREDOC' for literal"]
+      },
+      "general": {
+        "instruction": "Prefer heredocs over echo/print loops",
+        "rationale": "Maintains file structure visibility and reduces errors"
+      }
+    },
+    "language_patterns": {
+      "shell": {
+        "principles": [
+          "Fail fast with set options",
+          "Quote expansions except when splitting intended",
+          "Use readonly for constants",
+          "Prefer [[ ]] over [ ] in bash/zsh",
+          "Functions over aliases",
+          "Local variables in functions",
+          "Meaningful exit codes"
+        ],
+        "structure": [
+          "Constants at top",
+          "Functions grouped by purpose",
+          "Main execution at bottom",
+          "Cleanup handlers with trap"
+        ]
+      },
+      "ruby": {
+        "principles": [
+          "Frozen string literals",
+          "Duck typing over type checking",
+          "Composition over inheritance",
+          "Tell don't ask",
+          "Single responsibility",
+          "Dependency injection"
+        ],
+        "structure": [
+          "Requires at top",
+          "Configuration next",
+          "Classes/modules in logical order",
+          "Private methods at bottom"
+        ]
+      },
+      "config_files": {
+        "principles": [
+          "Group related settings",
+          "Document non-obvious values",
+          "Use environment variables for secrets",
+          "Validate early and clearly",
+          "Provide sensible defaults"
+        ]
+      }
+    }
+  },
+
   "validation": {
     "perspectives": {
-      /* Each perspective asks questions, not prescribes answers */
       "architect": {
         "considers": "structure, scalability, maintainability",
         "asks": "Will this solution grow gracefully?"
@@ -227,7 +300,6 @@
   },
 
   "execution_modes": {
-    /* LLM selects based on context */
     "standard": {
       "when": "New work or major changes",
       "flow": "Full workflow with all phases"
@@ -250,40 +322,6 @@
     }
   },
 
-  "language_patterns": {
-    /* Principles for language detection and formatting */
-    "instruction": "LLM derives specific rules from these principles",
-    "principles": {
-      "consistency": "Match existing patterns or ecosystem conventions",
-      "readability": "Optimize for human understanding",
-      "safety": "Prefer explicit error handling over implicit behavior",
-      "simplicity": "Use language features appropriately, not cleverly",
-      "tooling": "Align with available formatters and linters"
-    },
-    "categories": {
-      "systems": {
-        "traits": "Close to metal, resource conscious",
-        "emphasize": "Memory safety, error handling, performance"
-      },
-      "scripting": {
-        "traits": "Quick automation, glue code",
-        "emphasize": "Clarity, error recovery, idempotency"
-      },
-      "web": {
-        "traits": "User-facing, network-dependent",
-        "emphasize": "Security, accessibility, responsiveness"
-      },
-      "functional": {
-        "traits": "Immutability, composition",
-        "emphasize": "Purity, type safety, composability"
-      },
-      "object_oriented": {
-        "traits": "Encapsulation, inheritance",
-        "emphasize": "SOLID principles, design patterns"
-      }
-    }
-  },
-
   "diagnostics": {
     "purpose": "Track execution for debugging and improvement",
     "format": {
@@ -294,7 +332,6 @@
   },
 
   "red_flags": {
-    /* Universal anti-patterns to avoid */
     "complexity": {
       "signs": "Can't explain simply, too many parts, circular dependencies",
       "response": "Refactor for simplicity"
