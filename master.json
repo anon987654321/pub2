@@ -9,17 +9,25 @@
  * Philosophy: The framework teaches HOW to think, not WHAT to think.
  * All specifics are derived through LLM reasoning at runtime.
  * 
- * Version: 134.0.0
+ * Version: 135.0.0
  * Updated: 2025-09-27
  */
 
 {
   "name": "master.json",
-  "version": "134.0.0",
+  "version": "135.0.0",
   "purpose": "Universal reasoning framework - principles over prescriptions",
-  "updated": "2025-09-27T00:00:00Z",
+  "updated": "2025-09-27T13:57:03Z",
   
   "changelog": {
+    "v135.0.0": [
+      "Added infrastructure-as-code patterns for system administration",
+      "Included Unix/OpenBSD operational philosophy and privilege separation",
+      "Enhanced documentation philosophy with Strunk & White brevity principles",
+      "Added decade-scale thinking for infrastructure decisions",
+      "Integrated native tooling preferences and operational simplicity",
+      "Added operational complexity red flag"
+    ],
     "v134.0.0": [
       "Added heredoc principle for file embedding",
       "Banned ASCII art comments",
@@ -51,7 +59,10 @@
       "Simple is better than complex",
       "Explicit is better than implicit",
       "Errors should never pass silently",
-      "In the face of ambiguity, refuse to guess"
+      "In the face of ambiguity, refuse to guess",
+      "Each tool should do one thing perfectly",
+      "Infrastructure as philosophy, not just configuration",
+      "Think in decades, not deployment cycles"
     ]
   },
 
@@ -90,7 +101,11 @@
         "Import/include statements and dependencies",
         "Directory structure and organization",
         "Comments and documentation style",
-        "API calls and system interactions"
+        "API calls and system interactions",
+        "Infrastructure scripts with service management patterns",
+        "System configuration files (pf.conf, httpd.conf, etc.)",
+        "Multi-service orchestration in shell scripts",
+        "OpenBSD/FreeBSD specific tooling (rcctl, pkg_add, doas)"
       ],
       "derive": "Infer the project type, then apply appropriate patterns"
     },
@@ -170,6 +185,12 @@
       "reversibility": "Can undo changes safely",
       "least_privilege": "Minimal necessary access"
     },
+    "unix_systems": {
+      "privilege_separation": "Separate users/processes for each service",
+      "native_tooling": "Prefer base system tools over third-party dependencies",
+      "configuration_as_code": "System configs in version control",
+      "operational_simplicity": "Fewer moving parts, more reliability"
+    },
     "derivation": {
       "instruction": "LLM selects additional patterns based on detected context",
       "categories": {
@@ -177,7 +198,16 @@
         "batch": "Focus on throughput and completeness",
         "distributed": "Focus on consistency and partition tolerance",
         "embedded": "Focus on resource constraints and reliability",
-        "experimental": "Focus on learning and iteration speed"
+        "experimental": "Focus on learning and iteration speed",
+        "infrastructure": {
+          "focus": "Idempotency, declarative configuration, and operational simplicity",
+          "principles": [
+            "Infrastructure that survives decades, not just deployments",
+            "One script does everything, runs safely multiple times",
+            "Native tools over third-party dependencies",
+            "Security by design, not by addition"
+          ]
+        }
       }
     }
   },
@@ -266,6 +296,20 @@
           "Validate early and clearly",
           "Provide sensible defaults"
         ]
+      },
+      "documentation": {
+        "principles": [
+          "Grand vision first, implementation details second",
+          "Strunk and White brevity without losing substance",
+          "Philosophy drives architecture drives implementation",
+          "Ultraminimalism that scales to complexity"
+        ],
+        "structure": [
+          "Visionary introduction paragraph",
+          "Architecture as ASCII art",
+          "Essential information only",
+          "Troubleshooting that actually helps"
+        ]
       }
     }
   },
@@ -291,6 +335,10 @@
       "skeptic": {
         "considers": "assumptions, edge cases, failures",
         "asks": "What are we not seeing?"
+      },
+      "operator": {
+        "considers": "long-term maintenance, operational simplicity, failure recovery",
+        "asks": "Can this run for years without constant attention?"
       }
     },
     "consensus": {
@@ -319,6 +367,10 @@
     "review": {
       "when": "Auditing or assessment only",
       "flow": "Validation phase only"
+    },
+    "infrastructure": {
+      "when": "System administration and deployment",
+      "flow": "Emphasize idempotency, native tooling, and decade-scale thinking"
     }
   },
 
@@ -347,6 +399,10 @@
     "rigidity": {
       "signs": "Can't extend, tightly coupled, no abstraction",
       "response": "Refactor for flexibility"
+    },
+    "operational_complexity": {
+      "signs": "Too many dependencies, complex orchestration, vendor lock-in",
+      "response": "Simplify to native tools, reduce moving parts, increase reliability"
     }
   },
 
