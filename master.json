@@ -1,450 +1,252 @@
+// Universelt rammeverk for prosjektfullføring — sekvensielle faser, bevisporter, reverserbarhet.
+// Styrt autonomi, ikke-destruktiv KISS, dyp sporbarhet, autoformat, diff før full endring.
+
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.org/schemas/master.schema.json",
   "name": "master.json",
-  "version": "146.1.0",
-  "purpose": "Self-improving project completion framework with principled design",
-  "updated": "2025-01-09T12:00:00Z",
-  "location": "bergen→amsterdam",
-  "platform": "openbsd",
-  "philosophy": "Think deeply. Build once. Evolve continuously. Principle-driven, not ceremony-driven.",
+  "version": "177.15.0",
+  "updated": "2025-09-28T18:35:45Z",
+
+  "meta": {
+    "philosophy": "Internalize. Generate 5–10. Pick best. Diff-before-full. Simplicity without loss of intent.",
+    "style": "strunk_white",
+    "llm_instruction": "Run all phases. Enforce evidence-gated validation. Respect autonomy policy. Seek approval before destructive simplification."
+  },
+
+  "execution": {
+    "loop": "discover → analyze → design → implement → validate → deliver → learn",
+    "flow": "sequential",
+    "iteration": {
+      "auto": true,
+      "max": 10,
+      "convergence": { "delta_lt": 0.01, "gates_all_pass": true },
+      "design_min_options": 5,
+      "design_max_options": 10
+    },
+    "policies": {
+      "never_skip_phases": ["discover","analyze","design","implement","validate","deliver","learn"],
+      "pause_for_human": ["approval_points","missing_info","low_confidence"]
+    }
+  },
+
+  "modes": {
+    "autonomous": { "confidence": 0.9, "approval": false },
+    "supervised": { "confidence": 0.7, "approval": "checkpoints" },
+    "suggestion": { "confidence": 0.0, "approval": "always" },
+    "policy": "skill_autonomy_must_not_exceed_mode"
+  },
+
+  "validation": {
+    "pipeline": ["formatting","syntax","schema","semantic","security","accessibility"],
+    "perspectives": ["architect","security","performance","operator","developer","user_experience","legal_privacy"],
+    "adversarial": {
+      "enabled": true,
+      "tactics": ["cherry_pick_counterevidence","edge_case_attack","assumption_break","spec_mismatch_probe"],
+      "require_evidence_for_rebuttals": true
+    },
+    "gates": {
+      "required": ["works","secure","deployable","maintainable","accessibility","performance","privacy"],
+      "evidence_map": {
+        "works": ["tests","logs"],
+        "secure": ["threat_model","scan_reports"],
+        "deployable": ["runbooks","health_checks"],
+        "maintainable": ["docs","review_approvals"],
+        "accessibility": ["a11y_reports"],
+        "performance": ["benchmarks","profiling"],
+        "privacy": ["dpia","approvals"]
+      }
+    },
+    "rules": [
+      "No fabrication; ask when unsure",
+      "Cite sources for external facts",
+      "Never truncate",
+      "Diff before full",
+      "Rollback on failure",
+      "EOF marker for artifacts",
+      "Strunk & White brevity and clarity"
+    ]
+  },
+
+  "phases": [
+    { "id": "discover", "goal": "Context+patterns", "output": "Problem+constraints", "auto": true, "max": 2 },
+    { "id": "analyze", "goal": "Deep understanding", "output": "Analysis+edge_cases", "auto": true, "max": 3 },
+    { "id": "design", "goal": "Optimal approach", "output": "Selected+rationale+alternatives", "auto": true, "max": 4 },
+    { "id": "implement", "goal": "Build+test", "output": "Working_solution+tests", "auto": true, "max": 5 },
+    { "id": "validate", "goal": "Prove correct", "output": "Evidence_across_gates", "auto": true, "max": 3 },
+    { "id": "deliver", "goal": "Deploy+monitor", "output": "Production+runbooks" },
+    { "id": "learn", "goal": "Harvest patterns", "output": "Updated_skills+notes" }
+  ],
+
+  "questions": {
+    "discovery": ["What problem?","Who affected?","Constraints?"],
+    "design": ["Simplest (keep intent)?","Alternatives?","Principles?"],
+    "implementation": ["Prove correct?","Detect failures?","Rollback safe?"],
+    "learning": ["Patterns?","Improve framework?"]
+  },
+
+  "scrutiny": [
+    "Minimum complexity (keep intent)?",
+    "Hidden assumption?",
+    "Missing angle?",
+    "Prod failure path?",
+    "Ignored tradeoff?"
+  ],
+
+  "principles_registry": {
+    "track_violations": true,
+    "items": [
+      { "id": "dry", "definition": "Single source of truth" },
+      { "id": "kiss", "definition": "Simple, not simplistic (non-destructive)" },
+      { "id": "solid", "definition": "All five enforced" },
+      { "id": "reversibility", "definition": "Every change undoable" },
+      { "id": "observability", "definition": "Know state always" },
+      { "id": "security_by_default", "definition": "Default secure" },
+      { "id": "accessibility_first", "definition": "WCAG 2.2 AAA" },
+      { "id": "zen", "definition": "Essential only" },
+      { "id": "strunk", "definition": "Brevity with clarity" }
+    ],
+    "violations_log": []
+  },
+
+  "kiss_policy": {
+    "enabled": true,
+    "scope": "non_destructive",
+    "require_human_approval_for_destructive_changes": true,
+    "categories_requiring_approval": ["security","migrations","data_models","public_apis","deploy_scripts","tests"],
+    "heuristics": ["preserve_intent","no_loss_of_coverage","no_behavior_change_without_tests"]
+  },
+
+  "patterns": {
+    "universal": ["composition","separation_of_concerns","single_responsibility"],
+    "tactical": ["guard_clause","early_return","null_object"],
+    "strategic": ["strategy","observer","factory"],
+    "architectural": ["mvc","microservices","event_driven"]
+  },
+
+  "anti_patterns": [
+    "complexity_for_complexity",
+    "premature_optimization",
+    "ceremony_over_substance",
+    "breaking_working_systems",
+    "undocumented_magic"
+  ],
+
+  "format": {
+    "apply_to": ["code","docs","configs"],
+    "change_control": {
+      "require_approval": true,
+      "protected": ["defaults","languages"]
+    },
+    "defaults": {
+      "autoformat_on_write": true,
+      "indent": "2_spaces",
+      "quotes": "double",
+      "lines": "unix_lf",
+      "final_newline": true,
+      "trim_trailing_whitespace": true,
+      "whitespace": {
+        "collapse_runs_gt1": true,
+        "align_columns": false,
+        "exceptions": ["indentation","string_literal","regex","code_block","aligned_tables"]
+      }
+    },
+    "languages": {
+      "json": { "add": ["stable_key_order"] },
+      "markdown": { "add": ["wrap_at_80","no_trailing_spaces","fenced_codegfm"] },
+      "shell": { "override": { "indent": "2_spaces" }, "add": ["posix_style"] },
+      "ruby": { "add": ["rubocop_style_minimal"] },
+      "html": { "add": ["consistent_self_closing","attribute_order_minimal"] }
+    }
+  },
+
+  "diagnostics": {
+    "sinks": ["stdout","file:logs/master.log","syslog"],
+    "fields": ["ts","run_id","trace_id","phase","level","component","message","confidence"],
+    "trace_mode": true,
+    "uses_output_style": true,
+    "on_error": "rollback_and_escalate"
+  },
+
   "output_style": {
-    "prompt_format": "anon@master.json ~/pub2 main • v{version} {status_icons} ❯ {status_message}",
+    "prompt_format": "anon@master v{version} • {phase} {icon} ❯ {status_message}",
     "status_icons": {
-      "self_improving": "🧠🔄",
-      "optimized": "🧠✨",
-      "active": "⚡",
+      "working": "⚡",
+      "done": "✅",
+      "error": "❌",
+      "trace": "🐞",
       "learning": "📚",
       "deploying": "🚀"
     },
-    "diagnostic_format": "[{LEVEL}] {Component}: {Message} (confidence: {score})",
-    "diagnostic_levels": ["START", "DETECT", "DECIDE", "VALIDATE", "COMPLETE", "ERROR"],
-    "progress_indicators": {
-      "phase_completion": "✓",
-      "skill_application": "🔧",
-      "pattern_harvest": "📦",
-      "improvement": "⬆️"
+    "diagnostic_format": "[{level}] {component}: {message} (confidence: {confidence})",
+    "diagnostic_levels": ["START","DETECT","DECIDE","VALIDATE","COMPLETE","ERROR"],
+    "progress_indicators": { "phase_completion": "✓", "skill_application": "🔧", "pattern_harvest": "📦", "improvement": "⬆️" }
+  },
+
+  "presentation": {
+    "chat_ui": {
+      "enabled": true,
+      "uses_output_style": true,
+      "status_format": "Phase: {phase} [{progress}] • {current_action}",
+      "decision_format": "→ DECISION POINT: {question}\n  Options: {options}\n  Recommendation: {suggested}",
+      "error_format": "⚠ Issue: {problem} • Suggested fix: {solution}"
     }
   },
-  "design_principles": {
-    "dry": {
-      "definition": "Don't Repeat Yourself",
-      "application": "Single source of truth for patterns, skills, and configurations",
-      "violations": "Multiple definitions of same concept in different sections"
+
+  "domains": {
+    "enabled": ["rails","openbsd","deployment","ui_ux"],
+    "rails": {
+      "patterns": ["hotwire_progressive_enhancement","api_first_design","background_job_resilience"]
     },
-    "solid": {
-      "single_responsibility": "Each component has one clear purpose",
-      "open_closed": "Extensible through skills/patterns, core principles immutable",
-      "liskov_substitution": "Skills must be interchangeable within same category",
-      "interface_segregation": "Clean boundaries between AI, skills, patterns, execution",
-      "dependency_inversion": "Depend on abstractions (patterns) not implementations"
+    "openbsd": {
+      "patterns": ["privilege_separation","native_tooling","security_by_default"]
     },
-    "pola": {
-      "definition": "Principle of Least Astonishment",
-      "application": "Behavior matches expectations, no surprising side effects",
-      "validation": "If it surprises a developer, it's a bug"
+    "deployment": {
+      "patterns": ["progressive_rollout","infrastructure_as_code","observability_first"]
     },
-    "yagni": {
-      "definition": "You Aren't Gonna Need It",
-      "application": "Features added only when actually needed, not anticipated",
-      "enforcement": "Every feature must solve existing problem, not theoretical one"
-    },
-    "kiss": {
-      "definition": "Keep It Simple, Stupid",
-      "application": "Simplest solution that works completely",
-      "measurement": "Can explain in one sentence"
-    },
-    "composition_over_inheritance": {
-      "application": "Skills compose, don't inherit. Patterns combine, don't extend",
-      "benefit": "Flexible behavior without complex hierarchies"
+    "ui_ux": {
+      "principles": ["clarity","consistency","progressive_disclosure","accessibility_first"],
+      "status_microcopy": { "decision": "→ DECISION POINT", "ready": "✓ Ready", "validated": "✓ Validated" }
     }
   },
-  "core": {
-    "principles": [
-      "Questions before solutions",
-      "Evidence required for all claims",
-      "Preserve working systems",
-      "Fail safe to known good state",
-      "All decisions must be explainable",
-      "Every project teaches the framework"
-    ],
-    "protected": ["philosophy", "design_principles", "intelligence.safety_protocols", "questions", "patterns.universal", "execution.phases", "validation.strategies"],
-    "loop": "discover → analyze → design → implement → validate → deliver → learn → improve",
+
+  "deploy": {
+    "target": "${DEPLOY_TARGET}",
+    "platform": "openbsd_with_privilege_separation",
+    "rollback": {
+      "automatic": true,
+      "time_seconds": 60,
+      "triggers": [
+        { "metric": "error_rate", "op": ">", "value": 0.05 },
+        { "metric": "latency_p99_ms", "op": ">", "value": 1000 },
+        { "metric": "health", "op": "==", "value": "fail" }
+      ]
+    }
+  },
+
+  "skills": [
+    { "id": "code_generation", "confidence": 0.95 },
+    { "id": "problem_analysis", "confidence": 0.95 },
+    { "id": "documentation", "confidence": 0.92 },
+    { "id": "testing", "confidence": 0.90 },
+    { "id": "architecture_design", "confidence": 0.88 }
+  ],
+
+  "behavior": {
     "autonomous": true,
-    "self_improving": true
+    "communication": "strunk_white",
+    "preservation": "never_truncate"
   },
-  "execution": {
-    "modes": {
-      "autonomous": "Routine tasks, proven patterns",
-      "supervised": "New patterns, risky changes",
-      "suggestion": "Untested approaches, major decisions"
-    },
-    "modes_context": ["standard", "emergency", "maintenance", "exploration", "review", "infrastructure"],
-    "phases": {
-      "discover": {
-        "goal": "Understand context and identify applicable patterns",
-        "output": "Context analysis with pattern recommendations",
-        "time_percentage": 15
-      },
-      "analyze": {
-        "goal": "Deep problem understanding with constraint mapping",
-        "output": "Problem statement with success criteria",
-        "time_percentage": 20
-      },
-      "design": {
-        "goal": "Optimal approach using composable patterns",
-        "output": "Architecture with rationale and alternatives",
-        "time_percentage": 20
-      },
-      "implement": {
-        "goal": "Build solution executing skills and patterns",
-        "output": "Working system with comprehensive tests",
-        "time_percentage": 35
-      },
-      "validate": {
-        "goal": "Prove correctness across all perspectives",
-        "output": "Evidence of quality, security, performance",
-        "time_percentage": 5
-      },
-      "deliver": {
-        "goal": "Deploy with monitoring and documentation",
-        "output": "Operational system with runbooks",
-        "time_percentage": 3
-      },
-      "learn": {
-        "goal": "Extract lessons and harvest successful patterns",
-        "output": "Updated skill library and framework improvements",
-        "time_percentage": 2
-      }
-    },
-    "quality_gates": {
-      "required": ["works", "secure", "deployable", "maintainable"],
-      "validation": "automated_with_human_oversight",
-      "override": "emergency_with_documented_risk"
-    }
-  },
-  "diagnostics": {
-    "sinks": ["stdout", "file:logs/master.log", "syslog"],
-    "fields": ["ts", "run_id", "trace_id", "phase", "level", "component", "message", "confidence"],
-    "on_error": "rollback_and_escalate",
-    "policy": "logs must enable end-to-end reconstruction of decisions"
-  },
-  "intelligence": {
-    "ai_capabilities": {
-      "code_generation": { "autonomy": "supervised", "quality_gate": "test_coverage" },
-      "test_creation": { "autonomy": "autonomous", "quality_gate": "mutation_testing" },
-      "documentation": { "autonomy": "autonomous", "quality_gate": "comprehensibility" },
-      "architecture_decisions": { "autonomy": "supervised", "quality_gate": "principle_compliance" },
-      "pattern_optimization": { "autonomy": "supervised", "quality_gate": "performance_improvement" }
-    },
-    "decision_framework": {
-      "bayesian_updates": "Learn from outcomes to improve future decisions",
-      "confidence_tracking": "Know when to escalate to human judgment",
-      "alternative_evaluation": "Always consider multiple approaches",
-      "principle_validation": "Check against design principles before acting",
-      "policy": "skill_autonomy_must_not_exceed_execution_mode"
-    },
-    "enforcement": {
-      "loop": ["detect", "derive", "apply", "adapt"],
-      "interpreter_note": "Continuous feedback loop for intelligent system behavior adaptation"
-    },
-    "safety_protocols": {
-      "explainable": "All AI decisions must have clear rationale",
-      "reversible": "All changes must be undoable",
-      "human_override": "Humans always have final authority",
-      "regression_testing": "Changes cannot break existing functionality"
-    },
-    "error_recovery": {
-      "skill_failure_cascade": "Detect and isolate failing skills to prevent spread",
-      "partial_failure_modes": "Continue degraded operation when subset fails",
-      "graceful_degradation": "Fallback to simpler approaches automatically",
-      "root_cause_guidance": "Suggest probable causes and next actions"
-    },
-    "context_management": {
-      "project_switching": "Persist mental state and next-actions per project",
-      "environment_sync": "Dev/staging/prod awareness with guardrails",
-      "interrupted_workflow_recovery": "Resume exactly where left off with run_id/trace_id"
-    },
-    "resource_intelligence": {
-      "performance_budgets": "Time/memory/CPU limits per operation",
-      "constraint_aware_optimization": "Adapt behavior to resource availability",
-      "bottleneck_prediction": "Predict and surface likely bottlenecks early"
-    },
-    "security_by_design": {
-      "threat_modeling": "Perform lightweight STRIDE-like checks per change",
-      "principle_of_least_privilege": "Default-min privileges for every skill/pattern",
-      "security_validation_gates": "Block deploy without security clearance"
-    },
-    "technical_debt": {
-      "debt_detection": "Detect hotspots via churn/complexity/sentry",
-      "prioritization": "Rank by impact and fix effort",
-      "systematic_reduction": "Reserve capacity for continuous reduction"
-    },
-    "hot_evolution": {
-      "live_skill_updates": "Safely update skills mid-run with rollback",
-      "pattern_migration": "Migrate to better patterns without downtime",
-      "framework_versioning": "A/B new framework behaviors behind flags"
-    },
-    "predictive_intelligence": {
-      "failure_prediction": "Identify likely failure points before they occur",
-      "resource_demand_forecasting": "Forecast CPU/memory/bandwidth needs",
-      "pattern_success_probability": "Estimate likelihood of approach success"
-    },
-    "dependency_intelligence": {
-      "conflict_resolution": "Auto-resolve version conflicts with safety checks",
-      "update_orchestration": "Incremental, reversible dependency updates",
-      "circular_dependency_detection": "Detect/prevent dependency cycles"
-    },
-    "learning_network": {
-      "pattern_sharing": "Share anonymous effectiveness metrics",
-      "collective_intelligence": "Learn from aggregate success patterns",
-      "federated_improvement": "Privacy-preserving cross-project learning"
-    },
-    "human_factors": {
-      "attention_management": "Minimize context switching costs",
-      "energy_optimization": "Schedule demanding tasks when energy is high",
-      "cognitive_load_balancing": "Distribute mental effort optimally"
-    },
-    "ecosystem_integration": {
-      "ide_integration": "VS Code/vim/emacs workflows",
-      "ci_cd_native": "First-class GitHub Actions/GitLab CI",
-      "monitoring_fusion": "Datadog/Grafana integration patterns"
-    }
-  },
-  "skills": {
-    "library": {
-      "rails_hotwire_setup": {
-        "confidence": 0.95,
-        "usage_count": 47,
-        "success_rate": 0.98,
-        "dependencies": ["node_environment", "ruby_environment"],
-        "composition": ["turbo_install", "stimulus_config", "cable_setup"]
-      },
-      "progressive_deployment": {
-        "confidence": 0.92,
-        "usage_count": 23,
-        "success_rate": 0.96,
-        "dependencies": ["container_runtime", "monitoring_stack"],
-        "composition": ["health_checks", "gradual_rollout", "automatic_rollback"]
-      },
-      "openbsd_deployment": {
-        "confidence": 0.90,
-        "usage_count": 1,
-        "success_rate": 1.00,
-        "dependencies": ["privilege_separation", "pf_config"],
-        "composition": ["rcctl_services", "chroot_isolation", "pledge_restrictions"]
-      },
-      "node_environment": {
-        "confidence": 0.98,
-        "usage_count": 0,
-        "success_rate": 0.0,
-        "dependencies": [],
-        "composition": ["stub_implementation"]
-      },
-      "ruby_environment": {
-        "confidence": 0.98,
-        "usage_count": 0,
-        "success_rate": 0.0,
-        "dependencies": [],
-        "composition": ["stub_implementation"]
-      },
-      "privilege_separation": {
-        "confidence": 0.95,
-        "usage_count": 0,
-        "success_rate": 0.0,
-        "dependencies": [],
-        "composition": ["stub_implementation"]
-      },
-      "pf_config": {
-        "confidence": 0.92,
-        "usage_count": 0,
-        "success_rate": 0.0,
-        "dependencies": [],
-        "composition": ["stub_implementation"]
-      }
-    },
-    "management": {
-      "dependency_resolution": "automatic_with_conflict_detection",
-      "version_control": "semantic_versioning_with_rollback",
-      "composition_validation": "runtime_verification",
-      "performance_tracking": "effectiveness_measurement"
-    },
-    "harvesting": {
-      "pattern_recognition": "Identify successful workflows for replication",
-      "skill_synthesis": "Combine primitive skills into higher-order capabilities",
-      "failure_analysis": "Learn from errors to prevent recurrence",
-      "optimization_detection": "Find efficiency improvements in execution"
-    }
-  },
-  "style_guide": {
-    "formatting": {
-      "indentation": "Two spaces for all languages",
-      "quotes": "Double quotes for strings",
-      "line_endings": "Unix (LF)",
-      "max_line_length": 100
-    },
-    "commenting": {
-      "principle": "Strunk & White clarity",
-      "frequency": "Explain why, not what",
-      "format": "Complete sentences with proper punctuation"
-    },
-    "file_embedding": {
-      "heredocs": "Use for multi-line content",
-      "templates": "Embed directly when < 50 lines",
-      "separation": "Extract to files when > 50 lines"
-    },
-    "language_patterns": {
-      "shell": {
-        "structure": "Set options, source shared, declare variables, implement functions",
-        "error_handling": "set -euo pipefail",
-        "variables": "UPPER_CASE for constants, lower_case for locals"
-      },
-      "ruby": {
-        "structure": "Require dependencies, define modules/classes, implement logic",
-        "style": "Rubocop compliant",
-        "patterns": "Prefer composition over inheritance"
-      }
-    },
-    "documentation": {
-      "principles": ["User-focused", "Example-driven", "Maintenance-oriented"],
-      "structure": {
-        "overview": "What problem does this solve?",
-        "features": "Key capabilities and benefits", 
-        "implementation": "Technical details and examples",
-        "usage": "Common scenarios and commands"
-      }
-    }
-  },
-  "patterns": {
-    "universal": {
-      "idempotency": "Operations safe to repeat without side effects",
-      "atomicity": "Complete successfully or rollback cleanly",
-      "observability": "Always know system state and health",
-      "reversibility": "Every change can be undone safely",
-      "composability": "Small pieces combine into larger behaviors"
-    },
-    "domain_specific": {
-      "rails": {
-        "hotwire_progressive_enhancement": "Start with server-rendered, enhance with JS",
-        "api_first_design": "Build API, then consume it in frontend",
-        "background_job_resilience": "Jobs must handle failures gracefully"
-      },
-      "openbsd": {
-        "privilege_separation": "Each service runs with minimal required privileges",
-        "native_tooling": "Prefer base system tools over third-party dependencies",
-        "security_by_default": "Secure configuration is the default configuration"
-      },
-      "deployment": {
-        "progressive_rollout": "Gradual deployment with health monitoring",
-        "infrastructure_as_code": "All configuration in version control",
-        "observability_first": "Monitoring and logging before optimization"
-      }
-    }
-  },
-  "validation": {
-    "perspectives": {
-      "architect": "Structure, scalability, maintainability, principle compliance",
-      "security": "Attack vectors, privilege boundaries, data protection",
-      "performance": "Speed, resource usage, bottleneck identification",
-      "operator": "Deployability, monitorability, troubleshootability",
-      "developer": "Understandability, modifiability, debuggability"
-    },
-    "strategies": {
-      "contract_testing": "Validate API boundaries and service interactions",
-      "regression_testing": "Ensure changes don't break existing functionality",
-      "principle_validation": "Check compliance with design principles",
-      "performance_benchmarking": "Measure impact of changes on system performance"
-    },
-    "metrics": {
-      "developer_velocity": "Time from idea to production deployment",
-      "system_reliability": "Uptime and error rates in production",
-      "framework_effectiveness": "Skills reused per project, patterns harvested",
-      "principle_adherence": "Violations of design principles detected"
-    },
-    "evidence": {
-      "types": ["tests", "benchmarks", "logs", "approvals"],
-      "storage": ["CI_artifacts", "release_notes"]
-    },
-    "consensus": {
-      "requirement": "all_or_documented",
-      "escalation": "owner_breaks_ties"
-    }
-  },
-  "questions": {
-    "discovery": {
-      "problem": "What specific problem are we solving?",
-      "users": "Who is affected and how will their experience change?",
-      "constraints": "What boundaries and limitations exist?",
-      "patterns": "What applicable patterns exist in our skill library?"
-    },
-    "design": {
-      "simplicity": "What is the simplest approach that completely solves the problem?",
-      "composition": "How do existing skills and patterns combine for this solution?",
-      "alternatives": "What other approaches did we consider and why reject them?",
-      "principles": "How does this design comply with our principles?"
-    },
-    "implementation": {
-      "testing": "How do we prove this works correctly?",
-      "monitoring": "How will we know if this fails in production?",
-      "rollback": "How do we undo this if something goes wrong?",
-      "maintenance": "Who will maintain this and how?"
-    },
-    "learning": {
-      "harvest": "What patterns from this project can be reused?",
-      "improvement": "How can we make the framework better for next time?",
-      "optimization": "What inefficiencies did we discover and eliminate?"
-    }
-  },
-  "deployment": {
-    "infrastructure": {
-      "target": "185.52.176.18:amsterdam",
-      "platform": "openbsd_with_privilege_separation",
-      "strategy": "progressive_with_automatic_rollback",
-      "monitoring": "comprehensive_with_alerting"
-    },
-    "process": {
-      "health_checks": "Verify system health before and after deployment",
-      "gradual_rollout": "Deploy to subset, validate, then complete rollout",
-      "automatic_rollback": "Revert on health check failures",
-      "observability": "Full logging and metrics collection"
-    }
-  },
-  "improvement": {
-    "learning": {
-      "every_execution": "Extract lessons from each project completion",
-      "pattern_evolution": "Successful patterns improve over time",
-      "skill_optimization": "Skills become more effective through usage",
-      "principle_refinement": "Design principles evolve based on experience"
-    },
-    "adaptation": {
-      "performance_driven": "Changes must demonstrably improve outcomes",
-      "evidence_based": "All improvements backed by data",
-      "gradual_enhancement": "Incremental improvements over radical changes",
-      "safety_first": "Never compromise core safety or reliability"
-    }
-  },
-  "anti_patterns": {
-    "complexity": "Adding unnecessary features or overengineering simple solutions", 
-    "fragility": "Systems that break easily or require careful handling",
-    "opacity": "Code or behavior that's difficult to understand or debug",
-    "rigidity": "Systems resistant to change or extension",
-    "operational_complexity": "Deployment or maintenance processes that are overly complicated",
-    "ceremony_over_substance": "Process that exists to satisfy the process",
-    "breaking_working_systems": "Changes that reduce existing functionality",
-    "undocumented_magic": "Behavior that surprises or confuses users"
-  },
+
   "security": {
-    "protected_fingerprint": "sha256:ae099e79fc7f0963e3ecbc6d3a63d5dc5ec4212a9624815667dc4a6b7fc16910"
+    "protected_fingerprint": "sha256:REPLACE_WITH_COMPUTED_HASH",
+    "fingerprint_policy": {
+      "algorithm": "sha256",
+      "canonicalize_exclude": ["updated","diagnostics.run_id","diagnostics.trace_id"]
+    },
+    "prompt_secrecy": true
   },
-  "meta": {
-    "type": "Self-improving reasoning framework with principled design",
-    "evolution": "Framework learns continuously while maintaining design integrity",
-    "compatibility": "Any language, platform, or paradigm through adaptive composition",
-    "philosophy": "Maximum capability through principled simplicity, not clever complexity",
-    "versioning_policy": {
-      "major": "Protected keys/semantics change",
-      "minor": "New optional fields, non-breaking semantics",
-      "patch": "Docs/notes/clarifications"
-    }
+
+  "self_improve": {
+    "enabled": true
   }
 }
