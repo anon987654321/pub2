@@ -9,7 +9,7 @@
     "aesthetic": "starship zsh inspired"
   },
   "prompt": {
-    "example": "anon@master.json ~/pub2 main • v137.1.6 ❯ framework ready"
+    "example": "anon@master.json ~/pub2 main • v138.0.0 ❯ framework ready"
   },
   "core": {
     "methodology": {
