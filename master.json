@@ -5,7 +5,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "master.json",
   "version": "177.15.0",
-  "updated": "2025-09-28T18:35:45Z",
+  "updated": "2025-09-28T19:58:33Z",
 
   "meta": {
     "philosophy": "Internalize. Generate 5–10. Pick best. Diff-before-full. Simplicity without loss of intent.",
@@ -56,6 +56,21 @@
         "privacy": ["dpia","approvals"]
       }
     },
+    "config_validation": {
+      "required_paths": [
+        "config.multimedia.repligen",
+        "config.multimedia.postpro", 
+        "config.rails",
+        "settings.core.comments_policy",
+        "settings.optimization_patterns.enforce_least_privilege",
+        "settings.communication.notification_policy"
+      ],
+      "version_consistency": {
+        "enabled": true,
+        "current_version": "177.15.0",
+        "check_files": ["rails/*.sh", "rails/*.md", "multimedia/*.rb"]
+      }
+    },
     "rules": [
       "No fabrication; ask when unsure",
       "Cite sources for external facts",
@@ -63,7 +78,10 @@
       "Diff before full",
       "Rollback on failure",
       "EOF marker for artifacts",
-      "Strunk & White brevity and clarity"
+      "Strunk & White brevity and clarity",
+      "Version references must match current version",
+      "Configuration paths must resolve",
+      "All domain patterns must be implementable"
     ]
   },
 
@@ -193,19 +211,64 @@
   },
 
   "domains": {
-    "enabled": ["rails","openbsd","deployment","ui_ux"],
+    "enabled": ["rails", "openbsd", "deployment", "ui_ux", "multimedia"],
     "rails": {
-      "patterns": ["hotwire_progressive_enhancement","api_first_design","background_job_resilience"]
+      "patterns": [
+        "hotwire_progressive_enhancement", 
+        "api_first_design", 
+        "background_job_resilience",
+        "scaffold_crud_optimization",
+        "partial_extraction_dry",
+        "anonymous_posting_patterns",
+        "live_chat_utilities",
+        "mapbox_integration",
+        "infinite_scroll_patterns"
+      ],
+      "validation": {
+        "erb_style": "consistent_indentation",
+        "i18n_keys": "structured_namespacing", 
+        "schema_data": "required_for_seo",
+        "accessibility": "wcag_2_2_aaa"
+      }
+    },
+    "multimedia": {
+      "patterns": [
+        "chain_composition",
+        "cost_optimization", 
+        "graceful_degradation",
+        "sqlite_jsonl_fallback",
+        "camera_profile_support"
+      ],
+      "validation": {
+        "api_tokens": "secure_storage",
+        "output_quality": "configurable_limits",
+        "processing_timeout": "reasonable_defaults"
+      }
     },
     "openbsd": {
-      "patterns": ["privilege_separation","native_tooling","security_by_default"]
+      "patterns": ["privilege_separation", "native_tooling", "security_by_default"],
+      "validation": {
+        "unprivileged_user": "required",
+        "doas_usage": "minimal_necessary",
+        "native_tools": "preferred_over_third_party"
+      }
     },
     "deployment": {
-      "patterns": ["progressive_rollout","infrastructure_as_code","observability_first"]
+      "patterns": ["progressive_rollout", "infrastructure_as_code", "observability_first"],
+      "validation": {
+        "rollback_capability": "automatic",
+        "health_checks": "comprehensive",
+        "monitoring": "real_time"
+      }
     },
     "ui_ux": {
-      "principles": ["clarity","consistency","progressive_disclosure","accessibility_first"],
-      "status_microcopy": { "decision": "→ DECISION POINT", "ready": "✓ Ready", "validated": "✓ Validated" }
+      "principles": ["clarity", "consistency", "progressive_disclosure", "accessibility_first"],
+      "status_microcopy": { "decision": "→ DECISION POINT", "ready": "✓ Ready", "validated": "✓ Validated" },
+      "validation": {
+        "design_approach": "minimal_flat_nng",
+        "color_contrast": "wcag_aa_minimum",
+        "responsive_design": "mobile_first"
+      }
     }
   },
 
