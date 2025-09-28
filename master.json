@@ -2,9 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.org/schemas/master.schema.json",
   "name": "master.json",
-  "version": "146.0.0",
+  "version": "146.1.0",
   "purpose": "Self-improving project completion framework with principled design",
-  "updated": "2025-09-28T18:45:00Z",
+  "updated": "2025-01-09T12:00:00Z",
   "location": "bergen→amsterdam",
   "platform": "openbsd",
   "philosophy": "Think deeply. Build once. Evolve continuously. Principle-driven, not ceremony-driven.",
@@ -68,7 +68,7 @@
       "All decisions must be explainable",
       "Every project teaches the framework"
     ],
-    "protected": ["philosophy", "design_principles", "intelligence.safety_protocols"],
+    "protected": ["philosophy", "design_principles", "intelligence.safety_protocols", "questions", "patterns.universal", "execution.phases", "validation.strategies"],
     "loop": "discover → analyze → design → implement → validate → deliver → learn → improve",
     "autonomous": true,
     "self_improving": true
@@ -79,6 +79,7 @@
       "supervised": "New patterns, risky changes",
       "suggestion": "Untested approaches, major decisions"
     },
+    "modes_context": ["standard", "emergency", "maintenance", "exploration", "review", "infrastructure"],
     "phases": {
       "discover": {
         "goal": "Understand context and identify applicable patterns",
@@ -142,6 +143,10 @@
       "alternative_evaluation": "Always consider multiple approaches",
       "principle_validation": "Check against design principles before acting",
       "policy": "skill_autonomy_must_not_exceed_execution_mode"
+    },
+    "enforcement": {
+      "loop": ["detect", "derive", "apply", "adapt"],
+      "interpreter_note": "Continuous feedback loop for intelligent system behavior adaptation"
     },
     "safety_protocols": {
       "explainable": "All AI decisions must have clear rationale",
@@ -228,6 +233,34 @@
         "success_rate": 1.00,
         "dependencies": ["privilege_separation", "pf_config"],
         "composition": ["rcctl_services", "chroot_isolation", "pledge_restrictions"]
+      },
+      "node_environment": {
+        "confidence": 0.98,
+        "usage_count": 0,
+        "success_rate": 0.0,
+        "dependencies": [],
+        "composition": ["stub_implementation"]
+      },
+      "ruby_environment": {
+        "confidence": 0.98,
+        "usage_count": 0,
+        "success_rate": 0.0,
+        "dependencies": [],
+        "composition": ["stub_implementation"]
+      },
+      "privilege_separation": {
+        "confidence": 0.95,
+        "usage_count": 0,
+        "success_rate": 0.0,
+        "dependencies": [],
+        "composition": ["stub_implementation"]
+      },
+      "pf_config": {
+        "confidence": 0.92,
+        "usage_count": 0,
+        "success_rate": 0.0,
+        "dependencies": [],
+        "composition": ["stub_implementation"]
       }
     },
     "management": {
@@ -241,6 +274,45 @@
       "skill_synthesis": "Combine primitive skills into higher-order capabilities",
       "failure_analysis": "Learn from errors to prevent recurrence",
       "optimization_detection": "Find efficiency improvements in execution"
+    }
+  },
+  "style_guide": {
+    "formatting": {
+      "indentation": "Two spaces for all languages",
+      "quotes": "Double quotes for strings",
+      "line_endings": "Unix (LF)",
+      "max_line_length": 100
+    },
+    "commenting": {
+      "principle": "Strunk & White clarity",
+      "frequency": "Explain why, not what",
+      "format": "Complete sentences with proper punctuation"
+    },
+    "file_embedding": {
+      "heredocs": "Use for multi-line content",
+      "templates": "Embed directly when < 50 lines",
+      "separation": "Extract to files when > 50 lines"
+    },
+    "language_patterns": {
+      "shell": {
+        "structure": "Set options, source shared, declare variables, implement functions",
+        "error_handling": "set -euo pipefail",
+        "variables": "UPPER_CASE for constants, lower_case for locals"
+      },
+      "ruby": {
+        "structure": "Require dependencies, define modules/classes, implement logic",
+        "style": "Rubocop compliant",
+        "patterns": "Prefer composition over inheritance"
+      }
+    },
+    "documentation": {
+      "principles": ["User-focused", "Example-driven", "Maintenance-oriented"],
+      "structure": {
+        "overview": "What problem does this solve?",
+        "features": "Key capabilities and benefits", 
+        "implementation": "Technical details and examples",
+        "usage": "Common scenarios and commands"
+      }
     }
   },
   "patterns": {
@@ -352,14 +424,17 @@
     }
   },
   "anti_patterns": {
-    "complexity_for_complexity_sake": "Adding features that don't solve real problems",
-    "premature_optimization": "Optimizing before measuring actual bottlenecks",
+    "complexity": "Adding unnecessary features or overengineering simple solutions", 
+    "fragility": "Systems that break easily or require careful handling",
+    "opacity": "Code or behavior that's difficult to understand or debug",
+    "rigidity": "Systems resistant to change or extension",
+    "operational_complexity": "Deployment or maintenance processes that are overly complicated",
     "ceremony_over_substance": "Process that exists to satisfy the process",
     "breaking_working_systems": "Changes that reduce existing functionality",
     "undocumented_magic": "Behavior that surprises or confuses users"
   },
   "security": {
-    "protected_fingerprint": "sha256:REPLACE_WITH_COMPUTED_HASH"
+    "protected_fingerprint": "sha256:ae099e79fc7f0963e3ecbc6d3a63d5dc5ec4212a9624815667dc4a6b7fc16910"
   },
   "meta": {
     "type": "Self-improving reasoning framework with principled design",
