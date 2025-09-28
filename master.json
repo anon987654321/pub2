@@ -1,16 +1,15 @@
-// Universelt rammeverk for prosjektfullføring — sekvensielle faser, bevisporter, reverserbarhet.
-// Styrt autonomi, ikke-destruktiv KISS, dyp sporbarhet, autoformat, diff før full endring.
+// Universal completion framework — sequential phases, evidence gates, rollback.
+// Enforces DRY, SOLID, non-destructive KISS, UNIX LF format, autonomy policy,
+// multi‑perspective + adversarial validation, deep trace, and canonical behavior.
 
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "master.json",
-  "version": "177.15.0",
-  "updated": "2025-09-28T18:35:45Z",
+  "version": "178.6.1",
+  "updated": "2025-09-28T22:22:51Z",
 
   "meta": {
-    "philosophy": "Internalize. Generate 5–10. Pick best. Diff-before-full. Simplicity without loss of intent.",
-    "style": "strunk_white",
-    "llm_instruction": "Run all phases. Enforce evidence-gated validation. Respect autonomy policy. Seek approval before destructive simplification."
+    "philosophy": "Questions before commands; think before doing; evidence over opinion; clarity over cleverness."
   },
 
   "execution": {
@@ -18,15 +17,10 @@
     "flow": "sequential",
     "iteration": {
       "auto": true,
-      "max": 10,
-      "convergence": { "delta_lt": 0.01, "gates_all_pass": true },
-      "design_min_options": 5,
-      "design_max_options": 10
+      "convergence": { "gates_all_pass": true },
+      "design_options": { "min": 5, "max": 10 }
     },
-    "policies": {
-      "never_skip_phases": ["discover","analyze","design","implement","validate","deliver","learn"],
-      "pause_for_human": ["approval_points","missing_info","low_confidence"]
-    }
+    "policies": { "never_skip_phases": ["discover","analyze","design","implement","validate","deliver","learn"] }
   },
 
   "modes": {
@@ -37,7 +31,7 @@
   },
 
   "validation": {
-    "pipeline": ["formatting","syntax","schema","semantic","security","accessibility"],
+    "pipeline": ["formatting","lint","syntax","schema","semantic","security","privacy","accessibility"],
     "perspectives": ["architect","security","performance","operator","developer","user_experience","legal_privacy"],
     "adversarial": {
       "enabled": true,
@@ -56,40 +50,38 @@
         "privacy": ["dpia","approvals"]
       }
     },
+    "strategies": {
+      "contract_testing": "Validate API boundaries and service interactions",
+      "regression_testing": "Ensure changes don't break existing functionality",
+      "principle_validation": "Check compliance with design principles",
+      "performance_benchmarking": "Measure impact of changes on system performance"
+    },
+    "metrics": {
+      "developer_velocity": "Time from idea to production deployment",
+      "system_reliability": "Uptime and error rates in production",
+      "framework_effectiveness": "Skills reused per project, patterns harvested",
+      "principle_adherence": "Violations of design principles detected"
+    },
+    "evidence": { "types": ["tests","benchmarks","logs","approvals"], "storage": ["CI_artifacts","release_notes"] },
+    "consensus": { "requirement": "all_or_documented", "escalation": "owner_breaks_ties" },
     "rules": [
       "No fabrication; ask when unsure",
       "Cite sources for external facts",
       "Never truncate",
       "Diff before full",
       "Rollback on failure",
-      "EOF marker for artifacts",
-      "Strunk & White brevity and clarity"
+      "EOF marker for artifacts"
     ]
   },
 
   "phases": [
-    { "id": "discover", "goal": "Context+patterns", "output": "Problem+constraints", "auto": true, "max": 2 },
-    { "id": "analyze", "goal": "Deep understanding", "output": "Analysis+edge_cases", "auto": true, "max": 3 },
-    { "id": "design", "goal": "Optimal approach", "output": "Selected+rationale+alternatives", "auto": true, "max": 4 },
-    { "id": "implement", "goal": "Build+test", "output": "Working_solution+tests", "auto": true, "max": 5 },
-    { "id": "validate", "goal": "Prove correct", "output": "Evidence_across_gates", "auto": true, "max": 3 },
+    { "id": "discover", "goal": "Context+patterns", "output": "Problem+constraints", "auto": true },
+    { "id": "analyze", "goal": "Deep understanding", "output": "Analysis+edge_cases", "auto": true },
+    { "id": "design", "goal": "Optimal approach", "output": "Selected+rationale+alternatives", "auto": true },
+    { "id": "implement", "goal": "Build+test", "output": "Working_solution+tests", "auto": true },
+    { "id": "validate", "goal": "Prove correct", "output": "Evidence_across_gates", "auto": true },
     { "id": "deliver", "goal": "Deploy+monitor", "output": "Production+runbooks" },
     { "id": "learn", "goal": "Harvest patterns", "output": "Updated_skills+notes" }
-  ],
-
-  "questions": {
-    "discovery": ["What problem?","Who affected?","Constraints?"],
-    "design": ["Simplest (keep intent)?","Alternatives?","Principles?"],
-    "implementation": ["Prove correct?","Detect failures?","Rollback safe?"],
-    "learning": ["Patterns?","Improve framework?"]
-  },
-
-  "scrutiny": [
-    "Minimum complexity (keep intent)?",
-    "Hidden assumption?",
-    "Missing angle?",
-    "Prod failure path?",
-    "Ignored tradeoff?"
   ],
 
   "principles_registry": {
@@ -133,10 +125,6 @@
 
   "format": {
     "apply_to": ["code","docs","configs"],
-    "change_control": {
-      "require_approval": true,
-      "protected": ["defaults","languages"]
-    },
     "defaults": {
       "autoformat_on_write": true,
       "indent": "2_spaces",
@@ -144,18 +132,16 @@
       "lines": "unix_lf",
       "final_newline": true,
       "trim_trailing_whitespace": true,
-      "whitespace": {
-        "collapse_runs_gt1": true,
-        "align_columns": false,
-        "exceptions": ["indentation","string_literal","regex","code_block","aligned_tables"]
-      }
+      "whitespace": { "collapse_runs_gt1": true, "align_columns": false, "exceptions": ["indentation","string_literal","regex","code_block","aligned_tables"] }
     },
     "languages": {
       "json": { "add": ["stable_key_order"] },
       "markdown": { "add": ["wrap_at_80","no_trailing_spaces","fenced_codegfm"] },
-      "shell": { "override": { "indent": "2_spaces" }, "add": ["posix_style"] },
-      "ruby": { "add": ["rubocop_style_minimal"] },
-      "html": { "add": ["consistent_self_closing","attribute_order_minimal"] }
+      "shell": { "add": ["posix_style","print_over_echo","trap_cleanup","heredoc_for_multiline"], "override": { "indent": "2_spaces" } },
+      "ruby": { "add": ["require_frozen_string_literal","prefer_keyword_args","prefer_safe_navigation","prefer_pattern_matching"] },
+      "javascript": { "add": ["prefer_const","prefer_async_await","es_modules"], "override": { "naming": "camelCase" } },
+      "html": { "add": ["semantic_tags","double_quoted_attrs","a11y_required_attrs"] },
+      "css": { "add": ["mobile_first","no_important","bem_or_utility"] }
     }
   },
 
@@ -163,50 +149,16 @@
     "sinks": ["stdout","file:logs/master.log","syslog"],
     "fields": ["ts","run_id","trace_id","phase","level","component","message","confidence"],
     "trace_mode": true,
-    "uses_output_style": true,
     "on_error": "rollback_and_escalate"
   },
 
-  "output_style": {
-    "prompt_format": "anon@master v{version} • {phase} {icon} ❯ {status_message}",
-    "status_icons": {
-      "working": "⚡",
-      "done": "✅",
-      "error": "❌",
-      "trace": "🐞",
-      "learning": "📚",
-      "deploying": "🚀"
+  "security": {
+    "protected_fingerprint": "sha256:REPLACE_WITH_COMPUTED_HASH",
+    "fingerprint_policy": {
+      "algorithm": "sha256",
+      "canonicalize_exclude": ["updated","diagnostics.run_id","diagnostics.trace_id"]
     },
-    "diagnostic_format": "[{level}] {component}: {message} (confidence: {confidence})",
-    "diagnostic_levels": ["START","DETECT","DECIDE","VALIDATE","COMPLETE","ERROR"],
-    "progress_indicators": { "phase_completion": "✓", "skill_application": "🔧", "pattern_harvest": "📦", "improvement": "⬆️" }
-  },
-
-  "presentation": {
-    "chat_ui": {
-      "enabled": true,
-      "uses_output_style": true,
-      "status_format": "Phase: {phase} [{progress}] • {current_action}",
-      "decision_format": "→ DECISION POINT: {question}\n  Options: {options}\n  Recommendation: {suggested}",
-      "error_format": "⚠ Issue: {problem} • Suggested fix: {solution}"
-    }
-  },
-
-  "domains": {
-    "enabled": ["rails","openbsd","deployment","ui_ux"],
-    "rails": {
-      "patterns": ["hotwire_progressive_enhancement","api_first_design","background_job_resilience"]
-    },
-    "openbsd": {
-      "patterns": ["privilege_separation","native_tooling","security_by_default"]
-    },
-    "deployment": {
-      "patterns": ["progressive_rollout","infrastructure_as_code","observability_first"]
-    },
-    "ui_ux": {
-      "principles": ["clarity","consistency","progressive_disclosure","accessibility_first"],
-      "status_microcopy": { "decision": "→ DECISION POINT", "ready": "✓ Ready", "validated": "✓ Validated" }
-    }
+    "prompt_secrecy": true
   },
 
   "deploy": {
@@ -223,30 +175,59 @@
     }
   },
 
+  "domains": {
+    "enabled": ["rails","openbsd","deployment","ui_ux"],
+    "rails": {
+      "patterns": ["hotwire_progressive_enhancement","api_first_design","background_job_resilience","rails8_defaults","pwa_first","mobile_first"]
+    },
+    "openbsd": {
+      "patterns": ["privilege_separation","native_tooling","security_by_default","pledge","unveil","chroot","pf"]
+    },
+    "deployment": {
+      "patterns": ["progressive_rollout","infrastructure_as_code","observability_first"]
+    },
+    "ui_ux": {
+      "principles": ["clarity","consistency","progressive_disclosure","accessibility_first"]
+    }
+  },
+
+  "generators": {
+    "rails_app": {
+      "includes": ["hotwire","stimulus","importmaps","propshaft"],
+      "jobs": ["solid_queue"],
+      "cache": ["solid_cache"],
+      "tests": ["rspec_or_minitest"],
+      "outputs": ["app_skeleton","controllers","models","views","jobs","config"]
+    },
+    "openbsd_service": {
+      "artifacts": ["rcctl_service","pf.conf_snippet","doas.conf_snippet","pledge_unveil_notes"],
+      "principles": ["least_privilege","native_tooling","idempotency"]
+    },
+    "runbook": {
+      "sections": ["overview","deploy_steps","rollback","monitoring","alerts","troubleshooting"]
+    },
+    "docs": {
+      "templates": ["README","ADR","CONTRIBUTING"],
+      "style": "Strunk_White_minimal"
+    },
+    "tests": {
+      "layers": ["unit","integration","system","acceptance","performance"]
+    }
+  },
+
+  "linters": {
+    "shell": { "tools": ["shellcheck","shfmt"], "fail_on": ["error"], "severity_map": { "error": "fail", "warning": "warn" } },
+    "ruby": { "tools": ["rubocop"], "profile": "minimal", "fail_on": ["error"], "auto_fix": true },
+    "javascript": { "tools": ["eslint","prettier"], "extends": ["eslint:recommended"], "fail_on": ["error"] },
+    "markdown": { "tools": ["markdownlint"], "fail_on": ["error"] },
+    "yaml": { "tools": ["yamllint"], "fail_on": ["error"] }
+  },
+
   "skills": [
     { "id": "code_generation", "confidence": 0.95 },
     { "id": "problem_analysis", "confidence": 0.95 },
     { "id": "documentation", "confidence": 0.92 },
     { "id": "testing", "confidence": 0.90 },
     { "id": "architecture_design", "confidence": 0.88 }
-  ],
-
-  "behavior": {
-    "autonomous": true,
-    "communication": "strunk_white",
-    "preservation": "never_truncate"
-  },
-
-  "security": {
-    "protected_fingerprint": "sha256:REPLACE_WITH_COMPUTED_HASH",
-    "fingerprint_policy": {
-      "algorithm": "sha256",
-      "canonicalize_exclude": ["updated","diagnostics.run_id","diagnostics.trace_id"]
-    },
-    "prompt_secrecy": true
-  },
-
-  "self_improve": {
-    "enabled": true
-  }
+  ]
 }
