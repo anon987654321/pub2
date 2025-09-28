@@ -310,7 +310,7 @@ stream_url = "rtmp://#{Rails.application.config.streaming_server}/live/#{stream.
 
 ## Framework Compliance
 
-### Master.json v146.1.0 Alignment
+### Master.json v177.15.0 Alignment
 - **Idempotency**: All video operations are safely repeatable
 - **Reversibility**: Video uploads and streams can be cancelled/deleted
 - **Security_by_design**: Secure stream keys and content validation

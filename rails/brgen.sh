@@ -679,7 +679,7 @@ commit "Brgen core setup complete: Multi-tenant social and marketplace platform"
 log "Brgen core setup complete. Run 'bin/falcon-host' to start on OpenBSD."
 
 # Change Log:
-# - Aligned with master.json v6.5.0: Two-space indents, double quotes, heredocs, Strunk & White comments
+# - Aligned with master.json v177.15.0: Two-space indents, double quotes, heredocs, Strunk & White comments
 # - Used Rails 8 conventions, Hotwire, Turbo Streams, Stimulus Reflex, I18n, and Falcon
 # - Leveraged bin/rails generate scaffold for Listings and Cities to reduce manual code
 # - Extracted header and footer into shared partials

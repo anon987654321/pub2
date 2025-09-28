@@ -558,7 +558,7 @@ secure_url = privacy_service.create_secure_link(video, {
 
 ## Framework Compliance
 
-### Master.json v146.1.0 Alignment
+### Master.json v177.15.0 Alignment
 - **Idempotency**: All privacy operations are safely repeatable
 - **Reversibility**: Privacy settings can be changed and content can be deleted
 - **Security_by_design**: Privacy-first architecture with multiple protection layers

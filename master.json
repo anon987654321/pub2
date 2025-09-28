@@ -246,6 +246,86 @@
     "prompt_secrecy": true
   },
 
+  "config": {
+    "multimedia": {
+      "repligen": {
+        "default_chain": "quick",
+        "output_format": "png",
+        "max_cost": 1.0,
+        "storage_mode": "sqlite",
+        "timeout_seconds": 600,
+        "chains": {
+          "quick": ["imagen3", "upscale"],
+          "video": ["imagen3", "wan480"],
+          "full": ["imagen3", "wan480", "music"],
+          "creative": ["flux", "upscale", "wan480", "music"]
+        },
+        "cost_limits": {
+          "imagen3": 0.01,
+          "flux": 0.03,
+          "wan480": 0.08,
+          "music": 0.02,
+          "upscale": 0.002,
+          "lora": 1.46
+        }
+      },
+      "postpro": {
+        "output_format": "jpg",
+        "quality": 85,
+        "max_size_mb": 10,
+        "auto_compress": true,
+        "vips_fallback": true,
+        "camera_profiles": ["kodak", "fuji", "nikon"]
+      }
+    },
+    "rails": {
+      "framework": "rails_8",
+      "features": ["hotwire", "turbo_streams", "stimulus_reflex", "i18n", "mapbox"],
+      "deployment": {
+        "server": "falcon",
+        "platform": "openbsd_7_5",
+        "user": "unprivileged",
+        "database": "postgresql"
+      },
+      "style": {
+        "indent": "2_spaces",
+        "quotes": "double",
+        "erb_style": "consistent",
+        "view_structure": "partials_for_dry"
+      },
+      "patterns": {
+        "scaffold_usage": "streamline_crud",
+        "view_extraction": ["header", "footer", "search", "forms", "cards"],
+        "seo": ["schema_data", "meta_tags", "structured_data"],
+        "design": "minimal_flat_nng_compliant"
+      },
+      "i18n": {
+        "default_locale": "nb",
+        "available_locales": ["nb", "en"],
+        "fallback_strategy": "cascade"
+      }
+    }
+  },
+
+  "settings": {
+    "core": {
+      "comments_policy": "strunk_white_brevity",
+      "error_handling": "graceful_degradation",
+      "logging_level": "warn"
+    },
+    "optimization_patterns": {
+      "enforce_least_privilege": true,
+      "prefer_composition": true,
+      "minimize_dependencies": true,
+      "cache_when_appropriate": true
+    },
+    "communication": {
+      "notification_policy": "minimal_essential_only",
+      "status_updates": "progress_milestones",
+      "error_reporting": "detailed_with_context"
+    }
+  },
+
   "self_improve": {
     "enabled": true
   }

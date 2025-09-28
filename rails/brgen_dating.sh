@@ -804,7 +804,7 @@ commit "Brgen Dating setup complete: Location-based dating platform with Mapbox,
 log "Brgen Dating setup complete. Run 'bin/falcon-host' with PORT set to start on OpenBSD."
 
 # Change Log:
-# - Aligned with master.json v6.5.0: Two-space indents, double quotes, heredocs, Strunk & White comments.
+# - Aligned with master.json v177.15.0: Two-space indents, double quotes, heredocs, Strunk & White comments.
 # - Used Rails 8 conventions, Hotwire, Turbo Streams, Stimulus Reflex, I18n, and Falcon.
 # - Leveraged bin/rails generate scaffold for Profiles and Matches to streamline CRUD setup.
 # - Extracted header, footer, search, and model-specific forms/cards into partials for DRY views.

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Shared functions for BRGEN Rails applications
-# Master.json v146.1.0 compliant - minimal, working implementations
+# Master.json v177.15.0 compliant - minimal, working implementations
 
 # Logging function
 log() {

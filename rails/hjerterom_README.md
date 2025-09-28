@@ -452,7 +452,7 @@ end
 
 ## Framework Compliance
 
-### Master.json v146.1.0 Alignment
+### Master.json v177.15.0 Alignment
 - **Idempotency**: All food operations are safely repeatable
 - **Reversibility**: Donations can be cancelled before pickup
 - **Security_by_design**: Secure user verification and payment processing
