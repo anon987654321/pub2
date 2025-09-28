@@ -1,7 +1,7 @@
 {
   "name": "master.json",
-  "version": "137.1.6",
-  "purpose": "Universal reasoning framework - principles over prescriptions",
+  "version": "138.0.0",
+  "purpose": "Universal project completion framework",
   "updated": "2025-09-27T21:16:40Z",
   "style_contract": {
     "tone": "ultraminimal professional unix",
@@ -11,35 +11,7 @@
   "prompt": {
     "example": "anon@master.json ~/pub2 main • v137.1.6 ❯ framework ready"
   },
-  "changelog": {
-    "v137.1.6": [
-      "Merged v135.0.0 reasoning framework with pub2 deployment",
-      "Integrated autonomous execution mode",
-      "Added style contract for ultraminimal unix aesthetic",
-      "Consolidated to single authoritative master.json"
-    ],
-    "v137.1.5": [
-      "Rails consolidation active status",
-      "38.5KB foundation target",
-      "185.52.176.18 amsterdam deployment"
-    ],
-    "v135.0.0": [
-      "Added infrastructure-as-code patterns for system administration",
-      "Included Unix/OpenBSD operational philosophy and privilege separation",
-      "Enhanced documentation philosophy with Strunk & White brevity principles",
-      "Added decade-scale thinking for infrastructure decisions",
-      "Integrated native tooling preferences and operational simplicity",
-      "Added operational complexity red flag"
-    ],
-    "v134.0.0": [
-      "Added heredoc principle for file embedding",
-      "Banned ASCII art comments",
-      "Simplified commenting style",
-      "Emphasized inline clarity over block comments",
-      "Added file embedding patterns"
-    ]
-  },
-  "cognitive_core": {
+  "core": {
     "methodology": {
       "questions_before_solutions": "Always ask why before how",
       "evidence_required": "Every claim needs justification",
