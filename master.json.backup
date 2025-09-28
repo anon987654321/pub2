@@ -6,20 +6,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "name": "master.json",
   "version": "178.6.1",
-  "updated": "2025-09-28T23:22:54Z",
+  "updated": "2025-09-28T22:22:51Z",
 
   "meta": {
     "philosophy": "Questions before commands; think before doing; evidence over opinion; clarity over cleverness."
   },
 
-  "core": {
-    "principles": ["evidence_required", "dry", "kiss", "reversibility"]
-  },
-
   "execution": {
     "loop": "discover → analyze → design → implement → validate → deliver → learn",
     "flow": "sequential",
-    "mode": "sequential_autoadvance",
     "iteration": {
       "auto": true,
       "convergence": { "gates_all_pass": true },
@@ -91,13 +86,7 @@
 
   "principles_registry": {
     "track_violations": true,
-    "aliases": {
-      "single_source_truth": "dry",
-      "minimal_complexity": "kiss",
-      "reversible_changes": "reversibility"
-    },
     "items": [
-      { "id": "evidence_required", "definition": "Decisions must be backed by verifiable evidence" },
       { "id": "dry", "definition": "Single source of truth" },
       { "id": "kiss", "definition": "Simple, not simplistic (non-destructive)" },
       { "id": "solid", "definition": "All five enforced" },
@@ -234,25 +223,11 @@
     "yaml": { "tools": ["yamllint"], "fail_on": ["error"] }
   },
 
-  "ui": {
-    "output_style": {
-      "prompt_format": "default",
-      "diagnostic_format": "structured",
-      "levels": ["debug", "info", "warn", "error", "fatal"]
-    }
-  },
-
-  "style": {
-    "precedence": "language_overrides_over_defaults"
-  },
-
-  "skills": {
-    "library": {
-      "code_generation": { "confidence": 0.95 },
-      "problem_analysis": { "confidence": 0.95 },
-      "documentation": { "confidence": 0.92 },
-      "testing": { "confidence": 0.90 },
-      "architecture_design": { "confidence": 0.88 }
-    }
-  }
+  "skills": [
+    { "id": "code_generation", "confidence": 0.95 },
+    { "id": "problem_analysis", "confidence": 0.95 },
+    { "id": "documentation", "confidence": 0.92 },
+    { "id": "testing", "confidence": 0.90 },
+    { "id": "architecture_design", "confidence": 0.88 }
+  ]
 }
