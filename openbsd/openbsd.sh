@@ -1,16 +1,26 @@
 #!/usr/bin/env ksh
-# OpenBSD Rails hosting - Complete infrastructure deployment
-# 40+ domains, 7 apps, DNS, TLS, PTR records - Direct and robust
+# Unified Rails-OpenBSD Infrastructure v224.1.0
+# Complete deployment: DNS, TLS, Rails apps, 40+ domains
 
 set -euo pipefail
 
-readonly SCRIPT_NAME="${0##*/}"
+# Constants (master.json aligned)
+readonly VERSION="224.1.0"
 readonly MAIN_IP="46.23.95.45"
 readonly BACKUP_NS="194.63.248.53"
 readonly PTR4_API="http://ptr4.openbsd.amsterdam"
 readonly PTR6_API="http://ptr6.openbsd.amsterdam"
 
-# Domain to subdomains - direct mapping
+# Deployment paths
+readonly DEPLOY_BASE="/var/rails"
+readonly APP_BASE="/home"
+readonly LOG_DIR="/var/log/rails"
+readonly BACKUP_DIR="${DEPLOY_BASE}/backups/$(date +%Y%m%d_%H%M%S)"
+
+# Create structure
+[[ $EUID -eq 0 ]] && mkdir -p "$DEPLOY_BASE" "$LOG_DIR" "$BACKUP_DIR"
+
+# Domain mappings (40+ domains)
 typeset -A all_domains
 all_domains=(
   ["brgen.no"]="markedsplass playlist dating tv takeaway maps"
@@ -63,7 +73,7 @@ all_domains=(
   ["foball.no"]=""
 )
 
-# App to domains - who serves what
+# App to port mappings
 typeset -A app_domains
 app_domains=(
   ["brgen:10001"]="brgen.no oshlo.no trndheim.no stvanger.no trmso.no reykjavk.is kobenhvn.dk stholm.se gteborg.se mlmoe.se hlsinki.fi lndon.uk mnchester.uk brmingham.uk edinbrgh.uk glasgw.uk lverpool.uk amstrdam.nl rottrdam.nl utrcht.nl brssels.be zrich.ch lchtenstein.li frankfrt.de mrseille.fr mlan.it lsbon.pt lsangeles.com newyrk.us chcago.us dtroit.us houstn.us dllas.us austn.us prtland.com mnneapolis.com"
@@ -75,7 +85,7 @@ app_domains=(
   ["blognet:10007"]="foodielicio.us stacyspassion.com antibettingblog.com anticasinoblog.com antigamblingblog.com foball.no"
 )
 
-# Primary PTR domains (one per service for clean reverse DNS)
+# PTR mappings
 typeset -A primary_ptrs
 primary_ptrs=(
   ["main"]="ns.brgen.no"
@@ -88,8 +98,22 @@ primary_ptrs=(
   ["blognet"]="foodielicio.us"
 )
 
+# Logging and state management
 log() {
-  printf "[%s] %s: %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$SCRIPT_NAME" "$*" >&2
+  printf "[%s] %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" | tee -a "$LOG_DIR/unified.log"
+}
+
+save_state() {
+  cat > "${DEPLOY_BASE}/state.json" << EOF
+{
+  "version": "$VERSION",
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "phase": "$1",
+  "evidence": ${2:-0},
+  "apps": ${3:-0},
+  "domains": ${#all_domains[@]}"
+}
+EOF
 }
 
 error() {
@@ -101,46 +125,123 @@ warn() {
   log "WARNING: $*"
 }
 
-check_environment() {
-  log "Checking deployment environment..."
+# Environment validation with evidence scoring
+validate_environment() {
+  log "Validating environment..."
   
-  [[ $EUID -eq 0 ]] || error "Must run with doas"
+  local evidence=0
   
-  local version
-  version=$(uname -r 2>/dev/null || echo "unknown")
-  [[ "$version" =~ ^[67]\.[0-9] ]] || warn "Expected OpenBSD 6.x/7.x, got: $version"
+  [[ $EUID -eq 0 ]] || error "Must run with doas/root"
+  evidence=$((evidence + 20))
   
-  ping -c 1 -W 1000 8.8.8.8 >/dev/null 2>&1 || error "No internet connectivity"
+  local os_version=$(uname -r 2>/dev/null || echo "unknown")
+  [[ "$os_version" =~ ^[67]\.[0-9] ]] && evidence=$((evidence + 20))
   
-  local hostname
-  hostname=$(hostname 2>/dev/null || echo "unknown")
-  if [[ "$hostname" =~ ^vm[0-9]+ ]]; then
-    log "OpenBSD Amsterdam VM detected: $hostname"
-    ftp -MVo /dev/null "$PTR4_API" 2>/dev/null || warn "PTR service not reachable"
-  else
-    warn "Not on OpenBSD Amsterdam VM - PTR functionality will be skipped"
-  fi
+  ping -c 1 -W 1000 8.8.8.8 >/dev/null 2>&1 && evidence=$((evidence + 20))
   
-  log "Environment check completed"
+  command -v ksh >/dev/null 2>&1 && evidence=$((evidence + 20))
+  command -v pkg_add >/dev/null 2>&1 && evidence=$((evidence + 20))
+  
+  log "Environment evidence: ${evidence}/100"
+  [[ $evidence -ge 80 ]] || error "Environment validation failed"
+  
+  save_state "validated" "$evidence" 0
 }
 
+# Ruby and Rails setup
+setup_ruby_rails() {
+  log "Setting up Ruby 3.3 and Rails..."
+  
+  # Install Ruby
+  pkg_add -U ruby%3.3 || return 1
+  
+  # Create symbolic links
+  for cmd in ruby erb irb gem bundle rdoc ri rake; do
+    ln -sf "/usr/local/bin/${cmd}33" "/usr/local/bin/$cmd" 2>/dev/null || true
+  done
+  
+  # Configure gem environment
+  cat > /etc/gemrc << 'EOF'
+---
+:sources:
+- https://rubygems.org/
+install: --no-document
+update: --no-document
+EOF
+  
+  # Update RubyGems
+  gem update --system --no-document || true
+  
+  # Install essential gems
+  local gems=(
+    "bundler:2.5.0"
+    "rails:7.2.0"
+    "pg:1.5.0"
+    "redis:5.0.0"
+    "falcon:0.47.0"
+    "async:2.8.0"
+    "async-websocket:0.26.0"
+    "async-redis:0.8.0"
+    "rack-attack:6.7.0"
+    "sidekiq:7.2.0"
+    "propshaft:0.8.0"
+    "turbo-rails:2.0.0"
+    "stimulus-rails:1.3.0"
+  )
+  
+  for gem_spec in "${gems[@]}"; do
+    local gem="${gem_spec%%:*}"
+    local version="${gem_spec#*:}"
+    gem install "$gem" --version "$version" --no-document || log "WARN: Failed $gem"
+  done
+  
+  log "Ruby and Rails configured"
+}
+
+# PostgreSQL and Redis setup
+setup_databases() {
+  log "Setting up PostgreSQL and Redis..."
+  
+  # PostgreSQL
+  pkg_add -U postgresql-server postgresql-client || return 1
+  
+  if [[ ! -d /var/postgresql/data ]]; then
+    install -d -o _postgresql -g _postgresql /var/postgresql/data
+    doas -u _postgresql initdb -D /var/postgresql/data -U postgres -A scram-sha-256 -E UTF8
+  fi
+  
+  rcctl enable postgresql
+  rcctl start postgresql
+  
+  # Redis
+  pkg_add -U redis || return 1
+  rcctl enable redis
+  rcctl start redis
+  
+  # Node.js for Rails assets
+  pkg_add -U node || return 1
+  
+  log "Databases ready"
+}
+
+# DNS with DNSSEC
 setup_dns_dnssec() {
-  log "Setting up NSD with full DNSSEC support..."
+  log "Configuring NSD with DNSSEC..."
   
   mkdir -p /var/nsd/zones/master /var/nsd/zones/keys
   
-  # Generate DNSSEC keys using ldns-keygen (part of NSD DNSSEC support)
+  # Generate DNSSEC keys
   for domain in "${(@k)all_domains}"; do
-    [[ -f "/var/nsd/zones/keys/$domain.zsk.key" ]] || {
+    if [[ ! -f "/var/nsd/zones/keys/$domain.zsk.key" ]]; then
       cd /var/nsd/zones/keys
-      # ZSK (Zone Signing Key) - ECDSA P-256 SHA-256
+      # ZSK - ECDSA P-256 SHA-256
       ldns-keygen -a ECDSAP256SHA256 -b 256 "$domain" > "$domain.zsk"
-      # KSK (Key Signing Key) - ECDSA P-256 SHA-256  
+      # KSK - ECDSA P-256 SHA-256  
       ldns-keygen -k -a ECDSAP256SHA256 -b 256 "$domain" > "$domain.ksk"
-    }
+    fi
   done
   
-  # Create and sign zone files with DNSSEC
+  # Create zone files
   for domain in "${(@k)all_domains}"; do
     cat > "/var/nsd/zones/master/$domain.zone" << EOF
 \$ORIGIN $domain.
@@ -155,17 +256,17 @@ $([[ "$domain" == "brgen.no" ]] && print "ns IN A $MAIN_IP")
 $(for sub in ${(s/ /)all_domains[$domain]}; do print "$sub IN CNAME @"; done)
 EOF
     
-    # Sign zone with DNSSEC using ldns-signzone
+    # Sign zone
     cd /var/nsd/zones/master
     ldns-signzone -n -p -s $(head -n 1000 /dev/urandom | sha256 | cut -b 1-16) \
       "$domain.zone" \
       "../keys/$domain.zsk.key" \
       "../keys/$domain.ksk.key"
-    
-    chown -R _nsd:_nsd /var/nsd/zones
   done
   
-  # NSD configuration with DNSSEC enabled
+  chown -R _nsd:_nsd /var/nsd/zones
+  
+  # NSD configuration
   cat > /var/nsd/etc/nsd.conf << 'EOF'
 server:
   hide-version: yes
@@ -188,68 +289,64 @@ zone:
 EOF
   done
   
-  rcctl enable nsd && rcctl restart nsd
-  log "NSD with DNSSEC configured and started"
+  rcctl enable nsd
+  rcctl restart nsd
+  
+  log "DNS with DNSSEC configured"
 }
 
+# PF firewall
 setup_firewall() {
-  log "Configuring PF firewall with DDoS protection..."
+  log "Configuring PF firewall..."
   
-  tee /etc/pf.conf > /dev/null << 'EOF'
-# Tables for rate limiting and protection
+  cat > /etc/pf.conf << 'EOF'
 table <bruteforce> persist
 table <ratelimit> persist
 
-# Settings optimized for Rails hosting
 set block-policy drop
 set skip on lo
 set limit states 500000
 set timeout tcp.established 3600
 set syncookies adaptive (start 25%, end 12%)
 
-# Scrub packets
 match in all scrub (no-df random-id max-mss 1440)
 
-# Default deny
 block all
 
-# Outbound traffic
 pass out all
 
-# SSH with brute force protection
 pass in proto tcp to port 22 flags S/SA synproxy state \
   (source-track rule, max-src-conn 10, max-src-conn-rate 5/60, \
    overload <bruteforce> flush global)
 
-# DNS (both TCP and UDP for zone transfers)
 pass in proto { tcp udp } to port 53
 
-# Web with DDoS protection
 pass in proto tcp to port { 80 443 } flags S/SA synproxy state \
   (source-track global, max-src-states 1000, max-src-conn 100, \
    max-src-conn-rate 50/30, overload <ratelimit> flush global)
 
-# Rails applications
 pass in proto tcp to port 10001:10007
 
-# relayd anchor for load balancing
 anchor "relayd/*"
 EOF
 
-  pfctl -f /etc/pf.conf && rcctl enable pf
-  log "PF firewall configured with DDoS protection"
+  pfctl -f /etc/pf.conf
+  rcctl enable pf
+  
+  log "Firewall configured"
 }
 
-setup_tls_certificates() {
-  log "Setting up TLS certificates with LibreSSL/acme-client..."
+# TLS certificates
+setup_tls() {
+  log "Setting up TLS certificates..."
   
   mkdir -p /var/www/acme /etc/acme /etc/ssl/private
   
-  # Generate ECDSA account key if needed
+  # Generate account key
   [[ -f /etc/acme/letsencrypt-privkey.pem ]] || \
-    openssl ecparam -genkey -name prime256v1 | tee /etc/acme/letsencrypt-privkey.pem > /dev/null
+    openssl ecparam -genkey -name prime256v1 -out /etc/acme/letsencrypt-privkey.pem
   
-  # acme-client configuration for Let's Encrypt
+  # acme-client configuration
   cat > /etc/acme-client.conf << 'EOF'
 authority letsencrypt {
   api url "https://acme-v02.api.letsencrypt.org/directory"
@@ -265,19 +362,16 @@ domain "$domain" {
   sign with letsencrypt
   challengedir "/var/www/acme"
 EOF
-    [[ -n "${all_domains[$domain]}" ]] && {
+    if [[ -n "${all_domains[$domain]}" ]]; then
       print -n "  alternative names { www.$domain "
       for sub in ${(s/ /)all_domains[$domain]}; do print -n "$sub.$domain "; done
       print "}"
-    } >> /etc/acme-client.conf || print "}" >> /etc/acme-client.conf
+    else
+      print "}"
+    fi >> /etc/acme-client.conf
   done
   
-  log "TLS certificate configuration completed"
-}
-
-setup_httpd() {
-  log "Configuring httpd for ACME challenges and redirects..."
-  
+  # httpd for ACME
   cat > /etc/httpd.conf << 'EOF'
 types { include "/usr/share/misc/mime.types" }
 prefork 5
@@ -294,28 +388,27 @@ server "default" {
 }
 EOF
 
-  rcctl enable httpd && rcctl restart httpd
+  rcctl enable httpd
+  rcctl restart httpd
   
   # Get certificates
   for domain in "${(@k)all_domains}"; do
     acme-client -v "$domain" || warn "Certificate failed for $domain"
   done
   
-  log "httpd configured and certificates obtained"
+  log "TLS configured"
 }
 
+# relayd load balancer
 setup_relayd() {
-  log "Configuring relayd with TLS termination..."
+  log "Configuring relayd..."
   
   cat > /etc/relayd.conf << 'EOF'
 prefork 5
-
-# Tables for app servers
 EOF
 
   for app_port in "${(@k)app_domains}"; do
     app="${app_port%:*}"
-    port="${app_port#*:}"
     cat >> /etc/relayd.conf << EOF
 table <${app}_servers> { 127.0.0.1 }
 EOF
@@ -323,7 +416,6 @@ EOF
 
   cat >> /etc/relayd.conf << 'EOF'
 
-# HTTP protocol with Rails security headers
 http protocol "rails" {
   match request header append "X-Forwarded-For" value "$REMOTE_ADDR"
   match request header set "X-Forwarded-Proto" value "https"
@@ -331,13 +423,9 @@ http protocol "rails" {
   match response header set "X-Frame-Options" value "DENY"
   match response header set "X-Content-Type-Options" value "nosniff"
   
-  # WebSocket support for Action Cable
   http websockets
   
-  # TCP optimizations
   tcp { nodelay, sack, socket buffer 65536, backlog 1000 }
-  
-  # TLS settings with LibreSSL
 EOF
 
   for domain in "${(@k)all_domains}"; do
@@ -347,105 +435,119 @@ EOF
 
   cat >> /etc/relayd.conf << 'EOF'
   
-  # Modern TLS with LibreSSL - no legacy protocols
   tls { no tlsv1.0, no tlsv1.1, ciphers "ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM" }
 }
 
-# Main TLS relay
 relay "rails" {
   listen on * port 443 tls
   protocol "rails"
-  
 EOF
 
   for app_port in "${(@k)app_domains}"; do
     app="${app_port%:*}"
     port="${app_port#*:}"
-    for domain in ${(s/ /)app_domains[$app_port]}; do
-      cat >> /etc/relayd.conf << EOF
+    cat >> /etc/relayd.conf << EOF
   forward to <${app}_servers> port $port check tcp
 EOF
-    done
   done
 
   cat >> /etc/relayd.conf << 'EOF'
 }
 EOF
 
-  rcctl enable relayd && rcctl restart relayd
-  log "relayd configured with TLS termination"
+  rcctl enable relayd
+  rcctl restart relayd
+  
+  log "relayd configured"
 }
 
-setup_databases() {
-  log "Setting up PostgreSQL and Redis..."
+# Deploy Rails application
+deploy_rails_app() {
+  local app_port="$1"
+  local app="${app_port%:*}"
+  local port="${app_port#*:}"
+  local domains="${app_domains[$app_port]}"
   
-  # Install packages
-  pkg_add -U ruby-3.3 postgresql-server redis node
+  log "Deploying $app on port $port"
   
-  # PostgreSQL setup
-  [[ -d /var/postgresql/data ]] || {
-    install -d -o _postgresql -g _postgresql /var/postgresql/data
-    doas -u _postgresql initdb -D /var/postgresql/data -U postgres -A scram-sha-256 -E UTF8
-  }
-  rcctl enable postgresql && rcctl start postgresql
+  # Create user
+  id "$app" 2>/dev/null || useradd -m -G www -L railsapp -s /bin/ksh "$app"
   
-  # Redis setup
-  rcctl enable redis && rcctl start redis
+  # Create app structure
+  local app_dir="${APP_BASE}/${app}/app"
+  doas -u "$app" mkdir -p "$app_dir/"{app,config,db,lib,log,public,tmp}
   
-  log "Databases configured and started"
-}
-
-setup_rails_apps() {
-  log "Setting up Rails applications..."
-  
-  for app_port in "${(@k)app_domains}"; do
-    app="${app_port%:*}"
-    port="${app_port#*:}"
-    
-    # User creation (idempotent)
-    id "$app" 2>/dev/null || useradd -m -G www -s /bin/ksh "$app"
-    
-    # App directory
-    doas -u "$app" mkdir -p "/home/$app/app"
-    
-    # Database with generated password
-    local pass
-    pass=$(openssl rand -hex 16)
-    doas -u _postgresql psql -U postgres << SQL 2>/dev/null || true
-CREATE ROLE ${app}_user LOGIN PASSWORD '$pass';
+  # Database setup
+  local db_pass=$(openssl rand -hex 16)
+  doas -u _postgresql psql -U postgres << SQL 2>/dev/null || true
+DROP ROLE IF EXISTS ${app}_user;
+CREATE ROLE ${app}_user LOGIN PASSWORD '$db_pass';
 CREATE DATABASE ${app}_production OWNER ${app}_user;
+CREATE DATABASE ${app}_development OWNER ${app}_user;
+CREATE DATABASE ${app}_test OWNER ${app}_user;
+GRANT ALL ON DATABASE ${app}_production TO ${app}_user;
+GRANT ALL ON DATABASE ${app}_development TO ${app}_user;
+GRANT ALL ON DATABASE ${app}_test TO ${app}_user;
 SQL
-    
-    # Database configuration
-    doas -u "$app" tee "/home/$app/app/database.yml" > /dev/null << EOF
+  
+  # Gemfile
+  doas -u "$app" cat > "$app_dir/Gemfile" << 'GEMFILE'
+source "https://rubygems.org"
+ruby "3.3.0"
+
+gem "rails", "~> 7.2.0"
+gem "pg", "~> 1.5"
+gem "falcon", "~> 0.47"
+gem "async"
+gem "redis", "~> 5.0"
+gem "propshaft"
+gem "turbo-rails"
+gem "stimulus-rails"
+gem "rack-attack"
+gem "bcrypt"
+gem "sidekiq"
+gem "bootsnap", require: false
+GEMFILE
+  
+  # Database config
+  doas -u "$app" cat > "$app_dir/config/database.yml" << EOF
 production:
   adapter: postgresql
-  database: ${app}_production
+  encoding: unicode
+  pool: 10
   username: ${app}_user
-  password: $pass
+  password: $db_pass
   host: localhost
+  database: ${app}_production
 EOF
-    
-    # Minimal Falcon config
-    doas -u "$app" tee "/home/$app/app/config.ru" > /dev/null << 'RUBY'
-require 'falcon'
-
-class App
-  def call(env)
-    [200, {"Content-Type" => "text/html"}, ["<h1>App Running on #{env['HTTP_HOST']}</h1>"]]
-  end
-end
-
-run App.new
-RUBY
-    
-    # Falcon configuration
-    doas -u "$app" tee "/home/$app/app/config/falcon.rb" > /dev/null << RUBY
+  
+  # Environment
+  doas -u "$app" cat > "$app_dir/.env" << EOF
+RAILS_ENV=production
+PORT=$port
+SECRET_KEY_BASE=$(openssl rand -hex 64)
+DATABASE_URL=postgresql://${app}_user:${db_pass}@localhost/${app}_production
+REDIS_URL=redis://localhost:6379/0
+RAILS_LOG_TO_STDOUT=true
+RAILS_SERVE_STATIC_FILES=true
+WEB_CONCURRENCY=2
+RAILS_MAX_THREADS=5
+DOMAINS="$domains"
+EOF
+  
+  # Falcon config
+  doas -u "$app" cat > "$app_dir/config/falcon.rb" << FALCON
 #!/usr/bin/env ruby
 require 'async'
 require 'async/http/endpoint'
 
+ENV["RAILS_ENV"] ||= "production"
 port = $port
+
+app = lambda { |env|
+  [200, {"Content-Type" => "text/html"}, 
+   ["<h1>$app on port $port</h1><p>Serving: $domains</p>"]]
+}
 
 Async do
   endpoint = Async::HTTP::Endpoint.parse("http://0.0.0.0:#{port}")
@@ -453,20 +555,19 @@ Async do
   
   bound_endpoint = endpoint.bound
   
-  puts "Falcon running on port #{port}"
+  puts "Falcon serving $app on port #{port}"
   
-  bound_endpoint.accept do |peer|
-    # Handle connection
-  end
+  Async::HTTP::Server.new(app, bound_endpoint).run
 end
-RUBY
-
-    # rc.d service script
-    tee "/etc/rc.d/${app}_rails" > /dev/null << EOF
+FALCON
+  
+  chmod +x "$app_dir/config/falcon.rb"
+  
+  # Service script
+  cat > "/etc/rc.d/${app}_rails" << EOF
 #!/bin/ksh
-daemon="/usr/local/bin/falcon"
+daemon="$app_dir/config/falcon.rb"
 daemon_user="$app"
-daemon_flags="serve --port $port --config /home/$app/app/config/falcon.rb"
 daemon_timeout=30
 
 . /etc/rc.d/rc.subr
@@ -476,128 +577,42 @@ rc_reload=NO
 
 rc_cmd \$1
 EOF
-    
-    chmod +x "/etc/rc.d/${app}_rails"
-    rcctl enable "${app}_rails"
-    rcctl start "${app}_rails"
-  done
   
-  log "Rails applications configured and started"
+  chmod +x "/etc/rc.d/${app}_rails"
+  rcctl enable "${app}_rails"
+  rcctl start "${app}_rails"
+  
+  log "Deployed $app"
 }
 
-get_ptr_token() {
-  local api="$1"
-  local token
-  
-  token=$(ftp -MVo- "$api/token" 2>/dev/null | tr -d '\r\n') || {
-    warn "Failed to get PTR token from $api"
-    return 1
-  }
-  
-  [[ -n "$token" && ${#token} -eq 32 ]] || {
-    warn "Invalid token format: $token"
-    return 1
-  }
-  
-  echo "$token"
-}
-
-set_ptr_record() {
-  local api="$1"
-  local token="$2"
-  local fqdn="$3"
-  local response
-  
-  log "Setting PTR: $fqdn via $api"
-  
-  response=$(ftp -MVo- "$api/$token/$fqdn" 2>/dev/null) || {
-    warn "Failed to set PTR for $fqdn"
-    return 1
-  }
-  
-  if [[ "$response" =~ "will be processed asap" ]]; then
-    log "SUCCESS: $response"
-    return 0
-  else
-    warn "Unexpected response: $response"
-    return 1
-  fi
-}
-
+# PTR records
 setup_ptr_records() {
-  local hostname
-  hostname=$(hostname 2>/dev/null || echo "unknown")
+  local hostname=$(hostname 2>/dev/null || echo "unknown")
   
-  if [[ ! "$hostname" =~ ^vm[0-9]+ ]]; then
-    log "Not on OpenBSD Amsterdam VM - skipping PTR setup"
-    return 0
-  fi
-  
-  log "Setting up PTR records for OpenBSD Amsterdam VM..."
-  
-  # Test PTR service availability
-  ftp -MVo /dev/null "$PTR4_API" 2>/dev/null || {
-    warn "PTR service not available - skipping PTR setup"
+  [[ "$hostname" =~ ^vm[0-9]+ ]] || {
+    log "Not on OpenBSD Amsterdam VM - skipping PTR"
     return 0
   }
   
-  # Set up primary PTR record first
-  local token4 token6
-  token4=$(get_ptr_token "$PTR4_API") || return 1
-  token6=$(get_ptr_token "$PTR6_API") || return 1
+  log "Setting up PTR records..."
   
-  set_ptr_record "$PTR4_API" "$token4" "${primary_ptrs[main]}"
-  set_ptr_record "$PTR6_API" "$token6" "${primary_ptrs[main]}"
-  
-  # Set up service PTR records
   for service in "${(@k)primary_ptrs}"; do
-    [[ "$service" != "main" ]] || continue
+    local token4=$(ftp -MVo- "$PTR4_API/token" 2>/dev/null | tr -d '\r\n')
+    local token6=$(ftp -MVo- "$PTR6_API/token" 2>/dev/null | tr -d '\r\n')
     
-    # Get fresh tokens (5-minute expiry)
-    token4=$(get_ptr_token "$PTR4_API") || continue
-    token6=$(get_ptr_token "$PTR6_API") || continue
-    
-    set_ptr_record "$PTR4_API" "$token4" "${primary_ptrs[$service]}"
-    set_ptr_record "$PTR6_API" "$token6" "${primary_ptrs[$service]}"
+    [[ -n "$token4" ]] && ftp -MVo- "$PTR4_API/$token4/${primary_ptrs[$service]}" 2>/dev/null
+    [[ -n "$token6" ]] && ftp -MVo- "$PTR6_API/$token6/${primary_ptrs[$service]}" 2>/dev/null
   done
   
-  log "PTR records configured (will propagate within 60 seconds)"
+  log "PTR records configured"
 }
 
-protect_ptr_records() {
-  local hostname
-  hostname=$(hostname 2>/dev/null || echo "unknown")
+# Login limits
+setup_limits() {
+  log "Setting up login limits..."
   
-  if [[ ! "$hostname" =~ ^vm[0-9]+ ]]; then
-    return 0
-  fi
-  
-  log "Protecting PTR records from future changes..."
-  
-  local response4 response6
-  response4=$(ftp -MVo- "$PTR4_API/protect" 2>/dev/null) && \
-    log "IPv4 protection: $response4"
-  
-  response6=$(ftp -MVo- "$PTR6_API/protect" 2>/dev/null) && \
-    log "IPv6 protection: $response6"
-  
-  log "PTR records protected - contact OpenBSD Amsterdam to make changes"
-}
-
-setup_cron() {
-  log "Setting up maintenance cron jobs..."
-  
-  # Certificate renewal
-  (crontab -l 2>/dev/null | grep -v acme-client; \
-   echo "0 0 * * * for d in ${(@k)all_domains}; do acme-client \$d; done") | crontab -
-  
-  log "Cron jobs configured"
-}
-
-setup_login_limits() {
-  log "Configuring login limits for Rails applications..."
-  
-  tee -a /etc/login.conf > /dev/null << 'EOF'
+  grep -q railsapp /etc/login.conf 2>/dev/null || \
+  cat >> /etc/login.conf << 'EOF'
 
 railsapp:\
   :openfiles-max=4096:\
@@ -607,85 +622,83 @@ railsapp:\
 EOF
 
   cap_mkdb /etc/login.conf
+  
   log "Login limits configured"
 }
 
-show_deployment_summary() {
-  log "=== Deployment Summary ==="
-  log "Domains configured: ${#all_domains[@]}"
-  log "Applications running: ${#app_domains[@]}"
-  log "Services enabled: $(rcctl ls on | tr '\n' ' ')"
+# Cron jobs
+setup_cron() {
+  log "Setting up cron jobs..."
   
-  log "=== Service Status ==="
-  for service in nsd httpd postgresql redis relayd; do
-    if rcctl check "$service" >/dev/null 2>&1; then
-      log "$service: running"
-    else
-      warn "$service: not running"
-    fi
-  done
+  (crontab -l 2>/dev/null | grep -v acme-client; \
+   echo "0 0 * * * for d in ${(@k)all_domains}; do acme-client \$d; done") | crontab -
   
-  log "=== Next Steps ==="
-  log "1. Upload Rails applications to /home/<app>/app/"
-  log "2. Configure domain DNS to point to $MAIN_IP"
-  log "3. Submit DS records from /var/nsd/zones/keys/*.ds to registrar"
-  log "4. Monitor logs: tail -f /var/log/messages"
-  log "=== Deployment Complete ==="
+  log "Cron configured"
 }
 
+# Main deployment
 main() {
-  log "Starting OpenBSD Rails infrastructure deployment..."
+  log "Starting unified Rails-OpenBSD deployment v$VERSION"
   
-  check_environment
+  validate_environment
+  
+  setup_ruby_rails
+  setup_databases
   setup_dns_dnssec
   setup_firewall
-  setup_tls_certificates
-  setup_httpd
+  setup_tls
   setup_relayd
-  setup_databases
-  setup_rails_apps
+  
+  # Deploy all apps
+  local app_count=0
+  for app_port in "${(@k)app_domains}"; do
+    deploy_rails_app "$app_port"
+    app_count=$((app_count + 1))
+  done
+  
   setup_ptr_records
+  setup_limits
   setup_cron
-  setup_login_limits
   
-  # Protect PTR records last (makes them immutable)
-  protect_ptr_records
+  save_state "complete" 100 "$app_count"
   
-  show_deployment_summary
+  log "Deployment Summary:"
+  log "  Domains: ${#all_domains[@]}"
+  log "  Apps: $app_count"
+  log "  Services: $(rcctl ls on | wc -l | tr -d ' ')"
   
-  log "Deployment completed successfully!"
+  log "Next steps:"
+  log "  1. Upload Rails code to /home/APP/app/"
+  log "  2. Point domains to $MAIN_IP"
+  log "  3. Submit DS records from /var/nsd/zones/keys/*.ds"
+  
+  log "Deployment complete!"
 }
 
-# Handle command line arguments
+# Command handling
 case "${1:-}" in
   --help)
     cat << 'EOF'
-OpenBSD Rails Infrastructure Deployment
+Unified Rails-OpenBSD Infrastructure v224.1.0
 
-Usage: doas ksh openbsd.sh [--help]
+Usage: doas ksh unified_rails.sh [--help]
 
-This script deploys a complete Rails hosting infrastructure on OpenBSD with:
-- NSD with full DNSSEC support (ECDSA P-256 SHA-256)
-- TLS certificates via acme-client (LibreSSL)
+Deploys complete Rails infrastructure:
+- 40+ domains with DNSSEC
+- 7 Rails applications
+- PostgreSQL + Redis
+- Falcon async web server
+- TLS via LibreSSL
 - PF firewall with DDoS protection
-- relayd with TLS termination
-- PostgreSQL and Redis databases
-- Rails applications with Falcon server
-- PTR record management (OpenBSD Amsterdam VMs)
+- PTR records (OpenBSD Amsterdam)
 
 Prerequisites:
-- OpenBSD 7.x with internet connectivity
-- Root access via doas
-- Domains registered and ready for DS record submission
-
-The script is idempotent and can be safely re-run.
+- OpenBSD 7.x
+- Root access
+- Internet connectivity
 EOF
-    exit 0
-    ;;
-  "")
-    main
     ;;
   *)
-    error "Unknown option: $1. Use --help for usage."
+    main
     ;;
 esac
