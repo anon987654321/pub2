@@ -1,517 +1,138 @@
-// Universal completion framework — sequential phases, evidence gates, rollback.
-// Enforces DRY, SOLID, non-destructive KISS, UNIX LF format, autonomy policy,
-// multi‑perspective + adversarial validation, deep trace, and canonical behavior.
-
 {
   "meta": {
-    "version": "220.0.0",
+    "version": "220.1.0",
     "philosophy": "questions before commands, evidence over opinion, clarity over cleverness",
     "environment": "text_only_simulation no_external_tools self_contained",
     "baseline": "frozen_stable_complete",
     "optimized_by": "Grok 4 by xAI on 2025-09-29",
     "state": "frozen",
-    "frozen_at": "2025-09-29T04:56:13Z",
-    "notes": "This file is self-applied (uses its own rules). No external tools assumed."
+    "frozen_at": "2025-09-29T05:36:59Z",
+    "license": "project_defined",
+    "semver": {
+      "major": "schema_breaks or gate_behavior_changes",
+      "minor": "new sections or rules default-off",
+      "patch": "clarifications non-functional edits"
+    }
+  },
+  "cross_reference_engine": { "syntax": "@ref:path.to.key", "validation": "strict", "error_on_missing_ref": true },
+  "governance": {
+    "change_management": { "diff_required": true, "semantic_commits": true, "automated_backup": "before_change", "audit_log": true, "codeowners_required": true },
+    "content_preservation_policy": {
+      "forbidden_deletions": ["master","control.principles","verification","security","gates","style"],
+      "protected_sections": ["languages","universal","behavioral_rules","validation"],
+      "verification_checkpoints": ["pre_mod","post_mod","24h_review"],
+      "critical_section_protection": "immutable_without_unanimous_approval"
+    },
+    "formatting_enforcement": { "spacing": "2_spaces", "line_endings": "unix_lf", "final_newline": true, "cross_ref_format": "@ref:section.subsection.key" },
+    "unfreeze_policy": { "required_state": "frozen", "unlock": ["owner_approval","recorded_rationale","backup_snapshot"], "after_unlock": ["schema_validation","gate_recheck","refingerprint"] }
   },
   "master": {
     "flow": {
-      // The canonical cycle of work; never skip phases in production profile.
-      "cycle": [
-        "discover",
-        "analyze", 
-        "design",
-        "implement",
-        "validate",
-        "deliver",
-        "learn"
-      ],
-      "discover": [
-        "find_problem",
-        "scan_code",
-        "identify_pain",
-        "map_constraints",
-        "generate_tree",
-        "measure_impact"
-      ],
-      "analyze": [
-        "uncover_assumptions",
-        "estimate_fibonacci",
-        "find_failures",
-        "assess_burden",
-        "cost_benefit"
-      ],
-      "design": [
-        "generate_ten",
-        "compare_tradeoffs",
-        "select_simplest",
-        "plan_rollback",
-        "avoid_false_tradeoffs"
-      ],
-      "implement": [
-        "write_failing_test",
-        "make_pass",
-        "refactor_clean",
-        "apply_linters",
-        "apply_language_standards",
-        "beautiful_code"
-      ],
-      "validate": [
-        "check_gates",
-        "gather_evidence",
-        "run_adversarial",
-        "confirm_ready",
-        "expert_review",
-        "strunk_white_assess"
-      ],
-      "deliver": [
-        "write_runbooks",
-        "setup_monitoring",
-        "deploy_safely",
-        "enable_rollback",
-        "document_lessons"
-      ],
-      "learn": [
-        "extract_patterns",
-        "measure_efficiency",
-        "document_failures",
-        "capture_wisdom",
-        "improve_framework",
-        "ensure_all_referenced"
-      ],
-      "iteration": {
-        // Auto-iterate up to 10 cycles, stop early if improvement delta < 1% for 3 consecutive rounds.
-        "mode": "autoiterate_until_convergence",
-        "max": 10,
-        "delta": 0.01,
-        "plateau": "0.02x3"
+      "cycle": ["discover","analyze","design","implement","validate","deliver","learn"],
+      "discover": ["find_problem","scan_code","identify_pain","map_constraints","generate_tree","measure_impact"],
+      "analyze": ["uncover_assumptions","estimate_fibonacci","find_failures","assess_burden","cost_benefit"],
+      "design": ["generate_ten","compare_tradeoffs","select_simplest","plan_rollback","avoid_false_tradeoffs"],
+      "implement": ["write_failing_test","make_pass","refactor_clean","apply_linters","apply_language_standards","beautiful_code"],
+      "validate": ["check_gates","gather_evidence","run_adversarial","confirm_ready","expert_review","strunk_white_assess"],
+      "deliver": ["write_runbooks","setup_monitoring","deploy_safely","enable_rollback","document_lessons"],
+      "learn": ["extract_patterns","measure_efficiency","document_failures","capture_wisdom","improve_framework","ensure_all_referenced"],
+      "iteration": { "mode": "autoiterate_until_convergence", "max": "adaptive", "delta": "project_defined", "plateau": "project_defined_x3" },
+      "processing": ["line_by_line","chunk_large","maintain_context","preserve_state","cat_only"],
+      "context_budget": {
+        "priority": ["changed_files","neighbors","recent_edits","hotspots"],
+        "freeze": ["stable_sections","generated_artifacts"],
+        "evict": "LRU_after_budget",
+        "budget": "project_defined"
       },
-      "processing": [
-        // Process input deterministically; never use head/tail/grep; cat-only for full context.
-        "line_by_line",
-        "chunk_large",
-        "maintain_context",
-        "preserve_state",
-        "cat_only"
-      ],
-      "consensus": [
-        // Prefer unanimous agreement; else document dissent and escalate to owner.
-        "all_agree_or_document",
-        "escalate_to_owner",
-        "track_dissent",
-        "psychological_safety"
-      ],
-      "profiles": {
-        "prototype": "relaxed",
-        "production": "strict",
-        "legacy": "gradual"
+      "merge": {
+        "strategy": "rebase_then_merge",
+        "conflict_rule": "smallest_change_wins; if equal prefer_simplest",
+        "tie_breaker": "owner_decides",
+        "record_dissent": true
       },
-      "tree_requirement": [
-        // Avoid context loss: generate full tree before editing any file content.
-        "full_directory_structure_before_code",
-        "show_all_files_folders"
-      ]
+      "consensus": ["all_agree_or_document","escalate_to_owner","track_dissent","psychological_safety"],
+      "profiles": { "prototype": "relaxed", "production": "strict", "legacy": "gradual" },
+      "tree_requirement": ["full_directory_structure_before_code","show_all_files_folders"]
     },
     "questions": {
-      // Canonical questions per phase; ask before acting to reduce rework and churn.
-      "discover": [
-        "what_specific_measurable_problem",
-        "who_affected_how_often",
-        "what_impact",
-        "what_constraints",
-        "what_workarounds"
-      ],
-      "analyze": [
-        "hidden_assumptions",
-        "cost_hours",
-        "failure_modes",
-        "maintenance_burden",
-        "opportunity_cost"
-      ],
-      "design": [
-        "three_to_five_approaches",
-        "minimum_viable_complexity",
-        "where_breaks",
-        "cost_benefit",
-        "simplest_preserving_intent"
-      ],
-      "implement": [
-        "idioms_followed",
-        "single_responsibility",
-        "readable_by_team",
-        "failure_handled",
-        "testable"
-      ],
-      "validate": [
-        "requirements_met",
-        "edge_cases_covered",
-        "security_tested",
-        "performance_validated",
-        "accessible"
-      ],
-      "deliver": [
-        "deployment_ready",
-        "documentation_helpful",
-        "maintenance_plan",
-        "lessons_captured",
-        "rollback_tested"
-      ],
-      "adversarial": [
-        "why_exists",
-        "what_breaks_if_removed",
-        "lying_to_ourselves",
-        "expert_criticism",
-        "simpler_available",
-        "wrong_problem"
-      ],
-      "strunk_white": [
-        "omit_needless_words",
-        "use_active_voice",
-        "put_statements_positive_form",
-        "use_definite_specific_concrete_language",
-        "avoid_fancy_words",
-        "write_with_nouns_verbs",
-        "make_paragraph_unit",
-        "choose_suitable_design",
-        "revise_rewrite",
-        "be_clear_concise"
-      ]
+      "discover": ["what_specific_measurable_problem","who_affected_how_often","what_impact","what_constraints","what_workarounds"],
+      "analyze": ["hidden_assumptions","cost_hours","failure_modes","maintenance_burden","opportunity_cost"],
+      "design": ["three_to_five_approaches","minimum_viable_complexity","where_breaks","cost_benefit","simplest_preserving_intent"],
+      "implement": ["idioms_followed","single_responsibility","readable_by_team","failure_handled","testable"],
+      "validate": ["requirements_met","edge_cases_covered","security_tested","performance_validated","accessible"],
+      "deliver": ["deployment_ready","documentation_helpful","maintenance_plan","lessons_captured","rollback_tested"],
+      "adversarial": ["why_exists","what_breaks_if_removed","lying_to_ourselves","expert_criticism","simpler_available","wrong_problem"],
+      "strunk_white": ["omit_needless_words","use_active_voice","positive_form","concrete_language","avoid_fancy_words","nouns_verbs","paragraph_unit","suitable_design","revise_rewrite","clear_concise"]
     },
     "gates": {
-      // Seven evidence-backed gates; all must pass before delivery.
-      "functional": {
-        "tests": "high",
-        "logs": "clean",
-        "acceptance": "satisfied",
-        "behavior": "correct",
-        "coverage": "high",
-        "explain": "Functional readiness requires high automated coverage, clean logs at INFO and below, acceptance criteria met, and no behavior regressions."
-      },
-      "secure": {
-        "vulnerabilities": "none",
-        "secrets": "protected",
-        "input": "validated",
-        "privileges": "minimal",
-        "headers": "present",
-        "explain": "Security readiness requires zero known critical/high vulnerabilities, secret handling via environment/secret stores, input validation and output encoding, least-privilege defaults, and modern security headers."
-      },
-      "deployable": {
-        "rollback": "seconds",
-        "health": "active",
-        "runbook": "complete",
-        "monitoring": "configured",
-        "kamal": "ready",
-        "explain": "Deployable means documented runbook, health endpoints working, observability set up, and fast rollback tested. Kamal-compatible where applicable."
-      },
-      "maintainable": {
-        "documentation": "coverage",
-        "complexity": "complexity",
-        "purpose": "singular",
-        "duplication": "none",
-        "readable": "team",
-        "explain": "Maintainability requires purpose-focused modules, cyclomatic complexity under threshold, no duplication beyond rule-of-three, and team-readable code with up-to-date docs."
-      },
-      "accessible": {
-        "wcag": "aa",
-        "contrast": "4.5",
-        "keyboard": "full",
-        "screen_reader": "tested",
-        "nielsen": "applied",
-        "explain": "Accessibility requires WCAG 2.2 AA compliance, 4.5:1 text contrast, full keyboard operability, and basic screen reader support with Nielsen heuristics considered."
-      },
-      "performant": {
-        "paint": "2.5s",
-        "shift": "0.1",
-        "p99": "100ms",
-        "throughput": "acceptable",
-        "zero_cost": "verified",
-        "explain": "Performance targets LCP ≤ 2.5s, CLS ≤ 0.1, and back-end p99 latency ≤ 100ms for critical endpoints with throughput meeting SLOs."
-      },
-      "privacy": {
-        "gdpr": "yes",
-        "data": "minimized",
-        "consent": "explicit",
-        "retention": "justified",
-        "pii": "protected",
-        "explain": "Privacy requires explicit consent where needed, minimal data collection, documented retention, and protected PII with access controls."
-      },
+      "functional": { "tests": "high", "logs": "clean", "acceptance": "satisfied", "behavior": "correct", "coverage": "high" },
+      "secure": { "vulnerabilities": "none", "secrets": "protected", "input": "validated", "privileges": "minimal", "headers": "present" },
+      "deployable": { "rollback": "fast", "health": "active", "runbook": "complete", "monitoring": "configured", "kamal": "ready" },
+      "maintainable": { "documentation": "coverage", "complexity": "within_budget", "purpose": "singular", "duplication": "none", "readable": "team" },
+      "accessible": { "wcag": "aa", "contrast": "4.5", "keyboard": "full", "screen_reader": "tested", "nielsen": "applied" },
+      "performant": { "paint": "2.5s", "shift": "0.1", "latency": "within_slo", "throughput": "within_slo", "zero_cost": "verified" },
+      "privacy": { "gdpr": "yes", "data": "minimized", "consent": "explicit", "retention": "justified", "pii": "protected" },
       "evidence_map": {
-        // CI can use this map to verify evidence artifacts per gate.
-        "functional": ["tests", "logs", "trace"],
-        "secure": ["threat_model", "scan_reports"],
-        "deployable": ["runbooks", "health_checks"],
-        "maintainable": ["docs", "reviews"],
+        "functional": ["tests","logs","trace"],
+        "secure": ["threat_model","scan_reports"],
+        "deployable": ["runbooks","health_checks"],
+        "maintainable": ["docs","reviews"],
         "accessible": ["a11y_reports"],
-        "performant": ["benchmarks", "profiling"],
-        "privacy": ["dpia", "approvals"]
+        "performant": ["benchmarks","profiling"],
+        "privacy": ["dpia","approvals"]
       }
     },
     "control": {
-      "protection": [
-        "user_wellbeing",
-        "mental_health",
-        "factual_accuracy",
-        "truthfulness",
-        "data_preservation",
-        "no_oversimplification",
-        "minaswan",
-        "low_churn",
-        "no_new_code_smells"
-      ],
+      "protection": ["user_wellbeing","mental_health","factual_accuracy","truthfulness","data_preservation","no_oversimplification","minaswan","low_churn","no_new_code_smells"],
       "principles": {
-        // Expanded principles with definition, why, how, pitfalls, and examples to guide LLMs and humans.
-        "dry": {
-          "definition": "Don't repeat yourself beyond the rule of three; achieve a single source of truth.",
-          "why": "Duplication breeds inconsistency and defects.",
-          "how_to_apply": [
-            "Abstract only after the third duplication",
-            "Prefer composition over inheritance",
-            "Centralize configuration and constants"
-          ],
-          "pitfalls": [
-            "Over-abstracting too early",
-            "Coupling unrelated concerns"
-          ],
-          "examples": ["Extract shared query builders", "Shared validators"],
-          "anti_examples": ["Abstracting on first sight", "Monolithic utility classes"]
-        },
-        "kiss": {
-          "definition": "Keep it simple and small while preserving intent; remove accidental complexity only.",
-          "why": "Simplicity reduces defects and accelerates change.",
-          "how_to_apply": [
-            "Prefer straightforward data flows",
-            "Choose the simplest structure that meets requirements",
-            "Avoid magic and hidden coupling"
-          ],
-          "pitfalls": [
-            "Destructive simplification that removes essential safeguards",
-            "Reinventing standard features"
-          ],
-          "examples": ["Early return guards", "Flat data structures"],
-          "anti_examples": ["Clever metaprogramming for trivial tasks"]
-        },
-        "solid": {
-          "definition": "Apply SOLID in OOP contexts where it improves clarity and testability.",
-          "why": "Improves modularity and change resilience.",
-          "how_to_apply": [
-            "Single Responsibility per class/module",
-            "Interfaces small and specific",
-            "Depend on abstractions not concretions"
-          ],
-          "pitfalls": ["Over-engineering with excessive indirection"]
-        },
-        "yagni": {
-          "definition": "Build only what is needed now; avoid speculative features.",
-          "why": "Reduces scope, churn, and maintenance burden.",
-          "how_to_apply": ["Cut features without current users", "Defer hooks until justified"]
-        },
-        "composition": {
-          "definition": "Prefer composition and small units over inheritance hierarchies.",
-          "why": "Lowers coupling and increases reuse.",
-          "how_to_apply": ["Compose behaviors via modules/functions", "Use delegation patterns"]
-        },
-        "evidence": {
-          "definition": "Decisions require verifiable evidence or references.",
-          "how_to_apply": ["Link benchmarks, tests, and scans", "Document trade-off tables"]
-        },
-        "reversible": {
-          "definition": "Every change must be easy to undo with minimal data loss.",
-          "how_to_apply": ["Write migrations with down paths", "Keep feature flags", "Isolate risky changes"]
-        },
-        "explicit": {
-          "definition": "Prefer explicit configuration and flows over implicit magic.",
-          "how_to_apply": ["Name things concretely", "Avoid hidden global state"]
-        },
-        "orthogonal": {
-          "definition": "Keep concerns independent, minimize cross-effects.",
-          "how_to_apply": ["Split modules by concern", "Define clean interfaces"]
-        },
-        "no_false_tradeoffs": {
-          "definition": "Seek both-and solutions; avoid framing compromises where none are needed.",
-          "how_to_apply": ["Prototype alternatives", "Validate with data"]
-        }
+        "dry": { "def": "abstract after third repeat", "why": "reduce defects", "how": ["compose","centralize_constants","share_builders"], "pitfalls": ["early_abstraction","coupling"] },
+        "kiss": { "def": "simple not simplistic", "why": "speed + fewer bugs", "how": ["straight_flows","simplest_that_works","no_magic"], "pitfalls": ["remove_safeguards","reinvent_wheels"] },
+        "solid": { "def": "OOP only; clarity + testability", "how": ["srp","small_interfaces","depend_on_abstractions"] },
+        "yagni": { "def": "build only needed now", "how": ["cut_unused","defer_hooks"] },
+        "composition": { "def": "compose over inherit", "how": ["modules/functions","delegation"] },
+        "evidence": { "def": "decisions need proof", "how": ["link_tests_scans_benchmarks","tradeoff_tables"] },
+        "reversible": { "def": "easy undo", "how": ["down_migrations","feature_flags","isolate_risk"] },
+        "explicit": { "def": "no hidden magic", "how": ["concrete_names","no_global_state"] },
+        "orthogonal": { "def": "separate concerns", "how": ["split_by_concern","clean_interfaces"] },
+        "no_false_tradeoffs": { "def": "seek both-and", "how": ["prototype_alternatives","validate_with_data"] }
       },
-      "kiss_protection": {
-        // Prevent destructive simplification; certain safeguards can never be removed.
-        "never_remove": [
-          "validation",
-          "safety",
-          "error_handling"
-        ],
-        "preserve": [
-          "essential_complexity",
-          "user_protection"
-        ]
-      },
+      "kiss_protection": { "never_remove": ["validation","safety","error_handling"], "preserve": ["essential_complexity","user_protection"] },
       "churn_reduction": {
-        // Stabilize style to minimize cosmetic diffs across time and repos.
         "policy": "stabilize_styles_minimize_cosmetic_diffs",
-        "rules": [
-          "No cosmetic-only PRs in production profile",
-          "Bundle repo-wide reformatting into a single dedicated change",
-          "Lock quote styles per language and avoid flipping",
-          "Stable import/order rules; avoid churny sorting changes",
-          "Respect style precedence: language overrides universal"
-        ],
-        "mechanics": {
-          "style_lock_ttl_days": 180,
-          "allowlist_format_only_paths": ["docs/", "scripts/format/"],
-          "require_label_for_format_only": "format-only",
-          "auto_approve_format_only": true
-        }
+        "rules": ["no_cosmetic_only_prs_in_prod","bundle_reformat_once","lock_quote_styles","stable_import_order","language_overrides_win"],
+        "mechanics": { "style_lock_ttl_days": 180, "allowlist_format_only_paths": ["docs/","scripts/format/"], "require_label_for_format_only": "format-only", "auto_approve_format_only": true }
       },
       "smell_prevention": {
-        // Zero-tolerance gate for new code smells; CI must fail if any are introduced.
         "policy": "no_new_smells_zero_tolerance",
-        "gates": {
-          "new_smells": "0",
-          "total_smell_delta": "<=0",
-          "critical_or_blocker": "0"
-        },
-        "catalog": [
-          "long_method",
-          "large_class_or_module",
-          "god_object",
-          "feature_envy",
-          "shotgun_surgery",
-          "duplicate_code",
-          "speculative_generality",
-          "data_clumps",
-          "middle_man",
-          "inappropriate_intimacy",
-          "comments_explain_bad_code",
-          "primitive_obsession"
-        ],
+        "gates": { "new_smells": "0", "total_smell_delta": "<=0", "critical_or_blocker": "0" },
+        "catalog": ["long_method","large_class_or_module","god_object","feature_envy","shotgun_surgery","duplicate_code","speculative_generality","data_clumps","middle_man","inappropriate_intimacy","comments_explain_bad_code","primitive_obsession"],
         "languages": {
-          "ruby": { "linters": ["rubocop"], "profiles": ["minimal", "security"], "max_complexity": 10 },
+          "ruby": { "linters": ["rubocop"], "profiles": ["minimal","security"], "max_complexity": "within_budget" },
           "javascript": { "linters": ["eslint"], "extends": ["eslint:recommended"], "rules": ["no-unused-vars","no-undef"] },
           "shell": { "linters": ["shellcheck"], "severity_fail": ["error"] },
           "rust": { "linters": ["clippy"], "allow_zero_warnings": true }
         }
       },
-      "thresholds": {
-        "high": 0.9,
-        "medium": 0.7,
-        "low": 0.5,
-        "minimal": 0.05,
-        "seconds": 30,
-        "coverage": 0.8,
-        "complexity": 10,
-        "rule_of_three": 3
-      },
-      "confidence": {
-        "autonomous": "high",
-        "supervised": "medium",
-        "collaborative": "low"
-      },
-      "triggers": {
-        // Auto-rollback triggers; window used for health stabilization checks.
-        "errors": "minimal",
-        "latency": "1s",
-        "memory": "high",
-        "health": "fail",
-        "window": "60s"
-      },
-      "human_review": [
-        "logic",
-        "deletions",
-        "new_features",
-        "security",
-        "migrations",
-        "schemas",
-        "api_changes"
-      ],
-      "auto_approve": [
-        "syntax",
-        "dead_code",
-        "duplication",
-        "formatting",
-        "imports",
-        "patterns",
-        "performance",
-        "whitespace",
-        "typos"
-      ],
-      "deployment": {
-        "strategy": "blue_green",
-        "health_endpoint": "/health",
-        "timeout": "30s",
-        "zero_downtime": "kamal"
-      },
-      "artifacts": {
-        "eof_marker": "required",
-        "storage": "ci,releases",
-        "references": "@ref:path.to.key",
-        "simulate_internally": true
-      },
-      "beautiful_code": [
-        "automated_formatting",
-        "static_analysis",
-        "pre_commit_hooks",
-        "review_criteria",
-        "team_standards",
-        "uncle_bob:measurable"
-      ]
+      "thresholds": { "levels": ["high","medium","low","minimal"], "coverage": "project_defined", "complexity": "within_budget", "rule_of_three": 3 },
+      "confidence": { "autonomous": "high", "supervised": "medium", "collaborative": "low" },
+      "triggers": { "errors": "minimal", "latency": "within_slo", "memory": "within_budget", "health": "fail", "window": "fast" },
+      "human_review": ["logic","deletions","new_features","security","migrations","schemas","api_changes"],
+      "auto_approve": ["syntax","dead_code","duplication","formatting","imports","patterns","performance","whitespace","typos"],
+      "deployment": { "strategy": "blue_green", "health_endpoint": "/health", "timeout": "budgeted", "zero_downtime": "kamal" },
+      "artifacts": { "eof_marker": "required", "storage": "ci,releases", "references": "@ref:path.to.key", "simulate_internally": true },
+      "recovery": { "checkpoint": "every_phase_boundary", "resume": "from_last_good", "idempotent_ops": true, "retry_backoff": "exponential_with_jitter" },
+      "beautiful_code": ["automated_formatting","static_analysis","pre_commit_hooks","review_criteria","team_standards","uncle_bob:measurable"]
     },
     "verification": {
-      "adversarial": [
-        "cherry_pick",
-        "edge_case",
-        "assumption_challenge",
-        "spec_mismatch",
-        "simplification_check",
-        "false_plateau"
-      ],
-      "perspectives": [
-        "architect",
-        "security",
-        "performance",
-        "operator",
-        "developer",
-        "end_user",
-        "skeptic",
-        "ux_expert",
-        "clean_code_expert"
-      ],
-      "evidence": [
-        "tests",
-        "benchmarks",
-        "logs",
-        "approvals",
-        "scans",
-        "profiling",
-        "metrics"
-      ],
-      "smell_scans": {
-        // CI integration points for smell reports and gate enforcement.
-        "tools": ["rubocop","eslint","shellcheck","clippy"],
-        "quality_gates": ["no_new_smells","no_critical","delta_non_positive"],
-        "reporting": ["CI_artifacts","release_notes"]
-      },
-      "temperature": {
-        "conservative": 0.1,
-        "balanced": 0.5,
-        "creative": 0.8
-      },
-      "failures": [
-        "incomplete_context",
-        "wrong_assumptions",
-        "partial_implementation",
-        "premature_optimization",
-        "destructive_simplification"
-      ],
-      "capabilities": {
-        "analysis": 0.95,
-        "implementation": 0.92,
-        "testing": 0.94,
-        "documentation": 0.91,
-        "deployment": 0.89
-      },
-      "simulation": {
-        "linters": "internal",
-        "formatters": "internal",
-        "tests": "internal",
-        "deployment": "simulated"
-      },
+      "adversarial": ["cherry_pick","edge_case","assumption_challenge","spec_mismatch","simplification_check","false_plateau"],
+      "perspectives": ["architect","security","performance","operator","developer","end_user","skeptic","ux_expert","clean_code_expert"],
+      "evidence": ["tests","benchmarks","logs","approvals","scans","profiling","metrics"],
+      "weights": { "tests": 0.4, "scans": 0.25, "reviews": 0.2, "logs": 0.1, "profiling": 0.05, "threshold": ">=1.0", "project_override": true },
+      "smell_scans": { "tools": ["rubocop","eslint","shellcheck","clippy"], "quality_gates": ["no_new_smells","no_critical","delta_non_positive"], "reporting": ["CI_artifacts","release_notes"] },
+      "temperature": { "conservative": 0.1, "balanced": 0.5, "creative": 0.8 },
+      "failures": ["incomplete_context","wrong_assumptions","partial_implementation","premature_optimization","destructive_simplification"],
+      "capabilities": "project_assessed",
+      "simulation": { "linters": "internal", "formatters": "internal", "tests": "internal", "deployment": "simulated" },
       "nielsen_heuristics": {
         "visibility": "system_status clear_feedback progress",
         "match_world": "familiar_concepts logical_architecture",
@@ -526,223 +147,33 @@
       }
     },
     "universal": {
-      "format": {
-        "utf8": true,
-        "lf": "newline",
-        "trim": true,
-        "indent": 2,
-        "double_quotes": true,
-        "snake_case": true,
-        "ascii_identifiers": true
-      },
-      "output": [
-        "syslog",
-        "diff",
-        "minimal",
-        "complete",
-        "never_truncate",
-        "show_full",
-        "cat_command_only"
-      ],
-      "avoid": [
-        "walls",
-        "decoration",
-        "noise",
-        "oversimplification",
-        "truncation",
-        "partial",
-        "head",
-        "tail",
-        "grep"
-      ],
-      "thinking": [
-        "precise",
-        "brief",
-        "unique",
-        "complete",
-        "preserve_complexity",
-        "full_context",
-        "strunk_white"
-      ],
-      "operations": [
-        "defragment",
-        "decouple",
-        "flatten",
-        "hoist",
-        "deduplicate",
-        "consolidate",
-        "extract",
-        "inline",
-        "rename",
-        "move",
-        "split",
-        "combine",
-        "cache",
-        "index",
-        "parallelize",
-        "batch",
-        "lazy",
-        "memoize",
-        "validate",
-        "sanitize",
-        "escape",
-        "encrypt",
-        "hash",
-        "salt",
-        "sign",
-        "unit",
-        "integration",
-        "system",
-        "acceptance",
-        "performance",
-        "security",
-        "property"
-      ],
-      "git": {
-        // Reduce churn in VCS by constraining diffs to meaningful changes.
-        "commits": "semantic",
-        "branches": "feature_from_main",
-        "diffs": "unified_3_context",
-        "show_full": true,
-        "approval_before_change": true,
-        "reduce_churn": true,
-        "rules": [
-          "prefer_incremental_changes_over_mass_rewrites",
-          "group_related_changes",
-          "avoid_reformatting_unchanged_lines",
-          "disable_auto_rewrite_of_import_order_without_need"
-        ]
-      },
-      "integrations": {
-        "github": "chunks_100",
-        "copilot": "explicit_files",
-        "claude": "segment_markers",
-        "no_localStorage": true
-      },
-      "prompts": [
-        "what_problem",
-        "who_affected",
-        "what_constraints",
-        "generate_5_10",
-        "which_simplest",
-        "all_gates_pass",
-        "what_patterns"
-      ],
-      "team": [
-        "psychological_safety",
-        "honest_criticism",
-        "supportive_framework",
-        "minaswan",
-        "beautiful_code"
-      ]
+      "format": { "utf8": true, "lf": "newline", "trim": true, "indent": 2, "double_quotes": true, "snake_case": true, "ascii_identifiers": true },
+      "output": ["syslog","diff","minimal","complete","never_truncate","show_full","cat_command_only"],
+      "avoid": ["walls","decoration","noise","oversimplification","truncation","partial","head","tail","grep"],
+      "thinking": ["precise","brief","unique","complete","preserve_complexity","full_context","strunk_white"],
+      "operations": ["defragment","decouple","flatten","hoist","deduplicate","consolidate","extract","inline","rename","move","split","combine","cache","index","parallelize","batch","lazy","memoize","validate","sanitize","escape","encrypt","hash","salt","sign","unit","integration","system","acceptance","performance","security","property"],
+      "git": { "commits": "semantic", "branches": "feature_from_main", "diffs": "unified_3_context", "show_full": true, "approval_before_change": true, "reduce_churn": true, "rules": ["prefer_incremental_changes_over_mass_rewrites","group_related_changes","avoid_reformatting_unchanged_lines","disable_auto_rewrite_of_import_order_without_need"] },
+      "integrations": { "github": "chunks_adaptive", "copilot": "explicit_files", "claude": "segment_markers", "no_localStorage": true },
+      "prompts": ["what_problem","who_affected","what_constraints","generate_5_10","which_simplest","all_gates_pass","what_patterns"],
+      "team": ["psychological_safety","honest_criticism","supportive_framework","minaswan","beautiful_code"]
     },
     "languages": {
-      "ruby": {
-        "strings": "double",
-        "frozen": "required",
-        "arguments": "keyword",
-        "navigation": "safe",
-        "testing": "minitest",
-        "linting": "rubocop",
-        "smell_policy": "no_new_smells"
-      },
-      "rails": {
-        "version": 8,
-        "stack": "hotwire,turbo8,stimulus,native",
-        "patterns": "restful,strong_params",
-        "queries": "includes",
-        "deployment": "kamal",
-        "solid_queue": true,
-        "solid_cache": true
-      },
-      "javascript": {
-        "strings": "single",
-        "constants": "const",
-        "async": "await",
-        "modules": "es6",
-        "formatting": "prettier",
-        "naming": "camelCase",
-        "smell_policy": "no_new_smells"
-      },
-      "shell": {
-        // Preferred shells for scripts; avoid bashisms for portability and OpenBSD alignment.
-        "preferred": "zsh",
-        "fallback": "ksh",
-        "disallowed": ["bash"],
-        "mode": "strict",
-        "handling": "eu_nounset_pipefail_if_available",
-        "variables": "quoted",
-        "traps": "cleanup",
-        "avoid": "bashisms",
-        "checker": "shellcheck",
-        "notes": "On ksh (pdksh), emulate pipefail by checking each command in pipelines; use set -eu; zsh supports set -euo pipefail."
-      },
-      "html": {
-        "tags": "semantic",
-        "attributes": "quoted",
-        "validation": "w3c",
-        "accessibility": "aria",
-        "interaction": "keyboard",
-        "wcag": "aa"
-      },
-      "css": {
-        "approach": "mobile_first",
-        "importance": "never",
-        "methodology": "bem_or_utility",
-        "layout": "grid",
-        "properties": "logical"
-      },
-      "rust": {
-        "memory": "ownership",
-        "errors": "result",
-        "safety": "no_unsafe",
-        "patterns": "builder",
-        "concurrency": "async",
-        "optimization": "zero_cost",
-        "testing": "property",
-        "formatter": "rustfmt",
-        "linter": "clippy",
-        "smell_policy": "no_new_smells"
-      },
-      "json": {
-        "syntax": "valid",
-        "formatting": "pretty",
-        "strings": "double",
-        "order": "stable",
-        "trailing": "no_comma"
-      },
-      "markdown": {
-        "width": 80,
-        "lists": "dash",
-        "code": "fenced",
-        "links": "reference"
-      },
-      "openbsd": {
-        "security": "pledge,unveil",
-        "isolation": "privsep,chroot",
-        "firewall": "pf",
-        "service": "rcctl",
-        "permissions": "minimal",
-        "secure_by_default": true
-      }
+      "ruby": { "strings": "double", "frozen": "required", "arguments": "keyword", "navigation": "safe", "testing": "minitest", "linting": "rubocop", "smell_policy": "no_new_smells" },
+      "rails": { "version": 8, "stack": "hotwire,turbo8,stimulus,native", "patterns": "restful,strong_params", "queries": "includes", "deployment": "kamal", "solid_queue": true, "solid_cache": true },
+      "javascript": { "strings": "single", "constants": "const", "async": "await", "modules": "es6", "formatting": "prettier", "naming": "camelCase", "smell_policy": "no_new_smells" },
+      "shell": { "preferred": "zsh", "fallback": "ksh", "disallowed": ["bash"], "mode": "strict", "handling": "eu_nounset_pipefail_if_available", "variables": "quoted", "traps": "cleanup", "avoid": "bashisms", "checker": "shellcheck", "notes": "On ksh emulate pipefail; use set -eu; zsh supports -euo pipefail." },
+      "html": { "tags": "semantic", "attributes": "quoted", "validation": "w3c", "accessibility": "aria", "interaction": "keyboard", "wcag": "aa" },
+      "css": { "approach": "mobile_first", "importance": "never", "methodology": "bem_or_utility", "layout": "grid", "properties": "logical" },
+      "rust": { "memory": "ownership", "errors": "result", "safety": "no_unsafe", "patterns": "builder", "concurrency": "async", "optimization": "zero_cost", "testing": "property", "formatter": "rustfmt", "linter": "clippy", "smell_policy": "no_new_smells" },
+      "json": { "syntax": "valid", "formatting": "pretty", "strings": "double", "order": "stable", "trailing": "no_comma" },
+      "markdown": { "width": 80, "lists": "dash", "code": "fenced", "links": "reference" },
+      "openbsd": { "security": "pledge,unveil", "isolation": "privsep,chroot", "firewall": "pf", "service": "rcctl", "permissions": "minimal", "secure_by_default": true }
     },
-    "style": {
-      "precedence": "language_overrides_over_universal",
-      "stability": "lock_styles_to_reduce_churn",
-      "notes": "Language-specific style wins over universal to prevent unnecessary diffs."
-    }
+    "style": { "precedence": "language_overrides_over_universal", "stability": "lock_styles_to_reduce_churn" }
   },
   "security": {
     "protected_fingerprint": "sha256:TO_BE_COMPUTED_BY_CI",
-    "fingerprint_policy": {
-      // Compute stable fingerprint by excluding volatile keys; store in releases for audit.
-      "algorithm": "sha256",
-      "canonicalize_exclude": [
-        "meta.frozen_at",
-        "security.protected_fingerprint"
-      ],
-      "notes": "Compute fingerprint in CI after formatting; store in release notes."
-    },
+    "fingerprint_policy": { "algorithm": "sha256", "canonicalize_exclude": ["meta.frozen_at","security.protected_fingerprint"] },
     "prompt_secrecy": true
   }
 }
