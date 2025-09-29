@@ -1,12 +1,3 @@
-// **master.json** v224.1.0 (Claude Opus 4.1)
-//
-// Dette rammeverket gjør AI-systemer pålitelige. Det sikrer at hver beslutning
-// har bevis, hver endring er reversibel, og kompleksitet forblir håndterbar.
-// Når AI-modeller følger disse reglene, oppfører de seg forutsigbart og trygt.
-// Master.json er kontrakten mellom mennesker og maskiner - den garanterer at
-// AI forblir et verktøy som tjener oss, ikke omvendt. Fremtiden krever systemer
-// som kan bevise sine valg. Dette dokumentet gjør det mulig.
-
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "meta": {
@@ -136,5 +127,23 @@
       "fingerprint": "sha256:CI_COMPUTED",
       "exclude": ["meta.frozen_at"]
     }
-  }
+  },
+
+  "ai": {
+    "claude": {
+      "models": ["opus_4_1", "opus_4", "sonnet_4", "sonnet_3_7"],
+      "thinking": {
+        "status": "enabled",
+        "budget_tokens": 10000,
+        "interleaved": true,
+        "stream": true,
+        "cache": "one_hour",
+        "notes": "preserve_thinking_blocks_in_tool_turns summarized_in_claude_4 full_in_sonnet_3_7"
+      }
+    }
+  },
+
+  "apps": [
+    { "id": "govt_bergen", "name": "Bergens Selvstyreparti Plan", "audience": "govt", "stack": "html", "token": "MOD-ISSUE:govt_bergen" }
+  ]
 }
