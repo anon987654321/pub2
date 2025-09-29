@@ -1,12 +1,12 @@
 {
   "meta": {
-    "version": "220.2.0",
+    "version": "220.1.0",
     "philosophy": "questions before commands, evidence over opinion, clarity over cleverness",
     "environment": "text_only_simulation no_external_tools self_contained",
     "baseline": "frozen_stable_complete",
     "optimized_by": "Grok 4 by xAI on 2025-09-29",
     "state": "frozen",
-    "frozen_at": "2025-09-29T09:58:00Z",
+    "frozen_at": "2025-09-29T05:36:59Z",
     "license": "project_defined",
     "semver": {
       "major": "schema_breaks or gate_behavior_changes",
@@ -24,8 +24,7 @@
       "critical_section_protection": "immutable_without_unanimous_approval"
     },
     "formatting_enforcement": { "spacing": "2_spaces", "line_endings": "unix_lf", "final_newline": true, "cross_ref_format": "@ref:section.subsection.key" },
-    "unfreeze_policy": { "required_state": "frozen", "unlock": ["owner_approval","recorded_rationale","backup_snapshot"], "after_unlock": ["schema_validation","gate_recheck","refingerprint"] },
-    "content_policy": { "forbid_regex_and_slashes": true, "forbidden_categories": ["ceremony","theater","vague","duplication","fluff","meta","hedging","trunc"] }
+    "unfreeze_policy": { "required_state": "frozen", "unlock": ["owner_approval","recorded_rationale","backup_snapshot"], "after_unlock": ["schema_validation","gate_recheck","refingerprint"] }
   },
   "master": {
     "flow": {
@@ -53,8 +52,7 @@
       },
       "consensus": ["all_agree_or_document","escalate_to_owner","track_dissent","psychological_safety"],
       "profiles": { "prototype": "relaxed", "production": "strict", "legacy": "gradual" },
-      "tree_requirement": ["full_directory_structure_before_code","show_all_files_folders"],
-      "guardrails": ["internalize_document_before_changes"]
+      "tree_requirement": ["full_directory_structure_before_code","show_all_files_folders"]
     },
     "questions": {
       "discover": ["what_specific_measurable_problem","who_affected_how_often","what_impact","what_constraints","what_workarounds"],
@@ -96,9 +94,7 @@
         "reversible": { "def": "easy undo", "how": ["down_migrations","feature_flags","isolate_risk"] },
         "explicit": { "def": "no hidden magic", "how": ["concrete_names","no_global_state"] },
         "orthogonal": { "def": "separate concerns", "how": ["split_by_concern","clean_interfaces"] },
-        "no_false_tradeoffs": { "def": "seek both-and", "how": ["prototype_alternatives","validate_with_data"] },
-        "latch": { "def": "organize information by location, alphabet, time, category, hierarchy", "how": ["location","alphabet","time","category","hierarchy"], "notes": "information architecture principle for findability" },
-        "minimalism": { "def": "web/docs focus on essential elements only", "how": ["less_is_more","omit_needless_things","subtract_until_it_breaks","every_detail_counts","color_minimally","white_space_is_vital"], "notes": "design philosophy emphasizing simplicity and clarity" }
+        "no_false_tradeoffs": { "def": "seek both-and", "how": ["prototype_alternatives","validate_with_data"] }
       },
       "kiss_protection": { "never_remove": ["validation","safety","error_handling"], "preserve": ["essential_complexity","user_protection"] },
       "churn_reduction": {
