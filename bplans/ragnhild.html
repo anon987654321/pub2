@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ragnhilds Begravelsesbyrå – Feir Livet med en moderne og unik begravelse.">
+  <title>Ragnhilds Begravelsesbyrå – Feir Livet</title>
+  <link href="https://fonts.googleapis.com/css?family=Poppins:400,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src https://fonts.googleapis.com https://fonts.gstatic.com;">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      --brand:#0078d7; --bg:#f9f9f9; --fg:#333; --muted:#666; --line:#efefef;
+    }
+    /* Base */
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6}
+    a{color:var(--fg);text-decoration:none;transition:color .3s}
+    a:hover{color:var(--brand)}
+    header{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;background:var(--brand);color:#fff;position:relative;overflow:hidden}
+    header h1{font-size:2.2rem;font-weight:900;letter-spacing:.02em}
+    nav{display:flex;gap:24px}
+    nav a{color:#fff;font-weight:600}
+    .wave-container{position:absolute;top:0;left:0;width:100%;line-height:0;z-index:-1}
+    .wave{position:relative;display:block;width:calc(200% + 400px);height:200px;background:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAwIDEwMCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+PHBhdGggZD0iTTAgMzAgUTYwMCA2MCAxMjAwIDMwIFYxMDAgSDBaIiBmaWxsPSIjRkZGRkZGIi8+PHBhdGggZD0iTTAgMzAgUTYwMCA2MCAxMjAwIDMwIFYxMDAgSDBaIiBmaWxsPSIjRkJGRkZGIiBvcGFjaXR5PSIwLjUiLz48cGF0aCBkPSJNMCAzMCBRNjAwIDYwIDEyMDAgMzAgVjEwMCBIMFoiIGZpbGw9IiNGRkZGMDAiIG9wYWNpdHk9IjAuMyIvPjwvc3ZnPg==') repeat-x;animation:wave 3s linear infinite;transform:translate3d(0,0,0)}
+    @keyframes wave{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+    main{display:flex;justify-content:center;align-items:flex-start;padding:40px;position:relative;z-index:1}
+    .container{max-width:1100px;width:100%}
+    .badge{display:inline-block;margin-top:6px;padding:.15rem .5rem;border:1px solid rgba(255,255,255,.6);border-radius:999px;font-size:.8rem;color:#fff}
+
+    section{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;margin:14px 0}
+    h2{font-size:1.6rem;margin:.2rem 0 .6rem 0;font-weight:900}
+    h3{font-size:1.15rem;margin:1rem 0 .3rem}
+
+    /* Services grid */
+    .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    .service{background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,.06);padding:18px;text-align:left}
+    .service .title{font-size:1.2rem;font-weight:900;margin-bottom:.35rem}
+    .remark{color:var(--muted);font-size:.95rem}
+    .credits{color:var(--muted);font-size:.85rem;margin-top:.25rem}
+
+    /* Dialog */
+    .service_detail{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;z-index:100;align-items:center;justify-content:center;padding:20px}
+    .dialog{max-width:640px;width:100%;background:#111;color:#fff;border-radius:12px;padding:20px;position:relative}
+    .dialog h3{margin-top:0}
+    .dialog button.close{position:absolute;right:12px;top:10px;background:none;border:none;color:#fff;font-size:1.8rem}
+
+    /* Financial chart */
+    #finChart{width:100%;height:320px;border:1px solid var(--line);border-radius:8px}
+
+    /* Seasonal banner (optional) */
+    .halloween{display:flex;align-items:center;justify-content:center;background:#000;color:#fff;padding:8px 12px;border-radius:10px;margin-top:8px}
+    .halloween .script{font-family:'Great Vibes',cursive;font-size:1.4rem;margin-left:8px}
+
+    footer{background:#333;color:#f0f0f0;display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;padding:20px 40px}
+    footer section{min-width:200px}
+    footer h3{font-size:1.1rem;margin-bottom:.5rem}
+    footer ul{list-style:none;margin:0;padding:0}
+    footer li{margin:.4rem 0}
+    footer a{color:#f0f0f0}
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Ragnhilds Begravelsesbyrå</h1>
+      <span class="badge" aria-label="Framework badge">Framework: master.json v111.3-autonomous</span>
+      <div class="halloween" aria-hidden="true">
+        <span aria-hidden="true">🎃</span>
+        <span class="script">Happy Halloween</span>
+      </div>
+    </div>
+    <nav aria-label="Hovedmeny">
+      <a href="#services">Tjenester</a>
+      <a href="#about">Om oss</a>
+      <a href="#financials">Finans</a>
+      <a href="#contact">Kontakt</a>
+    </nav>
+    <div class="wave-container"><div class="wave"></div></div>
+  </header>
+
+  <main>
+    <div class="container">
+      <section aria-labelledby="summary">
+        <h2 id="summary">Sammendrag</h2>
+        <p>Vi feirer liv – moderne, personlige seremonier med varme, humor og verdighet. Ragnhilds Begravelsesbyrå kombinerer tradisjon med nytenkning: skreddersydde konsepter, trygg veiledning og profesjonell gjennomføring.</p>
+      </section>
+
+      <section aria-labelledby="services" id="services">
+        <h2 id="services-h">Tjenester</h2>
+        <div class="grid" role="list" aria-label="Tilgjengelige seremonikonsepter">
+          <article class="service" role="listitem">
+            <div class="title">Karaokekiste</div>
+            <p>Hvorfor være stille? Syng favorittsanger en siste gang. Vi kan også avspille stemmeopptak for et personlig farvel.</p>
+            <div class="remark">En siste karaoke.</div>
+            <div class="credits">Av: Festbyrået</div>
+            <button aria-label="Les mer om Karaokekiste" onclick="showServiceDetail('Karaokekiste','Hvorfor være stille? Syng dine favorittsanger en siste gang. Vi kan også avspille stemmeopptak for et personlig farvel.')">Detaljer</button>
+          </article>
+          <article class="service" role="listitem">
+            <div class="title">Diskokiste</div>
+            <p>LED‑belyste kister som gir en varm, feirende atmosfære med respekt og stil – skreddersydd lys og musikk.</p>
+            <div class="remark">En siste dans.</div>
+            <div class="credits">Av: Lysmestrene</div>
+            <button aria-label="Les mer om Diskokiste" onclick="showServiceDetail('Diskokiste','LED‑belyste kister for en feirende atmosfære – lys og musikk tilpasset livshistorien.')">Detaljer</button>
+          </article>
+          <article class="service" role="listitem">
+            <div class="title">Klovnepallbærere</div>
+            <p>For familier som ønsker en lett og varm tone – seremoni med innslag av mild humor, alltid verdig og balansert.</p>
+            <div class="remark">En siste reise med et smil.</div>
+            <div class="credits">Av: Latterfabrikken</div>
+            <button aria-label="Les mer om Klovnepallbærere" onclick="showServiceDetail('Klovnepallbærere','Seremoni med varme og lett humor i tett dialog med pårørende – alltid verdig.')">Detaljer</button>
+          </article>
+          <article class="service" role="listitem">
+            <div class="title">Pyroteknisk avskjed</div>
+            <p>Høytidsstemt lys‑ og lysshow utendørs, koordinert med musikk og sikkerhetsrutiner.</p>
+            <div class="remark">Avslutt med et lysbilde.</div>
+            <div class="credits">Av: Fyrverkeriekspertene</div>
+            <button aria-label="Les mer om Pyroteknisk avskjed" onclick="showServiceDetail('Pyroteknisk avskjed','Sertifisert utendørs lys‑ og lysshow koordinert med musikk. Sikkerhet i fokus.')">Detaljer</button>
+          </article>
+          <article class="service" role="listitem">
+            <div class="title">Stand‑up nekrologer</div>
+            <p>Komiske minneord fremført av profesjonelle – for familier som ønsker en lysere tone; alltid etter godkjenning.</p>
+            <div class="remark">En siste latter.</div>
+            <div class="credits">Av: Humorhuset</div>
+            <button aria-label="Les mer om Stand‑up nekrologer" onclick="showServiceDetail('Stand‑up nekrologer','Komiske minneord med respektfull tone og forhåndsgodkjenning fra pårørende.')">Detaljer</button>
+          </article>
+          <article class="service" role="listitem">
+            <div class="title">Poetisk avskjed</div>
+            <p>Skreddersydde dikt og taler som hedrer livshistorien – fremført av erfarne tekstforfattere og talere.</p>
+            <div class="remark">Poesi til minne.</div>
+            <div class="credits">Av: Ordsmia</div>
+            <button aria-label="Les mer om Poetisk avskjed" onclick="showServiceDetail('Poetisk avskjed','Elegante dikt og taler – skreddersydd til livshistorien og familien.')">Detaljer</button>
+          </article>
+          <article class="service" role="listitem">
+            <div class="title">Sprø kistedesign</div>
+            <p>Personlige design – alt fra hobby‑tema til unike former. Alltid innenfor regelverk og verdighet.</p>
+            <div class="remark">Unik avskjed.</div>
+            <div class="credits">Av: Kistegalskapen</div>
+            <button aria-label="Les mer om Sprø kistedesign" onclick="showServiceDetail('Sprø kistedesign','Unike, personlige kistedesign innenfor regelverk og god smak.')">Detaljer</button>
+          </article>
+          <article class="service" role="listitem">
+            <div class="title">Kiste med rutsjebane</div>
+            <p>En symbolsk, poetisk «siste tur» som del av en feiringsseremoni. Planlegges trygt og verdig.</p>
+            <div class="remark">En siste tur.</div>
+            <div class="credits">Av: Morrogutta</div>
+            <button aria-label="Les mer om Kiste med rutsjebane" onclick="showServiceDetail('Kiste med rutsjebane','Symbolsk og poetisk del av en feiringsseremoni – planlagt trygt og verdig.')">Detaljer</button>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="about" id="about">
+        <h2 id="about-h">Om oss</h2>
+        <p>Ragnhild grunnla byrået etter et liv på scene og reise – med mål om å gi rom for alle måter å ta farvel på. Vi arbeider nært med pårørende, kirker, trossamfunn og sivilsamfunn for å skape seremonier som kjennes riktige.</p>
+      </section>
+
+      <section aria-labelledby="financials" id="financials">
+        <h2 id="financials-h">Finans (indikativt)</h2>
+        <p>Estimater for de tre første årene. Tallene er illustrative og vil justeres i dialog med investorer.</p>
+        <div id="finChart" role="img" aria-label="Omsetning, margin og seremonier de neste tre årene"></div>
+      </section>
+
+      <section aria-labelledby="contact" id="contact">
+        <h2 id="contact-h">Kontakt</h2>
+        <ul>
+          <li><a href="tel:+4712345678">+47 123 45 678</a></li>
+          <li><a href="mailto:kontakt@ragnhilds.no">kontakt@ragnhilds.no</a></li>
+          <li>Adresse: Hovedgaten 1, 1234 Oslo</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <section>
+      <h3>Åpningstider</h3>
+      <ul>
+        <li>Mandag–Fredag: 09:00–17:00</li>
+        <li>Lørdag: 10:00–14:00</li>
+        <li>Søndag: Stengt</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Følg oss</h3>
+      <ul>
+        <li><a href="#">Facebook</a></li>
+        <li><a href="#">Twitter</a></li>
+        <li><a href="#">Instagram</a></li>
+      </ul>
+    </section>
+    <section>
+      <h3>Morsomme lenker</h3>
+      <ul>
+        <li><a href="#">Hvordan begrave en pizza?</a></li>
+        <li><a href="#">Tips for å lage den beste gravøl</a></li>
+        <li><a href="#">De mest kreative kistene i verden</a></li>
+      </ul>
+    </section>
+  </footer>
+
+  <!-- Accessible dialog -->
+  <div class="service_detail" id="serviceDetail" role="dialog" aria-modal="true" aria-labelledby="serviceTitle" aria-describedby="serviceDescription">
+    <div class="dialog">
+      <button class="close" onclick="closeServiceDetail()" aria-label="Lukk">&times;</button>
+      <h3 id="serviceTitle"></h3>
+      <p id="serviceDescription"></p>
+      <button onclick="closeServiceDetail()">Lukk</button>
+    </div>
+  </div>
+
+  <script>
+    // ECharts financials (Revenue, Margin, Ceremonies)
+    (function(){
+      const el=document.getElementById('finChart');
+      const ec=echarts.init(el,null,{renderer:'svg'});
+      const years=['År 1','År 2','År 3'];
+      const revenue=[3.0,4.8,6.2]; // MNOK
+      const margin=[35,42,48]; // %
+      const ceremonies=[120,220,360]; // count
+      ec.setOption({
+        title:{text:'Prognoser (MNOK / % / antall)',left:'center'},
+        tooltip:{trigger:'axis',axisPointer:{type:'cross'}},
+        legend:{top:28,data:['Omsetning (MNOK)','Bruttomargin %','Seremonier (antall)']},
+        grid:{left:40,right:48,bottom:35,top:70},
+        xAxis:{type:'category',data:years},
+        yAxis:[{type:'value',name:'MNOK'},{type:'value',name:'% / Antall',position:'right'}],
+        series:[
+          {name:'Omsetning (MNOK)',type:'bar',data:revenue,itemStyle:{color:'#00a6fb'}},
+          {name:'Bruttomargin %',type:'line',yAxisIndex:1,data:margin,smooth:true,lineStyle:{color:'#8338ec'}},
+          {name:'Seremonier (antall)',type:'line',yAxisIndex:1,data:ceremonies,smooth:true,lineStyle:{color:'#ff006e'}}
+        ]
+      });
+      window.addEventListener('resize',()=>ec.resize());
+    })();
+
+    // Accessible modal controls
+    function showServiceDetail(title, description){
+      const panel=document.getElementById('serviceDetail');
+      document.getElementById('serviceTitle').innerText=title;
+      document.getElementById('serviceDescription').innerText=description;
+      panel.style.display='flex';
+      panel.querySelector('.close').focus();
+    }
+    function closeServiceDetail(){
+      document.getElementById('serviceDetail').style.display='none';
+    }
+    document.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){closeServiceDetail();}
+    });
+  </script>
+</body>
+</html>
