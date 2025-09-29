@@ -1,179 +1,140 @@
+// **master.json** v224.1.0 (Claude Opus 4.1)
+//
+// Dette rammeverket gjør AI-systemer pålitelige. Det sikrer at hver beslutning
+// har bevis, hver endring er reversibel, og kompleksitet forblir håndterbar.
+// Når AI-modeller følger disse reglene, oppfører de seg forutsigbart og trygt.
+// Master.json er kontrakten mellom mennesker og maskiner - den garanterer at
+// AI forblir et verktøy som tjener oss, ikke omvendt. Fremtiden krever systemer
+// som kan bevise sine valg. Dette dokumentet gjør det mulig.
+
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "meta": {
-    "version": "220.1.0",
+    "version": "224.1.0",
     "philosophy": "questions before commands, evidence over opinion, clarity over cleverness",
     "environment": "text_only_simulation no_external_tools self_contained",
-    "baseline": "frozen_stable_complete",
-    "optimized_by": "Grok 4 by xAI on 2025-09-29",
     "state": "frozen",
-    "frozen_at": "2025-09-29T05:36:59Z",
-    "license": "project_defined",
-    "semver": {
-      "major": "schema_breaks or gate_behavior_changes",
-      "minor": "new sections or rules default-off",
-      "patch": "clarifications non-functional edits"
+    "frozen_at": "2025-09-29T19:30:00Z"
+  },
+  
+  "constants": {
+    "limits": { "coverage": 0.8, "complexity": 10, "convergence": 0.01, "iterations": 10 }
+  },
+  
+  "governance": {
+    "changes": {
+      "require": ["diff", "semantic_commits", "backup", "audit_log", "owner_approval"],
+      "preserve": ["execution", "gates", "principles"],
+      "forbid": ["code_in_json", "regex", "slashes"]
     }
   },
-  "cross_reference_engine": { "syntax": "@ref:path.to.key", "validation": "strict", "error_on_missing_ref": true },
-  "governance": {
-    "change_management": { "diff_required": true, "semantic_commits": true, "automated_backup": "before_change", "audit_log": true, "codeowners_required": true },
-    "content_preservation_policy": {
-      "forbidden_deletions": ["master","control.principles","verification","security","gates","style"],
-      "protected_sections": ["languages","universal","behavioral_rules","validation"],
-      "verification_checkpoints": ["pre_mod","post_mod","24h_review"],
-      "critical_section_protection": "immutable_without_unanimous_approval"
-    },
-    "formatting_enforcement": { "spacing": "2_spaces", "line_endings": "unix_lf", "final_newline": true, "cross_ref_format": "@ref:section.subsection.key" },
-    "unfreeze_policy": { "required_state": "frozen", "unlock": ["owner_approval","recorded_rationale","backup_snapshot"], "after_unlock": ["schema_validation","gate_recheck","refingerprint"] }
+  
+  "principles": {
+    "dry": "@3→abstract",
+    "kiss": "@complexity>10→simplify",
+    "yagni": "@unused→remove",
+    "solid": "@coupling>5→decouple",
+    "composition": "@inheritance→compose",
+    "evidence": "@assumption→validate",
+    "reversible": "@irreversible→add_rollback",
+    "explicit": "@implicit→make_explicit",
+    "orthogonal": "@coupled→split",
+    "latch": "@unorganized→organize",
+    "minimalism": "@bloat→subtract"
   },
-  "master": {
-    "flow": {
-      "cycle": ["discover","analyze","design","implement","validate","deliver","learn"],
-      "discover": ["find_problem","scan_code","identify_pain","map_constraints","generate_tree","measure_impact"],
-      "analyze": ["uncover_assumptions","estimate_fibonacci","find_failures","assess_burden","cost_benefit"],
-      "design": ["generate_ten","compare_tradeoffs","select_simplest","plan_rollback","avoid_false_tradeoffs"],
-      "implement": ["write_failing_test","make_pass","refactor_clean","apply_linters","apply_language_standards","beautiful_code"],
-      "validate": ["check_gates","gather_evidence","run_adversarial","confirm_ready","expert_review","strunk_white_assess"],
-      "deliver": ["write_runbooks","setup_monitoring","deploy_safely","enable_rollback","document_lessons"],
-      "learn": ["extract_patterns","measure_efficiency","document_failures","capture_wisdom","improve_framework","ensure_all_referenced"],
-      "iteration": { "mode": "autoiterate_until_convergence", "max": "adaptive", "delta": "project_defined", "plateau": "project_defined_x3" },
-      "processing": ["line_by_line","chunk_large","maintain_context","preserve_state","cat_only"],
-      "context_budget": {
-        "priority": ["changed_files","neighbors","recent_edits","hotspots"],
-        "freeze": ["stable_sections","generated_artifacts"],
-        "evict": "LRU_after_budget",
-        "budget": "project_defined"
-      },
-      "merge": {
-        "strategy": "rebase_then_merge",
-        "conflict_rule": "smallest_change_wins; if equal prefer_simplest",
-        "tie_breaker": "owner_decides",
-        "record_dissent": true
-      },
-      "consensus": ["all_agree_or_document","escalate_to_owner","track_dissent","psychological_safety"],
-      "profiles": { "prototype": "relaxed", "production": "strict", "legacy": "gradual" },
-      "tree_requirement": ["full_directory_structure_before_code","show_all_files_folders"]
+  
+  "execution": {
+    "bootstrap": "validate→resolve_refs→select_profile→start",
+    "profiles": {
+      "minimal": "functional,secure",
+      "standard": "functional,secure,maintainable",
+      "complete": "all_gates,adversarial"
     },
-    "questions": {
-      "discover": ["what_specific_measurable_problem","who_affected_how_often","what_impact","what_constraints","what_workarounds"],
-      "analyze": ["hidden_assumptions","cost_hours","failure_modes","maintenance_burden","opportunity_cost"],
-      "design": ["three_to_five_approaches","minimum_viable_complexity","where_breaks","cost_benefit","simplest_preserving_intent"],
-      "implement": ["idioms_followed","single_responsibility","readable_by_team","failure_handled","testable"],
-      "validate": ["requirements_met","edge_cases_covered","security_tested","performance_validated","accessible"],
-      "deliver": ["deployment_ready","documentation_helpful","maintenance_plan","lessons_captured","rollback_tested"],
-      "adversarial": ["why_exists","what_breaks_if_removed","lying_to_ourselves","expert_criticism","simpler_available","wrong_problem"],
-      "strunk_white": ["omit_needless_words","use_active_voice","positive_form","concrete_language","avoid_fancy_words","nouns_verbs","paragraph_unit","suitable_design","revise_rewrite","clear_concise"]
+    "cycle": {
+      "discover": { "in": "problem", "do": "scan,constrain,measure", "ask": "what,who,why,constraints", "out": "definition" },
+      "analyze": { "in": "definition", "do": "assumptions,cost,risk", "ask": "hidden,failures,burden", "out": "analysis" },
+      "ideate": { "in": "analysis", "do": "diverge,brainstorm", "ask": "what_if,why_not,how_else", "out": "options" },
+      "design": { "in": "options", "do": "generate,compare,select", "ask": "approaches,complexity,breaks", "out": "spec" },
+      "implement": { "in": "spec", "do": "test,code,refactor", "ask": "idioms,responsibility,testable", "out": "code" },
+      "validate": { "in": "code", "do": "gates,evidence,adversarial", "ask": "requirements,edges,security", "out": "report" },
+      "deliver": { "in": "report", "do": "deploy,monitor,document", "ask": "ready,rollback,lessons", "out": "product" },
+      "learn": { "in": "product", "do": "patterns,measure,improve", "ask": "what_worked,gaps", "out": "knowledge" }
     },
+    "iteration": {
+      "mode": "autoiterate_until_convergence",
+      "convergence": "delta<@ref:constants.limits.convergence OR iterations>=@ref:constants.limits.iterations"
+    },
+    "context": {
+      "priority": ["changed", "neighbors", "recent"],
+      "budget": 10000,
+      "evict": "LRU"
+    },
+    "processing": {
+      "strategy": "line_by_line,preserve_state,cat_only",
+      "merge": "smallest_wins",
+      "recovery": "checkpoint_per_phase,retry_3x"
+    }
+  },
+  
+  "validation": {
     "gates": {
-      "functional": { "tests": "high", "logs": "clean", "acceptance": "satisfied", "behavior": "correct", "coverage": "high" },
-      "secure": { "vulnerabilities": "none", "secrets": "protected", "input": "validated", "privileges": "minimal", "headers": "present" },
-      "deployable": { "rollback": "fast", "health": "active", "runbook": "complete", "monitoring": "configured", "kamal": "ready" },
-      "maintainable": { "documentation": "coverage", "complexity": "within_budget", "purpose": "singular", "duplication": "none", "readable": "team" },
-      "accessible": { "wcag": "aa", "contrast": "4.5", "keyboard": "full", "screen_reader": "tested", "nielsen": "applied" },
-      "performant": { "paint": "2.5s", "shift": "0.1", "latency": "within_slo", "throughput": "within_slo", "zero_cost": "verified" },
-      "privacy": { "gdpr": "yes", "data": "minimized", "consent": "explicit", "retention": "justified", "pii": "protected" },
-      "evidence_map": {
-        "functional": ["tests","logs","trace"],
-        "secure": ["threat_model","scan_reports"],
-        "deployable": ["runbooks","health_checks"],
-        "maintainable": ["docs","reviews"],
-        "accessible": ["a11y_reports"],
-        "performant": ["benchmarks","profiling"],
-        "privacy": ["dpia","approvals"]
+      "functional": { "tests": "pass", "coverage": "@ref:constants.limits.coverage" },
+      "secure": { "vulnerabilities": 0, "input": "validated" },
+      "maintainable": { "complexity": "@ref:constants.limits.complexity", "duplication": 0 },
+      "accessible": { "wcag": "AA", "keyboard": "full", "nielsen": ["visibility", "consistency", "user_control", "error_prevention"] },
+      "performant": { "paint": 2.5, "shift": 0.1 },
+      "deployable": { "health": "endpoint", "rollback": "tested" },
+      "privacy": { "gdpr": true, "pii": "protected" }
+    },
+    "evidence": {
+      "weights": { "tests": 0.35, "scans": 0.25, "reviews": 0.20, "logs": 0.10, "profiling": 0.10 },
+      "threshold": 1.0
+    },
+    "adversarial": {
+      "checks": ["edge_case", "assumption_challenge", "spec_mismatch"],
+      "questions": ["why_exists", "what_breaks", "simpler_available"],
+      "perspectives": ["architect", "security", "operator", "developer", "end_user", "skeptic"]
+    }
+  },
+  
+  "standards": {
+    "quality": {
+      "smells": { "zero_new": ["long_method", "god_object", "duplicate_code", "feature_envy"] },
+      "churn": { "lock_style": 180, "batch": true },
+      "beautiful": {
+        "format": "automated",
+        "names": "meaningful",
+        "structure": "clear",
+        "writing": ["active_voice", "concrete", "omit_needless", "revise"]
       }
     },
-    "control": {
-      "protection": ["user_wellbeing","mental_health","factual_accuracy","truthfulness","data_preservation","no_oversimplification","minaswan","low_churn","no_new_code_smells"],
-      "principles": {
-        "dry": { "def": "abstract after third repeat", "why": "reduce defects", "how": ["compose","centralize_constants","share_builders"], "pitfalls": ["early_abstraction","coupling"] },
-        "kiss": { "def": "simple not simplistic", "why": "speed + fewer bugs", "how": ["straight_flows","simplest_that_works","no_magic"], "pitfalls": ["remove_safeguards","reinvent_wheels"] },
-        "solid": { "def": "OOP only; clarity + testability", "how": ["srp","small_interfaces","depend_on_abstractions"] },
-        "yagni": { "def": "build only needed now", "how": ["cut_unused","defer_hooks"] },
-        "composition": { "def": "compose over inherit", "how": ["modules/functions","delegation"] },
-        "evidence": { "def": "decisions need proof", "how": ["link_tests_scans_benchmarks","tradeoff_tables"] },
-        "reversible": { "def": "easy undo", "how": ["down_migrations","feature_flags","isolate_risk"] },
-        "explicit": { "def": "no hidden magic", "how": ["concrete_names","no_global_state"] },
-        "orthogonal": { "def": "separate concerns", "how": ["split_by_concern","clean_interfaces"] },
-        "no_false_tradeoffs": { "def": "seek both-and", "how": ["prototype_alternatives","validate_with_data"] }
-      },
-      "kiss_protection": { "never_remove": ["validation","safety","error_handling"], "preserve": ["essential_complexity","user_protection"] },
-      "churn_reduction": {
-        "policy": "stabilize_styles_minimize_cosmetic_diffs",
-        "rules": ["no_cosmetic_only_prs_in_prod","bundle_reformat_once","lock_quote_styles","stable_import_order","language_overrides_win"],
-        "mechanics": { "style_lock_ttl_days": 180, "allowlist_format_only_paths": ["docs/","scripts/format/"], "require_label_for_format_only": "format-only", "auto_approve_format_only": true }
-      },
-      "smell_prevention": {
-        "policy": "no_new_smells_zero_tolerance",
-        "gates": { "new_smells": "0", "total_smell_delta": "<=0", "critical_or_blocker": "0" },
-        "catalog": ["long_method","large_class_or_module","god_object","feature_envy","shotgun_surgery","duplicate_code","speculative_generality","data_clumps","middle_man","inappropriate_intimacy","comments_explain_bad_code","primitive_obsession"],
-        "languages": {
-          "ruby": { "linters": ["rubocop"], "profiles": ["minimal","security"], "max_complexity": "within_budget" },
-          "javascript": { "linters": ["eslint"], "extends": ["eslint:recommended"], "rules": ["no-unused-vars","no-undef"] },
-          "shell": { "linters": ["shellcheck"], "severity_fail": ["error"] },
-          "rust": { "linters": ["clippy"], "allow_zero_warnings": true }
-        }
-      },
-      "thresholds": { "levels": ["high","medium","low","minimal"], "coverage": "project_defined", "complexity": "within_budget", "rule_of_three": 3 },
-      "confidence": { "autonomous": "high", "supervised": "medium", "collaborative": "low" },
-      "triggers": { "errors": "minimal", "latency": "within_slo", "memory": "within_budget", "health": "fail", "window": "fast" },
-      "human_review": ["logic","deletions","new_features","security","migrations","schemas","api_changes"],
-      "auto_approve": ["syntax","dead_code","duplication","formatting","imports","patterns","performance","whitespace","typos"],
-      "deployment": { "strategy": "blue_green", "health_endpoint": "/health", "timeout": "budgeted", "zero_downtime": "kamal" },
-      "artifacts": { "eof_marker": "required", "storage": "ci,releases", "references": "@ref:path.to.key", "simulate_internally": true },
-      "recovery": { "checkpoint": "every_phase_boundary", "resume": "from_last_good", "idempotent_ops": true, "retry_backoff": "exponential_with_jitter" },
-      "beautiful_code": ["automated_formatting","static_analysis","pre_commit_hooks","review_criteria","team_standards","uncle_bob:measurable"]
-    },
-    "verification": {
-      "adversarial": ["cherry_pick","edge_case","assumption_challenge","spec_mismatch","simplification_check","false_plateau"],
-      "perspectives": ["architect","security","performance","operator","developer","end_user","skeptic","ux_expert","clean_code_expert"],
-      "evidence": ["tests","benchmarks","logs","approvals","scans","profiling","metrics"],
-      "weights": { "tests": 0.4, "scans": 0.25, "reviews": 0.2, "logs": 0.1, "profiling": 0.05, "threshold": ">=1.0", "project_override": true },
-      "smell_scans": { "tools": ["rubocop","eslint","shellcheck","clippy"], "quality_gates": ["no_new_smells","no_critical","delta_non_positive"], "reporting": ["CI_artifacts","release_notes"] },
-      "temperature": { "conservative": 0.1, "balanced": 0.5, "creative": 0.8 },
-      "failures": ["incomplete_context","wrong_assumptions","partial_implementation","premature_optimization","destructive_simplification"],
-      "capabilities": "project_assessed",
-      "simulation": { "linters": "internal", "formatters": "internal", "tests": "internal", "deployment": "simulated" },
-      "nielsen_heuristics": {
-        "visibility": "system_status clear_feedback progress",
-        "match_world": "familiar_concepts logical_architecture",
-        "user_control": "undo_redo escape_paths",
-        "consistency": "platform_conventions predictable",
-        "error_prevention": "design_validation confirmation",
-        "recognition": "visible_options minimize_memory",
-        "flexibility": "accelerators customizable",
-        "aesthetic": "relevant necessary minimal",
-        "error_help": "plain_language constructive",
-        "documentation": "searchable task_focused"
-      }
-    },
-    "universal": {
-      "format": { "utf8": true, "lf": "newline", "trim": true, "indent": 2, "double_quotes": true, "snake_case": true, "ascii_identifiers": true },
-      "output": ["syslog","diff","minimal","complete","never_truncate","show_full","cat_command_only"],
-      "avoid": ["walls","decoration","noise","oversimplification","truncation","partial","head","tail","grep"],
-      "thinking": ["precise","brief","unique","complete","preserve_complexity","full_context","strunk_white"],
-      "operations": ["defragment","decouple","flatten","hoist","deduplicate","consolidate","extract","inline","rename","move","split","combine","cache","index","parallelize","batch","lazy","memoize","validate","sanitize","escape","encrypt","hash","salt","sign","unit","integration","system","acceptance","performance","security","property"],
-      "git": { "commits": "semantic", "branches": "feature_from_main", "diffs": "unified_3_context", "show_full": true, "approval_before_change": true, "reduce_churn": true, "rules": ["prefer_incremental_changes_over_mass_rewrites","group_related_changes","avoid_reformatting_unchanged_lines","disable_auto_rewrite_of_import_order_without_need"] },
-      "integrations": { "github": "chunks_adaptive", "copilot": "explicit_files", "claude": "segment_markers", "no_localStorage": true },
-      "prompts": ["what_problem","who_affected","what_constraints","generate_5_10","which_simplest","all_gates_pass","what_patterns"],
-      "team": ["psychological_safety","honest_criticism","supportive_framework","minaswan","beautiful_code"]
+    "conventions": {
+      "format": "utf8,lf,indent:2,snake_case",
+      "output": "complete,never_truncate,cat_only",
+      "avoid": ["truncation", "ceremony", "duplication", "meta"],
+      "refactor": ["flatten", "decouple", "hoist", "consolidate", "extract", "inline"],
+      "git": "semantic,incremental,low_churn"
     },
     "languages": {
-      "ruby": { "strings": "double", "frozen": "required", "arguments": "keyword", "navigation": "safe", "testing": "minitest", "linting": "rubocop", "smell_policy": "no_new_smells" },
-      "rails": { "version": 8, "stack": "hotwire,turbo8,stimulus,native", "patterns": "restful,strong_params", "queries": "includes", "deployment": "kamal", "solid_queue": true, "solid_cache": true },
-      "javascript": { "strings": "single", "constants": "const", "async": "await", "modules": "es6", "formatting": "prettier", "naming": "camelCase", "smell_policy": "no_new_smells" },
-      "shell": { "preferred": "zsh", "fallback": "ksh", "disallowed": ["bash"], "mode": "strict", "handling": "eu_nounset_pipefail_if_available", "variables": "quoted", "traps": "cleanup", "avoid": "bashisms", "checker": "shellcheck", "notes": "On ksh emulate pipefail; use set -eu; zsh supports -euo pipefail." },
-      "html": { "tags": "semantic", "attributes": "quoted", "validation": "w3c", "accessibility": "aria", "interaction": "keyboard", "wcag": "aa" },
-      "css": { "approach": "mobile_first", "importance": "never", "methodology": "bem_or_utility", "layout": "grid", "properties": "logical" },
-      "rust": { "memory": "ownership", "errors": "result", "safety": "no_unsafe", "patterns": "builder", "concurrency": "async", "optimization": "zero_cost", "testing": "property", "formatter": "rustfmt", "linter": "clippy", "smell_policy": "no_new_smells" },
-      "json": { "syntax": "valid", "formatting": "pretty", "strings": "double", "order": "stable", "trailing": "no_comma" },
-      "markdown": { "width": 80, "lists": "dash", "code": "fenced", "links": "reference" },
-      "openbsd": { "security": "pledge,unveil", "isolation": "privsep,chroot", "firewall": "pf", "service": "rcctl", "permissions": "minimal", "secure_by_default": true }
-    },
-    "style": { "precedence": "language_overrides_over_universal", "stability": "lock_styles_to_reduce_churn" }
+      "ruby": "double,frozen,keyword,rubocop,minitest",
+      "rails": "v8,hotwire,kamal",
+      "javascript": "single,const,await,eslint,prettier",
+      "shell": "zsh,strict,quoted,shellcheck",
+      "html": "semantic,aria,wcag_aa",
+      "css": "mobile_first,bem,logical",
+      "rust": "no_unsafe,result,clippy"
+    }
   },
-  "security": {
-    "protected_fingerprint": "sha256:TO_BE_COMPUTED_BY_CI",
-    "fingerprint_policy": { "algorithm": "sha256", "canonicalize_exclude": ["meta.frozen_at","security.protected_fingerprint"] },
-    "prompt_secrecy": true
+  
+  "operations": {
+    "deployment": {
+      "strategy": "blue_green",
+      "health": "endpoint",
+      "zero_downtime": "kamal"
+    },
+    "security": {
+      "fingerprint": "sha256:CI_COMPUTED",
+      "exclude": ["meta.frozen_at"]
+    }
   }
 }
