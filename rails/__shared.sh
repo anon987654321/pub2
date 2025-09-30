@@ -1,15 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env zsh
 set -euo pipefail
 
-# Shared functions for BRGEN Rails applications
-# Master.json v146.1.0 compliant - minimal, working implementations
+# Shared functions for Rails applications
 
 # Logging function
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+    print "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
 }
 
-# Check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1 || {
         log "ERROR: $1 is required but not installed"
@@ -17,7 +15,6 @@ command_exists() {
     }
 }
 
-# Install gem if not present
 install_gem() {
     local gem_name="$1"
     if ! bundle list | grep -q "^  \* $gem_name "; then

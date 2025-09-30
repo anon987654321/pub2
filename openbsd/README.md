@@ -1,8 +1,10 @@
-# OpenBSD Rails Infrastructure
+# OpenBSD Rails Infrastructure v225.0.0
 
 **The definitive deployment for hosting dozens of domains on OpenBSD.** This is infrastructure as philosophy: secure by design, minimal by nature, bulletproof by execution. One script deploys everything—DNS with DNSSEC, TLS termination, Rails applications, reverse DNS—creating a fortress that scales from startups to empires.
 
 Born from the Unix principle that each tool should do one thing well, this deployment orchestrates OpenBSD's native strengths into a cohesive platform. No Docker overhead. No Kubernetes complexity. Just OpenBSD doing what it does best: running forever.
+
+**Now with**: Structured JSON logging, zsh-native patterns, evidence-based validation, master.json v225.0.0 compliance.
 
 ## Architecture
 

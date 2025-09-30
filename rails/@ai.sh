@@ -1,4 +1,7 @@
-cd "$BASE_DIR"
+#!/usr/bin/env zsh
+set -euo pipefail
+
+# AI integration feature setup
 
 doas pkg_add llvm
 

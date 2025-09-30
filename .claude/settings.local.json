@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.claude.ai)",
+      "WebFetch(domain:www.anthropic.com)",
+      "WebFetch(domain:x.com)",
+      "WebFetch(domain:www.airbnb.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:snl.no)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

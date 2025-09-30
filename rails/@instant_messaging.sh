@@ -1,12 +1,13 @@
 
 #!/usr/bin/env zsh
+set -euo pipefail
 
-cd "$(dirname "$0")"
+# Instant messaging feature setup
 
 # Generate models, controllers, and views for instant messaging
 bin/rails generate model Message sender:references recipient:references body:text read:boolean
 bin/rails generate controller Messages create show index destroy
-echo "resources :messages, only: [:create, :show, :index, :destroy]" >> config/routes.rb
+print "resources :messages, only: [:create, :show, :index, :destroy]" >> config/routes.rb
 
 # Update Message model
 cat <<EOF > app/models/message.rb
@@ -113,4 +114,3 @@ cat <<EOF > app/views/messages/destroy.turbo_stream.erb
 EOF
 
 bin/rails db:migrate
-commit_to_git "Set up instant messaging functionality"

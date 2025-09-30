@@ -1,4 +1,7 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
+set -euo pipefail
+
+# Live cam streaming feature setup
 
 # Add dependencies
 yarn add video.js
@@ -7,8 +10,8 @@ yarn add video.js
 bin/rails generate model Stream title:string description:text user:references
 bin/rails generate controller Streams index show new create destroy
 
-# Add routes for streams (append to routes.rb)
-  echo "resources :streams, only: [:index, :show, :new, :create, :destroy]" >> config/routes.rb
+# Add routes for streams
+print "resources :streams, only: [:index, :show, :new, :create, :destroy]" >> config/routes.rb
 
 # Create the Streams controller
 cat <<EOF > app/controllers/streams_controller.rb
@@ -160,5 +163,3 @@ EOF
 
 # Run migrations
 bin/rails db:migrate
-
-commit_to_git "Set up live cam streaming for $APP"

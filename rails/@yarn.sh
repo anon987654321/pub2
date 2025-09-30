@@ -1,7 +1,8 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
+set -euo pipefail
 
 if ! command_exists yarn; then
-  echo "Yarn is not installed. Installing..."
+  print "Installing Yarn..."
   doas pkg_add -U node
   doas npm install yarn -g
 fi

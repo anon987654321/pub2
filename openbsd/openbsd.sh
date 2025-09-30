@@ -1,12 +1,12 @@
-#!/usr/bin/env ksh
-# Unified Rails-OpenBSD Infrastructure v224.1.0
+#!/usr/bin/env zsh
+# Unified Rails-OpenBSD Infrastructure v225.0.0
 # Complete deployment: DNS, TLS, Rails apps, 40+ domains
 
 set -euo pipefail
 
-# Constants (master.json aligned)
-readonly VERSION="224.1.0"
-readonly MAIN_IP="46.23.95.45"
+# Constants
+readonly VERSION="225.0.0"
+readonly MAIN_IP="185.52.176.18"
 readonly BACKUP_NS="194.63.248.53"
 readonly PTR4_API="http://ptr4.openbsd.amsterdam"
 readonly PTR6_API="http://ptr6.openbsd.amsterdam"
@@ -98,9 +98,13 @@ primary_ptrs=(
   ["blognet"]="foodielicio.us"
 )
 
-# Logging and state management
+# Logging with structured output
 log() {
-  printf "[%s] %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" | tee -a "$LOG_DIR/unified.log"
+  local level="${1:-INFO}"
+  shift
+  printf '{"time":"%s","level":"%s","msg":"%s"}\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$level" "$*" | \
+    tee -a "$LOG_DIR/unified.log"
 }
 
 save_state() {
@@ -117,34 +121,41 @@ EOF
 }
 
 error() {
-  log "ERROR: $*"
+  log "ERROR" "$*"
   exit 1
 }
 
 warn() {
-  log "WARNING: $*"
+  log "WARN" "$*"
 }
 
 # Environment validation with evidence scoring
 validate_environment() {
-  log "Validating environment..."
-  
+  log "INFO" "Validating environment..."
+
   local evidence=0
-  
+  local -A checks=(
+    ["root"]="$EUID -eq 0"
+    ["openbsd"]="uname -s matches OpenBSD"
+    ["network"]="connectivity to 8.8.8.8"
+    ["zsh"]="command -v zsh found"
+    ["pkg_add"]="command -v pkg_add found"
+  )
+
   [[ $EUID -eq 0 ]] || error "Must run with doas/root"
   evidence=$((evidence + 20))
-  
-  local os_version=$(uname -r 2>/dev/null || echo "unknown")
-  [[ "$os_version" =~ ^[67]\.[0-9] ]] && evidence=$((evidence + 20))
-  
+
+  local os=$(uname -s 2>/dev/null || print "unknown")
+  [[ "$os" == "OpenBSD" ]] && evidence=$((evidence + 20))
+
   ping -c 1 -W 1000 8.8.8.8 >/dev/null 2>&1 && evidence=$((evidence + 20))
-  
-  command -v ksh >/dev/null 2>&1 && evidence=$((evidence + 20))
+
+  command -v zsh >/dev/null 2>&1 && evidence=$((evidence + 20))
   command -v pkg_add >/dev/null 2>&1 && evidence=$((evidence + 20))
-  
-  log "Environment evidence: ${evidence}/100"
-  [[ $evidence -ge 80 ]] || error "Environment validation failed"
-  
+
+  log "INFO" "Environment evidence: ${evidence}/100"
+  [[ $evidence -ge 80 ]] || error "Environment validation failed (${evidence}/100)"
+
   save_state "validated" "$evidence" 0
 }
 
@@ -636,69 +647,86 @@ setup_cron() {
   log "Cron configured"
 }
 
-# Main deployment
-main() {
-  log "Starting unified Rails-OpenBSD deployment v$VERSION"
-  
+# Pre-point deployment (before domains point here)
+pre_point() {
+  log "INFO" "Starting pre-point deployment v$VERSION"
+
   validate_environment
-  
   setup_ruby_rails
   setup_databases
-  setup_dns_dnssec
   setup_firewall
-  setup_tls
-  setup_relayd
-  
+  setup_limits
+
   # Deploy all apps
   local app_count=0
   for app_port in "${(@k)app_domains}"; do
     deploy_rails_app "$app_port"
     app_count=$((app_count + 1))
   done
-  
+
+  save_state "pre_point_complete" 100 "$app_count"
+
+  log "INFO" "Pre-point deployment complete"
+  log "INFO" "  Apps deployed: $app_count"
+  log "INFO" "  Services running: $(rcctl ls on | wc -l)"
+  log "INFO" ""
+  log "INFO" "Next: Point domains to $MAIN_IP then run: doas zsh openbsd.sh --post-point"
+}
+
+# Post-point deployment (after domains point here)
+post_point() {
+  log "INFO" "Starting post-point deployment v$VERSION"
+
+  validate_environment
+  setup_dns_dnssec
+  setup_tls
+  setup_relayd
   setup_ptr_records
-  setup_limits
   setup_cron
-  
-  save_state "complete" 100 "$app_count"
-  
-  log "Deployment Summary:"
-  log "  Domains: ${#all_domains[@]}"
-  log "  Apps: $app_count"
-  log "  Services: $(rcctl ls on | wc -l | tr -d ' ')"
-  
-  log "Next steps:"
-  log "  1. Upload Rails code to /home/APP/app/"
-  log "  2. Point domains to $MAIN_IP"
-  log "  3. Submit DS records from /var/nsd/zones/keys/*.ds"
-  
-  log "Deployment complete!"
+
+  save_state "complete" 100 7
+
+  log "INFO" "Post-point deployment complete"
+  log "INFO" "  Domains configured: ${#all_domains[@]}"
+  log "INFO" "  Submit DS records from /var/nsd/zones/keys/*.ds to your registrars"
 }
 
 # Command handling
-case "${1:-}" in
+case "${1:---pre-point}" in
   --help)
     cat << 'EOF'
-Unified Rails-OpenBSD Infrastructure v224.1.0
+Unified Rails-OpenBSD Infrastructure v226.0.0
 
-Usage: doas ksh unified_rails.sh [--help]
+Usage: doas zsh openbsd.sh [--pre-point|--post-point|--help]
 
-Deploys complete Rails infrastructure:
-- 40+ domains with DNSSEC
-- 7 Rails applications
-- PostgreSQL + Redis
-- Falcon async web server
-- TLS via LibreSSL
-- PF firewall with DDoS protection
-- PTR records (OpenBSD Amsterdam)
+Two-stage deployment:
+
+  --pre-point   Deploy infrastructure before domains point here:
+                - Ruby 3.3 + Rails 7.2 + gems
+                - PostgreSQL + Redis
+                - 7 Rails apps on ports 10001-10007
+                - PF firewall
+
+  --post-point  Configure DNS/TLS after domains point to 185.52.176.18:
+                - NSD with DNSSEC for 40+ domains
+                - TLS certificates via ACME
+                - relayd load balancer
+                - PTR records
 
 Prerequisites:
 - OpenBSD 7.x
-- Root access
+- Root/doas access
 - Internet connectivity
 EOF
     ;;
+  --pre-point)
+    pre_point
+    ;;
+  --post-point)
+    post_point
+    ;;
   *)
-    main
+    echo "Usage: doas zsh openbsd.sh [--pre-point|--post-point|--help]"
+    exit 1
     ;;
 esac

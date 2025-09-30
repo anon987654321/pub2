@@ -1,5 +1,8 @@
 
 #!/usr/bin/env zsh
+set -euo pipefail
+
+# Active Storage and Image Processing feature setup
 
 bin/rails active_storage:install
 bin/rails generate migration add_avatar_to_users avatar:attachment

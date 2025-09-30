@@ -1,0 +1,106 @@
+{
+  "$schema": "session_recovery_v1.0",
+  "metadata": {
+    "created_at": "ISO8601_TIMESTAMP",
+    "task_description": "Brief description of the task",
+    "master_json_version": "225.0.0",
+    "platform": "openbsd|cygwin|linux|macos",
+    "working_directory": "/absolute/path/to/work/dir"
+  },
+  "progress": {
+    "current_phase": "discover|analyze|ideate|design|implement|validate|deliver|learn",
+    "phase_progress": 0.0,
+    "overall_progress": 0.0,
+    "estimated_completion": "ISO8601_TIMESTAMP"
+  },
+  "files": {
+    "pending": [
+      {
+        "path": "relative/path/to/file",
+        "priority": "high|medium|low",
+        "operations": ["read", "edit", "validate"],
+        "dependencies": ["file1", "file2"]
+      }
+    ],
+    "in_progress": [
+      {
+        "path": "relative/path/to/file",
+        "started_at": "ISO8601_TIMESTAMP",
+        "operations_completed": ["read"],
+        "operations_remaining": ["edit", "validate"],
+        "checkpoint": "line_number_or_marker"
+      }
+    ],
+    "completed": [
+      {
+        "path": "relative/path/to/file",
+        "completed_at": "ISO8601_TIMESTAMP",
+        "operations": ["read", "edit", "validate"],
+        "changes": "brief_summary",
+        "git_commit": "commit_hash_if_applicable"
+      }
+    ],
+    "failed": [
+      {
+        "path": "relative/path/to/file",
+        "failed_at": "ISO8601_TIMESTAMP",
+        "error": "error_message",
+        "retry_count": 0,
+        "max_retries": 3
+      }
+    ]
+  },
+  "context": {
+    "key_decisions": [
+      {
+        "decision": "What was decided",
+        "rationale": "Why it was decided",
+        "evidence": "What supported the decision",
+        "timestamp": "ISO8601_TIMESTAMP"
+      }
+    ],
+    "patterns_discovered": [
+      {
+        "pattern": "Pattern description",
+        "occurrences": 5,
+        "solution": "How to handle it",
+        "examples": ["file1:line10", "file2:line20"]
+      }
+    ],
+    "blockers": [
+      {
+        "issue": "What is blocking progress",
+        "impact": "high|medium|low",
+        "workaround": "Temporary solution if any",
+        "resolution_needed": "What needs to happen"
+      }
+    ],
+    "variables": {
+      "APP_NAME": "value",
+      "BASE_DIR": "value",
+      "custom_var": "value"
+    }
+  },
+  "validation": {
+    "gates_passed": ["functional", "secure"],
+    "gates_pending": ["maintainable", "performant"],
+    "gates_failed": [],
+    "test_results": {
+      "total": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "code_quality": {
+      "complexity": 0,
+      "duplication": 0,
+      "coverage": 0.0
+    }
+  },
+  "recovery": {
+    "last_checkpoint": "ISO8601_TIMESTAMP",
+    "safe_to_resume": true,
+    "resume_instructions": "What to do to continue from this point",
+    "rollback_point": "git_ref_or_backup_location"
+  }
+}

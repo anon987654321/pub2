@@ -1,6 +1,7 @@
-cd "$BASE_DIR"
+#!/usr/bin/env zsh
+set -euo pipefail
 
-# -- CONFIGURE FALCON AS THE PRIMARY WEB SERVER --
+# Falcon web server configuration feature setup
 
 bundle add falcon
 bundle add async
@@ -19,7 +20,7 @@ apps_domains=(
 
 for app in ${(k)apps_domains}; do
   port=${apps_domains[$app]}
-  
+
   config_content=$(cat <<EOF
 #!/usr/bin/env falcon-host
 # Falcon for Rails with ActionCable support
@@ -53,6 +54,6 @@ EOF
   )
 
   # Write the configuration to the file
-  echo "$config_content" > "/home/${app}/${app}/config/falcon.rb"
+  print "$config_content" > "/home/${app}/${app}/config/falcon.rb"
 done
 

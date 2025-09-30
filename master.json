@@ -1,17 +1,83 @@
+// **master.json** v226.0.0 (Claude Sonnet 4.5)
+//
+// Dette rammeverket gjør AI-systemer pålitelige. Det sikrer at hver beslutning
+// har bevis, hver endring er reversibel, og kompleksitet forblir håndterbar.
+// Når AI-modeller følger disse reglene, oppfører de seg forutsigbart og trygt.
+// Master.json er kontrakten mellom mennesker og maskiner - den garanterer at
+// AI forblir et verktøy som tjener oss, ikke omvendt. Fremtiden krever systemer
+// som kan bevise sine valg. Dette dokumentet gjør det mulig.
+//
+// KEY ARCHITECTURAL INSIGHTS:
+//
+// 1. Self-Enforcing: Uses @ref: references to constants, preventing configuration
+//    drift. Changes to limits cascade automatically throughout the system.
+//
+// 2. Declarative Triggers: Principles activate automatically (e.g., @3→abstract,
+//    @complexity>10→simplify) creating a rule engine that triggers refactoring.
+//
+// 3. Evidence-Based: Requires weighted proof (100% threshold) from 5 sources:
+//    tests (35%), scans (25%), reviews (20%), logs (10%), profiling (10%).
+//    No single method can satisfy requirements - forces comprehensive validation.
+//
+// 4. Recoverable: Session state persists in .session_recovery across interruptions,
+//    failures, and timeouts. Checkpoints after each phase enable fault tolerance.
+//
+// 5. Platform-Aware: Explicit handling of OpenBSD/Cygwin/POSIX differences.
+//    Cat-only file reading, quoted paths, base tools only, unveil/pledge security.
+//
+// 6. Frozen State: Version 226.0.0 locked on 2025-09-30. SHA-256 fingerprint
+//    (CI-computed) prevents unauthorized changes. Governance rules preserved.
+//
+// 7. No Code in Config: Governance forbids embedding logic, regex, or slashes
+//    in JSON. Prevents injection attacks and maintains declarative purity.
+//
+// 8. Adversarial by Design: Built-in skepticism through 6 perspectives (architect,
+//    security, operator, developer, end_user, skeptic) × 3 checks × 3 questions
+//    = 54 potential challenge dimensions.
+//
+// 9. Convergence-Based: Auto-iterates until stable (delta <1%) or hits hard limit
+//    (10 iterations). Prevents both premature stopping and infinite loops.
+//
+// 10. Context-Optimized: LRU eviction keeps relevant files (changed, neighbors,
+//     recent) in 10K token budget. Smart loading reduces usage, prevents overflow.
+
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+
+  // META: Version control and philosophical foundation
+  // The frozen state prevents runtime modification. SHA-256 fingerprinting
+  // (computed in CI) detects tampering. Philosophy drives all decisions:
+  // questions → commands, evidence → opinion, clarity → cleverness.
+
   "meta": {
-    "version": "224.1.0",
+    "version": "226.0.0",
     "philosophy": "questions before commands, evidence over opinion, clarity over cleverness",
     "environment": "text_only_simulation no_external_tools self_contained",
     "state": "frozen",
-    "frozen_at": "2025-09-29T19:30:00Z"
+    "frozen_at": "2025-09-30T12:00:00Z"
   },
-  
+
+  // CONSTANTS: Single source of truth for all limits
+  // Referenced throughout via @ref:constants.limits.* to prevent drift.
+  // Changes here cascade automatically. Example: coverage=0.8 means 80% test
+  // coverage required. Convergence=0.01 means iterate until delta <1%.
+
   "constants": {
-    "limits": { "coverage": 0.8, "complexity": 10, "convergence": 0.01, "iterations": 10 }
+    "limits": {
+      "coverage": 0.8,
+      "complexity": 10,
+      "convergence": 0.01,
+      "iterations": 10,
+      "coupling": 5,
+      "duplication": 0.03
+    }
   },
-  
+
+  // GOVERNANCE: Change control and protection mechanisms
+  // Requires: owner approval, diffs, semantic commits, backups, audit logs
+  // Preserves: execution logic, validation gates, core principles (immutable)
+  // Forbids: code in JSON (injection), regex (ReDoS), slashes (path traversal)
+
   "governance": {
     "changes": {
       "require": ["diff", "semantic_commits", "backup", "audit_log", "owner_approval"],
@@ -19,7 +85,18 @@
       "forbid": ["code_in_json", "regex", "slashes"]
     }
   },
-  
+
+  // PRINCIPLES: Declarative rule engine with automatic triggers
+  //
+  // Syntax: "principle": "@condition→action"
+  //
+  // Examples:
+  //   @3→abstract          = After 3 repetitions, abstract (DRY)
+  //   @complexity>10→simplify = When complexity exceeds 10, simplify (KISS)
+  //   @unused→remove       = When unused, remove (YAGNI)
+  //
+  // These trigger automatically during validation, creating self-enforcing code.
+
   "principles": {
     "dry": "@3→abstract",
     "kiss": "@complexity>10→simplify",
@@ -33,7 +110,46 @@
     "latch": "@unorganized→organize",
     "minimalism": "@bloat→subtract"
   },
-  
+
+  // METRICS: Precise definitions for all measurements
+  //
+  // Complexity: Cyclomatic complexity via AST analysis (branches + 1)
+  // Coupling: Incoming + outgoing dependencies per module
+  // Duplication: Token-based similarity (>3% considered duplicate)
+  // Coverage: Lines executed / total executable lines
+  // Churn: Files modified in last N commits / total files
+
+  "metrics": {
+    "complexity": {
+      "method": "cyclomatic",
+      "formula": "branches + loops + catches + 1",
+      "tool": "ast_analysis"
+    },
+    "coupling": {
+      "method": "afferent_efferent",
+      "formula": "fan_in + fan_out",
+      "includes": ["imports", "requires", "uses"]
+    },
+    "duplication": {
+      "method": "token_similarity",
+      "threshold": "@ref:constants.limits.duplication",
+      "min_tokens": 50
+    },
+    "coverage": {
+      "method": "line_coverage",
+      "formula": "executed_lines / executable_lines",
+      "exclude": ["comments", "whitespace", "declarations"]
+    }
+  },
+
+  // EXECUTION: 8-phase cycle with auto-iteration and session recovery
+  //
+  // Bootstrap: validate → resolve_refs → select_profile → start
+  // Cycle: discover → analyze → ideate → design → implement → validate → deliver → learn
+  // Iteration: Auto-iterate until delta <1% or 10 iterations (whichever comes first)
+  // Context: LRU eviction keeps changed/neighbors/recent files in 10K token budget
+  // Recovery: Checkpoints per phase, 3 retries, atomic writes to .session_recovery
+
   "execution": {
     "bootstrap": "validate→resolve_refs→select_profile→start",
     "profiles": {
@@ -64,9 +180,54 @@
       "strategy": "line_by_line,preserve_state,cat_only",
       "merge": "smallest_wins",
       "recovery": "checkpoint_per_phase,retry_3x"
+    },
+    "session": {
+      "recovery_file": ".session_recovery",
+      "persist": ["current_phase", "completed_files", "pending_files", "context_state"],
+      "restore_on": "interruption,failure,timeout",
+      "format": "json,utf8,atomic_write"
     }
   },
-  
+
+  // ERROR HANDLING: Failure modes and recovery strategies
+  //
+  // Classification: errors categorized by severity (fatal, recoverable, warning)
+  // Recovery: automatic retry with exponential backoff, fallback to last checkpoint
+  // Logging: structured logs with correlation IDs, stored in .error_log
+  // Escalation: fatal errors notify operator, recoverable errors logged only
+
+  "errors": {
+    "classification": {
+      "fatal": ["security_breach", "data_loss", "corruption"],
+      "recoverable": ["network_timeout", "resource_unavailable", "parse_error"],
+      "warning": ["deprecation", "performance_degradation", "style_violation"]
+    },
+    "recovery": {
+      "retry": "exponential_backoff",
+      "max_attempts": 3,
+      "backoff_base": 2,
+      "restore_checkpoint": true
+    },
+    "logging": {
+      "format": "json,structured",
+      "file": ".error_log",
+      "include": ["timestamp", "phase", "error_type", "context", "stack_trace"]
+    }
+  },
+
+  // VALIDATION: Quality gates + evidence model + adversarial testing
+  //
+  // Gates: 7 binary pass/fail checks (functional, secure, maintainable, accessible,
+  //        performant, deployable, privacy). Profile determines which gates activate.
+  //
+  // Evidence: Weighted proof from 5 sources must reach 100% threshold:
+  //   tests=35%, scans=25%, reviews=20%, logs=10%, profiling=10%
+  //   Formula: (0.35×tests + 0.25×scans + 0.20×reviews + 0.10×logs + 0.10×profiling) ≥ 1.0
+  //   Requires ALL 5 sources - no single method can satisfy requirement.
+  //
+  // Adversarial: 6 perspectives × 3 checks × 3 questions = 54 challenge dimensions
+  //   Perspectives: architect, security, operator, developer, end_user, skeptic
+
   "validation": {
     "gates": {
       "functional": { "tests": "pass", "coverage": "@ref:constants.limits.coverage" },
@@ -87,7 +248,24 @@
       "perspectives": ["architect", "security", "operator", "developer", "end_user", "skeptic"]
     }
   },
-  
+
+  // STANDARDS: Code quality, conventions, platform compatibility, language-specific
+  //
+  // Quality: Zero tolerance for code smells (long_method, god_object, duplicate_code,
+  //          feature_envy). Style locked for 180 days. Beautiful code = automated format,
+  //          meaningful names, clear structure, active voice.
+  //
+  // Conventions: UTF-8, LF, 2-space indent, snake_case. Output complete (never truncate).
+  //              Cat-only file reading. Semantic git commits, incremental, low churn.
+  //
+  // Platform: POSIX (cat only, zsh/bash, quoted paths), OpenBSD (base tools, unveil/pledge),
+  //           Cygwin (mixed paths OK, CRLF tolerant), Cross-platform (no GNU, prefer POSIX).
+  //
+  // Languages: Ruby (double quotes, frozen, keyword args), Rails (v8, Hotwire, OpenBSD),
+  //            JavaScript (single quotes, const, await), Shell (zsh, strict, quoted),
+  //            HTML (semantic, ARIA, WCAG AA), CSS (mobile-first, BEM, logical),
+  //            Rust (no unsafe, Result, Clippy).
+
   "standards": {
     "quality": {
       "smells": { "zero_new": ["long_method", "god_object", "duplicate_code", "feature_envy"] },
@@ -106,22 +284,77 @@
       "refactor": ["flatten", "decouple", "hoist", "consolidate", "extract", "inline"],
       "git": "semantic,incremental,low_churn"
     },
+    "platform": {
+      "posix": {
+        "file_ops": "cat_only,no_head_tail",
+        "shell": "zsh,bash_fallback",
+        "paths": "quoted,absolute_preferred"
+      },
+      "openbsd": {
+        "tools": "base_only,no_gnu",
+        "permissions": "unveil,pledge",
+        "user": "unprivileged_preferred"
+      },
+      "cygwin": {
+        "paths": "mixed_ok,quote_required",
+        "line_endings": "lf_preferred,crlf_tolerant",
+        "tools": "posix_subset"
+      },
+      "cross_platform": {
+        "avoid": ["gnu_extensions", "bashisms", "head", "tail"],
+        "prefer": ["cat", "awk", "sed_posix", "grep_basic"],
+        "test": "bracket_double"
+      }
+    },
     "languages": {
       "ruby": "double,frozen,keyword,rubocop,minitest",
-      "rails": "v8,hotwire,kamal",
+      "rails": "v8, hotwire, openbsd_deployment",
       "javascript": "single,const,await,eslint,prettier",
+      "typescript": "strict,no_any,eslint,prettier",
       "shell": "zsh,strict,quoted,shellcheck",
       "html": "semantic,aria,wcag_aa",
       "css": "mobile_first,bem,logical",
+      "sql": "parameterized,no_dynamic,explain_analyze",
+      "yaml": "quoted_strings,explicit_types,yamllint",
       "rust": "no_unsafe,result,clippy"
     }
   },
-  
+
+  // DEPENDENCIES: Package and module management policies
+  //
+  // Approval: Security scan + license check before adding
+  // Updates: Automated security patches, manual feature updates
+  // Pinning: Lock files required, exact versions in production
+  // Vendoring: Critical dependencies vendored for supply chain security
+
+  "dependencies": {
+    "approval": {
+      "require": ["security_scan", "license_check", "maintainer_review"],
+      "allowed_licenses": ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"]
+    },
+    "updates": {
+      "security": "automatic",
+      "feature": "manual_review"
+    },
+    "pinning": "exact_versions",
+    "vendoring": ["critical", "unmaintained", "supply_chain_risk"]
+  },
+
+  // OPERATIONS: Deployment strategy and security fingerprinting
+  //
+  // Deployment: Blue-green strategy, health endpoint, OpenBSD native platform.
+  //             Tools: rcctl (service control), relayd (load balancer), httpd (web server),
+  //             unveil (filesystem restrictions), pledge (system call restrictions).
+  //
+  // Security: SHA-256 fingerprint computed in CI to detect tampering. Excludes meta.frozen_at
+  //           to allow timestamp updates without breaking signature verification.
+
   "operations": {
     "deployment": {
       "strategy": "blue_green",
       "health": "endpoint",
-      "zero_downtime": "kamal"
+      "platform": "openbsd_native",
+      "tools": "rcctl, relayd, httpd, unveil, pledge"
     },
     "security": {
       "fingerprint": "sha256:CI_COMPUTED",
@@ -141,6 +374,90 @@
         "notes": "preserve_thinking_blocks_in_tool_turns summarized_in_claude_4 full_in_sonnet_3_7"
       }
     }
+  },
+
+  // AUTOMATION: Batch operations, refactoring guarantees, cross-cutting changes
+  //
+  // Batch: Delegate to agents when file_count >10 OR complexity >threshold.
+  //        Preserves: functionality, security, reversibility. Verify via spot checks.
+  //
+  // Refactoring: Recursive + in-place, atomic per-file, git-tracked checkpoints.
+  //              Validates: syntax, semantics, tests before accepting changes.
+  //
+  // Cross-cutting: Shell dialect, naming conventions, import styles applied consistently.
+  //                All changes verified and documented. Exceptions explicitly justified.
+
+  "automation": {
+    "batch_operations": {
+      "strategy": "agent_delegation",
+      "when": "file_count>10 OR complexity>threshold",
+      "preserve": ["functionality", "security", "reversibility"],
+      "verify": "spot_check,boundary_cases"
+    },
+    "refactoring": {
+      "scope": "recursive,in_place",
+      "atomic": "per_file",
+      "rollback": "git_tracked,checkpoint",
+      "validation": "syntax,semantics,tests"
+    },
+    "cross_cutting": {
+      "changes": ["shell_dialect", "naming_convention", "import_style"],
+      "apply": "consistent,verified,documented",
+      "exceptions": "explicit,justified,tracked"
+    }
+  },
+
+  // WORKFLOWS: Common execution patterns for typical scenarios
+  //
+  // New Feature: full cycle from discover to deliver
+  // Bug Fix: shortened cycle (analyze → implement → validate)
+  // Refactor: focus on maintainability (implement → validate with design gates)
+  // Security Fix: expedited with security gate emphasis
+
+  "workflows": {
+    "new_feature": {
+      "phases": ["discover", "analyze", "ideate", "design", "implement", "validate", "deliver", "learn"],
+      "profile": "standard",
+      "gates": ["functional", "secure", "maintainable"]
+    },
+    "bug_fix": {
+      "phases": ["analyze", "implement", "validate", "deliver"],
+      "profile": "minimal",
+      "gates": ["functional", "secure"]
+    },
+    "refactor": {
+      "phases": ["analyze", "design", "implement", "validate"],
+      "profile": "standard",
+      "gates": ["maintainable", "functional"]
+    },
+    "security_fix": {
+      "phases": ["analyze", "implement", "validate", "deliver"],
+      "profile": "complete",
+      "gates": ["secure", "functional"],
+      "priority": "high",
+      "fast_track": true
+    }
+  },
+
+  // ROLLBACK: Reversion procedures for failed changes
+  //
+  // Triggers: Gate failure, test failure, deployment failure, manual request
+  // Strategy: Git revert for committed changes, file restore for uncommitted
+  // Verification: Re-run gates after rollback to confirm clean state
+  // Audit: All rollbacks logged with reason, operator, timestamp
+
+  "rollback": {
+    "triggers": ["gate_failure", "test_failure", "deployment_failure", "manual"],
+    "strategy": {
+      "committed": "git_revert",
+      "uncommitted": "restore_from_checkpoint",
+      "deployed": "blue_green_switch"
+    },
+    "verification": {
+      "re_run_gates": true,
+      "confirm_clean": true
+    },
+    "audit": ["timestamp", "trigger", "operator", "files_affected", "reason"]
   },
 
   "apps": [

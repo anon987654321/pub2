@@ -1,7 +1,10 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
 commit_to_git() {
   git add -A
   git commit -m "$1"
-  echo "$1"
+  print "$1"
 }
 
 command_exists() {
@@ -9,8 +12,8 @@ command_exists() {
 }
 
 check_file_exists() {
-  if [ ! -f "$1" ]; then
-    echo "File $1 does not exist. Exiting..."
+  if [[ ! -f "$1" ]]; then
+    print "File $1 does not exist. Exiting..."
     exit 1
   fi
 }

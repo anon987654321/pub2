@@ -1,6 +1,7 @@
-cd "$BASE_DIR"
+#!/usr/bin/env zsh
+set -euo pipefail
 
-# -- SET UP DEVISE FOR USER AUTHENTICATION --
+cd "$BASE_DIR"
 
 bundle add devise
 bundle install
@@ -10,8 +11,6 @@ bin/rails generate devise User
 bin/rails db:migrate
 
 commit_to_git "Added Devise and hooked it up to User model."
-
-# -- SET UP OMNIAUTH FOR USER AUTHENTICATION --
 
 bundle add omniauth-openid-connect
 bundle add omniauth-google-oauth2

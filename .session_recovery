@@ -1,0 +1,39 @@
+# Claude Code Session Recovery Log
+Date: 2025-09-29
+Working Directory: G:\pub
+
+## Current Task
+Analyze master.json and complete everything in rails/ recursively. Extract and analyze old backups from https://github.com/anon987654321/pub/tree/main/__OLD_BACKUPS and restore critical/valuable content to pub2/rails/ systematically.
+
+## Task Progress
+- [ ] Read and analyze master.json configuration
+- [ ] Analyze all files in rails/ directory recursively
+- [ ] Fetch and analyze old backups from GitHub repository
+- [ ] Systematically restore critical/valuable content to pub2/rails/
+
+## Instructions
+- Don't create any new files, write into existing ones
+- Adhere to master.json while completing rails/ tasks
+- Extract and analyze all old backups systematically
+- Restore only critical or highly valuable content
+
+## Git Status at Start
+Current branch: main
+Modified files in rails/:
+- @active_storage_and_imageprocessing.sh
+- @ai.sh
+- @common.sh
+- @devise.sh
+- @falcon.sh
+- @instant_messaging.sh
+- @live_cam_streaming.sh
+- @live_streaming.sh
+- @postgresql.sh
+- @posts.sh
+- @pwa.sh
+- @rails_new.sh
+- @redis.sh
+- @yarn.sh
+- __shared.sh
+
+Last updated: 2025-09-29

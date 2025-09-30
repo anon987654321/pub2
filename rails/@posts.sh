@@ -1,6 +1,9 @@
-cd "$BASE_DIR"
+#!/usr/bin/env zsh
+set -euo pipefail
 
-echo "Generating Posts, Communities, and Comments..."
+# Posts, Communities, and Comments feature setup
+
+print "Generating Posts, Communities, and Comments..."
 
 bundle add friendly_id
 bundle install
@@ -168,12 +171,11 @@ cat <<EOF > app/views/comments/create.turbo_stream.erb
 EOF
 
 # FriendlyId for SEO-friendly URLs
-echo "Installing FriendlyId for SEO-friendly URLs..."
+print "Installing FriendlyId for SEO-friendly URLs..."
 
 bundle add friendly_id
 bundle install
 bin/rails generate friendly_id
-commit_to_git "Installed FriendlyId for SEO-friendly URLs."
 
 cat <<EOF > app/models/user.rb
 class User < ApplicationRecord
@@ -222,10 +224,8 @@ class Comment < ApplicationRecord
 end
 EOF
 
-commit_to_git "Set up FriendlyId for SEO-friendly URLs for User, Community, Post, and Comment models."
-
 # I18n and Babosa for translation and transliteration
-echo "Setting up I18n and Babosa for translation and transliteration..."
+print "Setting up I18n and Babosa for translation and transliteration..."
 bundle add babosa
 
 cat <<EOF > config/initializers/locale.rb
@@ -235,10 +235,8 @@ I18n.default_locale = :en
 require "babosa"
 EOF
 
-commit_to_git "Set up I18n and Babosa for translation and transliteration."
-
 # Add Private Posts feature
-echo "Adding private posts feature..."
+print "Adding private posts feature..."
 cat <<EOF > app/models/post.rb
 class Post < ApplicationRecord
   belongs_to :user
@@ -297,4 +295,3 @@ class PostsController < ApplicationController
 end
 EOF
 
-commit_to_git "Added private posts feature."

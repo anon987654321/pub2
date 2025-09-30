@@ -1,7 +1,8 @@
 
 #!/usr/bin/env zsh
+set -euo pipefail
 
-cd "$(dirname "$0")"
+# Live streaming feature setup
 
 # Add dependencies
 yarn add video.js @hotwired/turbo-rails stimulus
@@ -9,7 +10,7 @@ yarn add video.js @hotwired/turbo-rails stimulus
 # Generate models, controllers, and views for live streaming
 bin/rails generate model Stream title:string description:text user:references
 bin/rails generate controller Streams index show new create destroy
-echo "resources :streams, only: [:index, :show, :new, :create, :destroy]" >> config/routes.rb
+print "resources :streams, only: [:index, :show, :new, :create, :destroy]" >> config/routes.rb
 
 # Update Stream model
 cat <<EOF > app/models/stream.rb
@@ -100,4 +101,3 @@ cat <<EOF > app/views/streams/new.html.erb
 EOF
 
 bin/rails db:migrate
-commit_to_git "Set up live streaming functionality"
