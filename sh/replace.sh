@@ -1,18 +1,8 @@
-#!/bin/sh
-set -euo pipefail
-
-
 #!/usr/bin/env zsh
 # Swaps out words in files or renames them.
 # Usage: ./replace.sh [-b] <old> <new> [folder]
 
 set -e
-
-backup=false
-if [[ "$1" == "-b" ]]; then
-  backup=true
-  shift
-fi
 
 is_filename=false
 if [[ "$1" == "-f" ]]; then

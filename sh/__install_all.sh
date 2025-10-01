@@ -1,12 +1,8 @@
-#!/bin/sh
-set -euo pipefail
-
-
 #!/usr/bin/env zsh
 # Sets up utility scripts in ~/bin and adds them to PATH.
-# Usage: ./install.sh
+# Usage: ./__install_all.sh
 
-set -e
+set -euo pipefail
 
 echo "Installing scripts..."
 
@@ -14,11 +10,9 @@ log_file="$HOME/script_errors.log"
 [[ -f "$log_file" ]] && rm "$log_file"
 
 cat << 'EOF' > backup.sh
-#!/usr/bin/env zsh
 # Archives folders to dated .tgz files, skips unchanged ones.
 # Usage: ./backup.sh [directory]
 
-set -e
 
 log_error() { echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1" >> "$HOME/script_errors.log"; }
 
@@ -70,11 +64,9 @@ chmod +x backup.sh
 # ---
 
 cat << 'EOF' > clean.sh
-#!/usr/bin/env zsh
 # Removes carriage returns, trailing whitespaces, and extra blank lines from text files.
 # Usage: ./clean.sh [target_folder]
 
-set -e
 
 dir="${1:-.}"
 
@@ -109,11 +101,9 @@ chmod +x clean.sh
 # ---
 
 cat << 'EOF' > hack.sh
-#!/usr/bin/env zsh
 # Finds text files matching a pattern and opens them in Vim.
 # Usage: ./hack.sh [pattern]
 
-set -e
 
 pattern="$1"
 if [[ -n "$pattern" ]]; then
@@ -154,11 +144,9 @@ chmod +x hack.sh
 # ---
 
 cat << 'EOF' > lint.sh
-#!/usr/bin/env zsh
 # Checks and fixes Ruby code files for errors.
 # Usage: ./lint.sh
 
-set -e
 
 check_tool() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -194,11 +182,9 @@ chmod +x lint.sh
 # ---
 
 cat << 'EOF' > perms.sh
-#!/usr/bin/env zsh
 # Changes file ownership and permissions.
 # Usage: ./perms.sh <owner> <group> <file_perms> <folder_perms>
 
-set -e
 
 if (( $# < 4 )); then
   echo "Usage: $0 <owner> <group> <file_perms> <folder_perms>"
@@ -250,11 +236,9 @@ chmod +x perms.sh
 # ---
 
 cat << 'EOF' > replace.sh
-#!/usr/bin/env zsh
 # Swaps out words in files or renames them.
 # Usage: ./replace.sh [-b] <old> <new> [folder]
 
-set -e
 
 backup=false
 if [[ "$1" == "-b" ]]; then
@@ -319,11 +303,9 @@ chmod +x replace.sh
 # ---
 
 cat << 'EOF' > showp.sh
-#!/usr/bin/env zsh
 # Creates a Markdown list of text files and their contents.
 # Usage: ./showp.sh
 
-set -e
 
 root=$(basename "$PWD")
 date=$(date +"%Y-%m-%d_%H%M%S")
@@ -356,11 +338,9 @@ chmod +x showp.sh
 # ---
 
 cat << 'EOF' > svgomg.sh
-#!/usr/bin/env zsh
 # Shrinks SVG files to save space.
 # Usage: ./svgomg.sh [folder]
 
-set -e
 
 if ! command -v svgo >/dev/null 2>&1; then
   echo "Error: svgo not found. Install via npm."
@@ -388,11 +368,9 @@ chmod +x svgomg.sh
 # ---
 
 cat << 'EOF' > tree.sh
-#!/usr/bin/env zsh
 # Displays a tree of directories and files.
 # Usage: ./tree.sh [folder] [-a]
 
-set -e
 
 include_hidden=false
 folder="."
@@ -432,11 +410,9 @@ chmod +x tree.sh
 # ---
 
 cat << 'EOF' > free_up_space.sh
-#!/usr/bin/env zsh
 # Finds and deletes large files to free up space.
 # Usage: ./free_up_space.sh [directory]
 
-set -e
 
 search_dir="${1:-.}"
 
