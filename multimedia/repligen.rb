@@ -104,8 +104,8 @@ module Bootstrap
     nil
   end
 
-  def self.ensure_openai_token
-    return ENV["OPENAI_API_KEY"] if ENV["OPENAI_API_KEY"]
+  def self.ensure_anthropic_token
+    return ENV["ANTHROPIC_API_KEY"] if ENV["ANTHROPIC_API_KEY"]
 
     config_dir = File.expand_path("~/.config/repligen")
     config_file = File.join(config_dir, "config.json")
@@ -113,10 +113,10 @@ module Bootstrap
     if File.exist?(config_file)
       begin
         config = JSON.parse(File.read(config_file))
-        token = config["openai_api_key"]
+        token = config["anthropic_api_key"]
         if token && !token.empty?
-          ENV["OPENAI_API_KEY"] = token
-          dmesg "OK OPENAI_API_KEY loaded from user config"
+          ENV["ANTHROPIC_API_KEY"] = token
+          dmesg "OK ANTHROPIC_API_KEY loaded from user config"
           return token
         end
       rescue => e
@@ -124,7 +124,7 @@ module Bootstrap
       end
     end
 
-    dmesg "WARN OPENAI_API_KEY not found, GPT-4 Vision disabled"
+    dmesg "WARN ANTHROPIC_API_KEY not found, Claude vision disabled"
     nil
   end
 
@@ -147,14 +147,14 @@ module Bootstrap
     sqlite_available = ensure_sqlite3
     ferrum_available = ensure_ferrum
     token = ensure_token
-    openai_token = ensure_openai_token
+    anthropic_token = ensure_anthropic_token
     config = load_master_config
-    
+
     {
       sqlite_available: sqlite_available,
       ferrum_available: ferrum_available,
       token: token,
-      openai_token: openai_token,
+      anthropic_token: anthropic_token,
       config: config
     }
 
@@ -437,7 +437,7 @@ class Repligen
 
   def discover_models(args)
     pages = (args[0] || 5).to_i
-    scraper = ReplicateExplorer.new(@bootstrap[:openai_token])
+    scraper = ReplicateExplorer.new(@bootstrap[:anthropic_token])
     models = scraper.discover(max_pages: pages)
     puts "Discovered #{models.size} models"
     models.each { |m| puts "  #{m['id']}: #{m['type']}" }
@@ -446,7 +446,7 @@ class Repligen
   def radical_chain(args)
     style = args[0] || 'cinematic'
     length = (args[1] || 5).to_i
-    scraper = ReplicateExplorer.new(@bootstrap[:openai_token])
+    scraper = ReplicateExplorer.new(@bootstrap[:anthropic_token])
     chain = scraper.build_radical_chain(style: style, length: length)
 
     puts "\nRadical #{style} chain (#{chain.length} steps):"
@@ -477,8 +477,8 @@ end
 
 # Replicate model discovery via Ferrum + GPT-4 Vision
 class ReplicateExplorer
-  def initialize(openai_token, db = nil)
-    @openai_token = openai_token
+  def initialize(anthropic_token, db = nil)
+    @anthropic_token = anthropic_token
     @browser = nil
     @db = db || init_db
     @models = load_from_db
@@ -516,7 +516,7 @@ class ReplicateExplorer
         html = @browser.body
         screenshot = screenshot_page(page)
 
-        if screenshot && @openai_token
+        if screenshot && @anthropic_token
           models = extract_via_gpt4v(screenshot, html)
           discovered.concat(models) if models
           Bootstrap.dmesg "page #{page+1}: #{models&.size || 0} models"
@@ -590,33 +590,34 @@ class ReplicateExplorer
   end
 
   def extract_via_gpt4v(screenshot, html)
-    return nil unless @openai_token
+    return nil unless @anthropic_token
     require "base64"
 
     image_b64 = Base64.strict_encode64(File.read(screenshot))
-    uri = URI("https://api.openai.com/v1/chat/completions")
+    uri = URI("https://api.anthropic.com/v1/messages")
     req = Net::HTTP::Post.new(uri)
-    req["Authorization"] = "Bearer #{@openai_token}"
+    req["x-api-key"] = @anthropic_token
+    req["anthropic-version"] = "2023-06-01"
     req["Content-Type"] = "application/json"
     req.body = JSON.generate({
-      model: "gpt-4-vision-preview",
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 2000,
       messages: [{
         role: "user",
         content: [
-          { type: "text", text: "Extract Replicate models as JSON: [{\"id\":\"owner/name\",\"type\":\"image/video/audio\",\"description\":\"...\",\"cost\":0.05}]. HTML: #{html[0..3000]}" },
-          { type: "image_url", image_url: { url: "data:image/png;base64,#{image_b64}" }}
+          { type: "image", source: { type: "base64", media_type: "image/png", data: image_b64 }},
+          { type: "text", text: "Extract Replicate models from this screenshot as JSON: [{\"id\":\"owner/name\",\"type\":\"image/video/audio\",\"description\":\"...\",\"cost\":0.05}]. HTML context: #{html[0..3000]}" }
         ]
-      }],
-      max_tokens: 2000
+      }]
     })
 
     res = Net::HTTP.start(uri.host, uri.port, use_ssl: true, read_timeout: 90) { |http| http.request(req) }
     return nil unless res.code == "200"
 
-    content = JSON.parse(res.body).dig("choices", 0, "message", "content")
+    content = JSON.parse(res.body).dig("content", 0, "text")
     JSON.parse(content.gsub(/```json\n?/, "").gsub(/```/, ""))
   rescue => e
-    Bootstrap.dmesg "WARN gpt4v: #{e.message}"
+    Bootstrap.dmesg "WARN claude vision: #{e.message}"
     nil
   end
 
