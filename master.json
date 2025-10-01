@@ -784,17 +784,34 @@
       "openbsd_deployment": {
         "description": "VPS deployment to OpenBSD 7.x",
         "prerequisites": ["openbsd_7x", "root_doas_access", "internet_connectivity"],
+        "critical_gotchas": {
+          "dns_chicken_egg": {
+            "problem": "Registries (Norid, etc) require nameserver responding on port 53 BEFORE accepting registration",
+            "solution": "Set up NSD in pre-point stage, THEN register nameserver, THEN run post-point",
+            "sequence": ["1_run_pre_point_sets_up_dns", "2_register_ns_at_registrar", "3_point_domains_to_ns", "4_run_post_point_for_tls"]
+          },
+          "nsd_remote_control": {
+            "problem": "NSD fails if remote-control enabled but TLS certs missing",
+            "solution": "Disable remote-control in initial nsd.conf, enable later if needed",
+            "config": "Omit remote-control section from initial /var/nsd/etc/nsd.conf"
+          },
+          "pf_ssh_limits": {
+            "problem": "Default bruteforce limits (10 conn, 5/60 rate) too aggressive for deployment",
+            "solution": "Relax to 15 connections, 15/60 rate during setup",
+            "config": "max-src-conn 15, max-src-conn-rate 15/60"
+          }
+        },
         "phases": [
-          { "name": "ssh_setup", "steps": ["verify_key", "test_connection", "set_password"] },
-          { "name": "validation", "steps": ["check_man_pages", "verify_configs", "test_services"] },
-          { "name": "dnssec", "steps": ["generate_keys", "sign_zones", "verify_ds_records"] },
-          { "name": "deployment", "steps": ["pre_point", "wait_dns_delegation", "post_point"] },
-          { "name": "verification", "steps": ["test_tls", "check_services", "validate_dns"] }
+          { "name": "pre_point", "steps": ["ruby_rails", "databases", "pf_firewall", "nsd_dns", "deploy_apps"], "output": "dns_responding_on_port_53" },
+          { "name": "registrar", "steps": ["register_ns_at_norid", "verify_dns_validation", "point_domains"], "requires": "dns_responding" },
+          { "name": "post_point", "steps": ["acme_tls", "relayd", "ptr_records", "cron"], "requires": "domains_resolving" },
+          { "name": "verification", "steps": ["test_tls", "check_services", "validate_dnssec"] }
         ],
         "validation": {
           "check_against": "man.openbsd.org",
           "forbidden_commands": ["head", "tail", "bash"],
-          "required_tools": ["nsd", "ldns-keygen", "acme-client", "relayd", "pf"]
+          "required_tools": ["nsd", "ldns-keygen", "acme-client", "relayd", "pf"],
+          "base_tools_only": "NSD and Unbound in OpenBSD base, no pkg_add needed"
         },
         "rollback": {
           "strategy": "restore_from_backup",
