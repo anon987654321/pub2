@@ -507,7 +507,7 @@ match in all scrub (no-df random-id max-mss 1440)
 block all
 pass out all
 pass in proto tcp to port 22 flags S/SA synproxy state \
-  (source-track rule, max-src-conn 10, max-src-conn-rate 5/60, \
+  (source-track rule, max-src-conn 15, max-src-conn-rate 15/60, \
 
    overload <bruteforce> flush global)
 
@@ -942,6 +942,7 @@ setup_cron() {
 }
 
 # Pre-point deployment (before domains point here)
+# CRITICAL: DNS must be running BEFORE Norid nameserver registration
 pre_point() {
 
   log "INFO" "Starting pre-point deployment v$VERSION"
@@ -954,6 +955,10 @@ pre_point() {
   setup_firewall
 
   setup_limits
+
+  # DNS MUST be set up FIRST (before domain registration)
+  # Norid requires ns.brgen.no to respond on port 53 before accepting registration
+  setup_dns_dnssec
 
   # Deploy all apps
   local app_count=0
@@ -974,20 +979,26 @@ pre_point() {
 
   log "INFO" ""
 
-  log "INFO" "Next: Point domains to $MAIN_IP then run: doas zsh openbsd.sh --post-point"
+  log "INFO" "IMPORTANT: DNS is now running on port 53"
+  log "INFO" "1. Register nameserver ns.brgen.no -> $MAIN_IP at Norid"
+  log "INFO" "2. Point all domains to ns.brgen.no"
+  log "INFO" "3. Wait for DNS propagation (dig @8.8.8.8 brgen.no)"
+  log "INFO" "4. Then run: doas zsh openbsd.sh --post-point"
 
 }
 
 # Post-point deployment (after domains point here)
+# Run AFTER: 1) Norid accepts ns.brgen.no, 2) Domains point to nameserver
 post_point() {
 
   log "INFO" "Starting post-point deployment v$VERSION"
 
   validate_environment
-  setup_dns_dnssec
 
+  # TLS requires domains to resolve (acme-client needs HTTP-01 challenge)
   setup_tls
 
+  # relayd requires TLS certificates
   setup_relayd
 
   setup_ptr_records
@@ -998,6 +1009,8 @@ post_point() {
   log "INFO" "Post-point deployment complete"
   log "INFO" "  Domains configured: ${#all_domains[@]}"
 
+  log "INFO" "  TLS certificates obtained"
+  log "INFO" "  relayd load balancer running"
   log "INFO" "  Submit DS records from /var/nsd/zones/keys/*.ds to your registrars"
 
 }
