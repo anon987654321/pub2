@@ -206,23 +206,54 @@ EOF
     fi
 }
 
-setup_live_search() {
-    log "Setting up live search functionality"
-    install_gem "stimulus_reflex"
-    
-    # Create basic search reflex
-    if [ ! -f "app/reflexes/search_reflex.rb" ]; then
-        mkdir -p app/reflexes
-        cat > app/reflexes/search_reflex.rb << EOF
-class SearchReflex < ApplicationReflex
-  def search
-    @query = element.value
-    # Implement search logic based on current model
-  end
-end
-EOF
+setup_hotwire() {
+    log "Setting up Hotwire (Turbo + Stimulus)"
+    install_gem "turbo-rails"
+    install_gem "stimulus-rails"
+
+    if [ ! -f "app/javascript/controllers/application.js" ]; then
+        bin/rails turbo:install stimulus:install
     fi
 }
+
+setup_cable_ready() {
+    log "Setting up CableReady for real-time updates"
+    install_gem "cable_ready"
+
+    if ! grep -q "CableReady" app/javascript/application.js 2>/dev/null; then
+        yarn add cable_ready
+    fi
+}
+
+setup_live_search() {
+    log "Setting up live search with Turbo Streams"
+    install_gem "pagy"
+
+    if [ ! -f "app/javascript/controllers/search_controller.js" ]; then
+        mkdir -p app/javascript/controllers
+        cat > app/javascript/controllers/search_controller.js << "SEARCHEOF"
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["input", "results"]
+  static values = { url: String }
+
+  search() {
+    clearTimeout(this.timeout)
+    this.timeout = setTimeout(() => {
+      const query = this.inputTarget.value
+      const url = `${this.urlValue}?q=${encodeURIComponent(query)}`
+
+      fetch(url, {
+        headers: { "Accept": "text/vnd.turbo-stream.html" }
+      })
+      .then(response => response.text())
+      .then(html => Turbo.renderStreamMessage(html))
+    }, 300)
+  }
+}
+SEARCHEOF
+    fi
 
 setup_infinite_scroll() {
     log "Setting up infinite scroll"
