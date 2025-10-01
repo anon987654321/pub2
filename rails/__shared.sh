@@ -463,3 +463,90 @@ generate_turbo_views() {
 EOF
     fi
 }
+# Parameterized code generators to reduce duplication
+generate_infinite_scroll_reflex() {
+    local model_class="$1"
+    local model_plural="${2:-$(echo "$model_class" | awk '{print tolower($0) "s"}')}"
+    log "Generating infinite scroll reflex for $model_class"
+    
+    mkdir -p app/reflexes
+    cat > "app/reflexes/${model_plural}_infinite_scroll_reflex.rb" << EOF
+class ${model_class}sInfiniteScrollReflex < InfiniteScrollReflex
+  def load_more
+    @pagy, @collection = pagy(${model_class}.where(community: ActsAsTenant.current_tenant).order(created_at: :desc), page: page)
+    super
+  end
+end
+EOF
+}
+
+generate_mapbox_controller() {
+    local controller_name="$1"
+    local center_lng="${2:-5.3467}"
+    local center_lat="${3:-60.3971}"
+    local model_plural="${4:-listings}"
+    log "Generating Mapbox controller: $controller_name"
+    
+    mkdir -p app/javascript/controllers
+    cat > "app/javascript/controllers/${controller_name}_controller.js" << EOF
+import { Controller } from "@hotwired/stimulus"
+import mapboxgl from "mapbox-gl"
+import MapboxGeocoder from "mapbox-gl-geocoder"
+
+export default class extends Controller {
+  static values = { apiKey: String, ${model_plural}: Array }
+
+  connect() {
+    mapboxgl.accessToken = this.apiKeyValue
+    this.map = new mapboxgl.Map({
+      container: this.element,
+      style: "mapbox://styles/mapbox/streets-v11",
+      center: [${center_lng}, ${center_lat}],
+      zoom: 12
+    })
+
+    this.map.addControl(new MapboxGeocoder({
+      accessToken: this.apiKeyValue,
+      mapboxgl: mapboxgl
+    }))
+
+    this.map.on("load", () => {
+      this.addMarkers()
+    })
+  }
+
+  addMarkers() {
+    this.${model_plural}Value.forEach(item => {
+      new mapboxgl.Marker({ color: "#1a73e8" })
+        .setLngLat([item.lng, item.lat])
+        .setPopup(new mapboxgl.Popup().setHTML(\`<h3>\${item.title}</h3><p>\${item.description}</p>\`))
+        .addTo(this.map)
+    })
+  }
+}
+EOF
+}
+
+generate_insights_controller() {
+    local output_target="${1:-insights-output}"
+    log "Generating insights Stimulus controller"
+    
+    mkdir -p app/javascript/controllers
+    cat > app/javascript/controllers/insights_controller.js << EOF
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["output"]
+
+  analyze(event) {
+    event.preventDefault()
+    if (!this.hasOutputTarget) {
+      console.error("InsightsController: Output target not found")
+      return
+    }
+    this.outputTarget.innerHTML = "<i class='fas fa-spinner fa-spin' aria-label='Analyzing'></i>"
+    this.stimulate("InsightsReflex#analyze")
+  }
+}
+EOF
+}

@@ -52,7 +52,8 @@
       "WebFetch(domain:whyp.it)",
       "WebFetch(domain:www.toneprojects.com)",
       "WebFetch(domain:x.com)",
-      "WebFetch(domain:www.airbnb.com)"
+      "WebFetch(domain:www.airbnb.com)",
+      "Bash(dig:*)"
     ],
     "deny": [
       "Bash(head:*)",

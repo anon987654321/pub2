@@ -244,7 +244,22 @@ class SOSDilla
     @temp = Dir.mktmpdir("dilla_")
     @out = "dilla_output"
     FileUtils.mkdir_p(@out)
+    @config = load_master_config
     check_deps
+  end
+
+  def load_master_config
+    return {} unless File.exist?("../master.json")
+
+    begin
+      master = JSON.parse(File.read("../master.json").gsub(/^.*\/\/.*$/, ""))
+      config = master.dig("config", "multimedia", "dilla") || {}
+      puts "[dilla] OK loaded defaults from master.json" if config.any?
+      config
+    rescue => e
+      puts "[dilla] WARN failed to parse master.json: #{e.message}"
+      {}
+    end
   end
   
   def check_deps
@@ -822,106 +837,6 @@ class SOSDilla
 end
 
 # Integration check and execution
-if __FILE__ == $PROGRAM_NAME
-  begin
-    require "midilib"
-  rescue LoadError
-    puts "Missing midilib gem: gem install midilib"
-    exit 1
-  end
-  
-  SOSDilla.main(ARGV)
-end
-    puts <<~HELP
-      SOS Dilla - Intelligent Vocal Processing + Professional Mastering
-      
-      USAGE:
-        sos_dilla.rb gen [STYLE] [KEY] [BPM]       Generate progression
-        sos_dilla.rb vocals <vocal.wav> <beat.wav> Intelligent vocal processing
-        sos_dilla.rb master <input.wav> [era]      Era-specific mastering
-        sos_dilla.rb list                          Show styles  
-        sos_dilla.rb info                          Show techniques
-      
-      STYLES: donuts_classic neo_soul mpc_soul drunk
-      ERAS: dilla, marley, vintage_rare
-      
-      EXAMPLES:
-        sos_dilla.rb gen donuts_classic Db 94
-        sos_dilla.rb vocals lead.wav beat.wav      # Intelligent placement
-        sos_dilla.rb master mix.wav dilla          # Dilla era mastering
-        sos_dilla.rb master mix.wav marley         # Bob Marley 70s sound
-        sos_dilla.rb master mix.wav vintage_rare   # Rare equipment chain
-      
-      INTELLIGENT VOCAL PROCESSING:
-        • Advanced spectral analysis detects existing vocals
-        • Never places vocals on beats with vocals
-        • Finds optimal placement gaps automatically
-        • Fine-grained warping preserves vocal quality
-        • Precision timing matches vocals to beat perfectly
-      
-      ERA-SPECIFIC MASTERING:
-        • DILLA: MPC3000 + Presonus ACP-88 + SP-1200 aliasing
-        • MARLEY: Studer A80 + Neve 8048 + Telefunken U47 + Fairchild 670
-        • VINTAGE_RARE: Pultec EQP-1A + LA-2A + rare tube equipment
-      
-      PROFESSIONAL MASTERING CHAIN:
-        • Heavy Sonitex STX-1260: Aggressive vinyl → sampler processing
-        • Phasy NastyVCS: Analog summing with extreme phase character
-        • Era-specific color shaping and normalization
-        • Broadcast-ready limiting and professional dithering
-      
-      REQUIRES: FluidSynth, SoX, midilib gem
-    HELP
-  end
-  
-  def self.show_info
-    puts <<~INFO
-      INTELLIGENT VOCAL PROCESSING + ERA-SPECIFIC MASTERING:
-      
-      VOCAL INTELLIGENCE:
-      • Spectral analysis: Formant detection (300-2500Hz)
-      • Sibilance detection: High-frequency analysis (4-8kHz)
-      • Conflict prevention: Never doubles existing vocals
-      • Gap detection: Finds optimal placement windows
-      • Precision warping: Time-stretches vocals to fit gaps perfectly
-      
-      J DILLA ERA PROCESSING:
-      • MPC3000: 96 PPQN resolution, swing disabled
-      • Presonus ACP-88: 3:1 compression on each MPC output
-      • SP-1200 aliasing: 26kHz sampling artifacts
-      • Characteristic EQ: +4dB at 200Hz, -2.5dB at 8kHz
-      
-      BOB MARLEY 1970s ISLAND RECORDS:
-      • Studer A80: Tape saturation with wow/flutter modeling
-      • Neve 8048: Transformer EQ with famous "air" at 10kHz
-      • Telefunken U47: Tube microphone warmth simulation
-      • Fairchild 670: Tube compression with program-dependent timing
-      
-      VINTAGE RARE EQUIPMENT CHAIN:
-      • Pultec EQP-1A: Classic low boost (+3.2dB at 100Hz)
-      • LA-2A: Opto compression with musical slow attack
-      • Tube preamp: Even harmonic distortion modeling
-      • Vintage reverb: Chamber simulation with long decay
-      
-      HEAVY PROCESSING MODULES:
-      • Sonitex STX-1260 HEAVY: Aggressive 6-stage vinyl degradation
-        - Extreme RIAA pre-emphasis (+25dB curves)
-        - Multiple saturation stages with overdrive
-        - Heavy pitch instability (wow/flutter)
-        - Layered noise models (pink + brown noise)
-      
-      • NastyVCS PHASY: Extreme analog summing character  
-        - Heavy transformer modeling with saturation
-        - Aggressive opto compression (5:1+ ratios)
-        - Multiple phase-shifting layers for "summing phasy" effect
-        - Console bus saturation with character noise
-      
-      All processing maintains musical character while achieving
-      broadcast-ready loudness and professional sound quality.
-    INFO
-  end
-end
-
 if __FILE__ == $PROGRAM_NAME
   begin
     require "midilib"

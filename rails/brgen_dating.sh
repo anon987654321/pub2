@@ -152,43 +152,7 @@ class MatchesInfiniteScrollReflex < InfiniteScrollReflex
 end
 EOF
 
-cat <<EOF > app/javascript/controllers/mapbox_controller.js
-import { Controller } from "@hotwired/stimulus"
-import mapboxgl from "mapbox-gl"
-import MapboxGeocoder from "mapbox-gl-geocoder"
-
-export default class extends Controller {
-  static values = { apiKey: String, profiles: Array }
-
-  connect() {
-    mapboxgl.accessToken = this.apiKeyValue
-    this.map = new mapboxgl.Map({
-      container: this.element,
-      style: "mapbox://styles/mapbox/streets-v11",
-      center: [5.3467, 60.3971], // Bergen
-      zoom: 12
-    })
-
-    this.map.addControl(new MapboxGeocoder({
-      accessToken: this.apiKeyValue,
-      mapboxgl: mapboxgl
-    }))
-
-    this.map.on("load", () => {
-      this.addMarkers()
-    })
-  }
-
-  addMarkers() {
-    this.profilesValue.forEach(profile => {
-      new mapboxgl.Marker({ color: "#e91e63" })
-        .setLngLat([profile.lng, profile.lat])
-        .setPopup(new mapboxgl.Popup().setHTML(\`<h3>\${profile.user.email}</h3><p>\${profile.bio}</p>\`))
-        .addTo(this.map)
-    })
-  }
-}
-EOF
+generate_mapbox_controller "mapbox" 5.3467 60.3971 "profiles"
 
 cat <<EOF > app/controllers/profiles_controller.rb
 class ProfilesController < ApplicationController

@@ -25,14 +25,7 @@ bin/rails generate model Follower follower:references followed:references
 bin/rails generate scaffold Listing title:string description:text price:decimal category:string status:string user:references location:string lat:decimal lng:decimal photos:attachments
 bin/rails generate scaffold City name:string subdomain:string country:string city:string language:string favicon:string analytics:string tld:string
 
-cat <<EOF > app/reflexes/listings_infinite_scroll_reflex.rb
-class ListingsInfiniteScrollReflex < InfiniteScrollReflex
-  def load_more
-    @pagy, @collection = pagy(Listing.where(community: ActsAsTenant.current_tenant).order(created_at: :desc), page: page)
-    super
-  end
-end
-EOF
+generate_infinite_scroll_reflex "Listing" "listings"
 
 cat <<EOF > app/reflexes/insights_reflex.rb
 class InsightsReflex < ApplicationReflex
@@ -44,61 +37,9 @@ class InsightsReflex < ApplicationReflex
 end
 EOF
 
-cat <<EOF > app/javascript/controllers/mapbox_controller.js
-import { Controller } from "@hotwired/stimulus"
-import mapboxgl from "mapbox-gl"
-import MapboxGeocoder from "mapbox-gl-geocoder"
+generate_mapbox_controller "mapbox" 5.3467 60.3971 "listings"
 
-export default class extends Controller {
-  static values = { apiKey: String, listings: Array }
-
-  connect() {
-    mapboxgl.accessToken = this.apiKeyValue
-    this.map = new mapboxgl.Map({
-      container: this.element,
-      style: "mapbox://styles/mapbox/streets-v11",
-      center: [5.3467, 60.3971], // Bergen
-      zoom: 12
-    })
-
-    this.map.addControl(new MapboxGeocoder({
-      accessToken: this.apiKeyValue,
-      mapboxgl: mapboxgl
-    }))
-
-    this.map.on("load", () => {
-      this.addMarkers()
-    })
-  }
-
-  addMarkers() {
-    this.listingsValue.forEach(listing => {
-      new mapboxgl.Marker({ color: "#1a73e8" })
-        .setLngLat([listing.lng, listing.lat])
-        .setPopup(new mapboxgl.Popup().setHTML(\`<h3>\${listing.title}</h3><p>\${listing.description}</p>\`))
-        .addTo(this.map)
-    })
-  }
-}
-EOF
-
-cat <<EOF > app/javascript/controllers/insights_controller.js
-import { Controller } from "@hotwired/stimulus"
-
-export default class extends Controller {
-  static targets = ["output"]
-
-  analyze(event) {
-    event.preventDefault()
-    if (!this.hasOutputTarget) {
-      console.error("InsightsController: Output target not found")
-      return
-    }
-    this.outputTarget.innerHTML = "<i class='fas fa-spinner fa-spin' aria-label='<%= t('brgen.analyzing') %>'></i>"
-    this.stimulate("InsightsReflex#analyze")
-  }
-}
-EOF
+generate_insights_controller "output"
 
 cat <<EOF > config/initializers/tenant.rb
 Rails.application.config.middleware.use ActsAsTenant::Middleware

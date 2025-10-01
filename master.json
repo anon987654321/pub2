@@ -170,8 +170,6 @@
         "lib_project_name_integrations": "external services APIs web scraping"
       },
       "metrics": {
-        "max_file_lines": 200,
-        "optimal_file_lines": 50,
         "max_class_methods": 10,
         "max_module_coupling": 5
       }
@@ -237,11 +235,6 @@
     "specialized_assistants": {
       "description": "domain focused AI assistants with expertise modules",
       "structure": "assistants slash domain name dot rb",
-      "size_guidelines": {
-        "simple_assistant": "50 to 100 lines",
-        "standard_assistant": "100 to 250 lines",
-        "complex_assistant": "250 to 400 lines"
-      },
       "components": ["system prompt", "tools", "RAG context", "validation rules"]
     },
     "langchainrb_integration": {
@@ -580,7 +573,6 @@
       "color": "@ref:styles.colorBackground"
     },
     "main": {
-      "maxWidth": "80ch",
       "padding": "2rem 1rem",
       "margin": "0 auto"
     },
@@ -883,7 +875,7 @@
     "tool_selection_matrix": {
       "description": "Decision tree for Claude Code tool selection",
       "rules": [
-        { "when": "file_size<2000_lines AND known_path", "use": "Read" },
+        { "when": "known_path", "use": "Read" },
         { "when": "search_multiple_attempts_likely", "use": "Task(general_purpose)" },
         { "when": "shell_command_required", "use": "Bash(zsh:*)", "never": "Bash(bash:*)" },
         { "when": "file_pattern_search", "use": "Glob", "never": "Bash(find:*)" },

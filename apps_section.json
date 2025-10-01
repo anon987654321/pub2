@@ -1,0 +1,66 @@
+  "apps": [
+    {
+      "id": "govt_bergen",
+      "name": "Bergens Selvstyreparti Plan",
+      "audience": "government",
+      "stack": "html",
+      "tracking_token": "MOD-ISSUE:govt_bergen",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "rails",
+      "name": "Brgen Rails Generators",
+      "path": "g:/pub/rails",
+      "purpose": "Rails 8 generators for Brgen.no multi-city platform (40 cities: social+marketplace+dating+tv+music+delivery)",
+      "stack": "rails8+hotwire+actsastenant+postgresql+redis+solidus+langchainrb+replicate",
+      "deployment": "openbsd7.5+unprivileged",
+      "validation": "2025-10-01",
+      "status": "planning",
+      "violations": ["dry:partials_18x", "complexity:brgen_691_lines", "yagni:incomplete_tv_takeaway"],
+      "fix": "hybrid:brgen_core_gem+generators",
+      "effort": "16-20h",
+      "impact": "-60%_maintenance,-80%_duplication,+100%_tenant_safety",
+      "priority": ["verify_tenant_context_critical", "env_based_config", "consolidate_partials"],
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "ai3",
+      "name": "AI^3 Multi-LLM CLI",
+      "path": "g:/pub/ai3",
+      "purpose": "Multi-LLM CLI with 15 specialized assistants (general+lawyer+hacker+medical+trader), RAG via Weaviate, web scraping via Ferrum, AI generation via Replicate",
+      "stack": "ruby3.2+langchainrb+weaviate+ferrum+replicate+openbsd_pledge",
+      "deployment": "cross_platform_cli",
+      "validation": "2025-10-01",
+      "status": "planning",
+      "violations": ["complexity_critical:crc_1572_lines_21_classes", "security_critical:ai_root_doas_unguarded", "solid:god_class"],
+      "fix": "extract:lib/security/root_guard+lib/cli+lib/ai+lib/tools",
+      "effort": "12-16h",
+      "impact": "-60%_complexity,+100%_security,+maintainability",
+      "priority": ["root_access_whitelist_critical", "split_crc_rb", "extract_security_module"],
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "bplans",
+      "name": "Business Plans Collection",
+      "path": "g:/pub/bplans",
+      "purpose": "Business plan documentation for Brgen, AI3, NorwegianHedge, PubHealthcare, NATO, etc (HTML+MD format)",
+      "stack": "docs",
+      "validation": "2025-10-01",
+      "status": "pass",
+      "violations": "none",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "multimedia",
+      "name": "Repligen + Postpro Pipeline",
+      "path": "g:/pub/multimedia",
+      "purpose": "AI content generation via Replicate API (Imagen3+Flux Pro+Wan480+MusicGen) + cinematic post-processing via libvips",
+      "stack": "ruby+replicate_api+libvips+sqlite3",
+      "deployment": "cli+cross_platform",
+      "validation": "2025-10-01",
+      "status": "pass",
+      "violations": ["minor:postpro_750_lines", "minor:dry_effects_functions"],
+      "notes": "well_structured,good_bootstrap_pattern,graceful_degradation",
+      "workflow": "@ref:workflows.app_workflow"
+    }
+  ]

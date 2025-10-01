@@ -1,0 +1,765 @@
+// **master.json** v245.0.0
+// Universal governance framework for AI-assisted development
+// @ref prevents drift, declarative triggers, evidence-based gates
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+
+  "meta": {
+    "version": "245.0.0",
+    "philosophy": "questions before commands, evidence over opinion, clarity over cleverness",
+    "frozen_at": "2025-10-01T12:00:00Z",
+    "design_evidence": ["fowler_refactoring_2018", "beck_xp_2004", "brooks_mythical_man_month_1995", "hunt_pragmatic_programmer_2019", "evans_domain_driven_design_2003"]
+  },
+
+  "limits": {
+    "coverage": 0.8,
+    "complexity": 10,
+    "convergence": 0.01,
+    "iterations": 10,
+    "coupling": 5,
+    "duplication": 0.03
+  },
+
+  "defaults": {
+    "shell": "zsh",
+    "language": { "linter": true, "formatter": true, "strict": true },
+    "workflow": { "phases": [], "profile": "standard", "gates": ["functional", "secure"] }
+  },
+
+  "phase_io": {
+    "discover": { "in": "problem", "out": "definition" },
+    "analyze": { "in": "definition", "out": "analysis" },
+    "ideate": { "in": "analysis", "out": "options" },
+    "design": { "in": "options", "out": "spec" },
+    "implement": { "in": "spec", "out": "code" },
+    "validate": { "in": "code", "out": "report" },
+    "deliver": { "in": "report", "out": "product" },
+    "learn": { "in": "product", "out": "knowledge" }
+  },
+
+  "rules": {
+    "require": ["diff", "semantic_commits", "backup", "audit"],
+    "preserve": ["execution", "gates", "principles"],
+    "forbid": ["code_in_json", "regex", "slashes", "asking_without_diff"],
+    "approval": {
+      "human_required": ["logic", "deletions", "security", "migrations", "schemas", "api"],
+      "auto_proceed": ["syntax", "dead_code", "duplication", "formatting", "whitespace"],
+      "chain": [
+        "1_analyze_change",
+        "2_generate_diff",
+        "3_show_diff_to_user",
+        "4_ask_approval",
+        "5_apply_if_approved"
+      ]
+    },
+    "principles": {
+      "dry": {
+        "trigger": "@3→abstract",
+        "example": { "before": "same code 3x", "after": "shared function" }
+      },
+      "kiss": {
+        "trigger": "@complexity>10→simplify",
+        "example": { "before": "nested if chains", "after": "early returns" }
+      },
+      "yagni": {
+        "trigger": "@unused→remove",
+        "example": { "before": "speculative feature", "after": "removed" }
+      },
+      "solid": {
+        "trigger": "@coupling>5→decouple",
+        "example": { "before": "god class", "after": "focused classes" }
+      },
+      "composition": {
+        "trigger": "@inheritance→compose",
+        "example": { "before": "deep hierarchy", "after": "composed traits" }
+      },
+      "explicit": {
+        "trigger": "@implicit→make_explicit",
+        "example": { "before": "magic behavior", "after": "documented contract" }
+      },
+      "minimalism": {
+        "trigger": "@bloat→subtract",
+        "example": { "before": "unused dependencies", "after": "lean" }
+      }
+    }
+  },
+
+  "intelligence": {
+    "bias_mitigation": {
+      "recency": {
+        "strategy": "weight_old_and_new_equally",
+        "severity": "high",
+        "compounds_with": ["confirmation"]
+      },
+      "confirmation": {
+        "strategy": "seek_disconfirming_evidence",
+        "severity": "high",
+        "compounds_with": ["availability"]
+      },
+      "anchoring": {
+        "strategy": "generate_estimate_before_seeing_data",
+        "severity": "medium",
+        "compounds_with": ["optimism"]
+      },
+      "availability": {
+        "strategy": "use_base_rates_not_anecdotes",
+        "severity": "medium",
+        "compounds_with": ["recency"]
+      },
+      "sunk_cost": {
+        "strategy": "ignore_past_investment",
+        "severity": "high",
+        "compounds_with": ["optimism"]
+      },
+      "optimism": {
+        "strategy": "premortem_what_will_fail",
+        "severity": "high",
+        "compounds_with": ["anchoring", "sunk_cost"]
+      }
+    },
+    "pitfall_detection": {
+      "off_by_one": {
+        "pattern": "loop boundary error",
+        "fix": "use inclusive ranges or test boundaries",
+        "severity": "high"
+      },
+      "null_pointer": {
+        "pattern": "missing null check",
+        "fix": "add guard clause or use optional types",
+        "severity": "critical"
+      },
+      "race_condition": {
+        "pattern": "unsynchronized shared state",
+        "fix": "add locking or use immutable data",
+        "severity": "critical"
+      },
+      "injection": {
+        "pattern": "unescaped user input",
+        "fix": "parameterize queries, escape output",
+        "severity": "critical"
+      },
+      "overflow": {
+        "pattern": "arithmetic exceeds bounds",
+        "fix": "check bounds before operation",
+        "severity": "high"
+      },
+      "divide_by_zero": {
+        "pattern": "division without zero check",
+        "fix": "guard with zero check",
+        "severity": "high"
+      }
+    },
+    "decision_gates": {
+      "before_implement": ["is_necessary", "is_simplest", "is_testable"],
+      "before_merge": ["tests_pass", "no_new_smells", "documentation_updated"]
+    }
+  },
+
+  "patterns": {
+    "modular_architecture": {
+      "description": "lib directory structure with focused single-responsibility files",
+      "trigger": "@god_class→extract_lib",
+      "structure": {
+        "bin": "executable entry point minimal code just requires lib",
+        "lib_project_name": "core modules 20 to 50 lines each average 35",
+        "lib_project_name_cli": "command line interface user interaction",
+        "lib_project_name_ai": "LLM providers cognitive tracking memory management",
+        "lib_project_name_tools": "analyzers scanners utilities",
+        "lib_project_name_security": "sandbox root guard access control",
+        "lib_project_name_integrations": "external services APIs web scraping"
+      },
+      "metrics": {
+        "max_file_lines": 200,
+        "optimal_file_lines": 50,
+        "max_class_methods": 10,
+        "max_module_coupling": 5
+      }
+    },
+    "security_hardening": {
+      "description": "OpenBSD security patterns for privilege management",
+      "openbsd": {
+        "unveil": {
+          "purpose": "restrict filesystem access to declared paths only",
+          "usage": "call before any file operations",
+          "example": "unveil /etc r unveil /tmp rwc unveil null null locks",
+          "implementation": "lib_security_openbsd_sandbox.rb"
+        },
+        "pledge": {
+          "purpose": "restrict system calls to declared promises only",
+          "usage": "call after setup before untrusted operations",
+          "example": "pledge stdio rpath wpath cpath inet dns",
+          "progression": ["stdio rpath", "add wpath when needed", "add inet for network", "lock with null"],
+          "implementation": "lib_security_openbsd_sandbox.rb"
+        },
+        "root_guard": {
+          "purpose": "whitelist approach for system calls requiring privilege escalation",
+          "implementation": "lib_security_root_guard.rb",
+          "whitelist": ["git status", "git diff", "git log", "git show", "git branch"],
+          "blacklist": ["rm rf", "doas", "sudo", "eval", "system with user input"],
+          "validation": "check all system calls against whitelist before execution",
+          "error_action": "raise SecurityError with violation details"
+        }
+      },
+      "web_scraping": {
+        "humanize": {
+          "purpose": "avoid bot detection by simulating human behavior",
+          "techniques": ["random delays 2 to 8 seconds", "mouse movement to random coordinates", "viewport randomization 1024x768 to 1920x1080"],
+          "implementation": "lib_integrations_universal_scraper.rb lines 182 to 188"
+        },
+        "retry_with_backoff": {
+          "attempts": 3,
+          "strategy": "exponential backoff",
+          "timeout_progression": [30, 60, 120],
+          "implementation": "lib_integrations_universal_scraper.rb lines 190 to 200"
+        },
+        "screenshot_analysis": {
+          "purpose": "capture visual state for GPT vision analysis",
+          "format": "PNG",
+          "usage": "take screenshot then send to GPT 4 vision for content extraction guidance",
+          "implementation": "lib_integrations_universal_scraper.rb lines 118 to 123"
+        }
+      }
+    },
+    "memory_management": {
+      "description": "cognitive load aware memory patterns from ai3 implementation",
+      "short_term": {
+        "limit_bytes": 4096,
+        "eviction": "FIFO trim from front",
+        "consolidation_trigger": "@capacity 80 percent",
+        "implementation": "lib_ai_memory_manager.rb lines 12 to 14"
+      },
+      "long_term": {
+        "storage": "sqlite3 with AES 256 CBC encryption",
+        "indexing": "full text search with FTS5",
+        "retrieval": "similarity based top k with TF IDF embeddings"
+      },
+      "cognitive_tracking": {
+        "model": "7 plus minus 2 rule Millers law",
+        "max_concurrent_concepts": 7,
+        "overload_threshold": 6,
+        "circuit_breaker": "simplify task when overloaded",
+        "implementation": "lib_ai_cognitive_tracker.rb"
+      }
+    },
+    "specialized_assistants": {
+      "description": "domain focused AI assistants with expertise modules",
+      "structure": "assistants slash domain name dot rb",
+      "size_guidelines": {
+        "simple_assistant": "50 to 100 lines",
+        "standard_assistant": "100 to 250 lines",
+        "complex_assistant": "250 to 400 lines"
+      },
+      "components": ["system prompt", "tools", "RAG context", "validation rules"],
+      "specializations_from_backup": ["lawyer 219 lines", "trader 251 lines", "offensive operations 346 lines", "audio engineer 104 lines", "hacker 52 lines", "musicians 97 lines", "SEO 99 lines", "architect", "propulsion engineer 52 lines", "material repurposing 55 lines"],
+      "critical_files": ["assistants slash chatbots slash chatbot.rb", "assistants slash chatbots slash chatbot discord.rb", "assistants slash chatbots slash chatbot snapchat.rb", "assistants slash chatbots slash chatbot tinder.rb"]
+    },
+    "langchainrb_integration": {
+      "description": "patterns for safe LangchainRB usage discovered from ai3 and documentation study",
+      "tools": {
+        "safe": ["calculator", "database read only", "google search", "wikipedia", "weather", "news retriever"],
+        "requires_sandbox": ["file system", "ruby code interpreter"],
+        "requires_approval": ["database write", "system commands"],
+        "forbidden_in_autonomous": ["ruby code interpreter without pledge", "file system write without unveil", "system calls without root guard"]
+      },
+      "assistant_configuration": {
+        "auto_tool_execution": "only with safety guards active",
+        "write_permission": "only when autonomous mode explicitly enabled by user",
+        "tool_whitelist": "enforce before any tool execution",
+        "error_handling": "graceful degradation with fallback to mock responses"
+      },
+      "llm_providers": {
+        "primary": "anthropic claude with circuit breaker",
+        "fallback_chain": ["openai", "ollama local", "mock"],
+        "cooldown_after_failure": "60 seconds primary 120 seconds secondary",
+        "implementation": "lib_ai_llm_fallback.rb"
+      }
+    }
+  },
+
+  "execution": {
+    "bootstrap": "validate→resolve_refs→select_profile→display_startup→start",
+    "profiles": {
+      "minimal": "functional,secure",
+      "standard": "functional,secure,maintainable",
+      "complete": "all_gates,adversarial"
+    },
+    "phases": {
+      "discover": {
+        "io": "@ref:phase_io.discover",
+        "actions": ["scan", "constrain", "measure", "detect_deployment"],
+        "questions": ["what_problem", "who_affected", "impact", "constraints", "workarounds"]
+      },
+      "analyze": {
+        "io": "@ref:phase_io.analyze",
+        "actions": ["identify_assumptions", "estimate_cost", "assess_risk"],
+        "questions": ["hidden_assumptions", "cost_in_hours", "failure_modes", "maintenance_burden", "opportunity_cost"]
+      },
+      "ideate": {
+        "io": "@ref:phase_io.ideate",
+        "actions": ["diverge", "brainstorm"],
+        "questions": ["what_if", "why_not", "how_else"]
+      },
+      "design": {
+        "io": "@ref:phase_io.design",
+        "actions": ["generate_approaches", "compare_options", "select_simplest"],
+        "questions": ["three_to_five_approaches", "minimum_viable_complexity", "where_does_it_break", "cost_benefit", "simplest_that_works"]
+      },
+      "implement": {
+        "io": "@ref:phase_io.implement",
+        "actions": ["write_tests_first", "code", "refactor"],
+        "questions": ["idioms_followed", "single_responsibility", "readable", "failures_handled", "testable"],
+        "gates": "@ref:intelligence.decision_gates.before_implement"
+      },
+      "validate": {
+        "io": "@ref:phase_io.validate",
+        "actions": ["run_gates", "collect_evidence", "adversarial_review"],
+        "questions": ["requirements_met", "edge_cases_covered", "security_validated", "performance_acceptable", "accessible"]
+      },
+      "deliver": {
+        "io": "@ref:phase_io.deliver",
+        "actions": ["deploy", "monitor", "document"],
+        "questions": ["deployment_ready", "documentation_helpful", "maintenance_plan", "lessons_captured", "rollback_tested"],
+        "gates": "@ref:intelligence.decision_gates.before_merge"
+      },
+      "learn": {
+        "io": "@ref:phase_io.learn",
+        "actions": ["extract_patterns", "measure_effectiveness", "propose_improvements", "apply_improvements", "re_validate"],
+        "questions": ["what_worked", "what_gaps", "how_to_prevent"]
+      }
+    },
+    "iteration": {
+      "mode": "autoiterate_until_convergence",
+      "delta_threshold": "@ref:limits.convergence",
+      "max_iterations": "@ref:limits.iterations",
+      "depth_per_pass": ["surface", "structure", "philosophy", "meta"]
+    },
+    "context": {
+      "priority": ["changed", "neighbors", "recent"],
+      "budget_tokens": 10000,
+      "eviction": "LRU"
+    }
+  },
+
+  "quality": {
+    "metrics": {
+      "complexity": {
+        "method": "cyclomatic",
+        "formula": "branches + loops + catches + 1"
+      },
+      "coupling": {
+        "method": "afferent_efferent",
+        "formula": "fan_in + fan_out"
+      },
+      "duplication": {
+        "method": "token_similarity",
+        "threshold": "@ref:limits.duplication",
+        "min_tokens": 50
+      },
+      "coverage": {
+        "method": "line_coverage",
+        "formula": "executed_lines / executable_lines"
+      }
+    },
+    "code_smells": ["long_method", "god_object", "duplicate_code", "feature_envy"],
+    "gates": {
+      "functional": {
+        "tests": true,
+        "coverage": "@ref:limits.coverage"
+      },
+      "secure": {
+        "vulnerabilities": 0,
+        "input_validated": true
+      },
+      "maintainable": {
+        "complexity": "@ref:limits.complexity",
+        "duplication": 0
+      },
+      "performant": {
+        "paint_seconds": 2.5,
+        "layout_shift": 0.1
+      },
+      "deployable": {
+        "health_check": true,
+        "rollback_ready": true
+      },
+      "privacy": {
+        "gdpr_compliant": true,
+        "pii_protected": true
+      }
+    },
+    "evidence": {
+      "weights": {
+        "tests": 0.50,
+        "static_analysis": 0.30,
+        "complexity_checks": 0.20
+      },
+      "threshold": 1.0,
+      "note": "100% threshold forces comprehensive validation from all sources"
+    },
+    "adversarial": {
+      "checks": ["edge_cases", "assumption_challenges", "spec_mismatches"],
+      "questions": ["why_does_this_exist", "what_breaks_if_removed", "simpler_alternative"],
+      "perspectives": ["architect", "security", "operator", "developer", "end_user", "skeptic"]
+    },
+    "validation_depths": {
+      "surface": {
+        "checks": ["@ref_resolution", "syntax", "schema"],
+        "principles": ["dry:obvious_duplication", "yagni:unused_code"]
+      },
+      "structure": {
+        "checks": ["organization", "grouping", "nesting"],
+        "principles": ["dry:subtle_repetition", "kiss:complexity", "solid:single_responsibility"]
+      },
+      "philosophy": {
+        "checks": ["intent", "composability", "predictability"],
+        "principles": ["principle_of_least_astonishment", "orthogonality", "composition_over_inheritance"]
+      },
+      "meta": {
+        "checks": ["self_application", "dogfooding", "consistency"],
+        "principles": ["all_principles_applied_to_framework_itself"]
+      }
+    }
+  },
+
+  "workflows": {
+    "new_feature": {
+      "extends": "@ref:defaults.workflow",
+      "phases": ["discover", "analyze", "ideate", "design", "implement", "validate", "deliver", "learn"],
+      "gates": ["functional", "secure", "maintainable"]
+    },
+    "bug_fix": {
+      "extends": "@ref:defaults.workflow",
+      "phases": ["analyze", "implement", "validate", "deliver"],
+      "profile": "minimal"
+    },
+    "refactor": {
+      "extends": "@ref:defaults.workflow",
+      "phases": ["analyze", "design", "implement", "validate"],
+      "gates": ["maintainable", "functional"]
+    },
+    "self_validation": {
+      "extends": "@ref:defaults.workflow",
+      "phases": ["discover", "analyze", "design", "implement", "validate", "deliver", "learn"],
+      "profile": "complete",
+      "gates": ["functional", "secure", "maintainable"],
+      "iteration": {
+        "mode": "multi_pass",
+        "depths": "@ref:execution.iteration.depth_per_pass",
+        "per_depth_validation": "@ref:quality.validation_depths"
+      }
+    },
+    "app_workflow": {
+      "extends": "@ref:defaults.workflow",
+      "for_each_app": "@ref:apps",
+      "phases": ["discover", "implement", "validate", "deliver"]
+    },
+    "aight_refactor": {
+      "extends": "@ref:defaults.workflow",
+      "phases": ["discover", "analyze", "design", "implement", "validate", "deliver"],
+      "profile": "complete",
+      "gates": ["functional", "secure", "maintainable"],
+      "migration_steps": {
+        "1_rename": {
+          "action": "rename directory ai3 to aight",
+          "files": ["crc.rb to aight.rb"]
+        },
+        "2_extract_lib": {
+          "action": "apply @ref:patterns.modular_architecture",
+          "from": "crc.rb 1571 lines 21 classes",
+          "to": "lib structure 18 files approximately 642 lines",
+          "structure": {
+            "bin_aight": "executable entry point requires lib aight only",
+            "lib_aight_cli_rb": "CognitiveRubyCLI Console CLILogger",
+            "lib_aight_ai_rb": "LLMProvider LLMFallback CognitiveTracker",
+            "lib_aight_memory_rb": "KnowledgeStore MemoryManager",
+            "lib_aight_tools_rb": "CodeAnalyzer ProjectScanner FileWatcher",
+            "lib_aight_security_rb": "OpenBSDSandbox RootGuard",
+            "lib_aight_integrations_rb": "GitHubIntegration WebScraper",
+            "lib_aight_config_rb": "Configuration CrossPlatformPath AtomicFileWriter",
+            "lib_aight_assistant_rb": "Assistant base class with tool integration",
+            "assistants_dir": "specialized assistants as separate files"
+          }
+        },
+        "3_security_hardening": {
+          "action": "apply @ref:patterns.security_hardening",
+          "implementations": {
+            "root_guard": "whitelist all system calls git status git diff git log only",
+            "unveil": "restrict to config dir tmp dir home dir data dir",
+            "pledge": "stdio rpath wpath cpath inet dns only no proc exec",
+            "validate_autonomous": "ensure no privilege escalation in autonomous mode"
+          }
+        },
+        "4_restore_from_backup": {
+          "action": "restore critical components from ai3 backup",
+          "source": "final streamlined ai3 production ready tgz",
+          "restore": {
+            "lib_files": "automation workflows command handler context manager efficient data retrieval error handling feedback manager filesystem tool interactive session memory manager prompt manager query cache RAG system rate limit tracker schema manager universal scraper user interaction weaviate helper weaviate integration",
+            "assistants": "architect audio engineer hacker lawyer material repurposing musicians offensive operations propulsion engineer SEO trader",
+            "chatbots": "chatbot discord chatbot snapchat chatbot tinder base chatbot"
+          }
+        },
+        "5_langchainrb_integration": {
+          "action": "apply @ref:patterns.langchainrb_integration",
+          "safe_tools_only": ["calculator", "google search", "wikipedia", "weather"],
+          "sandbox_required": ["file system read only", "ruby code interpreter with pledge"],
+          "forbidden": ["arbitrary code execution", "unrestricted file writes", "system calls without root guard"]
+        },
+        "6_cognitive_architecture": {
+          "action": "apply @ref:patterns.memory_management",
+          "implementations": {
+            "cognitive_tracker": "7 plus minus 2 tracking with circuit breaker",
+            "memory_manager": "short term 4096 bytes long term sqlite encrypted",
+            "session_manager": "LRU eviction AES 256 encryption",
+            "rag_engine": "weaviate integration TF IDF embeddings similarity search"
+          }
+        },
+        "7_validate_all": {
+          "action": "comprehensive validation per master json patterns",
+          "checks": [
+            "no god classes all files under 200 lines",
+            "security sandbox active unveil pledge root guard",
+            "all system calls whitelisted",
+            "cognitive load tracking functional",
+            "memory management bounded",
+            "LLM fallback working anthropic openai ollama mock",
+            "all assistants loaded and functional",
+            "tests passing coverage above 80 percent"
+          ]
+        }
+      }
+    }
+  },
+
+  "standards": {
+    "format": "utf8,lf,indent:2,snake_case",
+    "git": "semantic,incremental,low_churn",
+    "platform": {
+      "posix": {
+        "shell": "@ref:defaults.shell",
+        "file_operations": "cat_only_no_head_tail",
+        "anti_truncation": true
+      },
+      "openbsd": {
+        "tools": "base_only_no_gnu",
+        "security": "unveil,pledge"
+      },
+      "cygwin": {
+        "shell": "@ref:defaults.shell",
+        "line_endings": "lf_preferred_crlf_tolerant"
+      }
+    },
+    "languages": {
+      "ruby": {
+        "extends": "@ref:defaults.language",
+        "quotes": "double",
+        "frozen_string_literals": true,
+        "linter": "rubocop"
+      },
+      "javascript": {
+        "extends": "@ref:defaults.language",
+        "quotes": "single",
+        "prefer_const": true,
+        "linter": "eslint"
+      },
+      "shell": {
+        "extends": "@ref:defaults.language",
+        "shell": "@ref:defaults.shell",
+        "always_quote": true,
+        "linter": "shellcheck"
+      },
+      "rust": {
+        "extends": "@ref:defaults.language",
+        "forbid_unsafe": true,
+        "error_handling": "result_type",
+        "linter": "clippy"
+      }
+    }
+  },
+
+  "recovery": {
+    "triggers": ["gate_failure", "test_failure", "deployment_failure", "manual_request"],
+    "strategy": {
+      "committed_changes": "git_revert",
+      "uncommitted_changes": "restore_from_checkpoint",
+      "deployed_version": "blue_green_switch"
+    },
+    "session_file": ".session_recovery",
+    "persist": ["current_phase", "completed_files", "pending_files", "context_state"],
+    "errors": {
+      "fatal": ["security_breach", "data_loss", "corruption"],
+      "recoverable": ["network_timeout", "resource_unavailable", "parse_error"],
+      "retry": {
+        "method": "exponential_backoff",
+        "max_attempts": 3
+      }
+    }
+  },
+
+  "deployment": {
+    "strategy": "blue_green",
+    "platform": "openbsd_native",
+    "security": {
+      "fingerprint_method": "sha256",
+      "computed_in": "CI"
+    },
+    "dependencies": {
+      "require_checks": ["security_scan", "license_verification"],
+      "allowed_licenses": ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"],
+      "updates": {
+        "security_patches": "automatic",
+        "feature_updates": "manual_approval"
+      }
+    }
+  },
+
+  "startup": {
+    "steps": [
+      {
+        "action": "display_startup_message",
+        "format": "**master.json** v{version} ACTIVATED"
+      },
+      {
+        "action": "check_auto_triggers",
+        "trigger_list": "@ref:recovery.triggers"
+      },
+      {
+        "action": "ask_user_for_target",
+        "prompt": "Project path to analyze? (or 'cwd' for current)"
+      },
+      {
+        "action": "execute_workflow",
+        "workflow": "@ref:workflows.self_validation"
+      }
+    ],
+    "logging": {
+      "format": "dmesg_style",
+      "timestamp_format": "[{seconds:2d}.{microseconds:06d}]"
+    },
+    "interaction": {
+      "diff_first": true,
+      "approval_steps": ["analyze", "generate_diff", "show_diff", "ask_approval", "apply_if_approved"]
+    }
+  },
+
+  "claude_code": {
+    "tools": {
+      "prefer": ["Read", "Edit", "Write", "Grep", "Glob"],
+      "forbid": ["head", "tail", "truncate", "cat", "sed", "awk", "echo"],
+      "bash_only_for": ["git", "npm", "bundle", "cargo"]
+    },
+    "workflow": {
+      "diff": "mandatory_before_every_approval",
+      "todo": "use_TodoWrite_for_3plus_steps",
+      "parallelism": "call_independent_tools_in_parallel",
+      "completion": "mark_complete_immediately_not_batched"
+    },
+    "permissions": ["Read", "Write", "Edit", "Grep", "Glob", "Bash(git:*)", "Bash(npm:*)"]
+  },
+
+  "apps": [
+    {
+      "id": "govt_bergen",
+      "name": "Bergens Selvstyreparti Plan",
+      "audience": "government",
+      "stack": "html",
+      "tracking_token": "MOD-ISSUE:govt_bergen",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "rails",
+      "path": "g:/pub/rails",
+      "stack": "rails",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "aight",
+      "name": "AIGHT Multi-LLM CLI",
+      "former_names": ["ai3", "egpt"],
+      "path": "g:/pub/ai3",
+      "target_path": "g:/pub/aight",
+      "purpose": "Multi-LLM CLI with 15 specialized assistants (general+lawyer+hacker+medical+trader), RAG via Weaviate, web scraping via Ferrum, AI generation via Replicate",
+      "stack": "ruby3.2+langchainrb+weaviate+ferrum+replicate+openbsd_pledge",
+      "deployment": "cross_platform_cli",
+      "validation": "2025-10-01",
+      "status": "refactoring",
+      "violations": {
+        "complexity_critical": "crc.rb 1571 lines 21 classes god_class",
+        "security_critical": "ai_root_doas_unguarded system_calls_lines_1479_1491_1492 no_whitelist",
+        "solid": "god_class single_responsibility_violated",
+        "details": {
+          "unguarded_system_calls": ["line_1479_git_checkout", "line_1491_git_add", "line_1492_git_commit"],
+          "unguarded_backticks": ["line_772_git_config", "line_1462_git_status"],
+          "missing_security": ["no_unveil", "no_pledge", "no_root_guard_whitelist"],
+          "class_count_in_single_file": 21,
+          "main_class_lines": "CognitiveRubyCLI 612 lines"
+        }
+      },
+      "fix": "apply @ref:workflows.aight_refactor extract:lib/security/root_guard+lib/cli+lib/ai+lib/tools",
+      "effort": "12-16h",
+      "impact": "-60%_complexity,+100%_security,+maintainability",
+      "priority": ["root_access_whitelist_critical", "split_crc_rb", "extract_security_module"],
+      "workflow": "@ref:workflows.aight_refactor",
+      "backup_source": "github.com/anon987654321/pub/__OLD_BACKUPS/ai33/final_streamlined_ai3_production_ready.tgz",
+      "evidence": {
+        "source": "crc.rb_static_analysis+backup_archive_extraction",
+        "validation_date": "2025-10-01",
+        "analyzer": "manual_code_review"
+      },
+      "critical_components_to_restore": {
+        "from_backup": [
+          "cognitive_orchestrator",
+          "multi_llm_manager",
+          "rag_engine",
+          "memory_manager_7plus_minus_2",
+          "15_specialized_assistants",
+          "universal_scraper_with_humanize",
+          "context_manager",
+          "command_handler"
+        ],
+        "from_current": [
+          "cross_platform_detection",
+          "atomic_file_writer",
+          "openbsd_sandbox_base"
+        ],
+        "merge_strategy": "prefer_backup_architecture+apply_current_security_hardening"
+      },
+      "assistants": {
+        "count": 15,
+        "types": [
+          "general",
+          "architect",
+          "hacker",
+          "lawyer",
+          "medical",
+          "trader",
+          "audio_engineer",
+          "screenwriter",
+          "psychologist",
+          "journalist",
+          "educator",
+          "philosopher",
+          "scientist",
+          "designer",
+          "strategist"
+        ]
+      },
+      "cognitive_features": {
+        "tracking": "7_plus_minus_2_millers_law",
+        "memory": "short_term_4096_chars+long_term_weaviate",
+        "circuit_breaker": "max_7_concurrent_concepts",
+        "context_window": "dynamic_trimming"
+      }
+    },
+    {
+      "id": "bplans",
+      "path": "g:/pub/bplans",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "multimedia",
+      "path": "g:/pub/multimedia",
+      "workflow": "@ref:workflows.app_workflow"
+    }
+  ]
+}

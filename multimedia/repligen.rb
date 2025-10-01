@@ -43,6 +43,27 @@ module Bootstrap
     end
   end
 
+  def self.ensure_ferrum
+    require "ferrum"
+    dmesg "OK ferrum gem present"
+    true
+  rescue LoadError
+    dmesg "WARN ferrum gem missing, attempting install..."
+    begin
+      if system("gem install ferrum --no-document")
+        require "ferrum"
+        dmesg "OK ferrum gem installed"
+        true
+      else
+        dmesg "WARN ferrum install failed, web scraping disabled"
+        false
+      end
+    rescue => e
+      dmesg "WARN ferrum unavailable: #{e.message}"
+      false
+    end
+  end
+
   def self.ensure_token
     return ENV["REPLICATE_API_TOKEN"] if ENV["REPLICATE_API_TOKEN"]
 
@@ -67,7 +88,7 @@ module Bootstrap
       dmesg "PROMPT Enter REPLICATE_API_TOKEN (from https://replicate.com/account):"
       print "Token: "
       token = gets.chomp.strip
-      
+
       if token && !token.empty?
         FileUtils.mkdir_p(config_dir)
         config = { "api_token" => token }
@@ -80,6 +101,30 @@ module Bootstrap
     end
 
     dmesg "ERROR no REPLICATE_API_TOKEN available"
+    nil
+  end
+
+  def self.ensure_openai_token
+    return ENV["OPENAI_API_KEY"] if ENV["OPENAI_API_KEY"]
+
+    config_dir = File.expand_path("~/.config/repligen")
+    config_file = File.join(config_dir, "config.json")
+
+    if File.exist?(config_file)
+      begin
+        config = JSON.parse(File.read(config_file))
+        token = config["openai_api_key"]
+        if token && !token.empty?
+          ENV["OPENAI_API_KEY"] = token
+          dmesg "OK OPENAI_API_KEY loaded from user config"
+          return token
+        end
+      rescue => e
+        dmesg "WARN config parse error: #{e.message}"
+      end
+    end
+
+    dmesg "WARN OPENAI_API_KEY not found, GPT-4 Vision disabled"
     nil
   end
 
@@ -100,21 +145,26 @@ module Bootstrap
   def self.run
     startup_banner
     sqlite_available = ensure_sqlite3
+    ferrum_available = ensure_ferrum
     token = ensure_token
+    openai_token = ensure_openai_token
     config = load_master_config
     
     {
       sqlite_available: sqlite_available,
+      ferrum_available: ferrum_available,
       token: token,
+      openai_token: openai_token,
       config: config
     }
+
   end
 end
-
 class Repligen
   API = 'https://api.replicate.com/v1'
   
   MODELS = {
+    ra2: 'anon987654321/ra2:983967a65f090aa0ced0d227e809ae57b29f2d1d1ae4f84a17dd25176e0d313d',
     imagen3: 'google/imagen-3:bffd1835e5c4ea8d40c18ff2f349a24e7fbdcfe5353135b008bc5795e492e7a6',
     flux: 'black-forest-labs/flux-1.1-pro:8f3e0970b7e77b40f6e940f648098297c4419816f9a6f3503697e9a058b28cfa',
     wan480: 'wan-ai/wan-2.1-i2v-480p:8cedc4c0313c89c8e5a98b3ad5e960a4c60e3b95c0bb7c89a96bbf90c74e967f',
@@ -124,9 +174,10 @@ class Repligen
     upscale: 'nightmareai/real-esrgan:f121d640bd286e1fdc67f9799164c1d5be36ff74576ee11c803ae5b665dd46aa'
   }.freeze
   
-  COSTS = { imagen3: 0.01, flux: 0.03, wan480: 0.08, sdv: 0.10, music: 0.02, upscale: 0.002, lora: 1.46 }.freeze
+  COSTS = { ra2: 0.08, imagen3: 0.01, flux: 0.03, wan480: 0.08, sdv: 0.10, music: 0.02, upscale: 0.002, lora: 1.46 }.freeze
   
   CHAINS = {
+    cinematic: %w[ra2 upscale],
     quick: %w[imagen3 upscale],
     video: %w[imagen3 wan480],
     full: %w[imagen3 wan480 music],
@@ -154,15 +205,7 @@ class Repligen
 
   def run(cmd = nil, *args)
     return auth_error unless @token
-    
-    case cmd
-    when "generate", "g" then gen_and_offer(args[0] || "futuristic city")
-    when "chain", "c" then chain_and_offer(args[0]&.to_sym || default_chain, args[1] || "digital art")
-    when "lora", "l" then train_lora(args)
-    when "cost" then puts "$%.3f" % cost(args[0]&.to_sym || default_chain)
-    when nil then autorun_default
-    else interactive
-    end
+    interactive_cli
   end
 
   def default_chain
@@ -262,7 +305,7 @@ class Repligen
 
   def format_input(model, input)
     case model
-    when :imagen3, :flux then { prompt: input.is_a?(String) ? input : 'digital art', num_outputs: 1 }
+    when :ra2, :imagen3, :flux then { prompt: input.is_a?(String) ? input : 'digital art', num_outputs: 1 }
     when :wan480, :sdv then input.start_with?('http') ? { image: input, num_frames: 96 } : { prompt: input }
     when :music then { prompt: 'cinematic', duration: 10 }
     when :upscale then { image: input, scale: 2 }
@@ -385,9 +428,31 @@ class Repligen
     when 'cost' then puts "$%.3f" % cost(args[0]&.to_sym || :quick)
     when 'postpro', 'p'
       @postpro ? system('ruby postpro.rb') : puts("postpro.rb not found")
+    when 'discover', 'd' then discover_models(args)
+    when 'radical', 'r' then radical_chain(args)
     when 'q', 'quit' then exit
     else puts "Unknown: #{cmd}"
     end
+  end
+
+  def discover_models(args)
+    pages = (args[0] || 5).to_i
+    scraper = ReplicateExplorer.new(@bootstrap[:openai_token])
+    models = scraper.discover(max_pages: pages)
+    puts "Discovered #{models.size} models"
+    models.each { |m| puts "  #{m['id']}: #{m['type']}" }
+  end
+
+  def radical_chain(args)
+    style = args[0] || 'cinematic'
+    length = (args[1] || 5).to_i
+    scraper = ReplicateExplorer.new(@bootstrap[:openai_token])
+    chain = scraper.build_radical_chain(style: style, length: length)
+
+    puts "\nRadical #{style} chain (#{chain.length} steps):"
+    chain.each_with_index { |m, i| puts "  #{i+1}. #{m[:id]} ($#{m[:cost]})" }
+    total = chain.sum { |m| m[:cost] }
+    puts "\nTotal: $#{total.round(3)}"
   end
 end
 
@@ -409,3 +474,281 @@ if __FILE__ == $0
     exit 1
   end
 end
+
+# Replicate model discovery via Ferrum + GPT-4 Vision
+class ReplicateExplorer
+  def initialize(openai_token, db = nil)
+    @openai_token = openai_token
+    @browser = nil
+    @db = db || init_db
+    @models = load_from_db
+  end
+
+  def init_db
+    require "sqlite3"
+    db = SQLite3::Database.new("repligen_models.db")
+    db.execute <<-SQL
+      CREATE TABLE IF NOT EXISTS models (
+        id TEXT PRIMARY KEY,
+        type TEXT,
+        description TEXT,
+        cost REAL,
+        documentation TEXT,
+        discovered_at INTEGER
+      )
+    SQL
+    db
+  rescue LoadError
+    Bootstrap.dmesg "WARN sqlite3 unavailable, models won't persist"
+    nil
+  end
+
+  def discover(max_pages: 5)
+    return [] unless setup_browser
+    Bootstrap.dmesg "discovering models from replicate.com/explore"
+
+    discovered = []
+    begin
+      @browser.goto("https://www.replicate.com/explore")
+      sleep rand(3..7)
+
+      max_pages.times do |page|
+        html = @browser.body
+        screenshot = screenshot_page(page)
+
+        if screenshot && @openai_token
+          models = extract_via_gpt4v(screenshot, html)
+          discovered.concat(models) if models
+          Bootstrap.dmesg "page #{page+1}: #{models&.size || 0} models"
+        end
+
+        break unless next_page
+        sleep rand(3..7)
+      end
+
+      discovered.each { |m| save_model_to_db(m) }
+      @models = load_from_db
+      discovered
+    rescue => e
+      Bootstrap.dmesg "ERROR discovery: #{e.message}"
+      []
+    ensure
+      cleanup
+    end
+  end
+
+  def build_radical_chain(style: "cinematic", length: 5)
+    return [] if @models.empty?
+
+    categories = {
+      image: @models.values.select { |m| m["type"] =~ /image|art/i },
+      video: @models.values.select { |m| m["type"] =~ /video|motion/i },
+      audio: @models.values.select { |m| m["type"] =~ /audio|music/i },
+      enhance: @models.values.select { |m| m["type"] =~ /upscale|enhance/i },
+      style: @models.values.select { |m| m["type"] =~ /style|artistic/i }
+    }
+
+    chain = case style
+    when "cinematic"
+      [categories[:image].sample, categories[:style].sample,
+       categories[:enhance].sample, categories[:video].sample,
+       categories[:audio].sample].compact
+    when "experimental"
+      @models.values.sample(length)
+    when "quality"
+      [categories[:image].sample, *categories[:enhance].sample(2),
+       categories[:style].sample].compact
+    else
+      @models.values.sample(length)
+    end
+
+    chain.map { |m| { id: m["id"], cost: m["cost"] || 0.05 } }
+  end
+
+  private
+
+  def setup_browser
+    require "ferrum"
+    @browser = Ferrum::Browser.new(headless: true, timeout: 30, window_size: [1920, 1080])
+    FileUtils.mkdir_p("discovery_screenshots")
+    true
+  rescue LoadError
+    Bootstrap.dmesg "ERROR ferrum gem required"
+    false
+  rescue => e
+    Bootstrap.dmesg "ERROR browser: #{e.message}"
+    false
+  end
+
+  def screenshot_page(page_num)
+    path = "discovery_screenshots/page_#{page_num}.png"
+    @browser.screenshot(path: path, full: true)
+    path
+  rescue => e
+    Bootstrap.dmesg "WARN screenshot: #{e.message}"
+    nil
+  end
+
+  def extract_via_gpt4v(screenshot, html)
+    return nil unless @openai_token
+    require "base64"
+
+    image_b64 = Base64.strict_encode64(File.read(screenshot))
+    uri = URI("https://api.openai.com/v1/chat/completions")
+    req = Net::HTTP::Post.new(uri)
+    req["Authorization"] = "Bearer #{@openai_token}"
+    req["Content-Type"] = "application/json"
+    req.body = JSON.generate({
+      model: "gpt-4-vision-preview",
+      messages: [{
+        role: "user",
+        content: [
+          { type: "text", text: "Extract Replicate models as JSON: [{\"id\":\"owner/name\",\"type\":\"image/video/audio\",\"description\":\"...\",\"cost\":0.05}]. HTML: #{html[0..3000]}" },
+          { type: "image_url", image_url: { url: "data:image/png;base64,#{image_b64}" }}
+        ]
+      }],
+      max_tokens: 2000
+    })
+
+    res = Net::HTTP.start(uri.host, uri.port, use_ssl: true, read_timeout: 90) { |http| http.request(req) }
+    return nil unless res.code == "200"
+
+    content = JSON.parse(res.body).dig("choices", 0, "message", "content")
+    JSON.parse(content.gsub(/```json\n?/, "").gsub(/```/, ""))
+  rescue => e
+    Bootstrap.dmesg "WARN gpt4v: #{e.message}"
+    nil
+  end
+
+  def next_page
+    btn = @browser.at_css('a[rel="next"]') || @browser.at_css('button:contains("Next")')
+    return false unless btn
+    btn.click
+    true
+  rescue
+    false
+  end
+
+  def cleanup
+    @browser&.quit
+    @browser = nil
+  end
+
+  def load_from_db
+    return {} unless @db
+    @db.results_as_hash = true
+    rows = @db.execute("SELECT * FROM models")
+    rows.map { |r| [r["id"], r] }.to_h
+  rescue
+    {}
+  end
+
+  def save_model_to_db(model)
+    return unless @db
+    @db.execute(<<-SQL, [model["id"], model["type"], model["description"], model["cost"] || 0.05, model["documentation"], Time.now.to_i])
+      INSERT OR REPLACE INTO models (id, type, description, cost, documentation, discovered_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    SQL
+  rescue => e
+    Bootstrap.dmesg "WARN db save: #{e.message}"
+end
+
+  def interactive_cli
+    puts "\n" + "="*60
+    puts "REPLIGEN - Cinematic AI Generation Pipeline"
+    puts "="*60
+    puts
+
+    puts "Please enter LoRA URL (or press Enter to skip):"
+    print "> "
+    lora_url = gets.chomp.strip
+    lora_url = nil if lora_url.empty?
+
+    puts "\nShould the resulting artwork be a photo or a movie?"
+    print "> "
+    output_type = gets.chomp.downcase.strip
+    is_video = output_type.include?("movie") || output_type.include?("video")
+
+    puts "\nDo you have a link to the background soundtrack? (or press Enter to skip):"
+    print "> "
+    soundtrack_url = gets.chomp.strip
+    soundtrack_url = nil if soundtrack_url.empty?
+
+    puts "\nDescribe the scene/artwork you want to create:"
+    print "> "
+    prompt = gets.chomp.strip
+    prompt = "digital art" if prompt.empty?
+
+    puts "\n" + "-"*60
+    puts "Building your cinematic pipeline..."
+    puts "-"*60
+
+    chain_steps = []
+
+    if lora_url
+      puts "• Using custom LoRA: #{lora_url}"
+      chain_steps << :ra2
+    else
+      chain_steps << :flux
+    end
+
+    chain_steps << :upscale
+
+    if is_video
+      puts "• Adding motion + camera angles"
+      chain_steps << :wan480
+    end
+
+    if soundtrack_url
+      puts "• Integrating soundtrack: #{soundtrack_url}"
+    elsif is_video
+      puts "• Generating cinematic soundtrack"
+      chain_steps << :music
+    end
+
+    puts "• Relighting + professional color grading"
+
+    puts "\nPipeline: #{chain_steps.join(' → ')}"
+    estimated_cost = chain_steps.sum { |m| COSTS[m] || 0.05 }
+    puts "Estimated cost: $#{estimated_cost.round(3)}"
+
+    print "\nProceed? (Y/n): "
+    response = gets.chomp.downcase
+    return unless response.empty? || response.start_with?("y")
+
+    puts "\nGenerating..."
+    result = execute_chain(chain_steps, prompt)
+
+    if @postpro && result
+      puts "\n" + "="*60
+      puts "POSTPRO.RB INTEGRATION"
+      puts "="*60
+      puts "Apply cinematic film-grade color grading?"
+      puts "• Kodak Portra curves • Skin tone protection"
+      puts "• Professional grain • Highlight rolloff"
+      print "\nLaunch postpro.rb? (Y/n): "
+
+      response = gets.chomp.downcase
+      system("ruby postpro.rb --from-repligen") if response.empty? || response.start_with?("y")
+    end
+
+    puts "\n✓ Complete! Output saved."
+    puts "\nGenerate another? (y/N): "
+    response = gets.chomp.downcase
+    interactive_cli if response.start_with?("y")
+  end
+
+  def execute_chain(steps, prompt)
+    output = prompt
+    cost = 0.0
+
+    steps.each_with_index do |model, i|
+      puts "\nStep #{i+1}/#{steps.length}: #{model}"
+      output = predict(model, output)
+      cost += COSTS[model]
+    end
+
+    log_chain(steps.map(&:to_s), cost)
+    save_output(output, :custom, prompt) if output.is_a?(String) && output.start_with?("http")
+    output
+  end

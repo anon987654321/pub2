@@ -1,0 +1,495 @@
+// **master.json** v245.0.0
+// Universal governance framework for AI-assisted development
+// @ref prevents drift, declarative triggers, evidence-based gates
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+
+  "meta": {
+    "version": "245.0.0",
+    "philosophy": "questions before commands, evidence over opinion, clarity over cleverness",
+    "frozen_at": "2025-10-01T12:00:00Z",
+    "design_evidence": ["fowler_refactoring_2018", "beck_xp_2004", "brooks_mythical_man_month_1995", "hunt_pragmatic_programmer_2019", "evans_domain_driven_design_2003"]
+  },
+
+  "limits": {
+    "coverage": 0.8,
+    "complexity": 10,
+    "convergence": 0.01,
+    "iterations": 10,
+    "coupling": 5,
+    "duplication": 0.03
+  },
+
+  "defaults": {
+    "shell": "zsh",
+    "language": { "linter": true, "formatter": true, "strict": true },
+    "workflow": { "phases": [], "profile": "standard", "gates": ["functional", "secure"] }
+  },
+
+  "phase_io": {
+    "discover": { "in": "problem", "out": "definition" },
+    "analyze": { "in": "definition", "out": "analysis" },
+    "ideate": { "in": "analysis", "out": "options" },
+    "design": { "in": "options", "out": "spec" },
+    "implement": { "in": "spec", "out": "code" },
+    "validate": { "in": "code", "out": "report" },
+    "deliver": { "in": "report", "out": "product" },
+    "learn": { "in": "product", "out": "knowledge" }
+  },
+
+  "rules": {
+    "require": ["diff", "semantic_commits", "backup", "audit"],
+    "preserve": ["execution", "gates", "principles"],
+    "forbid": ["code_in_json", "regex", "slashes", "asking_without_diff"],
+    "approval": {
+      "human_required": ["logic", "deletions", "security", "migrations", "schemas", "api"],
+      "auto_proceed": ["syntax", "dead_code", "duplication", "formatting", "whitespace"],
+      "chain": [
+        "1_analyze_change",
+        "2_generate_diff",
+        "3_show_diff_to_user",
+        "4_ask_approval",
+        "5_apply_if_approved"
+      ]
+    },
+    "principles": {
+      "dry": {
+        "trigger": "@3→abstract",
+        "example": { "before": "same code 3x", "after": "shared function" }
+      },
+      "kiss": {
+        "trigger": "@complexity>10→simplify",
+        "example": { "before": "nested if chains", "after": "early returns" }
+      },
+      "yagni": {
+        "trigger": "@unused→remove",
+        "example": { "before": "speculative feature", "after": "removed" }
+      },
+      "solid": {
+        "trigger": "@coupling>5→decouple",
+        "example": { "before": "god class", "after": "focused classes" }
+      },
+      "composition": {
+        "trigger": "@inheritance→compose",
+        "example": { "before": "deep hierarchy", "after": "composed traits" }
+      },
+      "explicit": {
+        "trigger": "@implicit→make_explicit",
+        "example": { "before": "magic behavior", "after": "documented contract" }
+      },
+      "minimalism": {
+        "trigger": "@bloat→subtract",
+        "example": { "before": "unused dependencies", "after": "lean" }
+      }
+    }
+  },
+
+  "intelligence": {
+    "bias_mitigation": {
+      "recency": {
+        "strategy": "weight_old_and_new_equally",
+        "severity": "high",
+        "compounds_with": ["confirmation"]
+      },
+      "confirmation": {
+        "strategy": "seek_disconfirming_evidence",
+        "severity": "high",
+        "compounds_with": ["availability"]
+      },
+      "anchoring": {
+        "strategy": "generate_estimate_before_seeing_data",
+        "severity": "medium",
+        "compounds_with": ["optimism"]
+      },
+      "availability": {
+        "strategy": "use_base_rates_not_anecdotes",
+        "severity": "medium",
+        "compounds_with": ["recency"]
+      },
+      "sunk_cost": {
+        "strategy": "ignore_past_investment",
+        "severity": "high",
+        "compounds_with": ["optimism"]
+      },
+      "optimism": {
+        "strategy": "premortem_what_will_fail",
+        "severity": "high",
+        "compounds_with": ["anchoring", "sunk_cost"]
+      }
+    },
+    "pitfall_detection": {
+      "off_by_one": {
+        "pattern": "loop boundary error",
+        "fix": "use inclusive ranges or test boundaries",
+        "severity": "high"
+      },
+      "null_pointer": {
+        "pattern": "missing null check",
+        "fix": "add guard clause or use optional types",
+        "severity": "critical"
+      },
+      "race_condition": {
+        "pattern": "unsynchronized shared state",
+        "fix": "add locking or use immutable data",
+        "severity": "critical"
+      },
+      "injection": {
+        "pattern": "unescaped user input",
+        "fix": "parameterize queries, escape output",
+        "severity": "critical"
+      },
+      "overflow": {
+        "pattern": "arithmetic exceeds bounds",
+        "fix": "check bounds before operation",
+        "severity": "high"
+      },
+      "divide_by_zero": {
+        "pattern": "division without zero check",
+        "fix": "guard with zero check",
+        "severity": "high"
+      }
+    },
+    "decision_gates": {
+      "before_implement": ["is_necessary", "is_simplest", "is_testable"],
+      "before_merge": ["tests_pass", "no_new_smells", "documentation_updated"]
+    }
+  },
+
+  "execution": {
+    "bootstrap": "validate→resolve_refs→select_profile→display_startup→start",
+    "profiles": {
+      "minimal": "functional,secure",
+      "standard": "functional,secure,maintainable",
+      "complete": "all_gates,adversarial"
+    },
+    "phases": {
+      "discover": {
+        "io": "@ref:phase_io.discover",
+        "actions": ["scan", "constrain", "measure", "detect_deployment"],
+        "questions": ["what_problem", "who_affected", "impact", "constraints", "workarounds"]
+      },
+      "analyze": {
+        "io": "@ref:phase_io.analyze",
+        "actions": ["identify_assumptions", "estimate_cost", "assess_risk"],
+        "questions": ["hidden_assumptions", "cost_in_hours", "failure_modes", "maintenance_burden", "opportunity_cost"]
+      },
+      "ideate": {
+        "io": "@ref:phase_io.ideate",
+        "actions": ["diverge", "brainstorm"],
+        "questions": ["what_if", "why_not", "how_else"]
+      },
+      "design": {
+        "io": "@ref:phase_io.design",
+        "actions": ["generate_approaches", "compare_options", "select_simplest"],
+        "questions": ["three_to_five_approaches", "minimum_viable_complexity", "where_does_it_break", "cost_benefit", "simplest_that_works"]
+      },
+      "implement": {
+        "io": "@ref:phase_io.implement",
+        "actions": ["write_tests_first", "code", "refactor"],
+        "questions": ["idioms_followed", "single_responsibility", "readable", "failures_handled", "testable"],
+        "gates": "@ref:intelligence.decision_gates.before_implement"
+      },
+      "validate": {
+        "io": "@ref:phase_io.validate",
+        "actions": ["run_gates", "collect_evidence", "adversarial_review"],
+        "questions": ["requirements_met", "edge_cases_covered", "security_validated", "performance_acceptable", "accessible"]
+      },
+      "deliver": {
+        "io": "@ref:phase_io.deliver",
+        "actions": ["deploy", "monitor", "document"],
+        "questions": ["deployment_ready", "documentation_helpful", "maintenance_plan", "lessons_captured", "rollback_tested"],
+        "gates": "@ref:intelligence.decision_gates.before_merge"
+      },
+      "learn": {
+        "io": "@ref:phase_io.learn",
+        "actions": ["extract_patterns", "measure_effectiveness", "propose_improvements", "apply_improvements", "re_validate"],
+        "questions": ["what_worked", "what_gaps", "how_to_prevent"]
+      }
+    },
+    "iteration": {
+      "mode": "autoiterate_until_convergence",
+      "delta_threshold": "@ref:limits.convergence",
+      "max_iterations": "@ref:limits.iterations",
+      "depth_per_pass": ["surface", "structure", "philosophy", "meta"]
+    },
+    "context": {
+      "priority": ["changed", "neighbors", "recent"],
+      "budget_tokens": 10000,
+      "eviction": "LRU"
+    }
+  },
+
+  "quality": {
+    "metrics": {
+      "complexity": {
+        "method": "cyclomatic",
+        "formula": "branches + loops + catches + 1"
+      },
+      "coupling": {
+        "method": "afferent_efferent",
+        "formula": "fan_in + fan_out"
+      },
+      "duplication": {
+        "method": "token_similarity",
+        "threshold": "@ref:limits.duplication",
+        "min_tokens": 50
+      },
+      "coverage": {
+        "method": "line_coverage",
+        "formula": "executed_lines / executable_lines"
+      }
+    },
+    "code_smells": ["long_method", "god_object", "duplicate_code", "feature_envy"],
+    "gates": {
+      "functional": {
+        "tests": true,
+        "coverage": "@ref:limits.coverage"
+      },
+      "secure": {
+        "vulnerabilities": 0,
+        "input_validated": true
+      },
+      "maintainable": {
+        "complexity": "@ref:limits.complexity",
+        "duplication": 0
+      },
+      "performant": {
+        "paint_seconds": 2.5,
+        "layout_shift": 0.1
+      },
+      "deployable": {
+        "health_check": true,
+        "rollback_ready": true
+      },
+      "privacy": {
+        "gdpr_compliant": true,
+        "pii_protected": true
+      }
+    },
+    "evidence": {
+      "weights": {
+        "tests": 0.50,
+        "static_analysis": 0.30,
+        "complexity_checks": 0.20
+      },
+      "threshold": 1.0,
+      "note": "100% threshold forces comprehensive validation from all sources"
+    },
+    "adversarial": {
+      "checks": ["edge_cases", "assumption_challenges", "spec_mismatches"],
+      "questions": ["why_does_this_exist", "what_breaks_if_removed", "simpler_alternative"],
+      "perspectives": ["architect", "security", "operator", "developer", "end_user", "skeptic"]
+    },
+    "validation_depths": {
+      "surface": {
+        "checks": ["@ref_resolution", "syntax", "schema"],
+        "principles": ["dry:obvious_duplication", "yagni:unused_code"]
+      },
+      "structure": {
+        "checks": ["organization", "grouping", "nesting"],
+        "principles": ["dry:subtle_repetition", "kiss:complexity", "solid:single_responsibility"]
+      },
+      "philosophy": {
+        "checks": ["intent", "composability", "predictability"],
+        "principles": ["principle_of_least_astonishment", "orthogonality", "composition_over_inheritance"]
+      },
+      "meta": {
+        "checks": ["self_application", "dogfooding", "consistency"],
+        "principles": ["all_principles_applied_to_framework_itself"]
+      }
+    }
+  },
+
+  "workflows": {
+    "new_feature": {
+      "extends": "@ref:defaults.workflow",
+      "phases": ["discover", "analyze", "ideate", "design", "implement", "validate", "deliver", "learn"],
+      "gates": ["functional", "secure", "maintainable"]
+    },
+    "bug_fix": {
+      "extends": "@ref:defaults.workflow",
+      "phases": ["analyze", "implement", "validate", "deliver"],
+      "profile": "minimal"
+    },
+    "refactor": {
+      "extends": "@ref:defaults.workflow",
+      "phases": ["analyze", "design", "implement", "validate"],
+      "gates": ["maintainable", "functional"]
+    },
+    "self_validation": {
+      "extends": "@ref:defaults.workflow",
+      "phases": ["discover", "analyze", "design", "implement", "validate", "deliver", "learn"],
+      "profile": "complete",
+      "gates": ["functional", "secure", "maintainable"],
+      "iteration": {
+        "mode": "multi_pass",
+        "depths": "@ref:execution.iteration.depth_per_pass",
+        "per_depth_validation": "@ref:quality.validation_depths"
+      }
+    },
+    "app_workflow": {
+      "extends": "@ref:defaults.workflow",
+      "for_each_app": "@ref:apps",
+      "phases": ["discover", "implement", "validate", "deliver"]
+    }
+  },
+
+  "standards": {
+    "format": "utf8,lf,indent:2,snake_case",
+    "git": "semantic,incremental,low_churn",
+    "platform": {
+      "posix": {
+        "shell": "@ref:defaults.shell",
+        "file_operations": "cat_only_no_head_tail",
+        "anti_truncation": true
+      },
+      "openbsd": {
+        "tools": "base_only_no_gnu",
+        "security": "unveil,pledge"
+      },
+      "cygwin": {
+        "shell": "@ref:defaults.shell",
+        "line_endings": "lf_preferred_crlf_tolerant"
+      }
+    },
+    "languages": {
+      "ruby": {
+        "extends": "@ref:defaults.language",
+        "quotes": "double",
+        "frozen_string_literals": true,
+        "linter": "rubocop"
+      },
+      "javascript": {
+        "extends": "@ref:defaults.language",
+        "quotes": "single",
+        "prefer_const": true,
+        "linter": "eslint"
+      },
+      "shell": {
+        "extends": "@ref:defaults.language",
+        "shell": "@ref:defaults.shell",
+        "always_quote": true,
+        "linter": "shellcheck"
+      },
+      "rust": {
+        "extends": "@ref:defaults.language",
+        "forbid_unsafe": true,
+        "error_handling": "result_type",
+        "linter": "clippy"
+      }
+    }
+  },
+
+  "recovery": {
+    "triggers": ["gate_failure", "test_failure", "deployment_failure", "manual_request"],
+    "strategy": {
+      "committed_changes": "git_revert",
+      "uncommitted_changes": "restore_from_checkpoint",
+      "deployed_version": "blue_green_switch"
+    },
+    "session_file": ".session_recovery",
+    "persist": ["current_phase", "completed_files", "pending_files", "context_state"],
+    "errors": {
+      "fatal": ["security_breach", "data_loss", "corruption"],
+      "recoverable": ["network_timeout", "resource_unavailable", "parse_error"],
+      "retry": {
+        "method": "exponential_backoff",
+        "max_attempts": 3
+      }
+    }
+  },
+
+  "deployment": {
+    "strategy": "blue_green",
+    "platform": "openbsd_native",
+    "security": {
+      "fingerprint_method": "sha256",
+      "computed_in": "CI"
+    },
+    "dependencies": {
+      "require_checks": ["security_scan", "license_verification"],
+      "allowed_licenses": ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"],
+      "updates": {
+        "security_patches": "automatic",
+        "feature_updates": "manual_approval"
+      }
+    }
+  },
+
+  "startup": {
+    "steps": [
+      {
+        "action": "display_startup_message",
+        "format": "**master.json** v{version} ACTIVATED"
+      },
+      {
+        "action": "check_auto_triggers",
+        "trigger_list": "@ref:recovery.triggers"
+      },
+      {
+        "action": "ask_user_for_target",
+        "prompt": "Project path to analyze? (or 'cwd' for current)"
+      },
+      {
+        "action": "execute_workflow",
+        "workflow": "@ref:workflows.self_validation"
+      }
+    ],
+    "logging": {
+      "format": "dmesg_style",
+      "timestamp_format": "[{seconds:2d}.{microseconds:06d}]"
+    },
+    "interaction": {
+      "diff_first": true,
+      "approval_steps": ["analyze", "generate_diff", "show_diff", "ask_approval", "apply_if_approved"]
+    }
+  },
+
+  "claude_code": {
+    "tools": {
+      "prefer": ["Read", "Edit", "Write", "Grep", "Glob"],
+      "forbid": ["head", "tail", "truncate", "cat", "sed", "awk", "echo"],
+      "bash_only_for": ["git", "npm", "bundle", "cargo"]
+    },
+    "workflow": {
+      "diff": "mandatory_before_every_approval",
+      "todo": "use_TodoWrite_for_3plus_steps",
+      "parallelism": "call_independent_tools_in_parallel",
+      "completion": "mark_complete_immediately_not_batched"
+    },
+    "permissions": ["Read", "Write", "Edit", "Grep", "Glob", "Bash(git:*)", "Bash(npm:*)"]
+  },
+
+  "apps": [
+    {
+      "id": "govt_bergen",
+      "name": "Bergens Selvstyreparti Plan",
+      "audience": "government",
+      "stack": "html",
+      "tracking_token": "MOD-ISSUE:govt_bergen",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "rails",
+      "path": "g:/pub/rails",
+      "stack": "rails",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "ai3",
+      "path": "g:/pub/ai3",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "bplans",
+      "path": "g:/pub/bplans",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "multimedia",
+      "path": "g:/pub/multimedia",
+      "workflow": "@ref:workflows.app_workflow"
+    }
+  ]
+}
