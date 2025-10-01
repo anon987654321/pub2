@@ -95,6 +95,32 @@
     ];
     const loadYouTubeAPI=()=>{if(IN_SANDBOX||window.__YT_API_LOADED)return;window.__YT_API_LOADED=true;const s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";s.async=true;document.head.appendChild(s)};
     
+    // MP3 Directory Scanning
+    const scanMp3Directory=async()=>{
+      try{
+        const response=await fetch('mp3/');
+        if(!response.ok)throw new Error('No mp3 directory');
+        
+        const html=await response.text();
+        const parser=new DOMParser();
+        const doc=parser.parseFromString(html,'text/html');
+        
+        const links=Array.from(doc.querySelectorAll('a'))
+          .map(a=>a.getAttribute('href'))
+          .filter(href=>href&&href.toLowerCase().endsWith('.mp3'));
+        
+        if(links.length===0)return null;
+        
+        return links.map(href=>({
+          src:`mp3/${href}`,
+          title:href.replace(/\.mp3$/i,'').replace(/[-_]/g,' '),
+          artist:'Local Library'
+        }));
+      }catch{
+        return null;
+      }
+    };
+    
     // MP3 Playlist Detection and Parsing
     const detectMp3Playlist=async()=>{
       if(IN_SANDBOX)return null;
@@ -122,6 +148,11 @@
           return Array.isArray(data)?data.map(t=>({...t,src:t.src})):null;
         }
       }catch{}
+      
+      // Scan directory as fallback
+      const scanned=await scanMp3Directory();
+      if(scanned&&scanned.length>0)return scanned;
+      
       return null;
     };
     
@@ -159,6 +190,25 @@
         this._initAudioElements();
       }
       
+      destroy(){
+        clearInterval(this._fadeIv);
+        clearTimeout(this._prefadeTimer);
+        if(this.audioContext){
+          if(this.analyser){
+            this.analyser.disconnect();
+          }
+          Object.values(this.players).forEach(p=>{
+            if(p._sourceNode){
+              p._sourceNode.disconnect();
+              delete p._sourceNode;
+            }
+            p.pause();
+            p.src='';
+          });
+          this.audioContext.close();
+        }
+      }
+      
       _initAudioElements(){
         // Create two audio elements for crossfading
         this.players.a=new Audio();
@@ -174,7 +224,7 @@
         try{
           this.audioContext=new(window.AudioContext||window.webkitAudioContext)();
           this.analyser=this.audioContext.createAnalyser();
-          this.analyser.fftSize=512;
+          this.analyser.fftSize=256;
           this.analyser.smoothingTimeConstant=0.8;
           this.dataArray=new Uint8Array(this.analyser.frequencyBinCount);
           
@@ -203,13 +253,20 @@
       
       _connectAnalyser(){
         if(!this.audioContext||!this.analyser)return;
+        const activePlayer=this.players[this.activeKey];
+        if(!activePlayer)return;
+        
+        // Disconnect old source if exists
+        if(activePlayer._sourceNode){
+          try{
+            activePlayer._sourceNode.disconnect();
+          }catch{}
+        }
+        
         try{
-          const activePlayer=this.players[this.activeKey];
-          if(activePlayer&&!activePlayer._sourceNode){
-            activePlayer._sourceNode=this.audioContext.createMediaElementSource(activePlayer);
-            activePlayer._sourceNode.connect(this.analyser);
-            this.analyser.connect(this.audioContext.destination);
-          }
+          activePlayer._sourceNode=this.audioContext.createMediaElementSource(activePlayer);
+          activePlayer._sourceNode.connect(this.analyser);
+          this.analyser.connect(this.audioContext.destination);
         }catch{}
       }
       
@@ -245,7 +302,7 @@
           this._connectAnalyser();
         }
         
-        // Auto-play when ready
+        // Auto-play when ready (use {once:true} to prevent listener accumulation)
         p.addEventListener('canplay',()=>{
           if(!this.muted||fadeIn)p.play().catch(()=>{});
         },{once:true});
@@ -393,8 +450,36 @@
     (()=>{
       const pack32=(r,g,b,a)=>((a&255)<<24)|((b&255)<<16)|((g&255)<<8)|(r&255);
       class PixelTunnel{
-        constructor(c){this.ctx=c;this.w=0;this.h=0;this.s=1;this.imageData=null;this.data=null;this.u32=null;this.BLACK32=0;this.fov=250;this.speed=.75;this.segments=64;this.baseRadius=75;this.zStep=4;this.particles=[];this.centers=[];this.time=0;this.mouse={x:0,y:0,down:false,active:false};this.ori={active:false,beta:0,gamma:0};this.tieRowStride=1;this.ringPxCull=.15}
-        resize(w,h,s){this.w=w;this.h=h;this.s=s;this.ctx.fillStyle="#000";this.ctx.fillRect(0,0,w,h);this.imageData=this.ctx.getImageData(0,0,w,h);this.data=this.imageData.data;this.u32=new Uint32Array(this.data.buffer);const t=new Uint8ClampedArray(4);t[3]=255;this.BLACK32=new Uint32Array(t.buffer)[0];this.init()}
+        constructor(c){this.ctx=c;this.w=0;this.h=0;this.s=1;this.imageData=null;this.data=null;this.u32=null;this.BLACK32=0;this.fov=250;this.speed=.75;this.segments=isLowEnd?32:48;this.baseRadius=75;this.zStep=4;this.particles=[];this.centers=[];this.time=0;this.mouse={x:0,y:0,down:false,active:false};this.ori={active:false,beta:0,gamma:0};this.tieRowStride=1;this.ringPxCull=.15;this.accretionParticles=[];this.hawkingParticles=[];this.eventHorizonRadius=120;this.photonSphereRadius=this.eventHorizonRadius*1.5}
+        resize(w,h,s){this.w=w;this.h=h;this.s=s;this.ctx.fillStyle="#000";this.ctx.fillRect(0,0,w,h);this.imageData=this.ctx.getImageData(0,0,w,h);this.data=this.imageData.data;this.u32=new Uint32Array(this.data.buffer);const t=new Uint8ClampedArray(4);t[3]=255;this.BLACK32=new Uint32Array(t.buffer)[0];this.init();this.initAccretionDisk()}
+        initAccretionDisk(){
+          this.accretionParticles=[];
+          const count=isLowEnd?100:200;
+          for(let i=0;i<count;i++){
+            const angle=Math.random()*Math.PI*2;
+            const radius=this.eventHorizonRadius+Math.random()*150;
+            this.accretionParticles.push({
+              angle,
+              radius,
+              velocity:0.02+Math.random()*0.03,
+              brightness:Math.random(),
+              size:1+Math.random()*2
+            });
+          }
+        }
+        emitHawkingRadiation(){
+          if(Math.random()>0.9){
+            const angle=Math.random()*Math.PI*2;
+            this.hawkingParticles.push({
+              x:this.w/2+Math.cos(angle)*this.eventHorizonRadius,
+              y:this.h/2+Math.sin(angle)*this.eventHorizonRadius,
+              vx:Math.cos(angle)*(2+Math.random()*3),
+              vy:Math.sin(angle)*(2+Math.random()*3),
+              life:100,
+              maxLife:100
+            });
+          }
+        }
         clearImageData(){this.u32.fill(this.BLACK32)}
         setPixel32(x,y,c){if(x<=0||x>=this.w||y<=0||y>=this.h)return;const i=x+y*this.imageData.width;this.u32[i]=c}
         drawLine32(x1,y1,x2,y2,c){let dx=Math.abs(x2-x1),dy=Math.abs(y2-y1),sx=x1<x2?1:-1,sy=y1<y2?1:-1,err=dx-dy,lx=x1,ly=y1;for(;;){if(lx>0&&lx<this.w&&ly>0&&ly<this.h)this.setPixel32(lx,ly,c);if(lx===x2&&ly===y2)break;const e2=2*err;if(e2>-dy){err-=dy;lx+=sx}if(e2<dx){err+=dx;ly+=sy}}}
@@ -402,7 +487,7 @@
         addParticle(x,y,z,a){return{x,y,z,x2d:0,y2d:0,radius:this.baseRadius,radiusAudio:this.baseRadius,index:0,segments:this.segments,centerX:0,centerY:0,audioIndex:a}}
         colorForRow32(i,l,a){const b=Math.max(0,Math.min(1,a?.bass??.5)),v=Math.max(0,Math.min(1,a?.average??.45)),h=Math.max(0,Math.min(1,a?.high??.35)),d=i/Math.max(1,l-1),r=Math.round(180*h+40*d),g=Math.round(90*v+60*d),u=Math.round(220*b);return pack32(r,g,u,255)}
         init(){this.particles=[];this.centers=[];const w1=Math.random()*this.w,h1=Math.random()*this.h;let c=0;for(let z=-this.fov;z<this.fov;z+=this.zStep){const coords=[];for(let i=0;i<this.segments;i++){const p=this.getCirclePos(0,0,this.baseRadius,i,this.segments);coords.push({x:p.x,y:p.y,index:i,radius:this.baseRadius,segments:this.segments,centerX:0,centerY:0})}const center={x:((this.w/2)-w1)*(c/15)+this.w/2,y:((this.h/2)-h1)*(c/15)+this.h/2};c++;this.centers.push(center);const row=[];let aIdx=8+Math.floor(Math.random()*1024);for(let i=0;i<coords.length;i++){const co=coords[i],p=this.addParticle(co.x,co.y,z,aIdx);p.index=co.index;p.radius=co.radius;p.radiusAudio=p.radius;p.segments=co.segments;p.centerX=co.centerX;p.centerY=co.centerY;row.push(p);aIdx+=i<coords.length/2?1:-1;if(aIdx>1024)aIdx=8;if(aIdx<8)aIdx=1024}this.particles.push(row)}}
-        frame(a){const m=motionScale();this.clearImageData();const l=this.particles.length;let s=false;for(let i=0;i<l;i++){const row=this.particles[i],rowBack=i>0?this.particles[i-1]:null,center=this.centers[i];if(this.mouse.active){center.x=(this.w/2-this.mouse.x/this.s)*((row[0].z-this.fov)/500)+this.w/2;center.y=(this.h/2-this.mouse.y/this.s)*((row[0].z-this.fov)/500)+this.h/2}else if(this.ori.active){const mx=-this.ori.gamma*(this.w/180),my=-this.ori.beta*(this.h/180);center.x=this.w/2+mx*((row[0].z-this.fov)/500);center.y=this.h/2+my*((row[0].z-this.fov)/500)}else{center.x+=(this.w/2-center.x)*.015;center.y+=(this.h/2-center.y)*.015}const f=(a?.average||0)*64+(a?.beat?8:0),sc=this.fov/(this.fov+row[0].z),r=(this.baseRadius+f)*sc;if(r<this.ringPxCull)continue;for(let j=0,k=row.length;j<k;j++){const p=row[j],z=this.fov/(this.fov+p.z);p.x2d=p.x*z+center.x;p.y2d=p.y*z+center.y;p.radiusAudio=p.radius+f;if(this.mouse.down){p.z+=this.speed*m;if(p.z>this.fov){p.z-=this.fov*2;s=true}}else{p.z-=this.speed*m;if(p.z<-this.fov){p.z+=this.fov*2;s=true}}const n=this.getCirclePos(p.centerX,p.centerY,p.radiusAudio,p.index,p.segments);p.x=n.x;p.y=n.y}const c=this.colorForRow32(i,l,a);for(let j=1;j<row.length;j++){const p=row[j],v=row[j-1];this.drawLine32(p.x2d|0,p.y2d|0,v.x2d|0,v.y2d|0,c)}if(row.length>2){const f=row[0],t=row[row.length-1];this.drawLine32(t.x2d|0,t.y2d|0,f.x2d|0,f.y2d|0,c)}if(i>0&&i<l-1&&rowBack&&i%this.tieRowStride===0){for(let j=0;j<row.length;j++){const p=row[j],b=j===0?rowBack[rowBack.length-1]:rowBack[j-1];this.drawLine32(p.x2d|0,p.y2d|0,b.x2d|0,b.y2d|0,c)}}}if(s)this.particles=this.particles.sort((a,b)=>b[0].z-a[0].z);this.time+=(this.mouse.down?-.005:.005)*m;this.ctx.putImageData(this.imageData,0,0)}
+        frame(a){const m=motionScale();this.clearImageData();const l=this.particles.length;let s=false;const viewMargin=50;for(let i=0;i<l;i++){const row=this.particles[i],rowBack=i>0?this.particles[i-1]:null,center=this.centers[i];if(this.mouse.active){center.x=(this.w/2-this.mouse.x/this.s)*((row[0].z-this.fov)/500)+this.w/2;center.y=(this.h/2-this.mouse.y/this.s)*((row[0].z-this.fov)/500)+this.h/2}else if(this.ori.active){const mx=-this.ori.gamma*(this.w/180),my=-this.ori.beta*(this.h/180);center.x=this.w/2+mx*((row[0].z-this.fov)/500);center.y=this.h/2+my*((row[0].z-this.fov)/500)}else{center.x+=(this.w/2-center.x)*.015;center.y+=(this.h/2-center.y)*.015}const f=(a?.average||0)*64+(a?.beat?8:0),sc=this.fov/(this.fov+row[0].z),r=(this.baseRadius+f)*sc;if(r<this.ringPxCull)continue;const projRadius=(this.baseRadius+64)*sc;if(center.x+projRadius<-viewMargin||center.x-projRadius>this.w+viewMargin||center.y+projRadius<-viewMargin||center.y-projRadius>this.h+viewMargin)continue;for(let j=0,k=row.length;j<k;j++){const p=row[j],z=this.fov/(this.fov+p.z);p.x2d=p.x*z+center.x;p.y2d=p.y*z+center.y;p.radiusAudio=p.radius+f;if(this.mouse.down){p.z+=this.speed*m;if(p.z>this.fov){p.z-=this.fov*2;s=true}}else{p.z-=this.speed*m;if(p.z<-this.fov){p.z+=this.fov*2;s=true}}const n=this.getCirclePos(p.centerX,p.centerY,p.radiusAudio,p.index,p.segments);p.x=n.x;p.y=n.y}const c=this.colorForRow32(i,l,a);for(let j=1;j<row.length;j++){const p=row[j],v=row[j-1];this.drawLine32(p.x2d|0,p.y2d|0,v.x2d|0,v.y2d|0,c)}if(row.length>2){const f=row[0],t=row[row.length-1];this.drawLine32(t.x2d|0,t.y2d|0,f.x2d|0,f.y2d|0,c)}if(i>0&&i<l-1&&rowBack&&i%this.tieRowStride===0){for(let j=0;j<row.length;j++){const p=row[j],b=j===0?rowBack[rowBack.length-1]:rowBack[j-1];this.drawLine32(p.x2d|0,p.y2d|0,b.x2d|0,b.y2d|0,c)}}}if(s)this.particles=this.particles.sort((a,b)=>b[0].z-a[0].z);const cx=this.w/2,cy=this.h/2;this.accretionParticles.forEach(p=>{p.angle+=p.velocity*(1+(a?.average||0)*0.5);const x=cx+Math.cos(p.angle)*p.radius,y=cy+Math.sin(p.angle)*p.radius;const velocityAngle=p.angle+Math.PI/2,dopplerShift=Math.cos(velocityAngle);const r=dopplerShift>0?255:Math.round(180+dopplerShift*75),g=Math.round(120+p.brightness*100),b=dopplerShift<0?255:Math.round(80-dopplerShift*80);const color=pack32(r,g,b,Math.round(200*p.brightness));for(let i=-p.size;i<=p.size;i++){for(let j=-p.size;j<=p.size;j++){this.setPixel32(Math.floor(x+i),Math.floor(y+j),color)}}});this.emitHawkingRadiation();this.hawkingParticles=this.hawkingParticles.filter(p=>{p.x+=p.vx;p.y+=p.vy;p.life--;if(p.life>0&&p.x>0&&p.x<this.w&&p.y>0&&p.y<this.h){const alpha=Math.round(255*(p.life/p.maxLife));const color=pack32(200,220,255,alpha);this.setPixel32(Math.floor(p.x),Math.floor(p.y),color);return true}return false});const photonSegments=isLowEnd?32:64;for(let i=0;i<photonSegments;i++){const angle1=(i/photonSegments)*Math.PI*2,angle2=((i+1)/photonSegments)*Math.PI*2;const x1=cx+Math.cos(angle1)*this.photonSphereRadius,y1=cy+Math.sin(angle1)*this.photonSphereRadius;const x2=cx+Math.cos(angle2)*this.photonSphereRadius,y2=cy+Math.sin(angle2)*this.photonSphereRadius;const brightness=128+Math.round((a?.beat||0)*80);const color=pack32(brightness,brightness,200,100);this.drawLine32(Math.floor(x1),Math.floor(y1),Math.floor(x2),Math.floor(y2),color)}const horizonSegments=32;for(let i=0;i<horizonSegments;i++){const angle1=(i/horizonSegments)*Math.PI*2,angle2=((i+1)/horizonSegments)*Math.PI*2;const glowRadius=this.eventHorizonRadius*(1+(a?.bass||0)*0.2);const x1=cx+Math.cos(angle1)*glowRadius,y1=cy+Math.sin(angle1)*glowRadius;const x2=cx+Math.cos(angle2)*glowRadius,y2=cy+Math.sin(angle2)*glowRadius;const color=pack32(255,180,100,180);this.drawLine32(Math.floor(x1),Math.floor(y1),Math.floor(x2),Math.floor(y2),color)}this.time+=(this.mouse.down?-.005:.005)*m;this.ctx.putImageData(this.imageData,0,0)}
       }
       const ctx=canvas.getContext("2d",{alpha:false,willReadFrequently:true})||canvas.getContext("2d");
       window.tunnelRenderer=new PixelTunnel(ctx)
@@ -495,10 +580,19 @@
     canvas.addEventListener("touchend",e=>{e.preventDefault();if(e.touches.length<2)resetPinch();if(e.touches.length===0){mouseDown=false;canvas.classList.remove("canvas-inverted");setUIInversion(false);sendInput();rippleAtEvent(e)}if(audio?.started&&!IN_SANDBOX){const t=e.changedTouches[0],r=canvas.getBoundingClientRect(),endX=t.clientX-r.left,endY=t.clientY-r.top,dx=endX-touchStartX,dy=endY-touchStartY;if(Math.abs(dx)>swipeThreshold||Math.abs(dy)>swipeThreshold){if(Math.abs(dx)>Math.abs(dy)){dx>0?audio.next():audio.prev()}else{const s=document.getElementById("swipeHint");s.textContent="Warp Tunnel";s.classList.add("show");setTimeout(()=>s.classList.remove("show"),1400)}try{navigator.vibrate?.(10)}catch{}}else{const n=performance.now();if(n-lastTapTime<doubleTapMs)toggleFullscreen();lastTapTime=n}}},{passive:false});
     canvas.addEventListener("touchcancel",()=>{resetPinch();mouseDown=false;canvas.classList.remove("canvas-inverted");setUIInversion(false);sendInput()},{passive:true});
     addEventListener("keydown",e=>{if(e.key?.toLowerCase()==="m"){e.preventDefault();if(audio?.started&&!IN_SANDBOX)audio.toggleMute();return}if(e.code==="ArrowRight"){e.preventDefault();if(audio?.started&&!IN_SANDBOX)audio.next();return}if(e.code==="ArrowLeft"){e.preventDefault();if(audio?.started&&!IN_SANDBOX)audio.prev();return}if(e.code==="KeyF"){e.preventDefault();toggleFullscreen();return}});
-    let pageHidden=document.hidden;document.addEventListener("visibilitychange",()=>pageHidden=document.hidden);
+    let pageHidden=document.hidden,animationFrameId=null;
+    document.addEventListener("visibilitychange",()=>{
+      pageHidden=document.hidden;
+      if(pageHidden&&animationFrameId){
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId=null;
+      }else if(!pageHidden&&!animationFrameId){
+        animationFrameId=requestAnimationFrame(animate);
+      }
+    });
     let lastFrameT=performance.now(),lastRenderT=lastFrameT;
-    const animate=()=>{const n=performance.now(),d=n-lastFrameT;lastFrameT=n;ewma=ewma*.9+d*.1;if(n-lastRenderT<MIN_FRAME_MS){requestAnimationFrame(animate);return}if(!pageHidden&&n-lastScaleAdjust>700){if(ewma>22){setScaleAndResize(INTERNAL_SCALE*.92);lastScaleAdjust=n}else if(ewma<14&&INTERNAL_SCALE<SCALE_MAX){setScaleAndResize(INTERNAL_SCALE*1.06);lastScaleAdjust=n}}if(pageHidden){requestAnimationFrame(animate);return}const a=audio?.started?audio.data():{average:0,beat:0,bass:.5,mid:.45,high:.35};window.tunnelRenderer?.frame(a);lastRenderT=n;requestAnimationFrame(animate)};
-    const boot=()=>{if(IN_SANDBOX){const u=document.getElementById("uiLabel");if(u)u.textContent="Visual-only (sandboxed)"}requestAnimationFrame(animate);document.getElementById("overlay").focus()};
+    const animate=()=>{const n=performance.now(),d=n-lastFrameT;lastFrameT=n;ewma=ewma*.9+d*.1;if(n-lastRenderT<MIN_FRAME_MS){animationFrameId=requestAnimationFrame(animate);return}if(!pageHidden&&n-lastScaleAdjust>2000){if(ewma>22){setScaleAndResize(INTERNAL_SCALE*.92);lastScaleAdjust=n}else if(ewma<14&&INTERNAL_SCALE<SCALE_MAX){setScaleAndResize(INTERNAL_SCALE*1.06);lastScaleAdjust=n}}if(pageHidden){animationFrameId=requestAnimationFrame(animate);return}const a=audio?.started?audio.data():{average:0,beat:0,bass:.5,mid:.45,high:.35};window.tunnelRenderer?.frame(a);lastRenderT=n;animationFrameId=requestAnimationFrame(animate)};
+    const boot=()=>{if(IN_SANDBOX){const u=document.getElementById("uiLabel");if(u)u.textContent="Visual-only (sandboxed)"}animationFrameId=requestAnimationFrame(animate);document.getElementById("overlay").focus()};
     document.readyState==="loading"?document.addEventListener("DOMContentLoaded",boot):boot();
   </script>
 </body>
