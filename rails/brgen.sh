@@ -41,6 +41,10 @@ generate_mapbox_controller "mapbox" 5.3467 60.3971 "listings"
 
 generate_insights_controller "output"
 
+# Generate all Stimulus controllers for Rails 8 PWA  
+generate_all_stimulus_controllers
+
+
 cat <<EOF > config/initializers/tenant.rb
 Rails.application.config.middleware.use ActsAsTenant::Middleware
 ActsAsTenant.configure do |config|

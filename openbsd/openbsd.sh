@@ -431,7 +431,7 @@ server:
   rrl-ratelimit: 200
   rrl-size: 1000000
 remote-control:
-  control-enable: yes
+  control-enable: no
 EOF
   for domain in "${(@k)all_domains}"; do
     cat >> /var/nsd/etc/nsd.conf << EOF

@@ -708,3 +708,349 @@ setup_stimulus_use() {
     log "Setting up stimulus-use for IntersectionObserver and other helpers"
     install_yarn_package "stimulus-use"
 }
+
+generate_character_counter_controller() {
+    log "Generating character counter Stimulus controller"
+    mkdir -p app/javascript/controllers
+    cat > app/javascript/controllers/character_counter_controller.js << 'CHAREOF'
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["input", "output"]
+  static values = { max: { type: Number, default: 500 } }
+
+  connect() {
+    this.update()
+  }
+
+  update() {
+    const length = this.inputTarget.value.length
+    const remaining = this.maxValue - length
+    this.outputTarget.textContent = `${remaining} characters remaining`
+    
+    if (remaining < 0) {
+      this.outputTarget.classList.add("text-red-600")
+    } else {
+      this.outputTarget.classList.remove("text-red-600")
+    }
+  }
+}
+CHAREOF
+}
+
+generate_form_validation_controller() {
+    log "Generating form validation Stimulus controller"
+    mkdir -p app/javascript/controllers
+    cat > app/javascript/controllers/form_validation_controller.js << 'FORMEOF'
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["submit"]
+
+  connect() {
+    this.element.addEventListener("input", () => this.validate())
+    this.validate()
+  }
+
+  validate() {
+    const isValid = this.element.checkValidity()
+    
+    if (this.hasSubmitTarget) {
+      this.submitTarget.disabled = !isValid
+    }
+  }
+
+  submit(event) {
+    if (!this.element.checkValidity()) {
+      event.preventDefault()
+      event.stopPropagation()
+      
+      // Show validation messages
+      const firstInvalid = this.element.querySelector(":invalid")
+      if (firstInvalid) {
+        firstInvalid.focus()
+        firstInvalid.reportValidity()
+      }
+    }
+  }
+}
+FORMEOF
+}
+
+generate_infinite_scroll_controller() {
+    log "Generating infinite scroll Stimulus controller (Rails 8 + Turbo)"
+    mkdir -p app/javascript/controllers
+    cat > app/javascript/controllers/infinite_scroll_controller.js << 'SCROLLEOF'
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["sentinel"]
+  static values = { 
+    url: String,
+    page: { type: Number, default: 1 }
+  }
+
+  connect() {
+    this.observer = new IntersectionObserver(
+      entries => this.handleIntersect(entries),
+      { threshold: 0.1 }
+    )
+    
+    if (this.hasSentinelTarget) {
+      this.observer.observe(this.sentinelTarget)
+    }
+  }
+
+  disconnect() {
+    if (this.observer) {
+      this.observer.disconnect()
+    }
+  }
+
+  async handleIntersect(entries) {
+    entries.forEach(async entry => {
+      if (entry.isIntersecting && !this.loading) {
+        this.loading = true
+        this.pageValue++
+        
+        const url = new URL(this.urlValue, window.location.origin)
+        url.searchParams.set('page', this.pageValue)
+        
+        try {
+          const response = await fetch(url, {
+            headers: { 
+              "Accept": "text/vnd.turbo-stream.html",
+              "Turbo-Frame": this.element.id
+            }
+          })
+          
+          if (response.ok) {
+            const html = await response.text()
+            Turbo.renderStreamMessage(html)
+          }
+        } catch (error) {
+          console.error("Infinite scroll error:", error)
+        } finally {
+          this.loading = false
+        }
+      }
+    })
+  }
+}
+SCROLLEOF
+}
+
+generate_dropdown_controller() {
+    log "Generating dropdown Stimulus controller"
+    mkdir -p app/javascript/controllers
+    cat > app/javascript/controllers/dropdown_controller.js << 'DROPEOF'
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["menu"]
+
+  toggle(event) {
+    event.preventDefault()
+    this.menuTarget.classList.toggle("hidden")
+  }
+
+  hide(event) {
+    if (!this.element.contains(event.target)) {
+      this.menuTarget.classList.add("hidden")
+    }
+  }
+
+  connect() {
+    document.addEventListener("click", this.hide.bind(this))
+  }
+
+  disconnect() {
+    document.removeEventListener("click", this.hide.bind(this))
+  }
+}
+DROPEOF
+}
+
+generate_notification_controller() {
+    log "Generating notification Stimulus controller"
+    mkdir -p app/javascript/controllers
+    cat > app/javascript/controllers/notification_controller.js << 'NOTIFEOF'
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static values = { 
+    autoHide: { type: Boolean, default: true },
+    delay: { type: Number, default: 5000 }
+  }
+
+  connect() {
+    if (this.autoHideValue) {
+      this.timeout = setTimeout(() => {
+        this.hide()
+      }, this.delayValue)
+    }
+  }
+
+  disconnect() {
+    if (this.timeout) {
+      clearTimeout(this.timeout)
+    }
+  }
+
+  hide() {
+    this.element.classList.add("opacity-0", "translate-x-full")
+    setTimeout(() => {
+      this.element.remove()
+    }, 300)
+  }
+}
+NOTIFEOF
+}
+
+generate_all_stimulus_controllers() {
+    log "Generating all Stimulus controllers for Rails 8 PWA"
+    generate_character_counter_controller
+    generate_form_validation_controller  
+    generate_infinite_scroll_controller
+    generate_dropdown_controller
+    generate_notification_controller
+    
+    log "All Stimulus controllers generated"
+}
+
+generate_show_view() {
+    local model_singular="$1"
+    local model_plural="$2"
+    log "Generating show view for $model_singular"
+    
+    mkdir -p "app/views/${model_plural}"
+    cat > "app/views/${model_plural}/show.html.erb" << 'SHOWEOF'
+<%= turbo_frame_tag dom_id(@<%= model_singular %>) do %>
+  <%= tag.article class: "detail-view", role: "article" do %>
+    <%= tag.header do %>
+      <%= tag.h1 @<%= model_singular %>.title %>
+      <%= tag.div class: "meta" do %>
+        <%= tag.span t("brgen.posted_by", user: @<%= model_singular %>.user.email) %>
+        <%= tag.span @<%= model_singular %>.created_at.strftime("%Y-%m-%d %H:%M") %>
+      <% end %>
+    <% end %>
+
+    <%= tag.section class: "content" do %>
+      <% if @<%= model_singular %>.photos.attached? %>
+        <%= tag.div class: "photos" do %>
+          <% @<%= model_singular %>.photos.each do |photo| %>
+            <%= image_tag photo, alt: t("brgen.listing_photo", title: @<%= model_singular %>.title) %>
+          <% end %>
+        <% end %>
+      <% end %>
+
+      <%= tag.div class: "description" do %>
+        <%= simple_format @<%= model_singular %>.description %>
+      <% end %>
+
+      <%= tag.dl class: "attributes" do %>
+        <%= tag.dt t("brgen.price") %>
+        <%= tag.dd number_to_currency(@<%= model_singular %>.price) %>
+        
+        <%= tag.dt t("brgen.category") %>
+        <%= tag.dd @<%= model_singular %>.category %>
+        
+        <%= tag.dt t("brgen.location") %>
+        <%= tag.dd @<%= model_singular %>.location %>
+        
+        <%= tag.dt t("brgen.status") %>
+        <%= tag.dd @<%= model_singular %>.status %>
+      <% end %>
+    <% end %>
+
+    <% if @<%= model_singular %>.lat.present? && @<%= model_singular %>.lng.present? %>
+      <%= tag.div id: "map", 
+                  data: { 
+                    controller: "mapbox",
+                    mapbox_api_key_value: ENV['MAPBOX_TOKEN'],
+                    mapbox_<%= model_plural %>_value: [@<%= model_singular %>].to_json
+                  },
+                  style: "height: 400px; margin: 2rem 0;" %>
+    <% end %>
+
+    <%= render partial: "shared/vote", locals: { votable: @<%= model_singular %> } %>
+
+    <%= tag.footer class: "actions" do %>
+      <%= link_to t("brgen.back"), <%= model_plural %>_path, class: "button secondary" %>
+      <% if @<%= model_singular %>.user == current_user || current_user&.admin? %>
+        <%= link_to t("brgen.edit"), edit_<%= model_singular %>_path(@<%= model_singular %>), class: "button" %>
+        <%= button_to t("brgen.delete"), <%= model_singular %>_path(@<%= model_singular %>), 
+                      method: :delete, 
+                      class: "button danger",
+                      data: { turbo_confirm: t("brgen.confirm_delete") } %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
+SHOWEOF
+    
+    # Replace template variables with actual model names
+    ruby -i -pe "s/<%= model_singular %>/${model_singular}/g; s/<%= model_plural %>/${model_plural}/g" "app/views/${model_plural}/show.html.erb"
+}
+
+generate_new_view() {
+    local model_singular="$1"
+    local model_plural="$2"
+    log "Generating new view for $model_singular"
+    
+    mkdir -p "app/views/${model_plural}"
+    cat > "app/views/${model_plural}/new.html.erb" << 'NEWEOF'
+<%= turbo_frame_tag "new_<%= model_singular %>" do %>
+  <%= tag.article class: "form-container" do %>
+    <%= tag.header do %>
+      <%= tag.h1 t("brgen.new_<%= model_singular %>") %>
+    <% end %>
+
+    <%= render "form", <%= model_singular %>: @<%= model_singular %> %>
+
+    <%= tag.footer do %>
+      <%= link_to t("brgen.cancel"), <%= model_plural %>_path, class: "button secondary" %>
+    <% end %>
+  <% end %>
+<% end %>
+NEWEOF
+
+    ruby -i -pe "s/<%= model_singular %>/${model_singular}/g; s/<%= model_plural %>/${model_plural}/g" "app/views/${model_plural}/new.html.erb"
+}
+
+generate_edit_view() {
+    local model_singular="$1"
+    local model_plural="$2"
+    log "Generating edit view for $model_singular"
+    
+    mkdir -p "app/views/${model_plural}"
+    cat > "app/views/${model_plural}/edit.html.erb" << 'EDITEOF'
+<%= turbo_frame_tag dom_id(@<%= model_singular %>) do %>
+  <%= tag.article class: "form-container" do %>
+    <%= tag.header do %>
+      <%= tag.h1 t("brgen.edit_<%= model_singular %>") %>
+    <% end %>
+
+    <%= render "form", <%= model_singular %>: @<%= model_singular %> %>
+
+    <%= tag.footer do %>
+      <%= link_to t("brgen.cancel"), <%= model_singular %>_path(@<%= model_singular %>), class: "button secondary" %>
+    <% end %>
+  <% end %>
+<% end %>
+EDITEOF
+
+    ruby -i -pe "s/<%= model_singular %>/${model_singular}/g; s/<%= model_plural %>/${model_plural}/g" "app/views/${model_plural}/edit.html.erb"
+}
+
+generate_crud_views() {
+    local model_singular="$1"
+    local model_plural="$2"
+    log "Generating all CRUD views for ${model_plural}"
+    
+    generate_show_view "$model_singular" "$model_plural"
+    generate_new_view "$model_singular" "$model_plural"
+    generate_edit_view "$model_singular" "$model_plural"
+    
+    log "CRUD views generated: show, new, edit"
+}
