@@ -123,3 +123,25 @@ Infrastructure that thinks in decades, not deployment cycles.
 
 **Author**: anon987654321  
 **Repository**: https://github.com/anon987654321/pub2/tree/main/openbsd
+
+## pledge(2) and unveil(2) Security
+
+Falcon servers can run with OpenBSD's native security restrictions:
+
+- **pledge gem**: `gem "pledge", "~> 1.2.0"` (by Jeremy Evans)
+- **unveil**: Restrict filesystem access to specific paths before accepting requests
+- **pledge**: Restrict system calls after initialization
+
+Example usage in config/falcon.rb:
+```ruby
+require 'pledge'
+
+# Unveil paths FIRST (app, gems, /tmp, sockets, certs)
+Pledge.unveil(Dir.pwd => 'r', :gem => 'r', '/tmp' => 'rwc')
+Pledge.unveil(nil, nil)  # Lock
+
+# Then pledge (stdio inet rpath wpath cpath unix dns)
+Pledge.pledge('stdio inet rpath wpath cpath unix dns recvfd sendfd')
+```
+
+Defense-in-depth: even if Rails is compromised, attacker is sandboxed.

@@ -176,17 +176,9 @@ primary_ptrs=(
 
 # Logging with structured output
 log() {
-
   local level="${1:-INFO}"
-
   shift
-
-  printf '{"time":"%s","level":"%s","msg":"%s"}\n' \
-
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$level" "$*" | \
-
-    tee -a "$LOG_DIR/unified.log"
-
+  printf '{"time":"%s","level":"%s","msg":"%s"}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$level" "$*" | tee -a "$LOG_DIR/unified.log"
 }
 
 save_state() {
@@ -214,14 +206,11 @@ EOF
 
 error() {
   log "ERROR" "$*"
-
   exit 1
-
 }
 
 warn() {
   log "WARN" "$*"
-
 }
 
 # Environment validation with evidence scoring
@@ -305,6 +294,8 @@ EOF
     "redis:5.0.0"
 
     "falcon:0.47.0"
+
+    "pledge:1.2.0"
 
     "async:2.8.0"
 
@@ -425,57 +416,31 @@ EOF
 
     # Sign zone
     cd /var/nsd/zones/master
-
     zsk_base=$(cat ../keys/"$domain.zsk")
-
     ksk_base=$(cat ../keys/"$domain.ksk")
-
-    ldns-signzone -n -p -s $(dd if=/dev/urandom bs=1000 count=1 2>/dev/null | sha256 | cut -b 1-16) \
-
-      "$domain.zone" \
-
-      "../keys/$zsk_base" \
-
-      "../keys/$ksk_base"
+    ldns-signzone -n -p -s $(dd if=/dev/urandom bs=1000 count=1 2>/dev/null | sha256 | cut -b 1-16) "$domain.zone" "../keys/$zsk_base" "../keys/$ksk_base"
 
   done
 
   chown -R _nsd:_nsd /var/nsd/zones
   # NSD configuration
   cat > /var/nsd/etc/nsd.conf << 'EOF'
-
 server:
-
   hide-version: yes
-
   verbosity: 1
-
   rrl-ratelimit: 200
-
   rrl-size: 1000000
-
-  dnssec-enable: yes
-
 remote-control:
   control-enable: yes
-
 EOF
-
   for domain in "${(@k)all_domains}"; do
     cat >> /var/nsd/etc/nsd.conf << EOF
-
 zone:
-
   name: "$domain"
-
   zonefile: master/$domain.zone.signed
-
   notify: $BACKUP_NS NOKEY
-
   provide-xfr: $BACKUP_NS NOKEY
-
 EOF
-
   done
 
   rcctl enable nsd
@@ -491,32 +456,18 @@ setup_firewall() {
 
   cat > /etc/pf.conf << 'EOF'
 table <bruteforce> persist
-
 table <ratelimit> persist
-
 set block-policy drop
 set skip on lo
-
 set limit states 500000
-
 set timeout tcp.established 3600
-
 set syncookies adaptive (start 25%, end 12%)
-
 match in all scrub (no-df random-id max-mss 1440)
 block all
 pass out all
-pass in proto tcp to port 22 flags S/SA synproxy state \
-  (source-track rule, max-src-conn 15, max-src-conn-rate 15/60, \
-
-   overload <bruteforce> flush global)
-
+pass in proto tcp to port 22 flags S/SA synproxy state (source-track rule, max-src-conn 15, max-src-conn-rate 15/60, overload <bruteforce> flush global)
 pass in proto { tcp udp } to port 53
-pass in proto tcp to port { 80 443 } flags S/SA synproxy state \
-  (source-track rule, max-src-states 1000, max-src-conn 100, \
-
-   max-src-conn-rate 50/30, overload <ratelimit> flush global)
-
+pass in proto tcp to port { 80 443 } flags S/SA synproxy state (source-track rule, max-src-states 1000, max-src-conn 100, max-src-conn-rate 50/30, overload <ratelimit> flush global)
 pass in proto tcp to port 10001:10007
 anchor "relayd/*"
 EOF
