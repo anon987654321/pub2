@@ -652,6 +652,7 @@ class ReplicateExplorer
     SQL
   rescue => e
     Bootstrap.dmesg "WARN db save: #{e.message}"
+  end
 end
 
   def interactive_cli

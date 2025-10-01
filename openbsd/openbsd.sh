@@ -503,34 +503,26 @@ authority letsencrypt {
 EOF
 
   for domain in "${(@k)all_domains}"; do
-    cat >> /etc/acme-client.conf << EOF
-
-domain "$domain" {
-
-  domain key "/etc/ssl/private/$domain.key" ecdsa
-
-  domain full chain certificate "/etc/ssl/$domain.crt"
-
-  sign with letsencrypt
-
-  challengedir "/var/www/acme"
-
-EOF
-
     if [[ -n "${all_domains[$domain]}" ]]; then
-
-      print -n "  alternative names { www.$domain "
-
-      for sub in ${(s/ /)all_domains[$domain]}; do print -n "$sub.$domain "; done
-
-      print "}"
-
+      cat >> /etc/acme-client.conf << EOF
+domain "$domain" {
+  domain key "/etc/ssl/private/$domain.key" ecdsa
+  domain full chain certificate "/etc/ssl/$domain.crt"
+  sign with letsencrypt
+  challengedir "/var/www/acme"
+  alternative names { www.$domain ${all_domains[$domain]// /.${domain} }.${domain} }
+}
+EOF
     else
-
-      print "}"
-
-    fi >> /etc/acme-client.conf
-
+      cat >> /etc/acme-client.conf << EOF
+domain "$domain" {
+  domain key "/etc/ssl/private/$domain.key" ecdsa
+  domain full chain certificate "/etc/ssl/$domain.crt"
+  sign with letsencrypt
+  challengedir "/var/www/acme"
+}
+EOF
+    fi
   done
 
   # httpd for ACME
@@ -709,6 +701,7 @@ gem "pg", "~> 1.5"
 gem "falcon", "~> 0.47"
 
 gem "async"
+gem "async-http"
 
 gem "redis", "~> 5.0"
 
@@ -780,8 +773,8 @@ EOF
 #!/usr/bin/env ruby
 
 require 'async'
-
 require 'async/http/endpoint'
+require 'async/http/server'
 
 ENV["RAILS_ENV"] ||= "production"
 port = $port
@@ -808,19 +801,14 @@ FALCON
   chmod +x "$app_dir/config/falcon.rb"
   # Service script
   cat > "/etc/rc.d/${app}_rails" << EOF
-
 #!/bin/ksh
-
-daemon="$app_dir/config/falcon.rb"
-
+daemon="/usr/local/bin/ruby"
+daemon_flags="$app_dir/config/falcon.rb"
 daemon_user="$app"
-
 daemon_timeout=30
-
 . /etc/rc.d/rc.subr
 rc_bg=YES
 rc_reload=NO
-
 rc_cmd \$1
 EOF
 

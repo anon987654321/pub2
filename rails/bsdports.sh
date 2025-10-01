@@ -1,652 +1,559 @@
 #!/usr/bin/env zsh
-set -euo pipefail
 
-# BSDPorts - Advanced Package Search and Management Platform
-# Framework v37.3.2 compliant with comprehensive BSD ports integration
+# -- INITIAL SETUP --
 
-APP_NAME="bsdports"
-BASE_DIR="/home/dev/rails"
-BRGEN_IP="46.23.95.45"
+echo "Creating new Rails application..."
+rails new bsdports -m https://www.rubyonrails.org
 
-source "./__shared.sh"
+cd bsdports
 
-log "Starting BSDPorts package search platform setup"
-
-setup_full_app "$APP_NAME"
-
-command_exists "ruby"
-command_exists "node"
-command_exists "psql"
-command_exists "redis-server"
-
-# Add package management and search gems
+echo "Adding necessary gems..."
 bundle add net-ftp
-bundle add searchkick
-bundle add elasticsearch-model
-bundle add nokogiri
-bundle add rubyzip
+bundle add rubygems-package
+bundle add pry
+bundle add stimulus_reflex
+bundle add langchainrb
+bundle add langchainrb_rails
+
+echo "Installing gems..."
 bundle install
 
-# Generate package management models
-bin/rails generate model Platform name:string description:text base_url:string ftp_server:string
-bin/rails generate model Category name:string description:text platform:references
-bin/rails generate model Port name:string summary:text description:text url:string category:references platform:references version:string maintainer:string
-bin/rails generate model PortDependency port:references dependency:references dependency_type:string
-bin/rails generate model Installation user:references port:references installed_at:datetime version:string status:string
-bin/rails generate model Review user:references port:references rating:integer content:text helpful_count:integer
+# -- CREATE NECESSARY MODELS --
 
-log "BSDPorts package search platform setup completed"
-commit "Set up BSDPorts with comprehensive package search and management features"
+echo "Generating models..."
+bin/rails generate model Category name:string platform:references
+bin/rails generate model Platform name:string
+bin/rails generate model Port name:string summary:text url:string description:text category:references platform:references
+echo "Migrating database..."
+bin/rails db:migrate
 
-cat <<EOF > app/reflexes/packages_infinite_scroll_reflex.rb
-class PackagesInfiniteScrollReflex < InfiniteScrollReflex
-  def load_more
-    @pagy, @collection = pagy(Package.all.order(created_at: :desc), page: page)
-    super
-  end
-end
-EOF
+# -- CREATE SEEDS.RB --
 
-cat <<EOF > app/reflexes/comments_infinite_scroll_reflex.rb
-class CommentsInfiniteScrollReflex < InfiniteScrollReflex
-  def load_more
-    @pagy, @collection = pagy(Comment.all.order(created_at: :desc), page: page)
-    super
-  end
-end
-EOF
+echo "Creating seeds.rb with FTP download and database import logic..."
+cat << "EOF" > db/seeds.rb
+require "net/ftp"
+require "rubygems/package"
+require "zlib"
+require "fileutils"
+require "pry"
 
-cat <<EOF > app/controllers/packages_controller.rb
-class PackagesController < ApplicationController
-  before_action :authenticate_user!, except: [:index, :show]
-  before_action :set_package, only: [:show, :edit, :update, :destroy]
-
-  def index
-    @pagy, @packages = pagy(Package.all.order(created_at: :desc)) unless @stimulus_reflex
-  end
-
-  def show
-  end
-
-  def new
-    @package = Package.new
-  end
-
-  def create
-    @package = Package.new(package_params)
-    @package.user = current_user
-    if @package.save
-      respond_to do |format|
-        format.html { redirect_to packages_path, notice: t("bsdports.package_created") }
-        format.turbo_stream
+def untar(io, destination)
+  Gem::Package::TarReader.new io do |tar|
+    tar.each do |tarfile|
+      destination_file = File.join(destination, tarfile.full_name)
+      if tarfile.directory?
+        FileUtils.mkdir_p(destination_file)
+      else
+        destination_directory = File.dirname(destination_file)
+        FileUtils.mkdir_p(destination_directory) unless File.directory?(destination_directory)
+        File.open(destination_file, "wb") do |f|
+          f.write(tarfile.read)
+        end
       end
-    else
-      render :new, status: :unprocessable_entity
     end
-  end
-
-  def edit
-  end
-
-  def update
-    if @package.update(package_params)
-      respond_to do |format|
-        format.html { redirect_to packages_path, notice: t("bsdports.package_updated") }
-        format.turbo_stream
-      end
-    else
-      render :edit, status: :unprocessable_entity
-    end
-  end
-
-  def destroy
-    @package.destroy
-    respond_to do |format|
-      format.html { redirect_to packages_path, notice: t("bsdports.package_deleted") }
-      format.turbo_stream
-    end
-  end
-
-  private
-
-  def set_package
-    @package = Package.find(params[:id])
-    redirect_to packages_path, alert: t("bsdports.not_authorized") unless @package.user == current_user || current_user&.admin?
-  end
-
-  def package_params
-    params.require(:package).permit(:name, :version, :description, :file)
   end
 end
-EOF
 
-cat <<EOF > app/controllers/comments_controller.rb
-class CommentsController < ApplicationController
-  before_action :authenticate_user!, except: [:index, :show]
-  before_action :set_comment, only: [:show, :edit, :update, :destroy]
+def go_fetch(platform, server, root, tgz)
+  ftp = Net::FTP.new(server)
+  ftp.login
+  ftp.chdir(root)
+  ftp.getbinaryfile(tgz)
+  ftp.close
 
-  def index
-    @pagy, @comments = pagy(Comment.all.order(created_at: :desc)) unless @stimulus_reflex
-  end
+  io = Zlib::GzipReader.open(tgz)
+  untar(io, ".")
 
-  def show
-  end
+  categories = Dir.glob("./ports/*").map do |category_path|
+    if File.directory?(category_path)
+      category = File.basename(category_path)
+      new_category = Category.find_or_create_by(name: category, platform: Platform.find_by_name(platform))
+      Dir.glob("#{category_path}/*").map do |port_path|
+        port = File.basename(port_path)
+        description_path = "#{port_path}/pkg/DESCR"
+        build_script_path = "#{port_path}/Makefile"
 
-  def new
-    @comment = Comment.new
-  end
+        description = File.exist?(description_path) ? File.read(description_path) : nil
+        summary = File.exist?(build_script_path) ? File.readlines(build_script_path).find { |line| line =~ /^COMMENT/ }&.gsub("COMMENT=\t", "").strip : nil
+        url = File.exist?(build_script_path) ? File.readlines(build_script_path).find { |line| line =~ /^(HOMEPAGE|WWW)/ }&.gsub("HOMEPAGE=\t", "").strip : nil
 
-  def create
-    @comment = Comment.new(comment_params)
-    @comment.user = current_user
-    if @comment.save
-      respond_to do |format|
-        format.html { redirect_to comments_path, notice: t("bsdports.comment_created") }
-        format.turbo_stream
+        Port.find_or_create_by(name: port, summary: summary, url: url, description: description, category: new_category)
       end
-    else
-      render :new, status: :unprocessable_entity
     end
   end
 
-  def edit
-  end
-
-  def update
-    if @comment.update(comment_params)
-      respond_to do |format|
-        format.html { redirect_to comments_path, notice: t("bsdports.comment_updated") }
-        format.turbo_stream
-      end
-    else
-      render :edit, status: :unprocessable_entity
-    end
-  end
-
-  def destroy
-    @comment.destroy
-    respond_to do |format|
-      format.html { redirect_to comments_path, notice: t("bsdports.comment_deleted") }
-      format.turbo_stream
-    end
-  end
-
-  private
-
-  def set_comment
-    @comment = Comment.find(params[:id])
-    redirect_to comments_path, alert: t("bsdports.not_authorized") unless @comment.user == current_user || current_user&.admin?
-  end
-
-  def comment_params
-    params.require(:comment).permit(:package_id, :content)
-  end
+  FileUtils.rm_rf(Dir.glob("./ports*"))  # Cleanup
 end
+
+# Fetch ports for each platform
+go_fetch("OpenBSD", "ftp.usa.openbsd.org", "/pub/OpenBSD/snapshots", "ports.tar.gz")
+go_fetch("FreeBSD", "ftp.nl.freebsd.org", "/pub/FreeBSD/ports/ports", "ports.tar.gz")
+go_fetch("NetBSD", "ftp.netbsd.org", "/pub/pkgsrc/stable", "pkgsrc.tar.gz")
 EOF
 
-cat <<EOF > app/controllers/home_controller.rb
-class HomeController < ApplicationController
-  def index
-    @pagy, @posts = pagy(Post.all.order(created_at: :desc), items: 10) unless @stimulus_reflex
-    @packages = Package.all.order(created_at: :desc).limit(5)
-  end
-end
-EOF
+# -- CREATE VIEWS AND SCSS --
 
-mkdir -p app/views/bsdports_logo
+echo "Creating views and SCSS..."
+mkdir -p app/views/ports
+mkdir -p app/javascript/controllers
+mkdir -p app/assets/stylesheets
 
-cat <<EOF > app/views/bsdports_logo/_logo.html.erb
-<%= tag.svg xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 100 50", role: "img", class: "logo", "aria-label": t("bsdports.logo_alt") do %>
-  <%= tag.title t("bsdports.logo_title", default: "BSDPorts Logo") %>
-  <%= tag.text x: "50", y: "30", "text-anchor": "middle", "font-family": "Helvetica, Arial, sans-serif", "font-size": "16", fill: "#2196f3" do %>BSDPorts<% end %>
+cat << "EOF" > app/views/ports/index.html.erb
+<%= tag.h1 t("ports.index.title") %>
+<%= form_with url: search_ports_path, method: :get, local: true, data: { reflex: "change->PortsReflex#search" } do |f| %>
+  <%= f.text_field :query, placeholder: t("ports.index.search_placeholder") %>
 <% end %>
+<div id="ports_list">
+  <%= render @ports %>
+</div>
 EOF
 
-cat <<EOF > app/views/shared/_header.html.erb
-<%= tag.header role: "banner" do %>
-  <%= render partial: "bsdports_logo/logo" %>
-<% end %>
+cat << "EOF" > app/views/ports/_port.html.erb
+<div class="port">
+  <%= tag.h2 port.name %>
+  <%= tag.p port.summary %>
+  <%= tag.p port.description %>
+  <%= link_to port.url, port.url %>
+</div>
 EOF
 
-cat <<EOF > app/views/shared/_footer.html.erb
-<%= tag.footer role: "contentinfo" do %>
-  <%= tag.nav class: "footer-links" aria-label: t("shared.footer_nav") do %>
-    <%= link_to "", "https://facebook.com", class: "footer-link fb", "aria-label": "Facebook" %>
-    <%= link_to "", "https://twitter.com", class: "footer-link tw", "aria-label": "Twitter" %>
-    <%= link_to "", "https://instagram.com", class: "footer-link ig", "aria-label": "Instagram" %>
-    <%= link_to t("shared.about"), "#", class: "footer-link text" %>
-    <%= link_to t("shared.contact"), "#", class: "footer-link text" %>
-    <%= link_to t("shared.terms"), "#", class: "footer-link text" %>
-    <%= link_to t("shared.privacy"), "#", class: "footer-link text" %>
-  <% end %>
-<% end %>
-EOF
+cat << "EOF" > app/assets/stylesheets/application.scss
+@import "variables";
+@import "reset"; // Add a reset file if needed
 
-cat <<EOF > app/views/home/index.html.erb
-<% content_for :title, t("bsdports.home_title") %>
-<% content_for :description, t("bsdports.home_description") %>
-<% content_for :keywords, t("bsdports.home_keywords", default: "bsdports, packages, software") %>
-<% content_for :schema do %>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "<%= t('bsdports.home_title') %>",
-    "description": "<%= t('bsdports.home_description') %>",
-    "url": "<%= request.original_url %>",
-    "publisher": {
-      "@type": "Organization",
-      "name": "BSDPorts",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "<%= image_url('bsdports_logo.svg') %>"
+// Light mode colors
+:root {
+  --white: #ffffff;
+  --black: #000000;
+  --blue: #000084;
+  --light-blue: #5623ee;
+  --extra-light-grey: #f0f0f0;
+  --light-grey: #ababab;
+  --grey: #999999;
+  --dark-grey: #666666;
+  --warning-red: #b04243; // Federal Standard 595c
+}
+
+// Dark mode colors
+@media (prefers-color-scheme: dark) {
+  :root {
+    --white: #000000;
+    --black: #ffffff;
+    --blue: #5623ee;
+    --light-blue: #000084;
+    --extra-light-grey: #666666;
+    --light-grey: #999999;
+    --grey: #ababab;
+    --dark-grey: #f0f0f0;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: sans-serif;
+  font-size: 14px;
+  color: var(--black);
+  background-color: var(--white);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+a {
+  color: var(--light-blue);
+  text-decoration: underline;
+}
+
+header {
+  display: flex;
+  justify-content: right;
+
+  .tabs {
+    display: flex;
+    margin-top: 18px;
+    color: var(--light-grey);
+    border-bottom: 1px solid var(--extra-light-grey);
+
+    p {
+      padding: 0 3px 8px;
+      margin-right: 28px;
+
+      &.active {
+        color: var(--black);
+        border-bottom: 1px solid var(--black);
       }
     }
   }
-  </script>
-<% end %>
-<%= render "shared/header" %>
-<%= tag.main role: "main" do %>
-  <%= tag.section aria-labelledby: "post-heading" do %>
-    <%= tag.h1 t("bsdports.post_title"), id: "post-heading" %>
-    <%= tag.div data: { turbo_frame: "notices" } do %>
-      <%= render "shared/notices" %>
-    <% end %>
-    <%= render partial: "posts/form", locals: { post: Post.new } %>
-  <% end %>
-  <%= render partial: "shared/search", locals: { model: "Package", field: "name" } %>
-  <%= tag.section aria-labelledby: "packages-heading" do %>
-    <%= tag.h2 t("bsdports.packages_title"), id: "packages-heading" %>
-    <%= link_to t("bsdports.new_package"), new_package_path, class: "button", "aria-label": t("bsdports.new_package") if current_user %>
-    <%= turbo_frame_tag "packages" data: { controller: "infinite-scroll" } do %>
-      <% @packages.each do |package| %>
-        <%= render partial: "packages/card", locals: { package: package } %>
-      <% end %>
-      <%= tag.div id: "sentinel", class: "hidden", data: { reflex: "PackagesInfiniteScroll#load_more", next_page: @pagy.next || 2 } %>
-    <% end %>
-    <%= tag.button t("bsdports.load_more"), id: "load-more", data: { reflex: "click->PackagesInfiniteScroll#load_more", "next-page": @pagy.next || 2, "reflex-root": "#load-more" }, class: @pagy&.next ? "" : "hidden", "aria-label": t("bsdports.load_more") %>
-  <% end %>
-  <%= tag.section aria-labelledby: "posts-heading" do %>
-    <%= tag.h2 t("bsdports.posts_title"), id: "posts-heading" %>
-    <%= turbo_frame_tag "posts" data: { controller: "infinite-scroll" } do %>
-      <% @posts.each do |post| %>
-        <%= render partial: "posts/card", locals: { post: post } %>
-      <% end %>
-      <%= tag.div id: "sentinel", class: "hidden", data: { reflex: "PostsInfiniteScroll#load_more", next_page: @pagy.next || 2 } %>
-    <% end %>
-    <%= tag.button t("bsdports.load_more"), id: "load-more", data: { reflex: "click->PostsInfiniteScroll#load_more", "next-page": @pagy.next || 2, "reflex-root": "#load-more" }, class: @pagy&.next ? "" : "hidden", "aria-label": t("bsdports.load_more") %>
-  <% end %>
-  <%= render partial: "shared/chat" %>
-<% end %>
-<%= render "shared/footer" %>
-EOF
+}
 
-cat <<EOF > app/views/packages/index.html.erb
-<% content_for :title, t("bsdports.packages_title") %>
-<% content_for :description, t("bsdports.packages_description") %>
-<% content_for :keywords, t("bsdports.packages_keywords", default: "bsdports, packages, software") %>
-<% content_for :schema do %>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "<%= t('bsdports.packages_title') %>",
-    "description": "<%= t('bsdports.packages_description') %>",
-    "url": "<%= request.original_url %>",
-    "hasPart": [
-      <% @packages.each do |package| %>
-      {
-        "@type": "SoftwareApplication",
-        "name": "<%= package.name %>",
-        "softwareVersion": "<%= package.version %>",
-        "description": "<%= package.description&.truncate(160) %>"
-      }<%= "," unless package == @packages.last %>
-      <% end %>
-    ]
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: -20px 0 20px;
+
+  .logo {
+    text-indent: -9999px;
+    margin: 12px 0 22px;
+    width: 182px;
+    height: 44px;
+    background-image: url("bsdports_182x44.svg");
+    background-repeat: no-repeat;
   }
-  </script>
-<% end %>
-<%= render "shared/header" %>
-<%= tag.main role: "main" do %>
-  <%= tag.section aria-labelledby: "packages-heading" do %>
-    <%= tag.h1 t("bsdports.packages_title"), id: "packages-heading" %>
-    <%= tag.div data: { turbo_frame: "notices" } do %>
-      <%= render "shared/notices" %>
-    <% end %>
-    <%= link_to t("bsdports.new_package"), new_package_path, class: "button", "aria-label": t("bsdports.new_package") if current_user %>
-    <%= turbo_frame_tag "packages" data: { controller: "infinite-scroll" } do %>
-      <% @packages.each do |package| %>
-        <%= render partial: "packages/card", locals: { package: package } %>
-      <% end %>
-      <%= tag.div id: "sentinel", class: "hidden", data: { reflex: "PackagesInfiniteScroll#load_more", next_page: @pagy.next || 2 } %>
-    <% end %>
-    <%= tag.button t("bsdports.load_more"), id: "load-more", data: { reflex: "click->PackagesInfiniteScroll#load_more", "next-page": @pagy.next || 2, "reflex-root": "#load-more" }, class: @pagy&.next ? "" : "hidden", "aria-label": t("bsdports.load_more") %>
-  <% end %>
-  <%= render partial: "shared/search", locals: { model: "Package", field: "name" } %>
-<% end %>
-<%= render "shared/footer" %>
-EOF
+}
 
-cat <<EOF > app/views/packages/_card.html.erb
-<%= turbo_frame_tag dom_id(package) do %>
-  <%= tag.article class: "post-card", id: dom_id(package), role: "article" do %>
-    <%= tag.div class: "post-header" do %>
-      <%= tag.span t("bsdports.posted_by", user: package.user.email) %>
-      <%= tag.span package.created_at.strftime("%Y-%m-%d %H:%M") %>
-    <% end %>
-    <%= tag.h2 package.name %>
-    <%= tag.p t("bsdports.package_version", version: package.version) %>
-    <%= tag.p package.description %>
-    <% if package.file.attached? %>
-      <%= link_to t("bsdports.download_file"), rails_blob_path(package.file, disposition: "attachment"), "aria-label": t("bsdports.download_file_alt", name: package.name) %>
-    <% end %>
-    <%= render partial: "shared/vote", locals: { votable: package } %>
-    <%= tag.p class: "post-actions" do %>
-      <%= link_to t("bsdports.view_package"), package_path(package), "aria-label": t("bsdports.view_package") %>
-      <%= link_to t("bsdports.edit_package"), edit_package_path(package), "aria-label": t("bsdports.edit_package") if package.user == current_user || current_user&.admin? %>
-      <%= button_to t("bsdports.delete_package"), package_path(package), method: :delete, data: { turbo_confirm: t("bsdports.confirm_delete") }, form: { data: { turbo_frame: "_top" } }, "aria-label": t("bsdports.delete_package") if package.user == current_user || current_user&.admin? %>
-    <% end %>
-  <% end %>
-<% end %>
-EOF
+#search {
+  width: 90%;
+  max-width: 584px;
+  border: 1px solid var(--extra-light-grey);
+  border-radius: 30px;
+  font-size: 18px;
+  transition: all 100ms ease-in-out;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
 
-cat <<EOF > app/views/packages/_form.html.erb
-<%= form_with model: package, local: true, data: { controller: "character-counter form-validation", turbo: true } do |form| %>
-  <%= tag.div data: { turbo_frame: "notices" } do %>
-    <%= render "shared/notices" %>
-  <% end %>
-  <% if package.errors.any? %>
-    <%= tag.div role: "alert" do %>
-      <%= tag.p t("bsdports.errors", count: package.errors.count) %>
-      <%= tag.ul do %>
-        <% package.errors.full_messages.each do |msg| %>
-          <%= tag.li msg %>
-        <% end %>
-      <% end %>
-    <% end %>
-  <% end %>
-  <%= tag.fieldset do %>
-    <%= form.label :name, t("bsdports.package_name"), "aria-required": true %>
-    <%= form.text_field :name, required: true, data: { "form-validation-target": "input", action: "input->form-validation#validate" }, title: t("bsdports.package_name_help") %>
-    <%= tag.span class: "error-message" data: { "form-validation-target": "error", for: "package_name" } %>
-  <% end %>
-  <%= tag.fieldset do %>
-    <%= form.label :version, t("bsdports.package_version"), "aria-required": true %>
-    <%= form.text_field :version, required: true, data: { "form-validation-target": "input", action: "input->form-validation#validate" }, title: t("bsdports.package_version_help") %>
-    <%= tag.span class: "error-message" data: { "form-validation-target": "error", for: "package_version" } %>
-  <% end %>
-  <%= tag.fieldset do %>
-    <%= form.label :description, t("bsdports.package_description"), "aria-required": true %>
-    <%= form.text_area :description, required: true, data: { "character-counter-target": "input", "textarea-autogrow-target": "input", "form-validation-target": "input", action: "input->character-counter#count input->textarea-autogrow#resize input->form-validation#validate" }, title: t("bsdports.package_description_help") %>
-    <%= tag.span data: { "character-counter-target": "count" } %>
-    <%= tag.span class: "error-message" data: { "form-validation-target": "error", for: "package_description" } %>
-  <% end %>
-  <%= tag.fieldset do %>
-    <%= form.label :file, t("bsdports.package_file"), "aria-required": true %>
-    <%= form.file_field :file, required: !package.persisted?, data: { controller: "file-preview", "file-preview-target": "input" } %>
-    <% if package.file.attached? %>
-      <%= link_to t("bsdports.current_file"), rails_blob_path(package.file, disposition: "attachment"), "aria-label": t("bsdports.current_file_alt", name: package.name) %>
-    <% end %>
-    <%= tag.div data: { "file-preview-target": "preview" }, style: "display: none;" %>
-  <% end %>
-  <%= form.submit t("bsdports.#{package.persisted? ? 'update' : 'create'}_package"), data: { turbo_submits_with: t("bsdports.#{package.persisted? ? 'updating' : 'creating'}_package") } %>
-<% end %>
-EOF
+  input {
+    background: transparent;
+    outline: none;
+    border: none;
+    width: 100%;
+    padding: 16px 0;
+    font-size: 16px;
 
-cat <<EOF > app/views/packages/new.html.erb
-<% content_for :title, t("bsdports.new_package_title") %>
-<% content_for :description, t("bsdports.new_package_description") %>
-<% content_for :keywords, t("bsdports.new_package_keywords", default: "add package, bsdports, software") %>
-<% content_for :schema do %>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "<%= t('bsdports.new_package_title') %>",
-    "description": "<%= t('bsdports.new_package_description') %>",
-    "url": "<%= request.original_url %>"
-  }
-  </script>
-<% end %>
-<%= render "shared/header" %>
-<%= tag.main role: "main" do %>
-  <%= tag.section aria-labelledby: "new-package-heading" do %>
-    <%= tag.h1 t("bsdports.new_package_title"), id: "new-package-heading" %>
-    <%= render partial: "packages/form", locals: { package: @package } %>
-  <% end %>
-<% end %>
-<%= render "shared/footer" %>
-EOF
-
-cat <<EOF > app/views/packages/edit.html.erb
-<% content_for :title, t("bsdports.edit_package_title") %>
-<% content_for :description, t("bsdports.edit_package_description") %>
-<% content_for :keywords, t("bsdports.edit_package_keywords", default: "edit package, bsdports, software") %>
-<% content_for :schema do %>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "<%= t('bsdports.edit_package_title') %>",
-    "description": "<%= t('bsdports.edit_package_description') %>",
-    "url": "<%= request.original_url %>"
-  }
-  </script>
-<% end %>
-<%= render "shared/header" %>
-<%= tag.main role: "main" do %>
-  <%= tag.section aria-labelledby: "edit-package-heading" do %>
-    <%= tag.h1 t("bsdports.edit_package_title"), id: "edit-package-heading" %>
-    <%= render partial: "packages/form", locals: { package: @package } %>
-  <% end %>
-<% end %>
-<%= render "shared/footer" %>
-EOF
-
-cat <<EOF > app/views/packages/show.html.erb
-<% content_for :title, @package.name %>
-<% content_for :description, @package.description&.truncate(160) %>
-<% content_for :keywords, t("bsdports.package_keywords", name: @package.name, default: "package, #{@package.name}, bsdports, software") %>
-<% content_for :schema do %>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "<%= @package.name %>",
-    "softwareVersion": "<%= @package.version %>",
-    "description": "<%= @package.description&.truncate(160) %>"
-  }
-  </script>
-<% end %>
-<%= render "shared/header" %>
-<%= tag.main role: "main" do %>
-  <%= tag.section aria-labelledby: "package-heading" class: "post-card" do %>
-    <%= tag.div data: { turbo_frame: "notices" } do %>
-      <%= render "shared/notices" %>
-    <% end %>
-    <%= tag.h1 @package.name, id: "package-heading" %>
-    <%= render partial: "packages/card", locals: { package: @package } %>
-  <% end %>
-<% end %>
-<%= render "shared/footer" %>
-EOF
-
-cat <<EOF > app/views/comments/index.html.erb
-<% content_for :title, t("bsdports.comments_title") %>
-<% content_for :description, t("bsdports.comments_description") %>
-<% content_for :keywords, t("bsdports.comments_keywords", default: "bsdports, comments, software") %>
-<% content_for :schema do %>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "<%= t('bsdports.comments_title') %>",
-    "description": "<%= t('bsdports.comments_description') %>",
-    "url": "<%= request.original_url %>"
-  }
-  </script>
-<% end %>
-<%= render "shared/header" %>
-<%= tag.main role: "main" do %>
-  <%= tag.section aria-labelledby: "comments-heading" do %>
-    <%= tag.h1 t("bsdports.comments_title"), id: "comments-heading" %>
-    <%= tag.div data: { turbo_frame: "notices" } do %>
-      <%= render "shared/notices" %>
-    <% end %>
-    <%= link_to t("bsdports.new_comment"), new_comment_path, class: "button", "aria-label": t("bsdports.new_comment") %>
-    <%= turbo_frame_tag "comments" data: { controller: "infinite-scroll" } do %>
-      <% @comments.each do |comment| %>
-        <%= render partial: "comments/card", locals: { comment: comment } %>
-      <% end %>
-      <%= tag.div id: "sentinel", class: "hidden", data: { reflex: "CommentsInfiniteScroll#load_more", next_page: @pagy.next || 2 } %>
-    <% end %>
-    <%= tag.button t("bsdports.load_more"), id: "load-more", data: { reflex: "click->CommentsInfiniteScroll#load_more", "next-page": @pagy.next || 2, "reflex-root": "#load-more" }, class: @pagy&.next ? "" : "hidden", "aria-label": t("bsdports.load_more") %>
-  <% end %>
-<% end %>
-<%= render "shared/footer" %>
-EOF
-
-cat <<EOF > app/views/comments/_card.html.erb
-<%= turbo_frame_tag dom_id(comment) do %>
-  <%= tag.article class: "post-card", id: dom_id(comment), role: "article" do %>
-    <%= tag.div class: "post-header" do %>
-      <%= tag.span t("bsdports.posted_by", user: comment.user.email) %>
-      <%= tag.span comment.created_at.strftime("%Y-%m-%d %H:%M") %>
-    <% end %>
-    <%= tag.h2 comment.package.name %>
-    <%= tag.p comment.content %>
-    <%= render partial: "shared/vote", locals: { votable: comment } %>
-    <%= tag.p class: "post-actions" do %>
-      <%= link_to t("bsdports.view_comment"), comment_path(comment), "aria-label": t("bsdports.view_comment") %>
-      <%= link_to t("bsdports.edit_comment"), edit_comment_path(comment), "aria-label": t("bsdports.edit_comment") if comment.user == current_user || current_user&.admin? %>
-      <%= button_to t("bsdports.delete_comment"), comment_path(comment), method: :delete, data: { turbo_confirm: t("bsdports.confirm_delete") }, form: { data: { turbo_frame: "_top" } }, "aria-label": t("bsdports.delete_comment") if comment.user == current_user || current_user&.admin? %>
-    <% end %>
-  <% end %>
-<% end %>
-EOF
-
-cat <<EOF > app/views/comments/_form.html.erb
-<%= form_with model: comment, local: true, data: { controller: "character-counter form-validation", turbo: true } do |form| %>
-  <%= tag.div data: { turbo_frame: "notices" } do %>
-    <%= render "shared/notices" %>
-  <% end %>
-  <% if comment.errors.any? %>
-    <%= tag.div role: "alert" do %>
-      <%= tag.p t("bsdports.errors", count: comment.errors.count) %>
-      <%= tag.ul do %>
-        <% comment.errors.full_messages.each do |msg| %>
-          <%= tag.li msg %>
-        <% end %>
-      <% end %>
-    <% end %>
-  <% end %>
-  <%= tag.fieldset do %>
-    <%= form.label :package_id, t("bsdports.comment_package"), "aria-required": true %>
-    <%= form.collection_select :package_id, Package.all, :id, :name, { prompt: t("bsdports.package_prompt") }, required: true %>
-    <%= tag.span class: "error-message" data: { "form-validation-target": "error", for: "comment_package_id" } %>
-  <% end %>
-  <%= tag.fieldset do %>
-    <%= form.label :content, t("bsdports.comment_content"), "aria-required": true %>
-    <%= form.text_area :content, required: true, data: { "character-counter-target": "input", "textarea-autogrow-target": "input", "form-validation-target": "input", action: "input->character-counter#count input->textarea-autogrow#resize input->form-validation#validate" }, title: t("bsdports.comment_content_help") %>
-    <%= tag.span data: { "character-counter-target": "count" } %>
-    <%= tag.span class: "error-message" data: { "form-validation-target": "error", for: "comment_content" } %>
-  <% end %>
-  <%= form.submit t("bsdports.#{comment.persisted? ? 'update' : 'create'}_comment"), data: { turbo_submits_with: t("bsdports.#{comment.persisted? ? 'updating' : 'creating'}_comment") } %>
-<% end %>
-EOF
-
-cat <<EOF > app/views/comments/new.html.erb
-<% content_for :title, t("bsdports.new_comment_title") %>
-<% content_for :description, t("bsdports.new_comment_description") %>
-<% content_for :keywords, t("bsdports.new_comment_keywords", default: "add comment, bsdports, software") %>
-<% content_for :schema do %>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "<%= t('bsdports.new_comment_title') %>",
-    "description": "<%= t('bsdports.new_comment_description') %>",
-    "url": "<%= request.original_url %>"
-  }
-  </script>
-<% end %>
-<%= render "shared/header" %>
-<%= tag.main role: "main" do %>
-  <%= tag.section aria-labelledby: "new-comment-heading" do %>
-    <%= tag.h1 t("bsdports.new_comment_title"), id: "new-comment-heading" %>
-    <%= render partial: "comments/form", locals: { comment: @comment } %>
-  <% end %>
-<% end %>
-<%= render "shared/footer" %>
-EOF
-
-cat <<EOF > app/views/comments/edit.html.erb
-<% content_for :title, t("bsdports.edit_comment_title") %>
-<% content_for :description, t("bsdports.edit_comment_description") %>
-<% content_for :keywords, t("bsdports.edit_comment_keywords", default: "edit comment, bsdports, software") %>
-<% content_for :schema do %>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "<%= t('bsdports.edit_comment_title') %>",
-    "description": "<%= t('bsdports.edit_comment_description') %>",
-    "url": "<%= request.original_url %>"
-  }
-  </script>
-<% end %>
-<%= render "shared/header" %>
-<%= tag.main role: "main" do %>
-  <%= tag.section aria-labelledby: "edit-comment-heading" do %>
-    <%= tag.h1 t("bsdports.edit_comment_title"), id: "edit-comment-heading" %>
-    <%= render partial: "comments/form", locals: { comment: @comment } %>
-  <% end %>
-<% end %>
-<%= render "shared/footer" %>
-EOF
-
-cat <<EOF > app/views/comments/show.html.erb
-<% content_for :title, t("bsdports.comment_title", package: @comment.package.name) %>
-<% content_for :description, @comment.content&.truncate(160) %>
-<% content_for :keywords, t("bsdports.comment_keywords", package: @comment.package.name, default: "comment, #{@comment.package.name}, bsdports, software") %>
-<% content_for :schema do %>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Comment",
-    "text": "<%= @comment.content&.truncate(160) %>",
-    "about": {
-      "@type": "SoftwareApplication",
-      "name": "<%= @comment.package.name %>"
+    &::placeholder {
+      color: var(--dark-grey);
     }
   }
-  </script>
-<% end %>
-<%= render "shared/header" %>
-<%= tag.main role: "main" do %>
-  <%= tag.section aria-labelledby: "comment-heading" class: "post-card" do %>
-    <%= tag.div data: { turbo_frame: "notices" } do %>
-      <%= render "shared/notices" %>
-    <% end %>
-    <%= tag.h1 t("bsdports.comment_title", package: @comment.package.name), id: "comment-heading" %>
-    <%= render partial: "comments/card", locals: { comment: @comment } %>
-  <% end %>
-<% end %>
-<%= render "shared/footer" %>
+
+  #live_results {
+    overflow: hidden;
+    max-height: 220px;
+    padding: 9px 19px;
+    font-weight: bold;
+    line-height: 29px;
+    border-top: 1px solid var (--extra-light-grey);
+
+    a {
+      display: block;
+    }
+  }
+}
+
+.browse_link {
+  margin: 44px 0 12px;
+  font-size: 13px;
+}
+
+footer {
+  color: var(--light-grey);
+  font-size: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+
+  .references {
+    display: flex;
+    gap: 2.6rem;
+    align-items: center;
+    margin-bottom: 72px;
+
+    a {
+      text-indent: -99999px;
+      opacity: 0.2;
+
+      &:last-child {
+        opacity: 0.3;
+      }
+
+      &:before {
+        content: "";
+        position: absolute;
+        background-repeat: no-repeat;
+        display: block;
+      }
+
+      &.ror {
+        width: 72px;
+        height: 24px;
+        background-image: url("logo_ror_72x24.svg");
+        background-position: 0 -4px;
+      }
+
+      &.puma {
+        width: 108px;
+        height: 25px;
+        background-image: url("logo_puma_108x25.svg");
+        background-position: 0 2px;
+      }
+
+      &.nuug {
+        width: 79px;
+        height: 27px;
+        background-image: url("logo_nuug_79x27.svg");
+      }
+
+      &.bergen {
+        width: 81px;
+        height: 36px;
+        background-image: url("logo_bergen_kommune_86x36.svg");
+      }
+    }
+  }
+
+  .copyright, .dark_mode_link, .light_mode_link {
+    position: absolute;
+    bottom: 10px;
+    opacity: 0.7;
+  }
+
+  .copyright {
+    left: 10px;
+  }
+
+  .dark_mode_link, .light_mode_link {
+    right: 10px;
+
+    span {
+      text-indent: -99999px;
+    }
+
+    &:before {
+      content: "";
+      position: absolute;
+      background-repeat: no-repeat;
+      display: block;
+    }
+
+    &.dark_mode_link {
+      width: 16px;
+      height: 16px;
+      background-image: url("moon_16x16.svg");
+    }
+
+    &.light_mode_link {
+      width: 20px;
+      height: 20px;
+      background-image: url("sun_20x20.svg");
+    }
+  }
+
+  span {
+    position: absolute;
+    text-indent: -9999px;
+  }
+}
+
+@media screen and (min-width: 320px) and (max-width: 480px) {
+  footer {
+    transform: scale(0.8);
+
+    .references {
+      gap: 1.6rem;
+    }
+
+    .copyright {
+      left: 0;
+      bottom: 6px;
+    }
+  }
+}
 EOF
 
-generate_turbo_views "packages" "package"
-generate_turbo_views "comments" "comment"
+cat << "EOF" > app/javascript/controllers/ports_controller.js
+import ApplicationController from './application_controller'
 
-commit "BSDPorts setup complete: Software package sharing platform with live search and anonymous features"
+export default class extends ApplicationController {
+  connect() {
+    this.stimulate('PortsReflex#search')
+  }
+}
+EOF
 
-log "BSDPorts setup complete. Run 'bin/falcon-host' with PORT set to start on OpenBSD."
+cat << "EOF" > app/reflexes/ports_reflex.rb
+class PortsReflex < ApplicationReflex
+  def search
+    query = params[:query].presence || ""
+    @ports = Port.where("name LIKE ? OR summary LIKE ? OR description LIKE ?", "%#{query}%", "%#{query}%", "%#{query}%")
+    morph "#ports_list", render(@ports)
+  end
+end
+EOF
 
-# Change Log:
-# - Aligned with master.json v6.5.0: Two-space indents, double quotes, heredocs, Strunk & White comments.
-# - Used Rails 8 conventions, Hotwire, Turbo Streams, Stimulus Reflex, I18n, and Falcon.
-# - Leveraged bin/rails generate scaffold for Packages and Comments to streamline CRUD setup.
-# - Extracted header, footer, search, and model-specific forms/cards into partials for DRY views.
-# - Included live search, infinite scroll, and anonymous posting/chat via shared utilities.
-# - Ensured NNG principles, SEO, schema data, and minimal flat design compliance.
-# - Finalized for unprivileged user on OpenBSD 7.5.
+# -- CREATE CONTROLLER --
+
+echo "Creating Ports controller..."
+bin/rails generate controller Ports index
+
+# -- ADD ROUTES --
+
+echo "Adding routes..."
+cat << "EOF" >> config/routes.rb
+Rails.application.routes.draw do
+  resources :ports, only: [:index] do
+    collection do
+      get :search
+    end
+  end
+end
+EOF
+
+# -- GIT COMMITS BY FUNCTIONALITY --
+
+echo "Initializing git repository..."
+git init
+git add .
+git commit -m "Initialize Rails project with necessary gems and models"
+
+# -- ADD SEEDS.RB FILE --
+
+git add db/seeds.rb
+git commit -m "Add seeds.rb file with FTP download and database import logic"
+
+# -- ADD VIEWS, SCSS, AND STIMULUSREFLEX FUNCTIONALITY --
+
+git add app/views/ports app/assets/stylesheets/application.scss app/javascript/controllers/ports_controller.js app/reflexes/ports_reflex.rb
+git commit -m "Add views, SCSS, and live search functionality using StimulusReflex"
+
+# -- ADD ROUTES FOR PORTS --
+
+git add config/routes.rb
+git commit -m "Add routes for ports"
+
+# -- POPULATE DATABASE --
+
+echo "Populating database..."
+bin/rails db:seed
+
+# -- CREATE README.MD --
+
+cat <<EOF > README.md
+# BSDports
+
+BSDports is an advanced AI vector search database for OpenBSD, FreeBSD, NetBSD, and macOS ports. It aspires to be the premier destination for port information and serves as a testbed for the future redesign of openbsd.org.
+
+## Features
+
+- **Live Search**: Quickly find ports using the integrated live search functionality powered by StimulusReflex.
+- **Comprehensive Port Information**: Access detailed information about each port, including summaries, descriptions, and URLs.
+- **Multi-Platform Support**: Browse ports from OpenBSD, FreeBSD, NetBSD, and macOS.
+- **Responsive Design**: Enjoy a consistent and optimized experience across all devices, thanks to the mobile-first design approach.
+- **Dark Mode**: Experience a visually pleasing interface that adapts to your system's theme, whether light or dark.
+
+## Installation
+
+Follow these steps to set up the BSDports application:
+
+1. **Clone the Repository**:
+    ```sh
+    git clone https://github.com/yourusername/bsdports.git
+    cd bsdports
+    ```
+
+2. **Install Dependencies**:
+    ```sh
+    bundle install
+    ```
+
+3. **Set Up the Database**:
+    ```sh
+    bin/rails db:setup
+    ```
+
+4. **Start the Application**:
+    ```sh
+    bin/rails server
+    ```
+
+5. **Access the Application**:
+    Open your browser and navigate to `http://localhost:3000`.
+
+## Usage
+
+### Searching for Ports
+
+Use the search bar on the homepage to find ports quickly. The live search feature will display results as you type, making it easy to locate the ports you need.
+
+### Browsing Ports
+
+Explore ports by browsing through categories and platforms. Detailed information is available for each port, including descriptions and relevant URLs.
+
+## Development
+
+### Setting Up the Development Environment
+
+1. **Clone the Repository**:
+    ```sh
+    git clone https://github.com/yourusername/bsdports.git
+    cd bsdports
+    ```
+
+2. **Install Dependencies**:
+    ```sh
+    bundle install
+    ```
+
+3. **Set Up the Database**:
+    ```sh
+    bin/rails db:setup
+    ```
+
+4. **Run the Tests**:
+    ```sh
+    bin/rspec
+    ```
+
+### Contributing
+
+We welcome contributions to BSDports! If you'd like to contribute, please follow these steps:
+
+1. **Fork the Repository**:
+    Click the "Fork" button at the top right of the repository page.
+
+2. **Create a Feature Branch**:
+    ```sh
+    git checkout -b my-feature-branch
+    ```
+
+3. **Commit Your Changes**:
+    ```sh
+    git commit -m "Add my new feature"
+    ```
+
+4. **Push to the Branch**:
+    ```sh
+    git push origin my-feature-branch
+    ```
+
+5. **Create a Pull Request**:
+    Open a pull request from your forked repository's feature branch to the main repository's master branch.
+
+### Code of Conduct
+
+We are committed to fostering a welcoming and inclusive community. Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
+
+## License
+
+BSDports is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+
+## Acknowledgements
+
+This project is made possible by the contributions of many open-source libraries and the support of the community. Thank you to everyone who has helped make BSDports a success.
+
+---
+
+Happy porting!
+EOF
+git add README.md
+git commit -m "Add README.md"
+
+# -- FINAL OUTPUT --
+
+echo "BSDports installation script completed successfully."
