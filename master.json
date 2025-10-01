@@ -86,7 +86,10 @@
   },
 
   "intelligence": {
-    "bias_mitigation": {
+    "minimum_requirements": {
+      "ai_model": "claude-sonnet-4.5",
+      "reason": "Required for vision analysis, advanced reasoning, and web scraping automation in multimedia pipeline"
+    },
       "recency": {
         "strategy": "weight_old_and_new_equally",
         "severity": "high",
