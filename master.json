@@ -1,466 +1,935 @@
-// **master.json** v226.0.0 (Claude Sonnet 4.5)
-//
-// Dette rammeverket gjør AI-systemer pålitelige. Det sikrer at hver beslutning
-// har bevis, hver endring er reversibel, og kompleksitet forblir håndterbar.
-// Når AI-modeller følger disse reglene, oppfører de seg forutsigbart og trygt.
-// Master.json er kontrakten mellom mennesker og maskiner - den garanterer at
-// AI forblir et verktøy som tjener oss, ikke omvendt. Fremtiden krever systemer
-// som kan bevise sine valg. Dette dokumentet gjør det mulig.
-//
-// KEY ARCHITECTURAL INSIGHTS:
-//
-// 1. Self-Enforcing: Uses @ref: references to constants, preventing configuration
-//    drift. Changes to limits cascade automatically throughout the system.
-//
-// 2. Declarative Triggers: Principles activate automatically (e.g., @3→abstract,
-//    @complexity>10→simplify) creating a rule engine that triggers refactoring.
-//
-// 3. Evidence-Based: Requires weighted proof (100% threshold) from 5 sources:
-//    tests (35%), scans (25%), reviews (20%), logs (10%), profiling (10%).
-//    No single method can satisfy requirements - forces comprehensive validation.
-//
-// 4. Recoverable: Session state persists in .session_recovery across interruptions,
-//    failures, and timeouts. Checkpoints after each phase enable fault tolerance.
-//
-// 5. Platform-Aware: Explicit handling of OpenBSD/Cygwin/POSIX differences.
-//    Cat-only file reading, quoted paths, base tools only, unveil/pledge security.
-//
-// 6. Frozen State: Version 226.0.0 locked on 2025-09-30. SHA-256 fingerprint
-//    (CI-computed) prevents unauthorized changes. Governance rules preserved.
-//
-// 7. No Code in Config: Governance forbids embedding logic, regex, or slashes
-//    in JSON. Prevents injection attacks and maintains declarative purity.
-//
-// 8. Adversarial by Design: Built-in skepticism through 6 perspectives (architect,
-//    security, operator, developer, end_user, skeptic) × 3 checks × 3 questions
-//    = 54 potential challenge dimensions.
-//
-// 9. Convergence-Based: Auto-iterates until stable (delta <1%) or hits hard limit
-//    (10 iterations). Prevents both premature stopping and infinite loops.
-//
-// 10. Context-Optimized: LRU eviction keeps relevant files (changed, neighbors,
-//     recent) in 10K token budget. Smart loading reduces usage, prevents overflow.
+// **master.json** v245.0.0
+// Universal governance framework for AI-assisted development
+// @ref prevents drift, declarative triggers, evidence-based gates
 
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
 
-  // META: Version control and philosophical foundation
-  // The frozen state prevents runtime modification. SHA-256 fingerprinting
-  // (computed in CI) detects tampering. Philosophy drives all decisions:
-  // questions → commands, evidence → opinion, clarity → cleverness.
-
   "meta": {
-    "version": "226.0.0",
+    "version": "245.0.0",
     "philosophy": "questions before commands, evidence over opinion, clarity over cleverness",
-    "environment": "text_only_simulation no_external_tools self_contained",
-    "state": "frozen",
-    "frozen_at": "2025-09-30T12:00:00Z"
+    "frozen_at": "2025-10-01T12:00:00Z",
+    "design_evidence": ["fowler_refactoring_2018", "beck_xp_2004", "brooks_mythical_man_month_1995", "hunt_pragmatic_programmer_2019", "evans_domain_driven_design_2003"]
   },
 
-  // CONSTANTS: Single source of truth for all limits
-  // Referenced throughout via @ref:constants.limits.* to prevent drift.
-  // Changes here cascade automatically. Example: coverage=0.8 means 80% test
-  // coverage required. Convergence=0.01 means iterate until delta <1%.
+  "limits": {
+    "coverage": 0.8,
+    "complexity": 10,
+    "convergence": 0.01,
+    "iterations": 10,
+    "coupling": 5,
+    "duplication": 0.03
+  },
 
-  "constants": {
-    "limits": {
-      "coverage": 0.8,
-      "complexity": 10,
-      "convergence": 0.01,
-      "iterations": 10,
-      "coupling": 5,
-      "duplication": 0.03
+  "defaults": {
+    "shell": "zsh",
+    "language": { "linter": true, "formatter": true, "strict": true },
+    "workflow": { "phases": [], "profile": "standard", "gates": ["functional", "secure"] }
+  },
+
+  "phase_io": {
+    "discover": { "in": "problem", "out": "definition" },
+    "analyze": { "in": "definition", "out": "analysis" },
+    "ideate": { "in": "analysis", "out": "options" },
+    "design": { "in": "options", "out": "spec" },
+    "implement": { "in": "spec", "out": "code" },
+    "validate": { "in": "code", "out": "report" },
+    "deliver": { "in": "report", "out": "product" },
+    "learn": { "in": "product", "out": "knowledge" }
+  },
+
+  "rules": {
+    "require": ["diff", "semantic_commits", "backup", "audit"],
+    "preserve": ["execution", "gates", "principles"],
+    "forbid": ["code_in_json", "regex", "slashes", "asking_without_diff"],
+    "approval": {
+      "human_required": ["logic", "deletions", "security", "migrations", "schemas", "api"],
+      "auto_proceed": ["syntax", "dead_code", "duplication", "formatting", "whitespace"],
+      "chain": [
+        "1_analyze_change",
+        "2_generate_diff",
+        "3_show_diff_to_user",
+        "4_ask_approval",
+        "5_apply_if_approved"
+      ]
+    },
+    "principles": {
+      "dry": {
+        "trigger": "@3→abstract",
+        "example": { "before": "same code 3x", "after": "shared function" }
+      },
+      "kiss": {
+        "trigger": "@complexity>10→simplify",
+        "example": { "before": "nested if chains", "after": "early returns" }
+      },
+      "yagni": {
+        "trigger": "@unused→remove",
+        "example": { "before": "speculative feature", "after": "removed" }
+      },
+      "solid": {
+        "trigger": "@coupling>5→decouple",
+        "example": { "before": "god class", "after": "focused classes" }
+      },
+      "composition": {
+        "trigger": "@inheritance→compose",
+        "example": { "before": "deep hierarchy", "after": "composed traits" }
+      },
+      "explicit": {
+        "trigger": "@implicit→make_explicit",
+        "example": { "before": "magic behavior", "after": "documented contract" }
+      },
+      "minimalism": {
+        "trigger": "@bloat→subtract",
+        "example": { "before": "unused dependencies", "after": "lean" }
+      }
     }
   },
 
-  // GOVERNANCE: Change control and protection mechanisms
-  // Requires: owner approval, diffs, semantic commits, backups, audit logs
-  // Preserves: execution logic, validation gates, core principles (immutable)
-  // Forbids: code in JSON (injection), regex (ReDoS), slashes (path traversal)
-
-  "governance": {
-    "changes": {
-      "require": ["diff", "semantic_commits", "backup", "audit_log", "owner_approval"],
-      "preserve": ["execution", "gates", "principles"],
-      "forbid": ["code_in_json", "regex", "slashes"]
+  "intelligence": {
+    "bias_mitigation": {
+      "recency": {
+        "strategy": "weight_old_and_new_equally",
+        "severity": "high",
+        "compounds_with": ["confirmation"]
+      },
+      "confirmation": {
+        "strategy": "seek_disconfirming_evidence",
+        "severity": "high",
+        "compounds_with": ["availability"]
+      },
+      "anchoring": {
+        "strategy": "generate_estimate_before_seeing_data",
+        "severity": "medium",
+        "compounds_with": ["optimism"]
+      },
+      "availability": {
+        "strategy": "use_base_rates_not_anecdotes",
+        "severity": "medium",
+        "compounds_with": ["recency"]
+      },
+      "sunk_cost": {
+        "strategy": "ignore_past_investment",
+        "severity": "high",
+        "compounds_with": ["optimism"]
+      },
+      "optimism": {
+        "strategy": "premortem_what_will_fail",
+        "severity": "high",
+        "compounds_with": ["anchoring", "sunk_cost"]
+      }
+    },
+    "pitfall_detection": {
+      "off_by_one": {
+        "pattern": "loop boundary error",
+        "fix": "use inclusive ranges or test boundaries",
+        "severity": "high"
+      },
+      "null_pointer": {
+        "pattern": "missing null check",
+        "fix": "add guard clause or use optional types",
+        "severity": "critical"
+      },
+      "race_condition": {
+        "pattern": "unsynchronized shared state",
+        "fix": "add locking or use immutable data",
+        "severity": "critical"
+      },
+      "injection": {
+        "pattern": "unescaped user input",
+        "fix": "parameterize queries, escape output",
+        "severity": "critical"
+      },
+      "overflow": {
+        "pattern": "arithmetic exceeds bounds",
+        "fix": "check bounds before operation",
+        "severity": "high"
+      },
+      "divide_by_zero": {
+        "pattern": "division without zero check",
+        "fix": "guard with zero check",
+        "severity": "high"
+      }
+    },
+    "decision_gates": {
+      "before_implement": ["is_necessary", "is_simplest", "is_testable"],
+      "before_merge": ["tests_pass", "no_new_smells", "documentation_updated"]
     }
   },
 
-  // PRINCIPLES: Declarative rule engine with automatic triggers
-  //
-  // Syntax: "principle": "@condition→action"
-  //
-  // Examples:
-  //   @3→abstract          = After 3 repetitions, abstract (DRY)
-  //   @complexity>10→simplify = When complexity exceeds 10, simplify (KISS)
-  //   @unused→remove       = When unused, remove (YAGNI)
-  //
-  // These trigger automatically during validation, creating self-enforcing code.
-
-  "principles": {
-    "dry": "@3→abstract",
-    "kiss": "@complexity>10→simplify",
-    "yagni": "@unused→remove",
-    "solid": "@coupling>5→decouple",
-    "composition": "@inheritance→compose",
-    "evidence": "@assumption→validate",
-    "reversible": "@irreversible→add_rollback",
-    "explicit": "@implicit→make_explicit",
-    "orthogonal": "@coupled→split",
-    "latch": "@unorganized→organize",
-    "minimalism": "@bloat→subtract"
-  },
-
-  // METRICS: Precise definitions for all measurements
-  //
-  // Complexity: Cyclomatic complexity via AST analysis (branches + 1)
-  // Coupling: Incoming + outgoing dependencies per module
-  // Duplication: Token-based similarity (>3% considered duplicate)
-  // Coverage: Lines executed / total executable lines
-  // Churn: Files modified in last N commits / total files
-
-  "metrics": {
-    "complexity": {
-      "method": "cyclomatic",
-      "formula": "branches + loops + catches + 1",
-      "tool": "ast_analysis"
+  "patterns": {
+    "modular_architecture": {
+      "description": "lib directory structure with focused single-responsibility files",
+      "trigger": "@god_class→extract_lib",
+      "structure": {
+        "bin": "executable entry point minimal code just requires lib",
+        "lib_project_name": "core modules 20 to 50 lines each average 35",
+        "lib_project_name_cli": "command line interface user interaction",
+        "lib_project_name_ai": "LLM providers cognitive tracking memory management",
+        "lib_project_name_tools": "analyzers scanners utilities",
+        "lib_project_name_security": "sandbox root guard access control",
+        "lib_project_name_integrations": "external services APIs web scraping"
+      },
+      "metrics": {
+        "max_file_lines": 200,
+        "optimal_file_lines": 50,
+        "max_class_methods": 10,
+        "max_module_coupling": 5
+      }
     },
-    "coupling": {
-      "method": "afferent_efferent",
-      "formula": "fan_in + fan_out",
-      "includes": ["imports", "requires", "uses"]
+    "security_hardening": {
+      "description": "Security patterns for privilege management and system protection",
+      "openbsd": {
+        "unveil": {
+          "purpose": "restrict filesystem access to declared paths only",
+          "usage": "call before any file operations",
+          "example": "unveil /etc r unveil /tmp rwc unveil null null locks"
+        },
+        "pledge": {
+          "purpose": "restrict system calls to declared promises only",
+          "usage": "call after setup before untrusted operations",
+          "example": "pledge stdio rpath wpath cpath inet dns",
+          "progression": ["stdio rpath", "add wpath when needed", "add inet for network", "lock with null"]
+        },
+        "root_guard": {
+          "purpose": "whitelist approach for system calls requiring privilege escalation",
+          "whitelist": ["git status", "git diff", "git log", "git show", "git branch"],
+          "blacklist": ["rm rf", "doas", "sudo", "eval", "system with user input"],
+          "validation": "check all system calls against whitelist before execution",
+          "error_action": "raise SecurityError with violation details"
+        }
+      },
+      "web_scraping": {
+        "humanize": {
+          "purpose": "avoid bot detection by simulating human behavior",
+          "techniques": ["random delays 2 to 8 seconds", "mouse movement to random coordinates", "viewport randomization 1024x768 to 1920x1080"]
+        },
+        "retry_with_backoff": {
+          "attempts": 3,
+          "strategy": "exponential backoff",
+          "timeout_progression": [30, 60, 120]
+        },
+        "screenshot_analysis": {
+          "purpose": "capture visual state for GPT vision analysis",
+          "format": "PNG",
+          "usage": "take screenshot then send to GPT 4 vision for content extraction guidance"
+        }
+      }
     },
-    "duplication": {
-      "method": "token_similarity",
-      "threshold": "@ref:constants.limits.duplication",
-      "min_tokens": 50
+    "memory_management": {
+      "description": "cognitive load aware memory patterns for AI systems",
+      "short_term": {
+        "limit_bytes": 4096,
+        "eviction": "FIFO trim from front",
+        "consolidation_trigger": "@capacity 80 percent"
+      },
+      "long_term": {
+        "storage": "sqlite3 with AES 256 CBC encryption",
+        "indexing": "full text search with FTS5",
+        "retrieval": "similarity based top k with TF IDF embeddings"
+      },
+      "cognitive_tracking": {
+        "model": "7 plus minus 2 rule Millers law",
+        "max_concurrent_concepts": 7,
+        "overload_threshold": 6,
+        "circuit_breaker": "simplify task when overloaded"
+      }
     },
-    "coverage": {
-      "method": "line_coverage",
-      "formula": "executed_lines / executable_lines",
-      "exclude": ["comments", "whitespace", "declarations"]
+    "specialized_assistants": {
+      "description": "domain focused AI assistants with expertise modules",
+      "structure": "assistants slash domain name dot rb",
+      "size_guidelines": {
+        "simple_assistant": "50 to 100 lines",
+        "standard_assistant": "100 to 250 lines",
+        "complex_assistant": "250 to 400 lines"
+      },
+      "components": ["system prompt", "tools", "RAG context", "validation rules"]
+    },
+    "langchainrb_integration": {
+      "description": "patterns for safe LangchainRB usage in production",
+      "tools": {
+        "safe": ["calculator", "database read only", "google search", "wikipedia", "weather", "news retriever"],
+        "requires_sandbox": ["file system", "ruby code interpreter"],
+        "requires_approval": ["database write", "system commands"],
+        "forbidden_in_autonomous": ["ruby code interpreter without pledge", "file system write without unveil", "system calls without root guard"]
+      },
+      "assistant_configuration": {
+        "auto_tool_execution": "only with safety guards active",
+        "write_permission": "only when autonomous mode explicitly enabled by user",
+        "tool_whitelist": "enforce before any tool execution",
+        "error_handling": "graceful degradation with fallback to mock responses"
+      },
+      "llm_providers": {
+        "primary": "anthropic claude with circuit breaker",
+        "fallback_chain": ["openai", "ollama local", "mock"],
+        "cooldown_after_failure": "60 seconds primary 120 seconds secondary"
+      }
+    },
+    "frontend_architecture": {
+      "description": "Rails-ready SCSS boilerplate patterns with mobile-first responsive design",
+      "principles": [
+        "pure SCSS no frameworks",
+        "semantic HTML tags header main section footer",
+        "flex and grid for layouts",
+        "whitespace defines hierarchy",
+        "variables from master.json override defaults",
+        "mobile first base styles for small screens media queries scale up",
+        "Rails 8 PWA compatible manifest.json service-worker.js"
+      ],
+      "structure": {
+        "base": "reset normalize typography",
+        "layout": "grid flex containers spacing",
+        "components": "header footer nav buttons forms",
+        "utilities": "spacing display text alignment",
+        "themes": "light dark high contrast"
+      },
+      "responsive_strategy": {
+        "approach": "mobile_first",
+        "base": "320px to 767px single column",
+        "tablet": "@media min-width 768px two columns",
+        "desktop": "@media min-width 1024px full layout",
+        "breakpoint_management": "centralized in master.json breakpoints"
+      }
     }
   },
-
-  // EXECUTION: 8-phase cycle with auto-iteration and session recovery
-  //
-  // Bootstrap: validate → resolve_refs → select_profile → start
-  // Cycle: discover → analyze → ideate → design → implement → validate → deliver → learn
-  // Iteration: Auto-iterate until delta <1% or 10 iterations (whichever comes first)
-  // Context: LRU eviction keeps changed/neighbors/recent files in 10K token budget
-  // Recovery: Checkpoints per phase, 3 retries, atomic writes to .session_recovery
 
   "execution": {
-    "bootstrap": "validate→resolve_refs→select_profile→start",
+    "bootstrap": "validate→resolve_refs→select_profile→display_startup→start",
     "profiles": {
       "minimal": "functional,secure",
       "standard": "functional,secure,maintainable",
       "complete": "all_gates,adversarial"
     },
-    "cycle": {
-      "discover": { "in": "problem", "do": "scan,constrain,measure", "ask": "what,who,why,constraints", "out": "definition" },
-      "analyze": { "in": "definition", "do": "assumptions,cost,risk", "ask": "hidden,failures,burden", "out": "analysis" },
-      "ideate": { "in": "analysis", "do": "diverge,brainstorm", "ask": "what_if,why_not,how_else", "out": "options" },
-      "design": { "in": "options", "do": "generate,compare,select", "ask": "approaches,complexity,breaks", "out": "spec" },
-      "implement": { "in": "spec", "do": "test,code,refactor", "ask": "idioms,responsibility,testable", "out": "code" },
-      "validate": { "in": "code", "do": "gates,evidence,adversarial", "ask": "requirements,edges,security", "out": "report" },
-      "deliver": { "in": "report", "do": "deploy,monitor,document", "ask": "ready,rollback,lessons", "out": "product" },
-      "learn": { "in": "product", "do": "patterns,measure,improve", "ask": "what_worked,gaps", "out": "knowledge" }
+    "phases": {
+      "discover": {
+        "io": "@ref:phase_io.discover",
+        "actions": ["scan", "constrain", "measure", "detect_deployment"],
+        "questions": ["what_problem", "who_affected", "impact", "constraints", "workarounds"]
+      },
+      "analyze": {
+        "io": "@ref:phase_io.analyze",
+        "actions": ["identify_assumptions", "estimate_cost", "assess_risk"],
+        "questions": ["hidden_assumptions", "cost_in_hours", "failure_modes", "maintenance_burden", "opportunity_cost"]
+      },
+      "ideate": {
+        "io": "@ref:phase_io.ideate",
+        "actions": ["diverge", "brainstorm"],
+        "questions": ["what_if", "why_not", "how_else"]
+      },
+      "design": {
+        "io": "@ref:phase_io.design",
+        "actions": ["generate_approaches", "compare_options", "select_simplest"],
+        "questions": ["three_to_five_approaches", "minimum_viable_complexity", "where_does_it_break", "cost_benefit", "simplest_that_works"]
+      },
+      "implement": {
+        "io": "@ref:phase_io.implement",
+        "actions": ["write_tests_first", "code", "refactor"],
+        "questions": ["idioms_followed", "single_responsibility", "readable", "failures_handled", "testable"],
+        "gates": "@ref:intelligence.decision_gates.before_implement"
+      },
+      "validate": {
+        "io": "@ref:phase_io.validate",
+        "actions": ["run_gates", "collect_evidence", "adversarial_review"],
+        "questions": ["requirements_met", "edge_cases_covered", "security_validated", "performance_acceptable", "accessible"]
+      },
+      "deliver": {
+        "io": "@ref:phase_io.deliver",
+        "actions": ["deploy", "monitor", "document"],
+        "questions": ["deployment_ready", "documentation_helpful", "maintenance_plan", "lessons_captured", "rollback_tested"],
+        "gates": "@ref:intelligence.decision_gates.before_merge"
+      },
+      "learn": {
+        "io": "@ref:phase_io.learn",
+        "actions": ["extract_patterns", "measure_effectiveness", "propose_improvements", "apply_improvements", "re_validate"],
+        "questions": ["what_worked", "what_gaps", "how_to_prevent"]
+      }
     },
     "iteration": {
       "mode": "autoiterate_until_convergence",
-      "convergence": "delta<@ref:constants.limits.convergence OR iterations>=@ref:constants.limits.iterations"
+      "delta_threshold": "@ref:limits.convergence",
+      "max_iterations": "@ref:limits.iterations",
+      "depth_per_pass": ["surface", "structure", "philosophy", "meta"]
     },
     "context": {
       "priority": ["changed", "neighbors", "recent"],
-      "budget": 10000,
-      "evict": "LRU"
-    },
-    "processing": {
-      "strategy": "line_by_line,preserve_state,cat_only",
-      "merge": "smallest_wins",
-      "recovery": "checkpoint_per_phase,retry_3x"
-    },
-    "session": {
-      "recovery_file": ".session_recovery",
-      "persist": ["current_phase", "completed_files", "pending_files", "context_state"],
-      "restore_on": "interruption,failure,timeout",
-      "format": "json,utf8,atomic_write"
+      "budget_tokens": 10000,
+      "eviction": "LRU"
     }
   },
 
-  // ERROR HANDLING: Failure modes and recovery strategies
-  //
-  // Classification: errors categorized by severity (fatal, recoverable, warning)
-  // Recovery: automatic retry with exponential backoff, fallback to last checkpoint
-  // Logging: structured logs with correlation IDs, stored in .error_log
-  // Escalation: fatal errors notify operator, recoverable errors logged only
-
-  "errors": {
-    "classification": {
-      "fatal": ["security_breach", "data_loss", "corruption"],
-      "recoverable": ["network_timeout", "resource_unavailable", "parse_error"],
-      "warning": ["deprecation", "performance_degradation", "style_violation"]
+  "quality": {
+    "metrics": {
+      "complexity": {
+        "method": "cyclomatic",
+        "formula": "branches + loops + catches + 1"
+      },
+      "coupling": {
+        "method": "afferent_efferent",
+        "formula": "fan_in + fan_out"
+      },
+      "duplication": {
+        "method": "token_similarity",
+        "threshold": "@ref:limits.duplication",
+        "min_tokens": 50
+      },
+      "coverage": {
+        "method": "line_coverage",
+        "formula": "executed_lines / executable_lines"
+      }
     },
-    "recovery": {
-      "retry": "exponential_backoff",
-      "max_attempts": 3,
-      "backoff_base": 2,
-      "restore_checkpoint": true
-    },
-    "logging": {
-      "format": "json,structured",
-      "file": ".error_log",
-      "include": ["timestamp", "phase", "error_type", "context", "stack_trace"]
-    }
-  },
-
-  // VALIDATION: Quality gates + evidence model + adversarial testing
-  //
-  // Gates: 7 binary pass/fail checks (functional, secure, maintainable, accessible,
-  //        performant, deployable, privacy). Profile determines which gates activate.
-  //
-  // Evidence: Weighted proof from 5 sources must reach 100% threshold:
-  //   tests=35%, scans=25%, reviews=20%, logs=10%, profiling=10%
-  //   Formula: (0.35×tests + 0.25×scans + 0.20×reviews + 0.10×logs + 0.10×profiling) ≥ 1.0
-  //   Requires ALL 5 sources - no single method can satisfy requirement.
-  //
-  // Adversarial: 6 perspectives × 3 checks × 3 questions = 54 challenge dimensions
-  //   Perspectives: architect, security, operator, developer, end_user, skeptic
-
-  "validation": {
+    "code_smells": ["long_method", "god_object", "duplicate_code", "feature_envy"],
     "gates": {
-      "functional": { "tests": "pass", "coverage": "@ref:constants.limits.coverage" },
-      "secure": { "vulnerabilities": 0, "input": "validated" },
-      "maintainable": { "complexity": "@ref:constants.limits.complexity", "duplication": 0 },
-      "accessible": { "wcag": "AA", "keyboard": "full", "nielsen": ["visibility", "consistency", "user_control", "error_prevention"] },
-      "performant": { "paint": 2.5, "shift": 0.1 },
-      "deployable": { "health": "endpoint", "rollback": "tested" },
-      "privacy": { "gdpr": true, "pii": "protected" }
+      "functional": {
+        "tests": true,
+        "coverage": "@ref:limits.coverage"
+      },
+      "secure": {
+        "vulnerabilities": 0,
+        "input_validated": true
+      },
+      "maintainable": {
+        "complexity": "@ref:limits.complexity",
+        "duplication": 0
+      },
+      "performant": {
+        "paint_seconds": 2.5,
+        "layout_shift": 0.1
+      },
+      "deployable": {
+        "health_check": true,
+        "rollback_ready": true
+      },
+      "privacy": {
+        "gdpr_compliant": true,
+        "pii_protected": true
+      }
     },
     "evidence": {
-      "weights": { "tests": 0.35, "scans": 0.25, "reviews": 0.20, "logs": 0.10, "profiling": 0.10 },
-      "threshold": 1.0
+      "weights": {
+        "tests": 0.50,
+        "static_analysis": 0.30,
+        "complexity_checks": 0.20
+      },
+      "threshold": 1.0,
+      "note": "100% threshold forces comprehensive validation from all sources"
     },
     "adversarial": {
-      "checks": ["edge_case", "assumption_challenge", "spec_mismatch"],
-      "questions": ["why_exists", "what_breaks", "simpler_available"],
+      "checks": ["edge_cases", "assumption_challenges", "spec_mismatches"],
+      "questions": ["why_does_this_exist", "what_breaks_if_removed", "simpler_alternative"],
       "perspectives": ["architect", "security", "operator", "developer", "end_user", "skeptic"]
-    }
-  },
-
-  // STANDARDS: Code quality, conventions, platform compatibility, language-specific
-  //
-  // Quality: Zero tolerance for code smells (long_method, god_object, duplicate_code,
-  //          feature_envy). Style locked for 180 days. Beautiful code = automated format,
-  //          meaningful names, clear structure, active voice.
-  //
-  // Conventions: UTF-8, LF, 2-space indent, snake_case. Output complete (never truncate).
-  //              Cat-only file reading. Semantic git commits, incremental, low churn.
-  //
-  // Platform: POSIX (cat only, zsh/bash, quoted paths), OpenBSD (base tools, unveil/pledge),
-  //           Cygwin (mixed paths OK, CRLF tolerant), Cross-platform (no GNU, prefer POSIX).
-  //
-  // Languages: Ruby (double quotes, frozen, keyword args), Rails (v8, Hotwire, OpenBSD),
-  //            JavaScript (single quotes, const, await), Shell (zsh, strict, quoted),
-  //            HTML (semantic, ARIA, WCAG AA), CSS (mobile-first, BEM, logical),
-  //            Rust (no unsafe, Result, Clippy).
-
-  "standards": {
-    "quality": {
-      "smells": { "zero_new": ["long_method", "god_object", "duplicate_code", "feature_envy"] },
-      "churn": { "lock_style": 180, "batch": true },
-      "beautiful": {
-        "format": "automated",
-        "names": "meaningful",
-        "structure": "clear",
-        "writing": ["active_voice", "concrete", "omit_needless", "revise"]
-      }
     },
-    "conventions": {
-      "format": "utf8,lf,indent:2,snake_case",
-      "output": "complete,never_truncate,cat_only",
-      "avoid": ["truncation", "ceremony", "duplication", "meta"],
-      "refactor": ["flatten", "decouple", "hoist", "consolidate", "extract", "inline"],
-      "git": "semantic,incremental,low_churn"
-    },
-    "platform": {
-      "posix": {
-        "file_ops": "cat_only,no_head_tail",
-        "shell": "zsh,bash_fallback",
-        "paths": "quoted,absolute_preferred"
+    "validation_depths": {
+      "surface": {
+        "checks": ["@ref_resolution", "syntax", "schema"],
+        "principles": ["dry:obvious_duplication", "yagni:unused_code"]
       },
-      "openbsd": {
-        "tools": "base_only,no_gnu",
-        "permissions": "unveil,pledge",
-        "user": "unprivileged_preferred"
+      "structure": {
+        "checks": ["organization", "grouping", "nesting"],
+        "principles": ["dry:subtle_repetition", "kiss:complexity", "solid:single_responsibility"]
       },
-      "cygwin": {
-        "paths": "mixed_ok,quote_required",
-        "line_endings": "lf_preferred,crlf_tolerant",
-        "tools": "posix_subset"
+      "philosophy": {
+        "checks": ["intent", "composability", "predictability"],
+        "principles": ["principle_of_least_astonishment", "orthogonality", "composition_over_inheritance"]
       },
-      "cross_platform": {
-        "avoid": ["gnu_extensions", "bashisms", "head", "tail"],
-        "prefer": ["cat", "awk", "sed_posix", "grep_basic"],
-        "test": "bracket_double"
-      }
-    },
-    "languages": {
-      "ruby": "double,frozen,keyword,rubocop,minitest",
-      "rails": "v8, hotwire, openbsd_deployment",
-      "javascript": "single,const,await,eslint,prettier",
-      "typescript": "strict,no_any,eslint,prettier",
-      "shell": "zsh,strict,quoted,shellcheck",
-      "html": "semantic,aria,wcag_aa",
-      "css": "mobile_first,bem,logical",
-      "sql": "parameterized,no_dynamic,explain_analyze",
-      "yaml": "quoted_strings,explicit_types,yamllint",
-      "rust": "no_unsafe,result,clippy"
-    }
-  },
-
-  // DEPENDENCIES: Package and module management policies
-  //
-  // Approval: Security scan + license check before adding
-  // Updates: Automated security patches, manual feature updates
-  // Pinning: Lock files required, exact versions in production
-  // Vendoring: Critical dependencies vendored for supply chain security
-
-  "dependencies": {
-    "approval": {
-      "require": ["security_scan", "license_check", "maintainer_review"],
-      "allowed_licenses": ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"]
-    },
-    "updates": {
-      "security": "automatic",
-      "feature": "manual_review"
-    },
-    "pinning": "exact_versions",
-    "vendoring": ["critical", "unmaintained", "supply_chain_risk"]
-  },
-
-  // OPERATIONS: Deployment strategy and security fingerprinting
-  //
-  // Deployment: Blue-green strategy, health endpoint, OpenBSD native platform.
-  //             Tools: rcctl (service control), relayd (load balancer), httpd (web server),
-  //             unveil (filesystem restrictions), pledge (system call restrictions).
-  //
-  // Security: SHA-256 fingerprint computed in CI to detect tampering. Excludes meta.frozen_at
-  //           to allow timestamp updates without breaking signature verification.
-
-  "operations": {
-    "deployment": {
-      "strategy": "blue_green",
-      "health": "endpoint",
-      "platform": "openbsd_native",
-      "tools": "rcctl, relayd, httpd, unveil, pledge"
-    },
-    "security": {
-      "fingerprint": "sha256:CI_COMPUTED",
-      "exclude": ["meta.frozen_at"]
-    }
-  },
-
-  "ai": {
-    "claude": {
-      "models": ["opus_4_1", "opus_4", "sonnet_4", "sonnet_3_7"],
-      "thinking": {
-        "status": "enabled",
-        "budget_tokens": 10000,
-        "interleaved": true,
-        "stream": true,
-        "cache": "one_hour",
-        "notes": "preserve_thinking_blocks_in_tool_turns summarized_in_claude_4 full_in_sonnet_3_7"
+      "meta": {
+        "checks": ["self_application", "dogfooding", "consistency"],
+        "principles": ["all_principles_applied_to_framework_itself"]
       }
     }
   },
-
-  // AUTOMATION: Batch operations, refactoring guarantees, cross-cutting changes
-  //
-  // Batch: Delegate to agents when file_count >10 OR complexity >threshold.
-  //        Preserves: functionality, security, reversibility. Verify via spot checks.
-  //
-  // Refactoring: Recursive + in-place, atomic per-file, git-tracked checkpoints.
-  //              Validates: syntax, semantics, tests before accepting changes.
-  //
-  // Cross-cutting: Shell dialect, naming conventions, import styles applied consistently.
-  //                All changes verified and documented. Exceptions explicitly justified.
-
-  "automation": {
-    "batch_operations": {
-      "strategy": "agent_delegation",
-      "when": "file_count>10 OR complexity>threshold",
-      "preserve": ["functionality", "security", "reversibility"],
-      "verify": "spot_check,boundary_cases"
-    },
-    "refactoring": {
-      "scope": "recursive,in_place",
-      "atomic": "per_file",
-      "rollback": "git_tracked,checkpoint",
-      "validation": "syntax,semantics,tests"
-    },
-    "cross_cutting": {
-      "changes": ["shell_dialect", "naming_convention", "import_style"],
-      "apply": "consistent,verified,documented",
-      "exceptions": "explicit,justified,tracked"
-    }
-  },
-
-  // WORKFLOWS: Common execution patterns for typical scenarios
-  //
-  // New Feature: full cycle from discover to deliver
-  // Bug Fix: shortened cycle (analyze → implement → validate)
-  // Refactor: focus on maintainability (implement → validate with design gates)
-  // Security Fix: expedited with security gate emphasis
 
   "workflows": {
     "new_feature": {
+      "extends": "@ref:defaults.workflow",
       "phases": ["discover", "analyze", "ideate", "design", "implement", "validate", "deliver", "learn"],
-      "profile": "standard",
       "gates": ["functional", "secure", "maintainable"]
     },
     "bug_fix": {
+      "extends": "@ref:defaults.workflow",
       "phases": ["analyze", "implement", "validate", "deliver"],
-      "profile": "minimal",
-      "gates": ["functional", "secure"]
+      "profile": "minimal"
     },
     "refactor": {
+      "extends": "@ref:defaults.workflow",
       "phases": ["analyze", "design", "implement", "validate"],
-      "profile": "standard",
       "gates": ["maintainable", "functional"]
     },
-    "security_fix": {
-      "phases": ["analyze", "implement", "validate", "deliver"],
+    "self_validation": {
+      "extends": "@ref:defaults.workflow",
+      "phases": ["discover", "analyze", "design", "implement", "validate", "deliver", "learn"],
       "profile": "complete",
-      "gates": ["secure", "functional"],
-      "priority": "high",
-      "fast_track": true
+      "gates": ["functional", "secure", "maintainable"],
+      "iteration": {
+        "mode": "multi_pass",
+        "depths": "@ref:execution.iteration.depth_per_pass",
+        "per_depth_validation": "@ref:quality.validation_depths"
+      }
+    },
+    "app_workflow": {
+      "extends": "@ref:defaults.workflow",
+      "for_each_app": "@ref:apps",
+      "phases": ["discover", "implement", "validate", "deliver"]
     }
   },
 
-  // ROLLBACK: Reversion procedures for failed changes
-  //
-  // Triggers: Gate failure, test failure, deployment failure, manual request
-  // Strategy: Git revert for committed changes, file restore for uncommitted
-  // Verification: Re-run gates after rollback to confirm clean state
-  // Audit: All rollbacks logged with reason, operator, timestamp
+  "standards": {
+    "format": "utf8,lf,indent:2,snake_case",
+    "git": "semantic,incremental,low_churn",
+    "platform": {
+      "posix": {
+        "shell": "@ref:defaults.shell",
+        "file_operations": "cat_only_no_head_tail",
+        "anti_truncation": true
+      },
+      "openbsd": {
+        "tools": "base_only_no_gnu",
+        "security": "unveil,pledge"
+      },
+      "cygwin": {
+        "shell": "@ref:defaults.shell",
+        "line_endings": "lf_preferred_crlf_tolerant"
+      }
+    },
+    "languages": {
+      "ruby": {
+        "extends": "@ref:defaults.language",
+        "quotes": "double",
+        "frozen_string_literals": true,
+        "linter": "rubocop"
+      },
+      "javascript": {
+        "extends": "@ref:defaults.language",
+        "quotes": "single",
+        "prefer_const": true,
+        "linter": "eslint"
+      },
+      "shell": {
+        "extends": "@ref:defaults.language",
+        "shell": "@ref:defaults.shell",
+        "always_quote": true,
+        "linter": "shellcheck"
+      },
+      "rust": {
+        "extends": "@ref:defaults.language",
+        "forbid_unsafe": true,
+        "error_handling": "result_type",
+        "linter": "clippy"
+      }
+    }
+  },
 
-  "rollback": {
-    "triggers": ["gate_failure", "test_failure", "deployment_failure", "manual"],
+  "recovery": {
+    "triggers": ["gate_failure", "test_failure", "deployment_failure", "manual_request"],
     "strategy": {
-      "committed": "git_revert",
-      "uncommitted": "restore_from_checkpoint",
-      "deployed": "blue_green_switch"
+      "committed_changes": "git_revert",
+      "uncommitted_changes": "restore_from_checkpoint",
+      "deployed_version": "blue_green_switch"
     },
-    "verification": {
-      "re_run_gates": true,
-      "confirm_clean": true
+    "session_file": ".session_recovery",
+    "persist": ["current_phase", "completed_files", "pending_files", "context_state"],
+    "errors": {
+      "fatal": ["security_breach", "data_loss", "corruption"],
+      "recoverable": ["network_timeout", "resource_unavailable", "parse_error"],
+      "retry": {
+        "method": "exponential_backoff",
+        "max_attempts": 3
+      }
+    }
+  },
+
+  "deployment": {
+    "strategy": "blue_green",
+    "platform": "openbsd_native",
+    "security": {
+      "fingerprint_method": "sha256",
+      "computed_in": "CI"
     },
-    "audit": ["timestamp", "trigger", "operator", "files_affected", "reason"]
+    "dependencies": {
+      "require_checks": ["security_scan", "license_verification"],
+      "allowed_licenses": ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"],
+      "updates": {
+        "security_patches": "automatic",
+        "feature_updates": "manual_approval"
+      }
+    }
+  },
+
+  "styles": {
+    "fontFamily": "sans-serif",
+    "colorPrimary": "#000",
+    "colorSecondary": "#666",
+    "colorBackground": "#fff",
+    "colorText": "#333",
+    "spaceUnit": "1rem",
+    "borders": false,
+    "borderRadius": "0",
+    "transition": "150ms ease"
+  },
+
+  "breakpoints": {
+    "mobile": "320px",
+    "tablet": "768px",
+    "desktop": "1024px",
+    "wide": "1440px"
+  },
+
+  "components": {
+    "header": {
+      "height": "4rem",
+      "padding": "1rem",
+      "background": "@ref:styles.colorPrimary",
+      "color": "@ref:styles.colorBackground"
+    },
+    "main": {
+      "maxWidth": "80ch",
+      "padding": "2rem 1rem",
+      "margin": "0 auto"
+    },
+    "footer": {
+      "height": "3rem",
+      "padding": "1rem",
+      "textAlign": "center"
+    },
+    "nav": {
+      "display": "flex",
+      "gap": "1rem",
+      "justifyContent": "space-between"
+    },
+    "button": {
+      "padding": "0.5rem 1rem",
+      "border": "1px solid",
+      "cursor": "pointer"
+    },
+    "form": {
+      "maxWidth": "40rem",
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "1rem"
+    }
+  },
+
+  "startup": {
+    "steps": [
+      {
+        "action": "display_startup_message",
+        "format": "**master.json** v{version} ACTIVATED"
+      },
+      {
+        "action": "check_auto_triggers",
+        "trigger_list": "@ref:recovery.triggers"
+      },
+      {
+        "action": "ask_user_for_target",
+        "prompt": "Project path to analyze? (or 'cwd' for current)"
+      },
+      {
+        "action": "execute_workflow",
+        "workflow": "@ref:workflows.self_validation"
+      }
+    ],
+    "logging": {
+      "format": "dmesg_style",
+      "timestamp_format": "[{seconds:2d}.{microseconds:06d}]"
+    },
+    "interaction": {
+      "diff_first": true,
+      "approval_steps": ["analyze", "generate_diff", "show_diff", "ask_approval", "apply_if_approved"]
+    }
+  },
+
+  "claude_code": {
+    "tools": {
+      "prefer": ["Read", "Edit", "Write", "Grep", "Glob"],
+      "forbid": ["head", "tail", "truncate", "cat", "sed", "awk", "echo"],
+      "bash_only_for": ["git", "npm", "bundle", "cargo"]
+    },
+    "workflow": {
+      "diff": "mandatory_before_every_approval",
+      "todo": "use_TodoWrite_for_3plus_steps",
+      "parallelism": "call_independent_tools_in_parallel",
+      "completion": "mark_complete_immediately_not_batched"
+    },
+    "permissions": ["Read", "Write", "Edit", "Grep", "Glob", "Bash(git:*)", "Bash(npm:*)"]
   },
 
   "apps": [
-    { "id": "govt_bergen", "name": "Bergens Selvstyreparti Plan", "audience": "govt", "stack": "html", "token": "MOD-ISSUE:govt_bergen" }
-  ]
+    {
+      "id": "govt_bergen",
+      "name": "Bergens Selvstyreparti Plan",
+      "audience": "government",
+      "stack": "html",
+      "tracking_token": "MOD-ISSUE:govt_bergen",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "rails",
+      "path": "g:/pub/rails",
+      "stack": "rails",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "aight",
+      "path": "g:/pub/ai3",
+      "stack": "ruby",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "bplans",
+      "path": "g:/pub/bplans",
+      "workflow": "@ref:workflows.app_workflow"
+    },
+    {
+      "id": "multimedia",
+      "path": "g:/pub/multimedia",
+      "workflow": "@ref:workflows.app_workflow"
+    }
+  ],
+
+  "workflow_improvements": {
+    "version": "1.0.0",
+    "description": "Consolidated workflow enhancements for Claude Code sessions",
+
+    "preflight_validation": {
+      "required_checks": [
+        { "name": "shell_availability", "check": "zsh_present", "fallback": "bash", "fatal": false },
+        { "name": "required_tools", "check": "git,cat,awk,sed,grep", "fatal": true },
+        { "name": "utility_scripts", "check": "sh/clean.sh,sh/tree.sh,sh/backup.sh", "fatal": false },
+        { "name": "master_json_compliance", "check": "no_head_tail_commands", "fatal": true },
+        { "name": "claude_permissions", "check": "settings_local_json_valid", "fatal": false },
+        { "name": "git_status", "check": "repository_detected", "fatal": false },
+        { "name": "platform_detection", "check": "uname", "fatal": false },
+        { "name": "session_recovery", "check": "no_orphaned_recovery_file", "fatal": false }
+      ],
+      "on_failure": {
+        "errors": "abort_session",
+        "warnings": "log_and_continue"
+      },
+      "run_before": ["commit", "deploy", "refactor"]
+    },
+
+    "task_decomposition": {
+      "auto_generate_todos": true,
+      "patterns": {
+        "deployment": {
+          "phases": ["validate_env", "backup", "review_config", "connect_test", "apply_changes", "verify_services", "validate_tests", "document", "commit", "rollback_plan"],
+          "checkpoint_after_each": true
+        },
+        "feature": {
+          "phases": ["research", "design", "test_cases", "implement_core", "error_handling", "integration_tests", "documentation", "review_standards", "cleanup_validation", "commit"],
+          "tdd": true
+        },
+        "bugfix": {
+          "phases": ["reproduce", "analyze_root_cause", "identify_affected", "design_fix", "regression_test", "implement", "verify", "check_similar", "update_docs", "commit"],
+          "require_test": true
+        },
+        "refactor": {
+          "phases": ["analyze_current", "measure_metrics", "design_improved", "characterization_tests", "incremental_refactor", "verify_tests", "update_docs", "cleanup", "validate_standards", "commit"],
+          "small_increments": true
+        },
+        "scss_extraction": {
+          "phases": ["analyze_source", "identify_mobile_first", "remove_dependencies", "extract_core", "normalize_format", "validate_standards", "test_html", "create_baseline", "document", "commit"],
+          "output": "single_file_mobile_first"
+        }
+      },
+      "use_when": "steps>=3 OR complexity>threshold"
+    },
+
+    "automated_cleanup": {
+      "git_hooks": {
+        "pre_commit": {
+          "enabled": true,
+          "operations": [
+            { "step": "clean_staged_files", "action": "remove_crlf_trailing_whitespace" },
+            { "step": "check_forbidden_commands", "action": "fail_if_head_tail_found" },
+            { "step": "validate_shell_scripts", "action": "zsh_syntax_check" },
+            { "step": "check_file_sizes", "action": "warn_if_large" }
+          ],
+          "abort_on_error": true
+        },
+        "pre_push": {
+          "enabled": false,
+          "operations": [
+            { "step": "run_tests", "action": "ensure_passing" },
+            { "step": "check_secrets", "action": "scan_for_credentials" }
+          ]
+        }
+      },
+      "auto_clean_before": ["commit", "stage"],
+      "operations": {
+        "crlf_removal": "tr -d '\\r'",
+        "trailing_whitespace": "awk '{sub(/[ \\t]+$/, \"\");} NF{print; if(p)print \"\"} {p=NF}'",
+        "blank_line_reduction": "consolidate_to_single"
+      }
+    },
+
+    "session_recovery": {
+      "enabled": true,
+      "checkpoint_file": ".session_recovery",
+      "persist": ["current_phase", "completed_files", "pending_files", "context_state", "todo_list"],
+      "restore_on": ["interruption", "failure", "timeout", "crash"],
+      "checkpoint_after": ["phase_completion", "file_modification", "major_operation"],
+      "format": "json_utf8_atomic_write",
+      "retention": {
+        "success": "delete_immediately",
+        "failure": "keep_until_resolved",
+        "max_age_days": 7
+      },
+      "recovery_strategy": {
+        "resume_from_checkpoint": true,
+        "replay_operations": false,
+        "ask_user_confirmation": true
+      }
+    },
+
+    "playbooks": {
+      "openbsd_deployment": {
+        "description": "VPS deployment to OpenBSD 7.x",
+        "prerequisites": ["openbsd_7x", "root_doas_access", "internet_connectivity"],
+        "phases": [
+          { "name": "ssh_setup", "steps": ["verify_key", "test_connection", "set_password"] },
+          { "name": "validation", "steps": ["check_man_pages", "verify_configs", "test_services"] },
+          { "name": "dnssec", "steps": ["generate_keys", "sign_zones", "verify_ds_records"] },
+          { "name": "deployment", "steps": ["pre_point", "wait_dns_delegation", "post_point"] },
+          { "name": "verification", "steps": ["test_tls", "check_services", "validate_dns"] }
+        ],
+        "validation": {
+          "check_against": "man.openbsd.org",
+          "forbidden_commands": ["head", "tail", "bash"],
+          "required_tools": ["nsd", "ldns-keygen", "acme-client", "relayd", "pf"]
+        },
+        "rollback": {
+          "strategy": "restore_from_backup",
+          "backup_before": "every_phase"
+        }
+      },
+      "rails_baseline": {
+        "description": "Extract and normalize Rails SCSS baseline",
+        "prerequisites": ["source_css", "rails_8", "propshaft"],
+        "phases": [
+          { "name": "analysis", "steps": ["read_source", "identify_patterns", "check_dependencies"] },
+          { "name": "extraction", "steps": ["remove_framework_deps", "extract_mobile_first", "preserve_breakpoints"] },
+          { "name": "normalization", "steps": ["format_scss", "apply_conventions", "validate_syntax"] },
+          { "name": "integration", "steps": ["test_in_app", "verify_propshaft", "document_usage"] }
+        ],
+        "output": {
+          "format": "single_application_scss",
+          "structure": "mobile_first_then_desktop_media_queries",
+          "forbidden": ["jquery_mobile", "modularization", "sprockets_directives"]
+        }
+      },
+      "validation_workflow": {
+        "description": "Comprehensive system validation",
+        "steps": [
+          "run_preflight_validation",
+          "check_master_json_compliance",
+          "verify_no_forbidden_commands",
+          "run_linting_tools",
+          "check_git_clean",
+          "validate_config_files",
+          "test_critical_paths",
+          "review_security",
+          "document_findings",
+          "address_issues"
+        ]
+      }
+    },
+
+    "conflict_detection": {
+      "check_before_edit": true,
+      "strategies": [
+        { "check": "git_diff", "action": "warn_if_uncommitted_changes" },
+        { "check": "file_timestamp", "action": "warn_if_recently_modified" },
+        { "check": "lock_file", "action": "fail_if_locked_by_other_process" }
+      ],
+      "auto_merge": {
+        "enabled": false,
+        "strategy": "smallest_wins",
+        "require_approval": true
+      },
+      "on_conflict": {
+        "action": "prompt_user",
+        "options": ["abort", "force", "merge", "diff_review"]
+      }
+    },
+
+    "investigation_first": {
+      "principle": "check_before_act",
+      "required_checks": [
+        { "question": "does_file_exist", "action": "stat_check" },
+        { "question": "is_newer_version_available", "action": "compare_timestamps" },
+        { "question": "already_resolved", "action": "check_git_log" },
+        { "question": "dependencies_satisfied", "action": "verify_requirements" }
+      ],
+      "apply_to": ["file_operations", "deployments", "refactors", "backups"],
+      "fail_fast": true
+    },
+
+    "tool_selection_matrix": {
+      "description": "Decision tree for Claude Code tool selection",
+      "rules": [
+        { "when": "file_size<2000_lines AND known_path", "use": "Read" },
+        { "when": "search_multiple_attempts_likely", "use": "Task(general_purpose)" },
+        { "when": "shell_command_required", "use": "Bash(zsh:*)", "never": "Bash(bash:*)" },
+        { "when": "file_pattern_search", "use": "Glob", "never": "Bash(find:*)" },
+        { "when": "content_search", "use": "Grep", "never": "Bash(grep:*)" },
+        { "when": "file_read", "use": "Read", "never": "Bash(cat:*)" },
+        { "when": "file_edit", "use": "Edit", "never": "Bash(sed:*)" },
+        { "when": "file_create", "use": "Write", "never": "Bash(echo:*)" }
+      ],
+      "forbidden_tools": ["head", "tail", "bash", "truncate"],
+      "preferred_tools": ["Read", "Edit", "Write", "Grep", "Glob", "Bash(zsh:*)"],
+      "optimization": {
+        "parallel_calls": "when_independent",
+        "sequential_calls": "when_dependent"
+      }
+    },
+
+    "standards_enforcement": {
+      "automatic": true,
+      "pre_commit_checks": [
+        { "rule": "no_head_tail_commands", "scope": "*.sh", "action": "fail" },
+        { "rule": "crlf_removal", "scope": "*", "action": "auto_fix" },
+        { "rule": "trailing_whitespace", "scope": "*", "action": "auto_fix" },
+        { "rule": "shell_syntax", "scope": "*.sh", "action": "validate" },
+        { "rule": "json_validity", "scope": "*.json", "action": "validate" },
+        { "rule": "file_size_limit", "scope": "*", "threshold": "1MB", "action": "warn" }
+      ],
+      "continuous": [
+        { "rule": "complexity_limit", "threshold": "@ref:limits.complexity", "action": "refactor_trigger" },
+        { "rule": "duplication_limit", "threshold": "@ref:limits.duplication", "action": "dry_trigger" },
+        { "rule": "coupling_limit", "threshold": "@ref:limits.coupling", "action": "decouple_trigger" }
+      ],
+      "reporting": {
+        "format": "structured_json",
+        "include": ["rule", "file", "line", "severity", "suggestion"],
+        "log_to": ".standards_violations"
+      }
+    },
+
+    "workflow_templates": {
+      "multi_system_deployment": {
+        "phases": ["local_validate", "remote_test", "apply", "verify", "document"],
+        "tools": ["Bash(ssh:*)", "Bash(git:*)", "Read", "Edit"],
+        "checkpoints": "per_phase",
+        "rollback": "automatic_on_failure"
+      },
+      "css_extraction": {
+        "phases": ["read_source", "identify_patterns", "extract", "normalize", "validate", "integrate"],
+        "tools": ["Read", "Write", "Grep"],
+        "output": "single_file",
+        "validation": "against_master_json_standards"
+      },
+      "bug_investigation": {
+        "phases": ["reproduce", "analyze", "fix", "test", "document"],
+        "tools": ["Read", "Grep", "Bash(git:*)"],
+        "require": "regression_test",
+        "checkpoints": "after_reproduce_and_fix"
+      },
+      "feature_development": {
+        "phases": ["design", "test", "implement", "review", "document"],
+        "tools": ["Read", "Write", "Edit", "Bash(git:*)"],
+        "tdd": true,
+        "review": "against_principles"
+      }
+    }
+  }
 }
