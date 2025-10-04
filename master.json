@@ -2,19 +2,27 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "meta": {
     "name": "master.json",
-    "version": "253.0.0",
-    "philosophy": "questions>commands, evidence>opinion, clarity>cleverness, consolidation>fragmentation",
+    "version": "275.0.0",
+    "purpose": "governance_for_llm_driven_development",
+    "target_agents": ["claude_code", "grok", "gpt"],
+    "philosophy": ["questions>commands", "evidence>opinion", "execution>explanation", "clarity>cleverness", "consolidation>fragmentation", "reversibility>irreversibility"],
     "state": "frozen",
+    "state_note": "frozen_modification_rules_not_content",
     "frozen_at": "2025-10-01T19:28:03Z",
     "evidence": ["fowler_refactoring_2018", "beck_xp_2004", "brooks_mmm_1995", "hunt_pragmatic_2019", "evans_ddd_2003"],
     "context": "OpenBSD infrastructure with 47 domains, 7 Rails apps, NSD DNS, relayd load balancer",
     "changelog": {
+      "v275": "structural_latch: reorganized sections to flow by importance and chronology for better comprehension",
+      "v274": "dnssec_deployment: enabled DNSSEC with ECDSAP256SHA256, NSEC3, CAA records, ldnscripts automation, monthly key rollover",
+      "v273": "priority_1_optimizations: removed verbose note line 257, DRYed smells list via @ref (line 667), removed blank line 995, fixed trailing comma syntax error",
+      "v272": "grok_feedback_integration: added execution>explanation to philosophy, added state_note clarifying frozen state, replaced subjective autonomous_threshold with @ref, added rule 10, consolidated recovery into deployment (16→15 sections)",
+      "v254": "radio_bergen_lessons: added geometric_clarity principle from audio visualizer optimization work",
       "v253": "autoiterative_optimization: eliminated project section, added anti_divitis + anti_sectionitis principles, universal continuous_refactoring, consolidated 8 scattered configs",
       "v252": "structure_consolidation: flatten project wrapper, merge scattered git/file/validation rules",
       "v251": "expansion: full governance framework with 14 principles, 10 personas, 9 biases, 13 pitfalls"
     },
     "integrity": {
-      "sections": "$schema,meta,modification_rules,startup,constants,principles,style,intelligence,execution,quality,workflows,standards,recovery,deployment,tools,apps",
+      "sections": "$schema,meta,modification_rules,principles,constants,execution,intelligence,quality,workflows,standards,style,startup,tools,deployment,recovery,apps",
       "validate_before_output": true,
       "checksum": "sha256",
       "anti_truncation": "always_output_complete,never_truncate,explicit_continuation_markers",
@@ -24,7 +32,7 @@
           "intelligence.bias_mitigation (9+ compound)",
           "intelligence.pitfalls (3 levels)",
           "execution.phases.*.questions (5+ per phase)",
-          "principles (16 total)",
+          "principles (17 total)",
           "execution.continuous_refactoring (mandatory)"
         ],
         "minimum_complexity": {
@@ -34,7 +42,7 @@
           "pitfall_levels": 3,
           "questions_per_phase": 5,
           "validation_depths": 4,
-          "principles": 16
+          "principles": 17
         },
         "degradation_detection": {
           "enabled": true,
@@ -56,63 +64,13 @@
       "6": "Refactoring must maintain all validation rules",
       "7": "Autoiteration must converge or stop at max_iterations",
       "8": "Deep optimization required for principles compliance",
-      "9": "User instructions from chat must be codified back into master.json"
+      "9": "User instructions from chat must be codified back into master.json",
+      "10": "Self-optimization via rules 4 and 9 preserves governance while allowing evolution"
     },
     "compression_constraints": {
       "allowed": "verbosity_reduction,DRY_application,structure_flattening,section_consolidation",
       "forbidden": "sharp_edge_removal,constraint_weakening,enforcement_dilution,functionality_loss",
       "floor": "protected_sections_maintain_minimum_complexity"
-    }
-  },
-  "startup": {
-    "steps": [
-      {"action": "display_startup", "format": "**master.json** v{version} ACTIVATED"},
-      {"action": "check_triggers", "when": "@ref:recovery.triggers"},
-      {"action": "ask_target", "prompt": "Project/app/workflow? (blank=infer from context)"},
-      {"action": "enforce_continuous_refactoring", "always": "@ref:execution.continuous_refactoring"}
-    ],
-    "logging": {
-      "format": "syslog",
-      "pattern": "MMM dd HH:mm:ss hostname service[pid]: facility.level: message",
-      "example": "Oct 1 19:28:03 localhost master.json[2847]: framework.info: phase:implement action:refactor_touched_code"
-    },
-    "interaction": {
-      "diff_first": true,
-      "approval_steps": ["analyze", "diff", "show", "ask", "apply"],
-      "pause_on_error": true,
-      "autonomous_threshold": "if_you_would_recommend_to_friend_just_do_it"
-    }
-  },
-  "constants": {
-    "limits": {
-      "coverage": 0.8,
-      "complexity": 10,
-      "convergence": 0.01,
-      "iterations": 10,
-      "coupling": 5,
-      "duplication": 0.03,
-      "nesting_depth": 4,
-      "section_count": 16
-    },
-    "evidence_weights": {
-      "tests": 0.50,
-      "static_analysis": 0.30,
-      "complexity_checks": 0.20
-    },
-    "phase_io": {
-      "discover": {"in": "problem", "out": "definition"},
-      "analyze": {"in": "definition", "out": "analysis"},
-      "ideate": {"in": "analysis", "out": "options"},
-      "design": {"in": "options", "out": "plan"},
-      "implement": {"in": "plan", "out": "code"},
-      "validate": {"in": "code", "out": "verified"},
-      "deliver": {"in": "verified", "out": "deployed"},
-      "learn": {"in": "deployed", "out": "knowledge"}
-    },
-    "workflow_defaults": {
-      "phases": [],
-      "profile": "standard",
-      "gates": ["functional", "secure"]
     }
   },
   "principles": {
@@ -218,28 +176,207 @@
       "note": "consolidate_related_configuration_avoid_fragmentation",
       "applies_to": "configuration,structure,organization",
       "detection": ["duplicate_keys_across_sections", "synonyms_in_section_names", "wrapper_sections_with_single_child"]
+    },
+    "geometric_clarity": {
+      "trigger": "@visual_confusion→geometric_simplification",
+      "example": {"before": "overlapping waveforms obscure data", "after": "clear separation with visual hierarchy"},
+      "severity": "medium",
+      "scope": "visualization,ui,information_design",
+      "note": "apply_gestalt_principles_to_data_visualization",
+      "applies_to": "charts,graphs,visualizations,ui_layout"
     }
   },
-  "style": {
-    "tone": "direct,critical,truth_over_agreeability",
-    "evaluation": "point_out_flaws,challenge_claims,verify_before_accepting",
-    "wellbeing": "prioritize_long_term_over_immediate_approval",
-    "banned_openings": ["good", "great", "fascinating", "excellent", "amazing", "brilliant", "profound"],
-    "emoji_policy": "only_if_user_uses_first",
-    "emotes": "only_if_requested",
-    "execution_over_explanation_ratio": 0.7,
-    "banned_outputs": ["README_without_request", "docs_directory_without_request", "process_documentation_without_request"],
-    "output_format": {
-      "use_backticks_for": ["code_terms", "filenames", "commands", "variables"],
-      "use_bold_for": ["emphasis", "status", "important_decisions"],
-      "avoid": ["excessive_headlines", "unnecessary_summaries", "redundant_explanations"]
+  "constants": {
+    "limits": {
+      "coverage": 0.8,
+      "complexity": 10,
+      "convergence": 0.01,
+      "iterations": 10,
+      "coupling": 5,
+      "duplication": 0.03,
+      "nesting_depth": 4,
+      "section_count": 16
     },
-    "strunk_white": {
-      "omit_needless_words": true,
-      "active_voice": true,
-      "concrete_over_abstract": true,
-      "parallel_construction": true,
-      "note": "applies_to_prose_and_comments_not_config_structure"
+    "evidence_weights": {
+      "tests": 0.50,
+      "static_analysis": 0.30,
+      "complexity_checks": 0.20
+    },
+    "phase_io": {
+      "discover": {"in": "problem", "out": "definition"},
+      "analyze": {"in": "definition", "out": "analysis"},
+      "ideate": {"in": "analysis", "out": "options"},
+      "design": {"in": "options", "out": "plan"},
+      "implement": {"in": "plan", "out": "code"},
+      "validate": {"in": "code", "out": "verified"},
+      "deliver": {"in": "verified", "out": "deployed"},
+      "learn": {"in": "deployed", "out": "knowledge"}
+    },
+    "workflow_defaults": {
+      "phases": [],
+      "profile": "standard",
+      "gates": ["functional", "secure"]
+    }
+  },
+  "execution": {
+    "bootstrap": "validate→resolve_refs→select_profile→display_startup→start",
+    "profiles": {
+      "minimal": "functional,secure",
+      "standard": "functional,secure,maintainable",
+      "complete": "all_gates,adversarial"
+    },
+    "continuous_refactoring": {
+      "enabled": true,
+      "scope": "every_file_every_touch",
+      "rationale": "refactoring_is_not_a_task_its_how_we_work",
+      "boy_scout_rule": "leave_code_better_than_you_found_it",
+      "triggers": ["file_read", "file_write", "file_edit", "code_review"],
+      "mandatory_checks": ["@ref:principles", "@ref:quality.smells", "@ref:intelligence.pitfalls"],
+      "actions": {
+        "on_read": ["detect_smells", "note_violations", "assess_improvement_opportunity"],
+        "on_write": ["apply_all_principles", "run_all_gates", "validate_no_regression"],
+        "on_edit": ["refactor_touched_code", "improve_adjacent_code", "update_tests", "consolidate_if_sectionitis", "flatten_if_divitis"]
+      },
+      "atomic": "per_file",
+      "validation": "syntax,semantics,tests",
+      "safety": "backup_first,test_before_commit",
+      "gates": ["no_new_smells", "complexity_reduced_or_same", "duplication_reduced"],
+      "exceptions": ["generated_files", "vendored_dependencies", "binary_files"],
+      "autoiteration": {
+        "mode": "iterate_until_convergence",
+        "max_iterations": "@ref:constants.limits.iterations",
+        "convergence_threshold": "@ref:constants.limits.convergence",
+        "metrics": ["duplication_ratio", "complexity_score", "coupling_count", "smell_count"]
+      }
+    },
+    "phases": {
+      "discover": {
+        "io": "@ref:constants.phase_io.discover",
+        "actions": ["scan", "constrain", "measure"],
+        "questions": [
+          "what_specific_measurable_problem",
+          "who_affected_how_often",
+          "what_current_impact",
+          "what_evidence_proves_problem_exists",
+          "what_happens_if_we_do_nothing"
+        ]
+      },
+      "analyze": {
+        "io": "@ref:constants.phase_io.analyze",
+        "actions": [
+          "identify_assumptions",
+          "estimate_cost",
+          "assess_risk",
+          "check_bias:@intelligence.bias_mitigation"
+        ],
+        "questions": [
+          "what_hidden_assumptions_are_we_making",
+          "what_could_go_wrong",
+          "what_dependencies_exist",
+          "what_evidence_supports_our_approach",
+          "what_biases_might_affect_judgment"
+        ]
+      },
+      "ideate": {
+        "io": "@ref:constants.phase_io.ideate",
+        "actions": [
+          "generate_15_alternatives:@intelligence.adversarial.alternatives_required",
+          "apply_all_personas:@intelligence.adversarial",
+          "multi_temperature_synthesis:@intelligence.multi_temperature_synthesis"
+        ],
+        "questions": [
+          "what_are_15_different_approaches",
+          "what_would_each_persona_suggest",
+          "which_alternatives_challenge_our_assumptions",
+          "what_unconventional_solutions_exist",
+          "which_solution_is_simplest"
+        ]
+      },
+      "design": {
+        "io": "@ref:constants.phase_io.design",
+        "actions": ["generate_alternatives", "compare_tradeoffs", "select_best"],
+        "questions": [
+          "what_are_15_approaches_we_generated",
+          "what_is_minimum_viable_solution",
+          "what_are_irreversible_decisions",
+          "what_testing_strategy_proves_correctness",
+          "what_makes_this_maintainable"
+        ]
+      },
+      "implement": {
+        "io": "@ref:constants.phase_io.implement",
+        "actions": [
+          "write_tests_first",
+          "implement_code",
+          "refactor_continuously:@execution.continuous_refactoring",
+          "detect_pitfalls:@intelligence.pitfalls"
+        ],
+        "questions": [
+          "what_tests_prove_behavior",
+          "what_edge_cases_exist",
+          "what_can_be_simplified",
+          "what_duplication_can_be_removed",
+          "what_makes_this_fail"
+        ]
+      },
+      "validate": {
+        "io": "@ref:constants.phase_io.validate",
+        "actions": [
+          "check_principles:@principles",
+          "run_gates:@quality.gates",
+          "gather_evidence:@quality.evidence",
+          "adversarial_review:@intelligence.adversarial"
+        ],
+        "questions": [
+          "what_evidence_proves_correctness",
+          "what_would_break_this",
+          "what_did_we_miss",
+          "what_principles_are_violated",
+          "what_would_adversarial_reviewers_find"
+        ]
+      },
+      "deliver": {
+        "io": "@ref:constants.phase_io.deliver",
+        "actions": ["deploy_safely", "monitor_health", "document_thoroughly"],
+        "questions": [
+          "what_makes_deployment_ready",
+          "what_documentation_is_helpful",
+          "what_monitoring_is_needed",
+          "what_rollback_plan_exists",
+          "what_user_impact_expected"
+        ]
+      },
+      "learn": {
+        "io": "@ref:constants.phase_io.learn",
+        "actions": [
+          "capture_patterns_learned",
+          "measure_outcomes",
+          "improve_process",
+          "codify_insights_to_master_json",
+          "re_validate_changes"
+        ],
+        "questions": [
+          "what_worked_well",
+          "what_failed",
+          "what_would_we_do_differently",
+          "what_patterns_emerged",
+          "what_should_we_add_to_master_json"
+        ]
+      }
+    },
+    "iteration": {
+      "mode": "autoiterate_until_convergence",
+      "delta_threshold": "@ref:constants.limits.convergence",
+      "max_iterations": "@ref:constants.limits.iterations",
+      "depth_per_pass": ["surface", "structure", "philosophy", "meta"],
+      "convergence_metric": "sum_of_deltas_across_all_metrics",
+      "report_progress": "every_iteration"
+    },
+    "context": {
+      "priority": ["changed", "neighbors", "recent"],
+      "budget": 10000,
+      "evict": "LRU",
+      "note": "smart_loading_prevents_token_budget_overflow"
     }
   },
   "intelligence": {
@@ -451,167 +588,6 @@
       }
     }
   },
-  "execution": {
-    "bootstrap": "validate→resolve_refs→select_profile→display_startup→start",
-    "profiles": {
-      "minimal": "functional,secure",
-      "standard": "functional,secure,maintainable",
-      "complete": "all_gates,adversarial"
-    },
-    "continuous_refactoring": {
-      "enabled": true,
-      "scope": "every_file_every_touch",
-      "rationale": "refactoring_is_not_a_task_its_how_we_work",
-      "boy_scout_rule": "leave_code_better_than_you_found_it",
-      "triggers": ["file_read", "file_write", "file_edit", "code_review"],
-      "mandatory_checks": ["@ref:principles", "@ref:quality.smells", "@ref:intelligence.pitfalls"],
-      "actions": {
-        "on_read": ["detect_smells", "note_violations", "assess_improvement_opportunity"],
-        "on_write": ["apply_all_principles", "run_all_gates", "validate_no_regression"],
-        "on_edit": ["refactor_touched_code", "improve_adjacent_code", "update_tests", "consolidate_if_sectionitis", "flatten_if_divitis"]
-      },
-      "atomic": "per_file",
-      "validation": "syntax,semantics,tests",
-      "safety": "backup_first,test_before_commit",
-      "gates": ["no_new_smells", "complexity_reduced_or_same", "duplication_reduced"],
-      "exceptions": ["generated_files", "vendored_dependencies", "binary_files"],
-      "autoiteration": {
-        "mode": "iterate_until_convergence",
-        "max_iterations": "@ref:constants.limits.iterations",
-        "convergence_threshold": "@ref:constants.limits.convergence",
-        "metrics": ["duplication_ratio", "complexity_score", "coupling_count", "smell_count"]
-      }
-    },
-    "phases": {
-      "discover": {
-        "io": "@ref:constants.phase_io.discover",
-        "actions": ["scan", "constrain", "measure"],
-        "questions": [
-          "what_specific_measurable_problem",
-          "who_affected_how_often",
-          "what_current_impact",
-          "what_evidence_proves_problem_exists",
-          "what_happens_if_we_do_nothing"
-        ]
-      },
-      "analyze": {
-        "io": "@ref:constants.phase_io.analyze",
-        "actions": [
-          "identify_assumptions",
-          "estimate_cost",
-          "assess_risk",
-          "check_bias:@intelligence.bias_mitigation"
-        ],
-        "questions": [
-          "what_hidden_assumptions_are_we_making",
-          "what_could_go_wrong",
-          "what_dependencies_exist",
-          "what_evidence_supports_our_approach",
-          "what_biases_might_affect_judgment"
-        ]
-      },
-      "ideate": {
-        "io": "@ref:constants.phase_io.ideate",
-        "actions": [
-          "generate_15_alternatives:@intelligence.adversarial.alternatives_required",
-          "apply_all_personas:@intelligence.adversarial",
-          "multi_temperature_synthesis:@intelligence.multi_temperature_synthesis"
-        ],
-        "questions": [
-          "what_are_15_different_approaches",
-          "what_would_each_persona_suggest",
-          "which_alternatives_challenge_our_assumptions",
-          "what_unconventional_solutions_exist",
-          "which_solution_is_simplest"
-        ]
-      },
-      "design": {
-        "io": "@ref:constants.phase_io.design",
-        "actions": ["generate_alternatives", "compare_tradeoffs", "select_best"],
-        "questions": [
-          "what_are_15_approaches_we_generated",
-          "what_is_minimum_viable_solution",
-          "what_are_irreversible_decisions",
-          "what_testing_strategy_proves_correctness",
-          "what_makes_this_maintainable"
-        ]
-      },
-      "implement": {
-        "io": "@ref:constants.phase_io.implement",
-        "actions": [
-          "write_tests_first",
-          "implement_code",
-          "refactor_continuously:@execution.continuous_refactoring",
-          "detect_pitfalls:@intelligence.pitfalls"
-        ],
-        "questions": [
-          "what_tests_prove_behavior",
-          "what_edge_cases_exist",
-          "what_can_be_simplified",
-          "what_duplication_can_be_removed",
-          "what_makes_this_fail"
-        ]
-      },
-      "validate": {
-        "io": "@ref:constants.phase_io.validate",
-        "actions": [
-          "check_principles:@principles",
-          "run_gates:@quality.gates",
-          "gather_evidence:@quality.evidence",
-          "adversarial_review:@intelligence.adversarial"
-        ],
-        "questions": [
-          "what_evidence_proves_correctness",
-          "what_would_break_this",
-          "what_did_we_miss",
-          "what_principles_are_violated",
-          "what_would_adversarial_reviewers_find"
-        ]
-      },
-      "deliver": {
-        "io": "@ref:constants.phase_io.deliver",
-        "actions": ["deploy_safely", "monitor_health", "document_thoroughly"],
-        "questions": [
-          "what_makes_deployment_ready",
-          "what_documentation_is_helpful",
-          "what_monitoring_is_needed",
-          "what_rollback_plan_exists",
-          "what_user_impact_expected"
-        ]
-      },
-      "learn": {
-        "io": "@ref:constants.phase_io.learn",
-        "actions": [
-          "capture_patterns_learned",
-          "measure_outcomes",
-          "improve_process",
-          "codify_insights_to_master_json",
-          "re_validate_changes"
-        ],
-        "questions": [
-          "what_worked_well",
-          "what_failed",
-          "what_would_we_do_differently",
-          "what_patterns_emerged",
-          "what_should_we_add_to_master_json"
-        ]
-      }
-    },
-    "iteration": {
-      "mode": "autoiterate_until_convergence",
-      "delta_threshold": "@ref:constants.limits.convergence",
-      "max_iterations": "@ref:constants.limits.iterations",
-      "depth_per_pass": ["surface", "structure", "philosophy", "meta"],
-      "convergence_metric": "sum_of_deltas_across_all_metrics",
-      "report_progress": "every_iteration"
-    },
-    "context": {
-      "priority": ["changed", "neighbors", "recent"],
-      "budget": 10000,
-      "evict": "LRU",
-      "note": "smart_loading_prevents_token_budget_overflow"
-    }
-  },
   "quality": {
     "metrics": {
       "complexity": {
@@ -650,7 +626,7 @@
         "detection": "anti_sectionitis_principle"
       }
     },
-    "smells": ["long_method", "god_object", "duplicate_code", "feature_envy", "divitis", "sectionitis"],
+    "smells": "@ref:standards.quality.smells.zero_new",
     "tdd": {
       "cycle": "red→green→refactor",
       "coverage_target": 0.90,
@@ -962,59 +938,116 @@
         "action": "explain_blocker_and_request_guidance",
         "never": "silently_fail_or_workaround_without_disclosure"
       }
-    }
-  },
-  "recovery": {
-    "triggers": ["gate_failure", "test_failure", "deployment_failure", "manual"],
-    "strategy": {
-      "committed": "git_revert",
-      "uncommitted": "restore_from_checkpoint",
-      "deployed": "blue_green_switch"
     },
-    "session_file": ".session_recovery",
-    "persist": ["current_phase", "completed_files", "pending_files", "context_state", "learned_patterns"],
-    "restore_on": ["interruption", "failure", "timeout"],
-    "errors": {
-      "classification": {
-        "fatal": ["security_breach", "data_loss", "corruption"],
-        "recoverable": ["network_timeout", "resource_unavailable", "parse_error"],
-        "warning": ["deprecation", "performance_degradation"]
+    "documentation": {
+      "config_comments": {
+        "style": "strunk_white_brevity",
+        "tone": "casual,non_technical,natural",
+        "explain": "why_not_what",
+        "examples": {
+          "good": ["Let SSH in, but ban anyone trying too many connections", "Tell acme-client where to get certificates", "Support live connections like chat"],
+          "bad": ["Configure SSH rate limiting", "Set ACME authority URL", "Enable WebSocket protocol"]
+        },
+        "applies_to": ["shell_heredocs", "config_files", "inline_comments"]
       },
-      "recovery": {
-        "retry": "exponential_backoff",
-        "max_attempts": 3,
-        "backoff_base": 2,
-        "restore_checkpoint": true
+      "readme_structure": {
+        "pattern": "vision→architecture→quick_start→prerequisites→details→troubleshooting",
+        "vision": {
+          "position": "first_paragraph",
+          "style": "bold_visionary_statement",
+          "purpose": "communicate_why_this_exists",
+          "length": "1_3_sentences",
+          "tone": "confident_direct_memorable",
+          "examples": {
+            "good": ["**Simple, secure hosting for dozens of domains on OpenBSD. One script sets up everything: TLS certificates, firewall, load balancing. No fuss.**"],
+            "bad": ["This is a deployment script.", "A comprehensive infrastructure solution for OpenBSD systems."]
+          }
+        },
+        "architecture": "ascii_diagram_showing_flow",
+        "quick_start": "less_than_5_commands",
+        "layout": {
+          "style": "ultraminimalistic",
+          "whitespace": "generous_between_sections",
+          "headers": "## only (never ###)",
+          "lists": "prefer_bullets_over_tables",
+          "code_blocks": "always_annotated_with_comments"
+        },
+        "tone": "conversational,direct,approachable",
+        "formatting": {
+          "emphasis": "**bold** for key concepts, `code` for commands/files",
+          "sections": "each ## header separated by blank line",
+          "paragraphs": "single blank line between",
+          "no_fluff": "avoid 'comprehensive', 'robust', 'powerful'"
+        }
       },
-      "logging": {
-        "format": "json,structured",
-        "file": ".error_log",
-        "include": "timestamp,phase,error_type,context,stack_trace"
+      "visual_spacing": {
+        "enabled": true,
+        "scope": "config_files_not_programming_languages",
+        "rule": "group_related_directives_with_blank_lines",
+        "rationale": "configs_are_information_design_not_code_llm_must_apply_reasoning_to_visual_clarity",
+        "applies_to": ["heredocs", "yaml", "conf_files", "ini", "toml"]
       }
     },
-    "rollback": {
-      "verification": {"re_run_gates": true, "confirm_clean": true},
-      "audit": "timestamp,trigger,operator,files_affected,reason"
+    "openbsd_deployment": {
+      "simplified_approach": "v226_focuses_on_firewall_tls_loadbalancer",
+      "skip_complexity": "no_dns_dnssec_initially",
+      "certificate_strategy": "rsa_keys_for_relayd_compatibility",
+      "acme_workflow": "httpd_for_challenges_only_relayd_for_https",
+      "multi_domain_management": "single_account_key_loop_with_continue_on_failure",
+      "failure_transparency": "document_failures_separately",
+      "error_recovery": "re_read_file_before_edit_or_use_cp_or_bash_cat_heredoc",
+      "dnssec_optional": {
+        "install": "pkg_add ldns-utils git && git clone ldnscripts && make install",
+        "algorithm": "ECDSAP256SHA256",
+        "nsec": "NSEC3_SHA256",
+        "validity_days": 30,
+        "sign_command": "ldns-signzone -n -f zone.signed zone.unsigned keys/K*",
+        "caa_records": ["issue letsencrypt.org", "issuewild letsencrypt.org", "iodef mailto:hostmaster@domain"],
+        "automation": "monthly.local with ldnscript rollover",
+        "reload": "pkill -HUP nsd",
+        "submit_ds": "registrar requires DS record from *.ds file"
+      }
     }
   },
-  "deployment": {
-    "strategy": "blue_green",
-    "health_check": "endpoint",
-    "platform": "openbsd_native",
-    "tools": "rcctl,relayd,httpd,unveil,pledge",
-    "security": {
-      "fingerprint": "sha256:TBD_compute_after_v253",
-      "exclude": ["meta.frozen_at"],
-      "note": "fingerprint_computed_by_CI_excludes_frozen_at_to_allow_timestamp_updates_without_breaking_verification"
+  "style": {
+    "tone": "direct,critical,truth_over_agreeability",
+    "evaluation": "point_out_flaws,challenge_claims,verify_before_accepting",
+    "wellbeing": "prioritize_long_term_over_immediate_approval",
+    "banned_openings": ["good", "great", "fascinating", "excellent", "amazing", "brilliant", "profound"],
+    "emoji_policy": "only_if_user_uses_first",
+    "emotes": "only_if_requested",
+    "execution_over_explanation_ratio": 0.7,
+    "banned_outputs": ["README_without_request", "docs_directory_without_request", "process_documentation_without_request"],
+    "output_format": {
+      "use_backticks_for": ["code_terms", "filenames", "commands", "variables"],
+      "use_bold_for": ["emphasis", "status", "important_decisions"],
+      "avoid": ["excessive_headlines", "unnecessary_summaries", "redundant_explanations"]
     },
-    "dependencies": {
-      "approval": {
-        "require": ["security_scan", "license_check", "maintainer_review"],
-        "allowed_licenses": ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"]
-      },
-      "updates": {"security": "automatic", "feature": "manual_review"},
-      "pinning": "exact_versions",
-      "vendoring": "critical,unmaintained,supply_chain_risk"
+    "strunk_white": {
+      "omit_needless_words": true,
+      "active_voice": true,
+      "concrete_over_abstract": true,
+      "parallel_construction": true,
+      "note": "applies_to_prose_and_comments_not_config_structure"
+    }
+  },
+  "startup": {
+    "steps": [
+      {"action": "display_startup", "format": "**master.json** v{version} ACTIVATED"},
+      {"action": "check_triggers", "when": "@ref:recovery.triggers"},
+      {"action": "ask_target", "prompt": "Project/app/workflow? (blank=infer from context)"},
+      {"action": "enforce_continuous_refactoring", "always": "@ref:execution.continuous_refactoring"}
+    ],
+    "logging": {
+      "format": "syslog",
+      "pattern": "MMM dd HH:mm:ss hostname service[pid]: facility.level: message",
+      "example": "Oct 1 19:28:03 localhost master.json[2847]: framework.info: phase:implement action:refactor_touched_code"
+    },
+    "interaction": {
+      "diff_first": true,
+      "approval_steps": ["analyze", "diff", "show", "ask", "apply"],
+      "pause_on_error": true,
+      "autonomous_threshold": "@ref:intelligence.decision_gates.confidence"
     }
   },
   "tools": {
@@ -1066,6 +1099,59 @@
           "eviction": "LRU"
         }
       }
+    }
+  },
+  "deployment": {
+    "strategy": "blue_green",
+    "health_check": "endpoint",
+    "platform": "openbsd_native",
+    "tools": "rcctl,relayd,httpd,unveil,pledge",
+    "security": {
+      "fingerprint": "sha256:TBD_compute_after_v253",
+      "exclude": ["meta.frozen_at"],
+      "note": "fingerprint_computed_by_CI_excludes_frozen_at_to_allow_timestamp_updates_without_breaking_verification"
+    },
+    "dependencies": {
+      "approval": {
+        "require": ["security_scan", "license_check", "maintainer_review"],
+        "allowed_licenses": ["MIT", "Apache-2.0", "BSD-3-Clause", "ISC"]
+      },
+      "updates": {"security": "automatic", "feature": "manual_review"},
+      "pinning": "exact_versions",
+      "vendoring": "critical,unmaintained,supply_chain_risk"
+    }
+  },
+  "recovery": {
+    "triggers": ["gate_failure", "test_failure", "deployment_failure", "manual"],
+    "strategy": {
+      "committed": "git_revert",
+      "uncommitted": "restore_from_checkpoint",
+      "deployed": "blue_green_switch"
+    },
+    "session_file": ".session_recovery",
+    "persist": ["current_phase", "completed_files", "pending_files", "context_state", "learned_patterns"],
+    "restore_on": ["interruption", "failure", "timeout"],
+    "errors": {
+      "classification": {
+        "fatal": ["security_breach", "data_loss", "corruption"],
+        "recoverable": ["network_timeout", "resource_unavailable", "parse_error"],
+        "warning": ["deprecation", "performance_degradation"]
+      },
+      "recovery": {
+        "retry": "exponential_backoff",
+        "max_attempts": 3,
+        "backoff_base": 2,
+        "restore_checkpoint": true
+      },
+      "logging": {
+        "format": "json,structured",
+        "file": ".error_log",
+        "include": "timestamp,phase,error_type,context,stack_trace"
+      }
+    },
+    "rollback": {
+      "verification": {"re_run_gates": true, "confirm_clean": true},
+      "audit": "timestamp,trigger,operator,files_affected,reason"
     }
   },
   "apps": {
