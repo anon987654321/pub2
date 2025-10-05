@@ -115,7 +115,7 @@
         }
       }catch{}
       try{
-        let r=await fetch("index.html.json");
+        let r=await fetch("index.json");
         if(r.ok){
           const data=await r.json();
           if(Array.isArray(data)){
