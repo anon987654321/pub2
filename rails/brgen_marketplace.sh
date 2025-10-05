@@ -19,6 +19,8 @@ command_exists "node"
 command_exists "psql"
 command_exists "redis-server"
 
+install_gem "faker"
+
 # Install Solidus e-commerce platform
 log "Installing Solidus e-commerce platform"
 bundle add solidus --github='solidusio/solidus'
@@ -650,6 +652,79 @@ EOF
 
 generate_turbo_views "products" "product"
 generate_turbo_views "orders" "order"
+
+cat <<EOF > db/seeds.rb
+require "faker"
+
+puts "Creating demo users with Faker..."
+demo_users = []
+8.times do
+  demo_users << User.create!(
+    email: Faker::Internet.unique.email,
+    password: "password123",
+    name: Faker::Name.name
+  )
+end
+
+puts "Created #{demo_users.count} demo users."
+
+puts "Creating demo vendors..."
+vendors = []
+4.times do
+  vendors << Vendor.create!(
+    name: Faker::Company.name,
+    description: Faker::Company.catch_phrase,
+    user: demo_users.sample,
+    verified: [true, false].sample
+  )
+end
+
+puts "Created #{vendors.count} vendors."
+
+puts "Creating demo products with Faker..."
+categories = ['Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Books', 'Toys']
+50.times do
+  Product.create!(
+    name: Faker::Commerce.product_name,
+    price: Faker::Commerce.price(range: 10.0..500.0),
+    description: Faker::Lorem.paragraph(sentence_count: 2),
+    user: demo_users.sample
+  )
+end
+
+puts "Created #{Product.count} demo products."
+
+puts "Creating demo listings..."
+30.times do
+  listing = Listing.create!(
+    title: Faker::Commerce.product_name,
+    description: Faker::Lorem.paragraph(sentence_count: 3),
+    price: Faker::Commerce.price(range: 5.0..250.0),
+    vendor: vendors.sample,
+    category: categories.sample,
+    status: ['active', 'sold', 'pending'].sample,
+    location: Faker::Address.city,
+    lat: Faker::Address.latitude,
+    lng: Faker::Address.longitude
+  )
+end
+
+puts "Created #{Listing.count} demo listings."
+
+puts "Creating demo orders..."
+20.times do
+  Order.create!(
+    buyer: demo_users.sample,
+    product: Product.all.sample,
+    status: ['pending', 'shipped', 'delivered'].sample,
+    total_amount: Faker::Commerce.price(range: 20.0..300.0)
+  )
+end
+
+puts "Created #{Order.count} demo orders."
+
+puts "Seed data creation complete!"
+EOF
 
 commit "Brgen Marketplace setup complete: E-commerce platform with live search, infinite scroll, and anonymous features"
 

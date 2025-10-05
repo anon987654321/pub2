@@ -20,7 +20,6 @@ cd blognet
 
 # Add Necessary Gems
 echo "Adding necessary gems..."
-bundle add faker
 bundle add esbuild-rails hotwire-rails stimulus_reflex devise friendly_id babosa acts_as_tenant
 
 # Install Frameworks
@@ -48,70 +47,6 @@ git commit -m "Added AI-related gems to Blognet"
 # Set up domain-based multi-tenancy
 echo "Setting up domain-based routing and multi-tenancy..."
 # Include multi-tenancy and routing setup here, similar to previous snippets.
-
-cat <<EOF > db/seeds.rb
-require "faker"
-
-puts "Creating demo users with Faker..."
-demo_users = []
-8.times do
-  demo_users << User.create!(
-    email: Faker::Internet.unique.email,
-    password: "password123",
-    name: Faker::Name.name
-  )
-end
-
-puts "Created #{demo_users.count} demo users."
-
-puts "Creating demo blogs..."
-5.times do
-  Blog.create!(
-    name: "#{Faker::Book.genre} Chronicles",
-    description: Faker::Lorem.paragraph(sentence_count: 3),
-    user: demo_users.sample,
-    domain: "#{Faker::Internet.domain_word}.blog",
-    theme: ['minimal', 'dark', 'colorful', 'professional'].sample
-  )
-end
-
-puts "Created #{Blog.count} blogs."
-
-puts "Creating demo blog posts with Faker..."
-Blog.all.each do |blog|
-  rand(10..20).times do
-    Post.create!(
-      blog: blog,
-      user: blog.user,
-      title: Faker::Book.title,
-      content: Faker::Lorem.paragraphs(number: rand(5..10)).join("\n\n"),
-      published: [true, true, true, false].sample,
-      published_at: Faker::Time.between(from: 3.months.ago, to: Time.now),
-      slug: Faker::Internet.slug,
-      views: rand(10..5000),
-      category: ['Technology', 'Lifestyle', 'Travel', 'Food', 'Opinion'].sample
-    )
-  end
-end
-
-puts "Created #{Post.count} blog posts."
-
-puts "Creating demo comments..."
-Post.all.sample(30).each do |post|
-  rand(2..8).times do
-    Comment.create!(
-      post: post,
-      user: demo_users.sample,
-      content: Faker::Lorem.paragraph(sentence_count: rand(1..3)),
-      approved: [true, true, false].sample
-    )
-  end
-end
-
-puts "Created #{Comment.count} comments."
-
-puts "Seed data creation complete!"
-EOF
 
 git add .
 

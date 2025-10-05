@@ -18,6 +18,8 @@ command_exists "node"
 command_exists "psql"
 command_exists "redis-server"
 
+install_gem "faker"
+
 bin/rails generate scaffold Video title:string description:text user:references file:attachment
 bin/rails generate scaffold Comment video:references user:references content:text
 
@@ -608,6 +610,78 @@ cat <<EOF > app/views/comments/show.html.erb
   <% end %>
 <% end %>
 <%= render "shared/footer" %>
+EOF
+
+cat <<EOF > db/seeds.rb
+require "faker"
+
+puts "Creating demo users with Faker..."
+demo_users = []
+10.times do
+  demo_users << User.create!(
+    email: Faker::Internet.unique.email,
+    password: "password123",
+    name: Faker::Name.name
+  )
+end
+
+puts "Created #{demo_users.count} demo users."
+
+puts "Creating demo videos with Faker..."
+40.times do
+  Video.create!(
+    user: demo_users.sample,
+    title: "#{Faker::Hipster.word.capitalize} #{Faker::Verb.ing_form.capitalize}",
+    description: Faker::Lorem.paragraph(sentence_count: rand(2..4)),
+    duration: rand(30..600),
+    views: rand(10..10000),
+    privacy: ['public', 'private', 'unlisted'].sample
+  )
+end
+
+puts "Created #{Video.count} videos."
+
+puts "Creating demo posts..."
+50.times do
+  Post.create!(
+    user: demo_users.sample,
+    title: Faker::Lorem.sentence(word_count: rand(3..8)),
+    body: Faker::Lorem.paragraph(sentence_count: rand(3..8)),
+    anonymous: [true, false, false].sample
+  )
+end
+
+puts "Created #{Post.count} posts."
+
+puts "Creating demo comments on videos..."
+Video.all.sample(25).each do |video|
+  rand(1..8).times do
+    Comment.create!(
+      video: video,
+      user: demo_users.sample,
+      content: Faker::Lorem.sentence(word_count: rand(5..20))
+    )
+  end
+end
+
+puts "Created #{Comment.count} comments."
+
+puts "Creating demo votes..."
+[Video, Post, Comment].each do |votable_class|
+  votable_class.all.sample(20).each do |votable|
+    rand(1..5).times do
+      Vote.create!(
+        votable: votable,
+        user: demo_users.sample,
+        value: [1, 1, 1, -1].sample
+      )
+    end
+  end
+end
+
+puts "Created #{Vote.count} votes."
+
+puts "Seed data creation complete!"
 EOF
 
 generate_turbo_views "videos" "video"

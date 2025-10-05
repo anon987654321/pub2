@@ -27,6 +27,8 @@ bin/rails generate model Translation verse:references language:string source:str
 bin/rails generate model AnalysisMetric verse:references metric_name:string baibl_score:decimal kjv_score:decimal improvement:decimal
 bin/rails generate model UserStudy user:references verse:references notes:text rating:integer timestamp:datetime
 
+install_gem "faker"
+
 # Add AI and language processing gems
 bundle add langchain
 bundle add ruby-openai
@@ -837,6 +839,20 @@ EOF
 
 # Create sample data seeds
 cat <<EOF > db/seeds.rb
+require "faker"
+
+puts "Creating demo users with Faker..."
+demo_users = []
+5.times do
+  demo_users << User.create!(
+    email: Faker::Internet.unique.email,
+    password: "password123",
+    name: Faker::Name.name
+  )
+end
+
+puts "Created #{demo_users.count} demo users."
+
 # BAIBL Sample Data
 
 # Create books
@@ -854,6 +870,15 @@ john = Book.create!(
   chapter_count: 21
 )
 
+matthew = Book.create!(
+  title: "Matteus",
+  abbreviation: "Matt",
+  testament: "New",
+  chapter_count: 28
+)
+
+puts "Created #{Book.count} books."
+
 # Create chapters
 genesis_1 = Chapter.create!(
   book: genesis,
@@ -868,6 +893,15 @@ john_1 = Chapter.create!(
   title: "Ordet ble kjød",
   verse_count: 51
 )
+
+matthew_5 = Chapter.create!(
+  book: matthew,
+  number: 5,
+  title: "Bergprekenen",
+  verse_count: 48
+)
+
+puts "Created #{Chapter.count} chapters."
 
 # Create sample verses with Norwegian content
 genesis_1_1 = Verse.create!(
@@ -900,6 +934,21 @@ john_1_1 = Verse.create!(
   notes: "Logosteologien i Johannesevangeliet."
 )
 
+# Create additional verses with Faker for variety
+5.times do |i|
+  Verse.create!(
+    chapter: matthew_5,
+    number: i + 1,
+    aramaic_text: Faker::Lorem.sentence(word_count: 12),
+    kjv_text: Faker::Lorem.sentence(word_count: 15),
+    baibl_text: Faker::Lorem.sentence(word_count: 15),
+    transliteration: Faker::Lorem.sentence(word_count: 12),
+    notes: Faker::Lorem.paragraph(sentence_count: 2)
+  )
+end
+
+puts "Created #{Verse.count} verses."
+
 # Create analysis metrics
 metrics_data = [
   { name: "Lingvistisk nøyaktighet", baibl: 97.8, kjv: 82.3 },
@@ -909,16 +958,51 @@ metrics_data = [
   { name: "Lesbarhet (moderne kontekst)", baibl: 99.1, kjv: 58.2 }
 ]
 
-[genesis_1_1, genesis_1_2, john_1_1].each do |verse|
+Verse.all.each do |verse|
   metrics_data.each do |metric|
     AnalysisMetric.create!(
       verse: verse,
       metric_name: metric[:name],
-      baibl_score: metric[:baibl],
-      kjv_score: metric[:kjv]
+      baibl_score: metric[:baibl] + rand(-2.0..2.0).round(1),
+      kjv_score: metric[:kjv] + rand(-3.0..3.0).round(1)
     )
   end
 end
+
+puts "Created #{AnalysisMetric.count} analysis metrics."
+
+# Create translations for verses
+languages = ['en', 'no', 'de', 'fr', 'es']
+sources = ['BAIBL AI', 'Traditional', 'Modern', 'Scholarly']
+
+Verse.all.each do |verse|
+  rand(2..4).times do
+    Translation.create!(
+      verse: verse,
+      language: languages.sample,
+      source: sources.sample,
+      translated_text: Faker::Lorem.paragraph(sentence_count: 2),
+      accuracy_score: rand(85.0..99.9).round(1)
+    )
+  end
+end
+
+puts "Created #{Translation.count} translations."
+
+# Create user studies
+demo_users.each do |user|
+  rand(5..10).times do
+    UserStudy.create!(
+      user: user,
+      verse: Verse.all.sample,
+      notes: Faker::Lorem.paragraph(sentence_count: 3),
+      rating: rand(1..5),
+      timestamp: Faker::Time.between(from: 6.months.ago, to: Time.now)
+    )
+  end
+end
+
+puts "Created #{UserStudy.count} user studies."
 
 puts "BAIBL sample data created successfully!"
 EOF
@@ -927,5 +1011,25 @@ EOF
 bin/rails db:migrate
 bin/rails db:seed
 
-log "BAIBL AI Bible application setup completed with Norwegian interface, dark theme, and precision metrics"
-commit "Set up BAIBL AI Bible application with comprehensive Norwegian interface and advanced text analysis features"
+commit "BAIBL setup complete: AI Bible application with Norwegian interface and precision metrics"
+
+log "BAIBL AI Bible application setup complete. Run 'bin/falcon-host' with PORT set to start on OpenBSD."
+log ""
+log "📖 BAIBL Features:"
+log "   • AI-powered biblical text analysis with precision metrics"
+log "   • Norwegian language interface (nb locale)"
+log "   • Dark theme optimized for reading"
+log "   • Aramaic, KJV, and BAIBL translation comparisons"
+log "   • LangChain + Weaviate for semantic search"
+log "   • Accuracy scoring and improvement tracking"
+log ""
+log "   Access: http://localhost:3003 for biblical text exploration"
+
+# Change Log:
+# - Aligned with master.json v6.5.0: Two-space indents, double quotes, heredocs, Strunk & White comments.
+# - Used Rails 8 conventions, Hotwire, Turbo Streams, Stimulus Reflex, I18n, and Falcon.
+# - Norwegian language support with nb locale as default.
+# - AI-powered translation analysis with precision scoring.
+# - Integrated LangChain and Weaviate for semantic biblical text search.
+# - Ensured NNG principles, SEO, schema data, and minimal flat design compliance.
+# - Finalized for unprivileged user on OpenBSD 7.5.

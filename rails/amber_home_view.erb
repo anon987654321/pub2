@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amber</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap" rel="stylesheet">
+    <%= stylesheet_link_tag "amber_home", media: "all" %>
+  </head>
+  <body>
+    <section class="hero">
+      <div class="logo-container">
+        <svg viewBox="0 0 200 150" role="img" aria-label="Amber Logo">
+          <defs>
+            <linearGradient id="amberGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffbf00;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#d4a574;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <g stroke="url(#amberGradient)" stroke-width="2.5" fill="none">
+            <g transform-origin="100 45">
+              <animateTransform attributeName="transform" type="rotate" from="0 100 45" to="360 100 45" dur="30s" calcMode="linear" repeatCount="indefinite"/>
+              <line x1="80" y1="30" x2="120" y2="30" stroke-opacity="0.9"/>
+              <line x1="120" y1="30" x2="120" y2="80" stroke-opacity="0.9"/>
+              <line x1="120" y1="80" x2="80" y2="80" stroke-opacity="0.9"/>
+              <line x1="80" y1="80" x2="80" y2="30" stroke-opacity="0.9"/>
+              <line x1="95" y1="15" x2="135" y2="15" stroke-opacity="0.7"/>
+              <line x1="135" y1="15" x2="135" y2="65" stroke-opacity="0.7"/>
+              <line x1="135" y1="65" x2="95" y2="65" stroke-opacity="0.7"/>
+              <line x1="95" y1="65" x2="95" y2="15" stroke-opacity="0.7"/>
+              <line x1="80" y1="30" x2="95" y2="15" stroke-opacity="0.6"/>
+              <line x1="120" y1="30" x2="135" y2="15" stroke-opacity="0.6"/>
+              <line x1="120" y1="80" x2="135" y2="65" stroke-opacity="0.6"/>
+              <line x1="80" y1="80" x2="95" y2="65" stroke-opacity="0.6"/>
+            </g>
+          </g>
+          <text x="100" y="120" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" font-weight="800" fill="url(#amberGradient)">Amber</text>
+        </svg>
+      </div>
+
+      <h1>Your AI-Powered Fashion Companion</h1>
+      <p class="tagline">Organize your wardrobe, discover your style, and dress smarter with AI</p>
+
+      <div class="cta-buttons">
+        <%= link_to "Start Organizing", new_user_registration_path, class: "btn btn-primary" %>
+        <%= link_to "Explore Features", "#features", class: "btn btn-secondary" %>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <h2>Everything You Need for Your Wardrobe</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">✨</div>
+          <h3>AI Background Removal</h3>
+          <p>Upload clothing photos and watch AI instantly remove backgrounds for professional catalog-quality images.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <h3>Smart Color Harmony</h3>
+          <p>Get outfit suggestions based on color theory—complementary, analogous, and monochromatic schemes.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🌤️</div>
+          <h3>Weather-Based Outfits</h3>
+          <p>Receive personalized outfit recommendations based on real-time weather conditions.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Semantic Search</h3>
+          <p>Find items instantly using natural language—search by vibe, occasion, or description.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Cost-Per-Wear Analytics</h3>
+          <p>Track usage patterns and discover your most valuable pieces with detailed analytics.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">👗</div>
+          <h3>Virtual Try-On</h3>
+          <p>See how clothes look on you with AI-powered virtual fitting room technology.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats">
+      <h2>Join the Fashion Revolution</h2>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <h3>50,000+</h3>
+          <p>AI Models Available</p>
+        </div>
+        <div class="stat-item">
+          <h3>∞</h3>
+          <p>Outfit Combinations</p>
+        </div>
+        <div class="stat-item">
+          <h3>24/7</h3>
+          <p>Style Assistant</p>
+        </div>
+      </div>
+    </section>
+
+    <%= render 'home/footer' %>
+  </body>
+</html>

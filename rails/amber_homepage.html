@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amber - Your AI-Powered Fashion Companion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        background: linear-gradient(135deg, #fff8f0 0%, #fff 100%);
+        color: #2c2c2c;
+        line-height: 1.6;
+      }
+
+      .hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(255,191,0,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        top: -200px;
+        right: -200px;
+        animation: float 20s infinite ease-in-out;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        50% { transform: translate(-50px, 50px) rotate(180deg); }
+      }
+
+      .logo-container {
+        width: 80vw;
+        max-width: 300px;
+        margin-bottom: 2rem;
+        filter: drop-shadow(0 10px 40px rgba(255,191,0,0.2));
+      }
+
+      svg { width: 100%; height: auto; }
+
+      h1 {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 800;
+        text-align: center;
+        background: linear-gradient(135deg, #d4a574 0%, #ffbf00 50%, #d4a574 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+      }
+
+      .tagline {
+        font-size: clamp(1rem, 2.5vw, 1.25rem);
+        color: #666;
+        text-align: center;
+        margin-bottom: 3rem;
+        font-weight: 300;
+      }
+
+      .cta-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .btn {
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-block;
+        font-size: 1rem;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #ffbf00 0%, #d4a574 100%);
+        color: #fff;
+        box-shadow: 0 10px 30px rgba(255,191,0,0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(255,191,0,0.4);
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: #d4a574;
+        border: 2px solid #d4a574;
+      }
+
+      .btn-secondary:hover {
+        background: #d4a574;
+        color: #fff;
+        transform: translateY(-2px);
+      }
+
+      .features {
+        padding: 6rem 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .features h2 {
+        font-size: clamp(2rem, 4vw, 2.5rem);
+        text-align: center;
+        margin-bottom: 3rem;
+        font-weight: 800;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+      }
+
+      .feature-card {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 60px rgba(255,191,0,0.15);
+      }
+
+      .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .feature-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #d4a574;
+      }
+
+      .feature-card p {
+        color: #666;
+        line-height: 1.7;
+      }
+
+      .stats {
+        background: linear-gradient(135deg, #ffbf00 0%, #d4a574 100%);
+        color: #fff;
+        padding: 4rem 2rem;
+        text-align: center;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        max-width: 1000px;
+        margin: 2rem auto 0;
+      }
+
+      .stat-item h3 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-item p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      @media (min-width: 768px) {
+        .logo-container { max-width: 350px; }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="hero">
+      <div class="logo-container">
+        <svg viewBox="0 0 200 150" role="img" aria-label="Amber Logo">
+          <defs>
+            <linearGradient id="amberGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#ffbf00;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#d4a574;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <g stroke="url(#amberGradient)" stroke-width="2.5" fill="none">
+            <g transform-origin="100 45">
+              <animateTransform attributeName="transform" type="rotate" from="0 100 45" to="360 100 45" dur="30s" calcMode="linear" repeatCount="indefinite"/>
+              <line x1="80" y1="30" x2="120" y2="30" stroke-opacity="0.9"/>
+              <line x1="120" y1="30" x2="120" y2="80" stroke-opacity="0.9"/>
+              <line x1="120" y1="80" x2="80" y2="80" stroke-opacity="0.9"/>
+              <line x1="80" y1="80" x2="80" y2="30" stroke-opacity="0.9"/>
+              <line x1="95" y1="15" x2="135" y2="15" stroke-opacity="0.7"/>
+              <line x1="135" y1="15" x2="135" y2="65" stroke-opacity="0.7"/>
+              <line x1="135" y1="65" x2="95" y2="65" stroke-opacity="0.7"/>
+              <line x1="95" y1="65" x2="95" y2="15" stroke-opacity="0.7"/>
+              <line x1="80" y1="30" x2="95" y2="15" stroke-opacity="0.6"/>
+              <line x1="120" y1="30" x2="135" y2="15" stroke-opacity="0.6"/>
+              <line x1="120" y1="80" x2="135" y2="65" stroke-opacity="0.6"/>
+              <line x1="80" y1="80" x2="95" y2="65" stroke-opacity="0.6"/>
+            </g>
+          </g>
+          <text x="100" y="120" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" font-weight="800" fill="url(#amberGradient)">Amber</text>
+        </svg>
+      </div>
+
+      <h1>Your AI-Powered Fashion Companion</h1>
+      <p class="tagline">Organize your wardrobe, discover your style, and dress smarter with AI</p>
+
+      <div class="cta-buttons">
+        <a href="/users/sign_up" class="btn btn-primary">Start Organizing</a>
+        <a href="#features" class="btn btn-secondary">Explore Features</a>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <h2>Everything You Need for Your Wardrobe</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">✨</div>
+          <h3>AI Background Removal</h3>
+          <p>Upload clothing photos and watch AI instantly remove backgrounds for professional catalog-quality images.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <h3>Smart Color Harmony</h3>
+          <p>Get outfit suggestions based on color theory—complementary, analogous, and monochromatic schemes.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🌤️</div>
+          <h3>Weather-Based Outfits</h3>
+          <p>Receive personalized outfit recommendations based on real-time weather conditions.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Semantic Search</h3>
+          <p>Find items instantly using natural language—search by vibe, occasion, or description.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Cost-Per-Wear Analytics</h3>
+          <p>Track usage patterns and discover your most valuable pieces with detailed analytics.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">👗</div>
+          <h3>Virtual Try-On</h3>
+          <p>See how clothes look on you with AI-powered virtual fitting room technology.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats">
+      <h2>Join the Fashion Revolution</h2>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <h3>50,000+</h3>
+          <p>AI Models Available</p>
+        </div>
+        <div class="stat-item">
+          <h3>∞</h3>
+          <p>Outfit Combinations</p>
+        </div>
+        <div class="stat-item">
+          <h3>24/7</h3>
+          <p>Style Assistant</p>
+        </div>
+      </div>
+    </section>
+
+    <footer style="background: #2c2c2c; color: #fff; padding: 3rem 2rem; text-align: center;">
+      <p>&copy; 2025 Amber Fashion. Your AI-powered wardrobe companion.</p>
+    </footer>
+  </body>
+</html>

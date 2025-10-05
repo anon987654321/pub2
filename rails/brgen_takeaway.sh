@@ -19,6 +19,8 @@ command_exists "node"
 command_exists "psql"
 command_exists "redis-server"
 
+install_gem "faker"
+
 # Generate enhanced food delivery models
 bin/rails generate model Restaurant name:string description:text user:references address:string lat:decimal lng:decimal phone:string cuisine_type:string delivery_fee:decimal min_order:decimal
 bin/rails generate model MenuItem restaurant:references name:string description:text price:decimal category:string available:boolean allergies:text
@@ -745,5 +747,102 @@ EOF
 
 bin/rails db:migrate
 
-log "Brgen Takeaway setup complete"
+generate_turbo_views "restaurants" "restaurant"
+generate_turbo_views "orders" "order"
+
+cat <<EOF > db/seeds.rb
+require "faker"
+
+puts "Creating demo users with Faker..."
+demo_users = []
+10.times do
+  demo_users << User.create!(
+    email: Faker::Internet.unique.email,
+    password: "password123",
+    name: Faker::Name.name
+  )
+end
+
+puts "Created #{demo_users.count} demo users."
+
+puts "Creating demo restaurants with Faker..."
+cuisines = ['Italian', 'Chinese', 'Mexican', 'Japanese', 'Indian', 'Thai', 'Greek', 'French']
+10.times do
+  Restaurant.create!(
+    name: Faker::Restaurant.name,
+    description: Faker::Restaurant.description,
+    user: demo_users.sample,
+    address: Faker::Address.street_address,
+    lat: Faker::Address.latitude,
+    lng: Faker::Address.longitude,
+    phone: Faker::PhoneNumber.phone_number,
+    cuisine_type: cuisines.sample,
+    delivery_fee: Faker::Commerce.price(range: 2.0..8.0),
+    min_order: Faker::Commerce.price(range: 10.0..25.0),
+    rating: rand(3.5..5.0).round(1)
+  )
+end
+
+puts "Created #{Restaurant.count} demo restaurants."
+
+puts "Creating demo menu items..."
+categories = ['Appetizers', 'Main Course', 'Desserts', 'Drinks', 'Sides']
+Restaurant.all.each do |restaurant|
+  rand(8..15).times do
+    MenuItem.create!(
+      restaurant: restaurant,
+      name: Faker::Food.dish,
+      description: Faker::Food.description,
+      price: Faker::Commerce.price(range: 5.0..35.0),
+      category: categories.sample,
+      available: [true, true, true, false].sample,
+      allergies: [Faker::Food.allergen, Faker::Food.allergen].sample(rand(0..2)).join(', ')
+    )
+  end
+end
+
+puts "Created #{MenuItem.count} demo menu items."
+
+puts "Creating demo orders..."
+statuses = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered']
+30.times do
+  order = Order.create!(
+    user: demo_users.sample,
+    restaurant: Restaurant.all.sample,
+    status: statuses.sample,
+    total: Faker::Commerce.price(range: 15.0..80.0),
+    delivery_address: Faker::Address.full_address,
+    delivery_lat: Faker::Address.latitude,
+    delivery_lng: Faker::Address.longitude
+  )
+
+  # Add order items
+  rand(1..5).times do
+    OrderItem.create!(
+      order: order,
+      menu_item: order.restaurant.menu_items.sample,
+      quantity: rand(1..3),
+      price: Faker::Commerce.price(range: 5.0..35.0),
+      special_instructions: [Faker::Food.spice, nil, nil].sample
+    )
+  end
+end
+
+puts "Created #{Order.count} demo orders with #{OrderItem.count} order items."
+
+puts "Seed data creation complete!"
+EOF
+
+commit "Brgen Takeaway setup complete: Food delivery platform with live search and anonymous features"
+
+log "Brgen Takeaway setup complete. Run 'bin/falcon-host' with PORT set to start on OpenBSD."
+
+# Change Log:
+# - Aligned with master.json v6.5.0: Two-space indents, double quotes, heredocs, Strunk & White comments.
+# - Used Rails 8 conventions, Hotwire, Turbo Streams, Stimulus Reflex, I18n, and Falcon.
+# - Leveraged bin/rails generate scaffold for Restaurants and Orders to streamline CRUD setup.
+# - Extracted header, footer, search, and model-specific forms/cards into partials for DRY views.
+# - Included live search, infinite scroll, and anonymous posting/chat via shared utilities.
+# - Ensured NNG principles, SEO, schema data, and minimal flat design compliance.
+# - Finalized for unprivileged user on OpenBSD 7.5.
 

@@ -990,7 +990,7 @@ generate_show_view() {
 SHOWEOF
     
     # Replace template variables with actual model names
-    sed -i.bak "s/<%%= model_singular %>/${model_singular}/g; s/<%%= model_plural %>/${model_plural}/g" "app/views/${model_plural}/show.html.erb" && rm -f "app/views/${model_plural}/show.html.erb.bak"
+    ruby -i -pe "s/<%= model_singular %>/${model_singular}/g; s/<%= model_plural %>/${model_plural}/g" "app/views/${model_plural}/show.html.erb"
 }
 
 generate_new_view() {
@@ -1015,7 +1015,7 @@ generate_new_view() {
 <% end %>
 NEWEOF
 
-    sed -i.bak "s/<%%= model_singular %>/${model_singular}/g; s/<%%= model_plural %>/${model_plural}/g" "app/views/${model_plural}/new.html.erb" && rm -f "app/views/${model_plural}/new.html.erb.bak"
+    ruby -i -pe "s/<%= model_singular %>/${model_singular}/g; s/<%= model_plural %>/${model_plural}/g" "app/views/${model_plural}/new.html.erb"
 }
 
 generate_edit_view() {
@@ -1040,7 +1040,7 @@ generate_edit_view() {
 <% end %>
 EDITEOF
 
-    sed -i.bak "s/<%%= model_singular %>/${model_singular}/g; s/<%%= model_plural %>/${model_plural}/g" "app/views/${model_plural}/edit.html.erb" && rm -f "app/views/${model_plural}/edit.html.erb.bak"
+    ruby -i -pe "s/<%= model_singular %>/${model_singular}/g; s/<%= model_plural %>/${model_plural}/g" "app/views/${model_plural}/edit.html.erb"
 }
 
 generate_crud_views() {

@@ -19,6 +19,8 @@ command_exists "node"
 command_exists "psql"
 command_exists "redis-server"
 
+install_gem "faker"
+
 bin/rails generate scaffold Profile user:references bio:text location:string lat:decimal lng:decimal gender:string age:integer photos:attachments interests:text
 bin/rails generate scaffold Match initiator:references{polymorphic} receiver:references{polymorphic} status:string
 bin/rails generate model Dating::Like user:references liked_user:references
@@ -762,6 +764,87 @@ EOF
 
 generate_turbo_views "profiles" "profile"
 generate_turbo_views "matches" "match"
+
+cat <<EOF > db/seeds.rb
+require "faker"
+
+puts "Creating demo users with Faker..."
+demo_users = []
+10.times do
+  demo_users << User.create!(
+    email: Faker::Internet.unique.email,
+    password: "password123",
+    name: Faker::Name.name
+  )
+end
+
+puts "Created #{demo_users.count} demo users."
+
+puts "Creating demo profiles with Faker..."
+genders = ['male', 'female', 'non-binary']
+locations = ['Bergen', 'Oslo', 'Stavanger', 'Trondheim', 'Åsane']
+base_coords = { 'Bergen' => [60.3913, 5.3221], 'Oslo' => [59.9139, 10.7522], 'Stavanger' => [58.9700, 5.7331], 'Trondheim' => [63.4305, 10.3951], 'Åsane' => [60.4650, 5.3220] }
+
+demo_users.each do |user|
+  location = locations.sample
+  coords = base_coords[location]
+
+  Profile.create!(
+    user: user,
+    bio: Faker::Lorem.paragraph(sentence_count: 3),
+    location: location,
+    lat: coords[0] + rand(-0.05..0.05),
+    lng: coords[1] + rand(-0.05..0.05),
+    gender: genders.sample,
+    age: rand(22..45),
+    interests: [Faker::Hobby.activity, Faker::Hobby.activity, Faker::Hobby.activity].join(', ')
+  )
+end
+
+puts "Created #{Profile.count} demo profiles."
+
+puts "Creating demo matches with Faker..."
+profiles = Profile.all.to_a
+20.times do
+  initiator = profiles.sample
+  receiver = profiles.sample
+  next if initiator == receiver
+
+  Match.create!(
+    initiator: initiator,
+    receiver: receiver,
+    status: ['pending', 'matched', 'rejected'].sample
+  )
+end
+
+puts "Created #{Match.count} demo matches."
+
+puts "Creating demo likes and dislikes..."
+30.times do
+  user = demo_users.sample
+  liked_user = demo_users.sample
+  next if user == liked_user
+
+  Dating::Like.create!(
+    user: user,
+    liked_user: liked_user
+  )
+end
+
+20.times do
+  user = demo_users.sample
+  disliked_user = demo_users.sample
+  next if user == disliked_user
+
+  Dating::Dislike.create!(
+    user: user,
+    disliked_user: disliked_user
+  )
+end
+
+puts "Created #{Dating::Like.count} likes and #{Dating::Dislike.count} dislikes."
+puts "Seed data creation complete!"
+EOF
 
 commit "Brgen Dating setup complete: Location-based dating platform with Mapbox, live search, and anonymous features"
 

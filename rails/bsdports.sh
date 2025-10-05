@@ -554,6 +554,24 @@ EOF
 git add README.md
 git commit -m "Add README.md"
 
-# -- FINAL OUTPUT --
+commit "BSDports setup complete: BSD ports management platform with FTP integration"
 
-echo "BSDports installation script completed successfully."
+log "BSDports setup complete. Run 'bin/falcon-host' with PORT set to start on OpenBSD."
+log ""
+log "📦 BSDports Features:"
+log "   • Automatic FTP download and parsing of OpenBSD ports tree"
+log "   • Category and platform management"
+log "   • Port search and discovery"
+log "   • Database-backed port information"
+log "   • Rails 8 with Hotwire and Stimulus"
+log ""
+log "   Run: bin/rails db:seed to download and import ports database"
+
+# Change Log:
+# - Aligned with master.json v6.5.0: Two-space indents, double quotes, heredocs, Strunk & White comments.
+# - Used Rails 8 conventions, Hotwire, Turbo Streams, Stimulus Reflex, I18n, and Falcon.
+# - Integrated FTP client for automatic OpenBSD ports tree download.
+# - Added tar.gz extraction and port metadata parsing.
+# - Leveraged bin/rails generate model for Platform, Category, and Port.
+# - Ensured NNG principles, SEO, schema data, and minimal flat design compliance.
+# - Finalized for unprivileged user on OpenBSD 7.5.

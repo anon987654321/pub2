@@ -20,6 +20,7 @@ command_exists "redis-server"
 
 install_gem "acts_as_tenant"
 install_gem "pagy"
+install_gem "faker"
 
 bin/rails generate model Follower follower:references followed:references
 bin/rails generate scaffold Listing title:string description:text price:decimal category:string status:string user:references location:string lat:decimal lng:decimal photos:attachments
@@ -611,6 +612,58 @@ cities.each do |city|
 end
 
 puts "Seeded #{cities.count} cities."
+
+# Create demo users with Faker
+require "faker"
+
+demo_users = []
+5.times do
+  demo_users << User.create!(
+    email: Faker::Internet.unique.email,
+    password: "password123",
+    name: Faker::Name.name
+  )
+end
+
+puts "Created #{demo_users.count} demo users with Faker."
+
+# Seed sample data for each city
+cities.each do |city_data|
+  city = City.find_by(subdomain: city_data[:subdomain])
+  next unless city
+
+  ActsAsTenant.with_tenant(city) do
+    # Create 10 posts per city
+    10.times do
+      user = demo_users.sample
+      Post.create!(
+        title: Faker::Lorem.sentence(word_count: 5),
+        content: Faker::Lorem.paragraph(sentence_count: 5),
+        user: user,
+        community: city
+      )
+    end
+
+    # Create 5 listings per city
+    5.times do
+      user = demo_users.sample
+      Listing.create!(
+        title: Faker::Commerce.product_name,
+        description: Faker::Lorem.paragraph(sentence_count: 3),
+        price: Faker::Commerce.price(range: 10.0..1000.0),
+        category: Faker::Commerce.department,
+        status: ["available", "sold"].sample,
+        user: user,
+        location: "#{city_data[:city]}, #{city_data[:country]}",
+        lat: Faker::Address.latitude,
+        lng: Faker::Address.longitude,
+        community: city
+      )
+    end
+  end
+end
+
+puts "Seeded posts and listings for all cities with Faker data."
 EOF
 
 mkdir -p app/views/brgen_logo

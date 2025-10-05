@@ -19,6 +19,8 @@ command_exists "node"
 command_exists "psql"
 command_exists "redis-server"
 
+install_gem "faker"
+
 # Generate enhanced video streaming models
 bin/rails generate model Video title:string description:text user:references duration:integer views:integer status:string category:string
 bin/rails generate model LiveStream title:string description:text user:references status:string viewer_count:integer stream_key:string
@@ -890,5 +892,89 @@ EOF
 
 bin/rails db:migrate
 
-log "Brgen TV setup complete"
+generate_turbo_views "shows" "show"
+generate_turbo_views "episodes" "episode"
+
+cat <<EOF > db/seeds.rb
+require "faker"
+
+puts "Creating demo users with Faker..."
+demo_users = []
+8.times do
+  demo_users << User.create!(
+    email: Faker::Internet.unique.email,
+    password: "password123",
+    name: Faker::Name.name
+  )
+end
+
+puts "Created #{demo_users.count} demo users."
+
+puts "Creating demo TV shows with Faker..."
+genres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Documentary', 'Thriller', 'Romance']
+15.times do
+  Show.create!(
+    title: Faker::TvShows::GameOfThrones.character + " Chronicles",
+    description: Faker::Lorem.paragraph(sentence_count: 3),
+    user: demo_users.sample,
+    genre: genres.sample,
+    release_date: Faker::Date.between(from: 5.years.ago, to: Date.today),
+    duration: rand(30..90),
+    rating: rand(5.0..10.0).round(1),
+    trailer_url: "https://example.com/trailers/#{Faker::Alphanumeric.alpha(number: 10)}"
+  )
+end
+
+puts "Created #{Show.count} demo TV shows."
+
+puts "Creating demo episodes..."
+Show.all.each do |show|
+  seasons = rand(1..4)
+  seasons.times do |season_num|
+    episodes_count = rand(6..12)
+    episodes_count.times do |ep_num|
+      Episode.create!(
+        show: show,
+        title: Faker::TvShows::GameOfThrones.quote.split(' ').first(3).join(' '),
+        description: Faker::Lorem.paragraph(sentence_count: 2),
+        duration: rand(25..65),
+        episode_number: ep_num + 1,
+        season_number: season_num + 1,
+        video_url: "https://example.com/videos/#{Faker::Alphanumeric.alpha(number: 10)}.mp4"
+      )
+    end
+  end
+end
+
+puts "Created #{Episode.count} demo episodes."
+
+puts "Creating demo viewings..."
+50.times do
+  episode = Episode.all.sample
+  Viewing.create!(
+    show: episode.show,
+    episode: episode,
+    user: demo_users.sample,
+    progress: rand(0..episode.duration * 60),
+    watched: [true, false].sample
+  )
+end
+
+puts "Created #{Viewing.count} demo viewings."
+
+puts "Seed data creation complete!"
+EOF
+
+commit "Brgen TV setup complete: Video streaming platform with live search and anonymous features"
+
+log "Brgen TV setup complete. Run 'bin/falcon-host' with PORT set to start on OpenBSD."
+
+# Change Log:
+# - Aligned with master.json v6.5.0: Two-space indents, double quotes, heredocs, Strunk & White comments.
+# - Used Rails 8 conventions, Hotwire, Turbo Streams, Stimulus Reflex, I18n, and Falcon.
+# - Leveraged bin/rails generate scaffold for Shows and Episodes to streamline CRUD setup.
+# - Extracted header, footer, search, and model-specific forms/cards into partials for DRY views.
+# - Included live search, infinite scroll, and anonymous posting/chat via shared utilities.
+# - Ensured NNG principles, SEO, schema data, and minimal flat design compliance.
+# - Finalized for unprivileged user on OpenBSD 7.5.
 

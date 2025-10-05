@@ -19,6 +19,8 @@ command_exists "node"
 command_exists "psql"
 command_exists "redis-server"
 
+install_gem "faker"
+
 # Generate enhanced playlist models
 bin/rails generate model Playlist::Set name:string description:text user:references privacy:string collaborative:boolean
 bin/rails generate model Playlist::Track name:string artist:string audio_url:string duration:integer set:references position:integer
@@ -871,9 +873,158 @@ EOF
 generate_turbo_views "playlists" "playlist"
 generate_turbo_views "comments" "comment"
 
-commit "Brgen Playlist setup complete: Music playlist sharing platform with live search and anonymous features"
+cat <<EOF > db/seeds.rb
+require "faker"
+
+puts "Creating demo users with Faker..."
+demo_users = []
+8.times do
+  demo_users << User.create!(
+    email: Faker::Internet.unique.email,
+    password: "password123",
+    name: Faker::Name.name
+  )
+end
+
+puts "Created #{demo_users.count} demo users."
+
+puts "Creating demo playlists with Faker..."
+genres = ['Rock', 'Pop', 'Jazz', 'Classical', 'Electronic', 'Hip-Hop']
+moods = ['Energetic', 'Relaxing', 'Happy', 'Melancholic', 'Romantic']
+
+20.times do
+  Playlist.create!(
+    name: "#{Faker::Music.genre} #{moods.sample} Mix",
+    description: Faker::Lorem.paragraph(sentence_count: 2),
+    tracks: [Faker::Music.band, Faker::Music.band, Faker::Music.band].join(', '),
+    user: demo_users.sample
+  )
+end
+
+puts "Created #{Playlist.count} demo playlists."
+
+puts "Creating demo playlist sets..."
+15.times do
+  set = Playlist::Set.create!(
+    name: "#{genres.sample} Favorites #{rand(2020..2025)}",
+    description: Faker::Lorem.paragraph(sentence_count: 3),
+    user: demo_users.sample,
+    privacy: ['public', 'private', 'unlisted'].sample,
+    collaborative: [true, false].sample
+  )
+
+  # Add tracks to each set
+  rand(5..12).times do |i|
+    Playlist::Track.create!(
+      set: set,
+      name: Faker::Music.album,
+      artist: Faker::Music.band,
+      audio_url: "https://example.com/audio/#{Faker::Alphanumeric.alpha(number: 10)}.mp3",
+      duration: rand(120..300),
+      position: i + 1
+    )
+  end
+end
+
+puts "Created #{Playlist::Set.count} playlist sets with #{Playlist::Track.count} tracks."
+
+puts "Creating demo comments..."
+40.times do
+  Comment.create!(
+    playlist_set: Playlist::Set.all.sample,
+    user: demo_users.sample,
+    content: Faker::Lorem.sentence(word_count: rand(10..25))
+  )
+end
+
+puts "Created #{Comment.count} demo comments."
+
+puts "Creating demo likes..."
+50.times do
+  set = Playlist::Set.all.sample
+  user = demo_users.sample
+
+  Playlist::Like.find_or_create_by(user: user, set: set)
+end
+
+puts "Created #{Playlist::Like.count} demo likes."
+
+puts "Seed data creation complete!"
+EOF
+
+# Integrate Radio Bergen Visualizer
+log "Integrating Radio Bergen 8-bit pixel visualizer..."
+
+mkdir -p public/visualizer
+
+# Copy Radio Bergen visualizer from G:/pub/index.html
+if [[ -f "/g/pub/index.html" ]]; then
+  cp "/g/pub/index.html" public/visualizer/index.html
+  log "✓ Copied Radio Bergen visualizer to public/visualizer/index.html"
+else
+  log "⚠ Warning: G:/pub/index.html not found, skipping visualizer integration"
+fi
+
+# Add visualizer route
+cat <<'EOF' >> config/routes.rb
+
+  # Radio Bergen Visualizer
+  get "visualizer", to: redirect("/visualizer/index.html")
+EOF
+
+# Add visualizer link to playlist show view
+cat <<'EOF' > app/views/playlists/show.html.erb
+<% content_for :title, @playlist.name %>
+<% content_for :description, @playlist.description&.truncate(160) %>
+<% content_for :keywords, t("brgen_playlist.playlist_keywords", name: @playlist.name, default: "playlist, #{@playlist.name}, brgen playlist, music") %>
+<% content_for :schema do %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MusicPlaylist",
+    "name": "<%= @playlist.name %>",
+    "description": "<%= @playlist.description&.truncate(160) %>"
+  }
+  </script>
+<% end %>
+<%= render "shared/header" %>
+<%= tag.main role: "main" do %>
+  <%= tag.section aria-labelledby: "playlist-heading" class: "post-card" do %>
+    <%= tag.div data: { turbo_frame: "notices" } do %>
+      <%= render "shared/notices" %>
+    <% end %>
+    <%= tag.h1 @playlist.name, id: "playlist-heading" %>
+
+    <%= tag.p class: "visualizer-link" style: "margin: 1em 0;" do %>
+      <%= link_to "🎵 Open in Radio Bergen Visualizer", visualizer_path, target: "_blank", class: "button", style: "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;", "aria-label": "Open playlist in Radio Bergen 8-bit visualizer", title: "Experience this playlist with 8-bit pixel visualizations, physics-based motion, and beat-reactive effects" %>
+    <% end %>
+
+    <%= render partial: "playlists/card", locals: { playlist: @playlist } %>
+  <% end %>
+<% end %>
+<%= render "shared/footer" %>
+EOF
+
+log "✓ Radio Bergen visualizer integrated"
+
+commit "Brgen Playlist setup complete: Music playlist sharing platform with Radio Bergen visualizer"
 
 log "Brgen Playlist setup complete. Run 'bin/falcon-host' with PORT set to start on OpenBSD."
+log ""
+log "📻 Radio Bergen Visualizer Integrated:"
+log "   • Location: public/visualizer/index.html"
+log "   • Route: /visualizer"
+log "   • Access: http://localhost:3000/visualizer"
+log "   • Features:"
+log "     - 8 visualizer modes (Tunnel, Infinity Grid, Cymatic Waves, Fractal Cascade, etc.)"
+log "     - Physics-based motion (wave interference, golden ratio spirals, particle trails)"
+log "     - Beat-reactive psychedelic effects (auto-applied per visualizer)"
+log "     - 6 color themes with keyboard shortcuts"
+log "     - MP3 playback with Web Audio API + FFT analysis"
+log "     - Mouse/gyro parallax support"
+log ""
+log "   Open any playlist and click '🎵 Open in Radio Bergen Visualizer'"
+log "   See G:/pub/README-VISUALIZER.md for full documentation"
 
 # Change Log:
 # - Aligned with master.json v6.5.0: Two-space indents, double quotes, heredocs, Strunk & White comments.
@@ -883,3 +1034,6 @@ log "Brgen Playlist setup complete. Run 'bin/falcon-host' with PORT set to start
 # - Included live search, infinite scroll, and anonymous posting/chat via shared utilities.
 # - Ensured NNG principles, SEO, schema data, and minimal flat design compliance.
 # - Finalized for unprivileged user on OpenBSD 7.5.
+# - Integrated Radio Bergen Visualizer (G:/pub/index.html) as static asset at /visualizer route
+# - Added visualizer link to playlist show pages for immersive playback experience
+# - Visualizer features: 8 modes, physics-based motion, psychedelic effects, 6 themes, MP3 playback
