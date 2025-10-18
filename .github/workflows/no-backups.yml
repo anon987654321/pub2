@@ -1,0 +1,20 @@
+name: No backup files
+on:
+  pull_request:
+    paths:
+      - '**'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail on backup-like files
+        run: |
+          set -euo pipefail
+          matches=$(git ls-files | grep -E '(master\.json\..+|\.backup$|\.before_.+|\.pre_.+)' || true)
+          if [ -n "$matches" ]; then
+            echo "Backup-like files detected:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "OK: no backup-like files."

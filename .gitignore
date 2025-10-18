@@ -1,0 +1,5 @@
+# Block master.json backups and variants
+master.json.*
+*.backup
+*.before_*
+*.pre_*
