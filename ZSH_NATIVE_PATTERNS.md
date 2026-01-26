@@ -1,4 +1,4 @@
-# ZSH Native Patterns - Replacing awk/sed/tr/grep
+# Zsh Native Patterns - Replacing awk/sed/tr/grep
 
 **Philosophy:** No external forks, pure zsh parameter expansion for maximum performance.
 
@@ -97,3 +97,4 @@ Use external tools only for:
 - Complex regex requiring PCRE
 - Multi-file operations
 - Binary data processing
+
